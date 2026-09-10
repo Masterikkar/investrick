@@ -7,9 +7,12 @@ const OPERAZIONI = [
   { value: 'Dividendo', label: 'Dividendo' },
   { value: 'Ricompensa', label: 'Ricompensa' },
   { value: 'Costo_quote', label: 'Costo (in quote)' },
+  { value: 'Costo_contanti', label: 'Costo (in contanti)' },
   { value: 'Scambio_cessione', label: 'Scambio (cessione)' },
   { value: 'Scambio_acquisizione', label: 'Scambio (acquisizione)' },
 ]
+
+const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Crypto', 'Multiasset']
 
 export default async function TransazioniPage({
   searchParams,
@@ -43,7 +46,7 @@ export default async function TransazioniPage({
       >
         <label>
           Strumento
-          <select name="strumento_id" required style={{ width: '100%' }}>
+          <select name="strumento_id" style={{ width: '100%' }}>
             <option value="">Seleziona...</option>
             {strumenti?.map((s) => (
               <option key={s.id} value={s.id}>
@@ -51,6 +54,20 @@ export default async function TransazioniPage({
               </option>
             ))}
           </select>
+          <small style={{ color: '#666' }}>Lascia vuoto solo per "Costo (in contanti)".</small>
+        </label>
+
+        <label>
+          Categoria
+          <select name="categoria_manuale" style={{ width: '100%' }}>
+            <option value="">—</option>
+            {CATEGORIE.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <small style={{ color: '#666' }}>Necessaria solo se Strumento è vuoto (operazione "Costo in contanti").</small>
         </label>
 
         <label>
@@ -84,11 +101,13 @@ export default async function TransazioniPage({
         <label>
           Quantità
           <input type="number" name="quantita" step="any" required style={{ width: '100%' }} />
+          <small style={{ color: '#666' }}>Per "Costo in contanti" usa 1.</small>
         </label>
 
         <label>
           Prezzo unitario (€)
           <input type="number" name="prezzo_unitario" step="any" required style={{ width: '100%' }} />
+          <small style={{ color: '#666' }}>Per "Costo in contanti" è l'importo speso.</small>
         </label>
 
         <label>

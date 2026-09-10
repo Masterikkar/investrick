@@ -1,0 +1,438 @@
+import { createClient } from '@/lib/supabase/server'
+import { formatEuro } from '@/lib/format'
+import {
+  calcolaRibilanciamentoConVersamento,
+  distribuisciAcquisto,
+  simulaVenditaStrumento,
+  aliquotaPerStrumento,
+  type CompartoTarget,
+  type RigaAllocazione,
+  type EsitoVenditaStrumento,
+} from '@/lib/ribilanciamento'
+
+type Scostamento = {
+  target_id: string
+  contenitore_id: string
+  contenitore_nome: string
+  contenitore_tipo: string
+  categoria: string
+  target_percentuale: number
+  valore_categoria: number
+  valore_contenitore_totale: number
+  peso_attuale_pct: number
+  scostamento_pp: number
+}
+
+type PosizioneVendibile = {
+  strumento_id: string
+  categoria: string
+  valore_attuale: number
+  prezzo_attuale: number
+}
+
+type StrumentoInfo = {
+  id: string
+  nome: string
+  ticker: string | null
+  titolo_di_stato: boolean
+  percentuale_titoli_stato: number | null
+}
+
+type LottoRaw = {
+  strumento_id: string
+  quantita_residua: number
+  prezzo_acquisto: number
+  commissione_residua: number
+}
+
+export default async function RibilanciamentoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    contenitore_id?: string
+    versamento?: string
+    forza?: string
+    commissione_vendita?: string
+  }>
+}) {
+  const params = await searchParams
+  const supabase = await createClient()
+
+  const { data: scostamenti } = await supabase
+    .from('v_scostamento_target')
+    .select('*')
+    .returns<Scostamento[]>()
+
+  const { data: impostazioni } = await supabase
+    .from('impostazioni_utente')
+    .select('soglia_ribilanciamento_pp')
+    .single()
+
+  const soglia = impostazioni?.soglia_ribilanciamento_pp ?? 3
+
+  const fuoriSoglia = (scostamenti ?? [])
+    .filter((s) => Math.abs(s.scostamento_pp) >= soglia)
+    .sort((a, b) => Math.abs(b.scostamento_pp) - Math.abs(a.scostamento_pp))
+
+  const contenitoriMap = new Map<string, string>()
+  for (const s of scostamenti ?? []) contenitoriMap.set(s.contenitore_id, s.contenitore_nome)
+  const contenitoriDisponibili = Array.from(contenitoriMap.entries())
+
+  const contenitoreSelezionato = params.contenitore_id
+  const versamento = params.versamento ? Number(params.versamento) : 0
+  const forzaVendita = params.forza === '1'
+  const commissioneVenditaStimata = params.commissione_vendita ? Number(params.commissione_vendita) : 0
+
+  let necessario: number | null = null
+  let sufficiente = false
+  let allocazioneAcquisto: RigaAllocazione[] = []
+  let venditeProposte: EsitoVenditaStrumento[] = []
+  let poolTotale = 0
+  const allocazioneStrumenti: { categoria: string; strumenti: { nome: string; ticker: string | null; importo: number }[] }[] = []
+
+  if (contenitoreSelezionato) {
+    const comparti = (scostamenti ?? []).filter((s) => s.contenitore_id === contenitoreSelezionato)
+
+    if (comparti.length > 0) {
+      const contenitoreTipo = comparti[0].contenitore_tipo
+      const valoreTotaleAttuale = comparti[0].valore_contenitore_totale
+
+      const compartiInput: CompartoTarget[] = comparti.map((c) => ({
+        categoria: c.categoria,
+        valoreAttuale: c.valore_categoria,
+        targetPct: c.target_percentuale / 100,
+      }))
+
+      // Budget necessario a bilanciare solo comprando: calcolato sempre, non serve alcun input.
+      const risultatoPuro = calcolaRibilanciamentoConVersamento(
+        compartiInput,
+        valoreTotaleAttuale,
+        soglia,
+        Math.max(versamento, valoreTotaleAttuale * 20, 1000)
+      )
+      necessario = risultatoPuro.budgetNecessario
+      sufficiente = versamento >= necessario
+
+      if (sufficiente) {
+        allocazioneAcquisto = distribuisciAcquisto(compartiInput, valoreTotaleAttuale, versamento)
+        poolTotale = versamento
+      } else {
+        // --- Scenario B: vendo dai comparti sovrappesati per coprire la differenza ---
+        const comportiSovrappesati = comparti.filter(
+          (c) => c.valore_categoria > (c.target_percentuale / 100) * valoreTotaleAttuale
+        )
+
+        const idealeSellPerCategoria = new Map<string, number>()
+        for (const c of comportiSovrappesati) {
+          idealeSellPerCategoria.set(
+            c.categoria,
+            c.valore_categoria - (c.target_percentuale / 100) * valoreTotaleAttuale
+          )
+        }
+
+        const vendutoPerCategoria = new Map<string, number>()
+
+        if (comportiSovrappesati.length > 0) {
+          const { data: posizioniRaw } = await supabase
+            .from('v_valore_posizioni_attuale')
+            .select('strumento_id, categoria, valore_attuale, prezzo_attuale')
+            .eq('contenitore_id', contenitoreSelezionato)
+            .in('categoria', comportiSovrappesati.map((c) => c.categoria))
+            .returns<PosizioneVendibile[]>()
+
+          const posizioni = posizioniRaw ?? []
+          const strumentoIds = posizioni.map((p) => p.strumento_id)
+
+          const { data: strumentiInfo } = await supabase
+            .from('strumenti')
+            .select('id, nome, ticker, titolo_di_stato, percentuale_titoli_stato')
+            .in('id', strumentoIds)
+            .returns<StrumentoInfo[]>()
+
+          const { data: lottiRaw } = await supabase
+            .from('v_lotti_residui')
+            .select('strumento_id, quantita_residua, prezzo_acquisto, commissione_residua, data_acquisto')
+            .eq('contenitore_id', contenitoreSelezionato)
+            .in('strumento_id', strumentoIds)
+            .order('data_acquisto', { ascending: true })
+            .returns<LottoRaw[]>()
+
+          // Nel PAC/Diretto una vendita simulata è imponibile normalmente.
+          // In una Polizza il ribilanciamento avviene sempre via switch interno -> mai imponibile.
+          const imponibile = contenitoreTipo !== 'Polizza'
+
+          for (const c of comportiSovrappesati) {
+            const idealeCategoria = idealeSellPerCategoria.get(c.categoria) ?? 0
+            const posizioniCategoria = posizioni.filter((p) => p.categoria === c.categoria)
+            const totaleCategoria = posizioniCategoria.reduce((sum, p) => sum + Number(p.valore_attuale), 0)
+            if (totaleCategoria <= 0) continue
+
+            let vendutoCategoria = 0
+
+            for (const p of posizioniCategoria) {
+              const info = strumentiInfo?.find((si) => si.id === p.strumento_id)
+              if (!info) continue
+
+              const idealeStrumento = idealeCategoria * (Number(p.valore_attuale) / totaleCategoria)
+              const quantitaIdeale = idealeStrumento / Number(p.prezzo_attuale)
+              if (quantitaIdeale <= 0) continue
+
+              const lottiStrumento = (lottiRaw ?? [])
+                .filter((l) => l.strumento_id === p.strumento_id)
+                .map((l) => ({
+                  quantitaResidua: Number(l.quantita_residua),
+                  prezzoAcquisto: Number(l.prezzo_acquisto),
+                  commissioneResidua: Number(l.commissione_residua),
+                }))
+
+              const aliquota = aliquotaPerStrumento({
+                titoloDiStato: info.titolo_di_stato,
+                percentualeTitoliStato: info.percentuale_titoli_stato,
+              })
+
+              const esito = simulaVenditaStrumento(
+                p.strumento_id,
+                info.nome,
+                lottiStrumento,
+                quantitaIdeale,
+                Number(p.prezzo_attuale),
+                commissioneVenditaStimata,
+                imponibile,
+                aliquota,
+                forzaVendita
+              )
+
+              venditeProposte.push(esito)
+              vendutoCategoria += esito.valoreVenduto
+            }
+
+            vendutoPerCategoria.set(c.categoria, vendutoCategoria)
+          }
+        }
+
+        const proventoNettoTotale = venditeProposte.reduce((s, v) => s + v.proventoNetto, 0)
+        poolTotale = versamento + proventoNettoTotale
+
+        const compartiPostVendita: CompartoTarget[] = compartiInput.map((c) => ({
+          categoria: c.categoria,
+          valoreAttuale: c.valoreAttuale - (vendutoPerCategoria.get(c.categoria) ?? 0),
+          targetPct: c.targetPct,
+        }))
+        const totaleAttualePostVendita =
+          valoreTotaleAttuale - Array.from(vendutoPerCategoria.values()).reduce((a, b) => a + b, 0)
+
+        allocazioneAcquisto = distribuisciAcquisto(compartiPostVendita, totaleAttualePostVendita, poolTotale)
+      }
+
+      // Drill-down a livello di strumento per l'acquisto finale (comune a entrambi gli scenari)
+      for (const a of allocazioneAcquisto.filter((r) => r.importo > 0)) {
+        const { data: posizioni } = await supabase
+          .from('v_valore_posizioni_attuale')
+          .select('strumento_id, valore_attuale')
+          .eq('contenitore_id', contenitoreSelezionato)
+          .eq('categoria', a.categoria)
+          .returns<{ strumento_id: string; valore_attuale: number }[]>()
+
+        const righe = posizioni ?? []
+        const totaleCategoria = righe.reduce((sum, r) => sum + Number(r.valore_attuale), 0)
+
+        if (totaleCategoria > 0) {
+          const { data: strumentiInfo } = await supabase
+            .from('strumenti')
+            .select('id, nome, ticker')
+            .in('id', righe.map((r) => r.strumento_id))
+
+          allocazioneStrumenti.push({
+            categoria: a.categoria,
+            strumenti: righe.map((r) => {
+              const info = strumentiInfo?.find((si) => si.id === r.strumento_id)
+              return {
+                nome: info?.nome ?? '—',
+                ticker: info?.ticker ?? null,
+                importo: Math.round((Number(r.valore_attuale) / totaleCategoria) * a.importo * 100) / 100,
+              }
+            }),
+          })
+        } else {
+          allocazioneStrumenti.push({ categoria: a.categoria, strumenti: [] })
+        }
+      }
+    }
+  }
+
+  return (
+    <div>
+      <h1>Ribilanciamento</h1>
+      <p style={{ color: '#666' }}>Soglia di alert: ±{soglia.toFixed(2)} punti percentuali</p>
+
+      {fuoriSoglia.length === 0 ? (
+        <p style={{ marginTop: 16 }}>Tutto in linea con i target. Nessuno scostamento fuori soglia.</p>
+      ) : (
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
+          <thead>
+            <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
+              <th style={{ padding: 8 }}>Contenitore</th>
+              <th style={{ padding: 8 }}>Categoria</th>
+              <th style={{ padding: 8 }}>Target</th>
+              <th style={{ padding: 8 }}>Attuale</th>
+              <th style={{ padding: 8 }}>Scostamento</th>
+            </tr>
+          </thead>
+          <tbody>
+            {fuoriSoglia.map((s) => {
+              const sovrappeso = s.scostamento_pp > 0
+              return (
+                <tr key={s.target_id} style={{ borderBottom: '1px solid #eee' }}>
+                  <td style={{ padding: 8 }}>{s.contenitore_nome}</td>
+                  <td style={{ padding: 8 }}>{s.categoria}</td>
+                  <td style={{ padding: 8 }}>{s.target_percentuale.toFixed(2)}%</td>
+                  <td style={{ padding: 8 }}>{s.peso_attuale_pct.toFixed(2)}%</td>
+                  <td style={{ padding: 8, color: sovrappeso ? '#b45309' : '#2563eb', fontWeight: 600 }}>
+                    {sovrappeso ? '+' : ''}
+                    {s.scostamento_pp.toFixed(2)} pp ({sovrappeso ? 'sovrappeso' : 'sottopeso'})
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      )}
+
+      <h2 style={{ marginTop: 40 }}>Tool di calcolo</h2>
+
+      <form method="GET" style={{ display: 'flex', gap: 12, alignItems: 'flex-end', marginTop: 16, flexWrap: 'wrap' }}>
+        <label>
+          Contenitore
+          <select name="contenitore_id" defaultValue={contenitoreSelezionato} required style={{ display: 'block' }}>
+            <option value="">Seleziona...</option>
+            {contenitoriDisponibili.map(([id, nome]) => (
+              <option key={id} value={id}>{nome}</option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Quanto sei disposto a versare (€)
+          <input type="number" name="versamento" step="any" min="0" defaultValue={params.versamento} style={{ display: 'block' }} />
+        </label>
+
+        <label>
+          Commissione stimata per vendita (€)
+          <input type="number" name="commissione_vendita" step="any" min="0" defaultValue={params.commissione_vendita} style={{ display: 'block' }} />
+        </label>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <input type="checkbox" name="forza" value="1" defaultChecked={forzaVendita} />
+          Vendi comunque anche in perdita
+        </label>
+
+        <button type="submit">Calcola</button>
+      </form>
+
+      {contenitoreSelezionato && necessario !== null && (
+        <div style={{ marginTop: 24 }}>
+          <p>
+            Per bilanciare comprando soltanto servirebbero circa <strong>{formatEuro(necessario)}</strong>.
+          </p>
+
+          {sufficiente ? (
+            <p style={{ color: 'green', fontWeight: 600 }}>
+              Il versamento di {formatEuro(versamento)} basta.
+            </p>
+          ) : (
+            <>
+              <p style={{ color: '#b45309', fontWeight: 600 }}>
+                Il versamento di {formatEuro(versamento)} non basta. Proposta di vendita per coprire la differenza:
+              </p>
+
+              {venditeProposte.length === 0 ? (
+                <p>Nessun comparto sovrappesato da cui vendere in questo contenitore.</p>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
+                      <th style={{ padding: 8 }}>Strumento</th>
+                      <th style={{ padding: 8 }}>Quantità</th>
+                      <th style={{ padding: 8 }}>Valore</th>
+                      <th style={{ padding: 8 }}>Plus/minus lorda</th>
+                      <th style={{ padding: 8 }}>Aliquota</th>
+                      <th style={{ padding: 8 }}>Tassa</th>
+                      <th style={{ padding: 8 }}>Netto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {venditeProposte.map((v) => (
+                      <tr key={v.strumentoId} style={{ borderBottom: '1px solid #eee' }}>
+                        <td style={{ padding: 8 }}>{v.nome}</td>
+                        <td style={{ padding: 8 }}>
+                          {v.quantitaVenduta.toFixed(6)}
+                          {!v.vincoloRispettato && (
+                            <div style={{ color: '#b45309', fontSize: 12 }}>
+                              ridotta da {v.quantitaIdeale.toFixed(6)} per evitare minusvalenza netta
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: 8 }}>{formatEuro(v.valoreVenduto)}</td>
+                        <td style={{ padding: 8, color: v.plusvalenzaLorda >= 0 ? 'green' : '#b91c1c' }}>
+                          {formatEuro(v.plusvalenzaLorda)}
+                        </td>
+                        <td style={{ padding: 8 }}>{v.imponibile ? `${(v.aliquota * 100).toFixed(1)}%` : 'esente (Polizza)'}</td>
+                        <td style={{ padding: 8 }}>{formatEuro(v.tassa)}</td>
+                        <td style={{ padding: 8, fontWeight: 600 }}>{formatEuro(v.proventoNetto)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              <p style={{ marginTop: 12 }}>
+                Versamento + proventi netti disponibili da reinvestire: <strong>{formatEuro(poolTotale)}</strong>
+              </p>
+            </>
+          )}
+
+          {allocazioneAcquisto.length > 0 && (
+            <>
+              <h3 style={{ marginTop: 24 }}>Acquisti proposti</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
+                <thead>
+                  <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
+                    <th style={{ padding: 8 }}>Categoria</th>
+                    <th style={{ padding: 8 }}>Da versare</th>
+                    <th style={{ padding: 8 }}>Peso finale</th>
+                    <th style={{ padding: 8 }}>Scostamento finale</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allocazioneAcquisto.map((a) => (
+                    <tr key={a.categoria} style={{ borderBottom: '1px solid #eee' }}>
+                      <td style={{ padding: 8 }}>{a.categoria}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(a.importo)}</td>
+                      <td style={{ padding: 8 }}>{a.pesoFinalePct.toFixed(2)}%</td>
+                      <td style={{ padding: 8 }}>{a.scostamentoFinalePp.toFixed(2)} pp</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {allocazioneStrumenti.map((c) => (
+                <div key={c.categoria} style={{ marginTop: 16 }}>
+                  <strong>{c.categoria}</strong>
+                  {c.strumenti.length === 0 ? (
+                    <p style={{ color: '#b45309' }}>Nessuno strumento posseduto qui: scegli manualmente cosa comprare.</p>
+                  ) : (
+                    <ul>
+                      {c.strumenti.map((s) => (
+                        <li key={s.nome}>{s.nome} {s.ticker ? `(${s.ticker})` : ''}: {formatEuro(s.importo)}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
