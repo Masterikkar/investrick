@@ -283,6 +283,7 @@ export type Database = {
       strumenti: {
         Row: {
           categoria: string
+          codice_prezzo: string | null
           created_at: string
           id: string
           isin: string | null
@@ -299,6 +300,7 @@ export type Database = {
         }
         Insert: {
           categoria: string
+          codice_prezzo?: string | null
           created_at?: string
           id?: string
           isin?: string | null
@@ -315,6 +317,7 @@ export type Database = {
         }
         Update: {
           categoria?: string
+          codice_prezzo?: string | null
           created_at?: string
           id?: string
           isin?: string | null
