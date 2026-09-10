@@ -53,7 +53,9 @@ export default async function PolizzePage() {
   const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Crypto', 'Multiasset']
   const composizione = (scostamenti ?? [])
     .slice()
-    .sort((a, b) => ORDINE_CATEGORIE.indexOf(a.categoria) - ORDINE_CATEGORIE.indexOf(b.categoria))
+    .sort(
+      (a, b) => ORDINE_CATEGORIE.indexOf(a.categoria ?? '') - ORDINE_CATEGORIE.indexOf(b.categoria ?? '')
+    )
 
   const righePolizze = (polizze ?? []).map((p) => {
     const valore = valori?.find((v) => v.contenitore_id === p.id)?.valore_totale ?? 0
@@ -162,7 +164,9 @@ export default async function PolizzePage() {
               >
                 <div style={{ fontWeight: 'bold' }}>{r.nome}</div>
                 <div style={{ fontSize: 13, color: '#666', marginTop: 4 }}>
-                  Attiva dal {new Date(r.dataAttivazione).toLocaleDateString('it-IT')}
+                  {r.dataAttivazione
+                    ? `Attiva dal ${new Date(r.dataAttivazione).toLocaleDateString('it-IT')}`
+                    : 'Data di attivazione non impostata'}
                 </div>
                 <div style={{ marginTop: 12, fontSize: 20 }}>{formatEuro(r.valore)}</div>
                 <div style={{ marginTop: 8, fontSize: 13, color: '#666' }}>

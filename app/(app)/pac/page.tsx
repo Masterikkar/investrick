@@ -55,7 +55,8 @@ export default async function PacPage() {
   const composizione = (scostamenti ?? [])
     .slice()
     .sort(
-      (a, b) => ORDINE_CATEGORIE_PAC.indexOf(a.categoria) - ORDINE_CATEGORIE_PAC.indexOf(b.categoria)
+      (a, b) =>
+        ORDINE_CATEGORIE_PAC.indexOf(a.categoria ?? '') - ORDINE_CATEGORIE_PAC.indexOf(b.categoria ?? '')
     )
 
   const righe = (posizioni ?? [])
