@@ -289,6 +289,7 @@ export type Database = {
           isin: string | null
           nome: string
           note: string | null
+          percentuale_titoli_stato: number | null
           provider: string | null
           tasso_percentuale: number | null
           ticker: string | null
@@ -306,6 +307,7 @@ export type Database = {
           isin?: string | null
           nome: string
           note?: string | null
+          percentuale_titoli_stato?: number | null
           provider?: string | null
           tasso_percentuale?: number | null
           ticker?: string | null
@@ -323,6 +325,7 @@ export type Database = {
           isin?: string | null
           nome?: string
           note?: string | null
+          percentuale_titoli_stato?: number | null
           provider?: string | null
           tasso_percentuale?: number | null
           ticker?: string | null
@@ -607,6 +610,37 @@ export type Database = {
           },
         ]
       }
+      v_costo_liquidita: {
+        Row: {
+          contenitore_id: string | null
+          costo_totale: number | null
+          strumento_id: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "contenitori"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_valore_per_contenitore"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "movimenti_liquidita_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_costo_per_contenitore: {
         Row: {
           contenitore_id: string | null
@@ -707,6 +741,37 @@ export type Database = {
           },
           {
             foreignKeyName: "transazioni_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_interessi_liquidita: {
+        Row: {
+          contenitore_id: string | null
+          interessi_totali: number | null
+          strumento_id: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "contenitori"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_valore_per_contenitore"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "movimenti_liquidita_strumento_id_fkey"
             columns: ["strumento_id"]
             isOneToOne: false
             referencedRelation: "strumenti"

@@ -39,7 +39,11 @@ export default async function CryptoPage() {
     : { data: null }
 
   const contenitoreIds = Array.from(
-    new Set((posizioni ?? []).map((p) => p.contenitore_id).filter(Boolean))
+    new Set(
+      (posizioni ?? [])
+        .map((p) => p.contenitore_id)
+        .filter((id): id is string => id !== null)
+    )
   )
 
   const { data: contenitori } = contenitoreIds.length

@@ -20,7 +20,9 @@ export default async function LiquiditaPage() {
         .eq('contenitore_id', contenitoreId)
     : { data: null }
 
-  const strumentoIds = saldi?.map((s) => s.strumento_id) ?? []
+  const strumentoIds = (saldi ?? [])
+    .map((s) => s.strumento_id)
+    .filter((id): id is string => id !== null)
 
   const { data: strumenti } = strumentoIds.length
     ? await supabase

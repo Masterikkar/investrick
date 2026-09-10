@@ -23,7 +23,9 @@ export default async function PacPage() {
         .eq('contenitore_id', contenitoreId)
     : { data: null }
 
-  const strumentoIds = posizioni?.map((p) => p.strumento_id) ?? []
+  const strumentoIds = (posizioni ?? [])
+    .map((p) => p.strumento_id)
+    .filter((id): id is string => id !== null)
 
   const { data: strumenti } = strumentoIds.length
     ? await supabase.from('strumenti').select('id, nome, tipo, categoria').in('id', strumentoIds)
