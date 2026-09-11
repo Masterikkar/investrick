@@ -18,6 +18,8 @@ const COLONNE: ColonnaTabella[] = [
   { key: 'costo', label: 'Costo', kind: 'euro' },
 ]
 
+const ORDINE_CATEGORIE_PAC = ['Azioni', 'Obbligazioni', 'Materie prime', 'Crypto', 'Multiasset']
+
 export default async function PacPage() {
   const supabase = await createClient()
 
@@ -92,7 +94,6 @@ export default async function PacPage() {
 
   const soglia = impostazioni?.soglia_ribilanciamento_pp ?? 3
 
-  const ORDINE_CATEGORIE_PAC = ['Azioni', 'Obbligazioni', 'Materie prime', 'Crypto', 'Multiasset']
   const composizione = (scostamenti ?? [])
     .slice()
     .sort(
@@ -126,6 +127,7 @@ export default async function PacPage() {
   const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
   const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
   const plusMinusNonRealizzata = valoreTotalePosizioni - capitaleInvestitoTotale
+  const rendimentoPctTotale = capitaleInvestitoTotale > 0 ? (plusMinusNonRealizzata / capitaleInvestitoTotale) * 100 : null
 
   // --- Sotto-target per singolo strumento, raggruppati per categoria ---
   const valorePerCategoria: Record<string, number> = {}
@@ -159,6 +161,22 @@ export default async function PacPage() {
     sottoTargetPerCategoria[cat].sort((a, b) => b.targetPct - a.targetPct)
   }
 
+  // --- Contributo al rendimento per comparto ---
+  const guadagnoPerCategoria: Record<string, number> = {}
+  for (const r of righe) {
+    const cat = r.categoria as string
+    guadagnoPerCategoria[cat] = (guadagnoPerCategoria[cat] ?? 0) + (r.rendimentoAssoluto as number)
+  }
+  const maxAbsGuadagno = Math.max(0, ...Object.values(guadagnoPerCategoria).map((g) => Math.abs(g)))
+  const contributoPerCategoria = ORDINE_CATEGORIE_PAC.filter((cat) => guadagnoPerCategoria[cat] !== undefined).map(
+    (cat) => {
+      const guadagno = guadagnoPerCategoria[cat]
+      const contributoPct = plusMinusNonRealizzata !== 0 ? (guadagno / plusMinusNonRealizzata) * 100 : null
+      const larghezzaPct = maxAbsGuadagno > 0 ? (Math.abs(guadagno) / maxAbsGuadagno) * 50 : 0
+      return { categoria: cat, guadagno, contributoPct, larghezzaPct }
+    }
+  )
+
   return (
     <div>
       <div style={{ fontSize: 13, color: '#666' }}>PAC</div>
@@ -169,6 +187,96 @@ export default async function PacPage() {
 
       <section style={{ marginTop: 24 }}>
         <GraficoStorico punti={puntiStorico} />
+      </section>
+
+      <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Rendimento</div>
+          <div
+            style={{
+              fontSize: 22,
+              marginTop: 4,
+              color: (rendimentoPctTotale ?? 0) >= 0 ? '#0a7d2c' : '#c0392b',
+            }}
+          >
+            {rendimentoPctTotale != null
+              ? `${rendimentoPctTotale >= 0 ? '+' : ''}${rendimentoPctTotale.toFixed(2)}%`
+              : '—'}
+          </div>
+        </div>
+
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Plus/minusvalenza non realizzata</div>
+          <div
+            style={{
+              fontSize: 22,
+              marginTop: 4,
+              color: plusMinusNonRealizzata >= 0 ? '#0a7d2c' : '#c0392b',
+            }}
+          >
+            {plusMinusNonRealizzata >= 0 ? '+' : ''}
+            {formatEuro(plusMinusNonRealizzata)}
+          </div>
+          <Link href="/fiscalita" style={{ fontSize: 13 }}>
+            Vedi dettaglio fiscalità →
+          </Link>
+        </div>
+
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Costo totale</div>
+          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(costoTotalePac)}</div>
+          <Link href="/costi" style={{ fontSize: 13 }}>
+            Vedi dettaglio costi →
+          </Link>
+        </div>
+      </section>
+
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Contributo al rendimento per comparto</h2>
+        {contributoPerCategoria.length === 0 || plusMinusNonRealizzata === 0 ? (
+          <p style={{ color: '#666' }}>Nessun guadagno o perdita maturata ancora.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 560 }}>
+            {contributoPerCategoria.map((c) => {
+              const positivo = c.guadagno >= 0
+              const colore = positivo ? '#0a7d2c' : '#c0392b'
+              return (
+                <div key={c.categoria}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      fontSize: 14,
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span>{c.categoria}</span>
+                    <span style={{ color: colore, fontWeight: 600 }}>
+                      {positivo ? '+' : ''}
+                      {formatEuro(c.guadagno)}
+                      {c.contributoPct != null && ` (${c.contributoPct >= 0 ? '+' : ''}${c.contributoPct.toFixed(1)}%)`}
+                    </span>
+                  </div>
+                  <div style={{ position: 'relative', height: 10, background: '#eee', borderRadius: 4 }}>
+                    <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: '#999' }} />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        height: '100%',
+                        background: colore,
+                        borderRadius: 4,
+                        ...(positivo
+                          ? { left: '50%', width: `${c.larghezzaPct}%` }
+                          : { right: '50%', width: `${c.larghezzaPct}%` }),
+                      }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </section>
 
       <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
@@ -247,33 +355,6 @@ export default async function PacPage() {
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12 }}>Strumenti</h2>
         <TabellaOrdinabile colonne={COLONNE} righe={righe} />
-      </section>
-
-      <section style={{ marginTop: 32, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Costo totale</div>
-          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(costoTotalePac)}</div>
-          <Link href="/costi" style={{ fontSize: 13 }}>
-            Vedi dettaglio costi →
-          </Link>
-        </div>
-
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Plus/minusvalenza non realizzata</div>
-          <div
-            style={{
-              fontSize: 22,
-              marginTop: 4,
-              color: plusMinusNonRealizzata >= 0 ? '#0a7d2c' : '#c0392b',
-            }}
-          >
-            {plusMinusNonRealizzata >= 0 ? '+' : ''}
-            {formatEuro(plusMinusNonRealizzata)}
-          </div>
-          <Link href="/fiscalita" style={{ fontSize: 13 }}>
-            Vedi dettaglio fiscalità →
-          </Link>
-        </div>
       </section>
     </div>
   )
