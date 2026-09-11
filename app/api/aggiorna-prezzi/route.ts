@@ -98,14 +98,19 @@ export async function GET(request: Request) {
       .from('v_valore_posizioni_attuale')
       .select('strumento_id, contenitore_id, quantita_corrente, prezzo_attuale, valore_attuale')
 
-    if (posizioniMercato && posizioniMercato.length > 0) {
-      const righeMercato = posizioniMercato.map((p) => ({
-        strumento_id: p.strumento_id,
+    const posizioniValide = (posizioniMercato ?? []).filter(
+      (p) => p.strumento_id !== null && p.quantita_corrente !== null && p.prezzo_attuale !== null
+    )
+    const posizioniScartate = (posizioniMercato?.length ?? 0) - posizioniValide.length
+
+    if (posizioniValide.length > 0) {
+      const righeMercato = posizioniValide.map((p) => ({
+        strumento_id: p.strumento_id as string,
         contenitore_id: p.contenitore_id,
         data: oggi,
-        quantita: p.quantita_corrente,
-        prezzo: p.prezzo_attuale,
-        valore: p.valore_attuale,
+        quantita: p.quantita_corrente as number,
+        prezzo: p.prezzo_attuale as number,
+        valore: (p.valore_attuale as number | null) ?? (p.quantita_corrente as number) * (p.prezzo_attuale as number),
       }))
 
       const { error: erroreMercato } = await supabase
@@ -114,22 +119,31 @@ export async function GET(request: Request) {
 
       risultatiSnapshot.push({
         tipo: 'mercato',
-        esito: erroreMercato ? `errore: ${erroreMercato.message}` : `ok (${righeMercato.length} posizioni)`,
+        esito: erroreMercato
+          ? `errore: ${erroreMercato.message}`
+          : `ok (${righeMercato.length} posizioni${posizioniScartate > 0 ? `, ${posizioniScartate} scartate per dati mancanti` : ''})`,
       })
+    } else {
+      risultatiSnapshot.push({ tipo: 'mercato', esito: 'nessuna posizione valida da salvare' })
     }
 
     const { data: saldiLiquidita } = await supabase
       .from('v_saldo_liquidita')
       .select('strumento_id, contenitore_id, saldo_corrente')
 
-    if (saldiLiquidita && saldiLiquidita.length > 0) {
-      const righeLiquidita = saldiLiquidita.map((s) => ({
-        strumento_id: s.strumento_id,
+    const saldiValidi = (saldiLiquidita ?? []).filter(
+      (s) => s.strumento_id !== null && s.saldo_corrente !== null
+    )
+    const saldiScartati = (saldiLiquidita?.length ?? 0) - saldiValidi.length
+
+    if (saldiValidi.length > 0) {
+      const righeLiquidita = saldiValidi.map((s) => ({
+        strumento_id: s.strumento_id as string,
         contenitore_id: s.contenitore_id,
         data: oggi,
         quantita: 1,
-        prezzo: s.saldo_corrente,
-        valore: s.saldo_corrente,
+        prezzo: s.saldo_corrente as number,
+        valore: s.saldo_corrente as number,
       }))
 
       const { error: erroreLiquidita } = await supabase
@@ -138,8 +152,12 @@ export async function GET(request: Request) {
 
       risultatiSnapshot.push({
         tipo: 'liquidita',
-        esito: erroreLiquidita ? `errore: ${erroreLiquidita.message}` : `ok (${righeLiquidita.length} conti)`,
+        esito: erroreLiquidita
+          ? `errore: ${erroreLiquidita.message}`
+          : `ok (${righeLiquidita.length} conti${saldiScartati > 0 ? `, ${saldiScartati} scartati per dati mancanti` : ''})`,
       })
+    } else {
+      risultatiSnapshot.push({ tipo: 'liquidita', esito: 'nessun conto valido da salvare' })
     }
   } catch (e) {
     risultatiSnapshot.push({ tipo: 'snapshot', esito: `errore imprevisto: ${e}` })
