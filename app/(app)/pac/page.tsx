@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
+import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 
 const COLONNE: ColonnaTabella[] = [
   { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
@@ -27,6 +28,23 @@ export default async function PacPage() {
 
   const contenitoreId = pac?.contenitore_id
   const valoreTotalePac = pac?.valore_totale ?? 0
+
+  const { data: storicoRaw } = contenitoreId
+    ? await supabase
+        .from('storico_valorizzazioni')
+        .select('data, valore')
+        .eq('contenitore_id', contenitoreId)
+        .order('data', { ascending: true })
+    : { data: null }
+
+  const storicoMap = new Map<string, number>()
+  for (const r of storicoRaw ?? []) {
+    const attuale = storicoMap.get(r.data) ?? 0
+    storicoMap.set(r.data, attuale + Number(r.valore))
+  }
+  const puntiStorico: PuntoStorico[] = Array.from(storicoMap.entries())
+    .map(([data, valore]) => ({ data, valore }))
+    .sort((a, b) => a.data.localeCompare(b.data))
 
   const { data: posizioni } = contenitoreId
     ? await supabase
@@ -109,6 +127,10 @@ export default async function PacPage() {
       <p style={{ fontFamily: 'Georgia, serif', fontSize: 48, margin: 0 }}>
         {formatEuro(valoreTotalePac)}
       </p>
+
+      <section style={{ marginTop: 24 }}>
+        <GraficoStorico punti={puntiStorico} />
+      </section>
 
       <section style={{ marginTop: 32 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
