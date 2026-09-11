@@ -163,10 +163,17 @@ export async function importaTransazioniBulk(
   const errori: { riga: number; messaggio: string }[] = []
 
   for (const r of righe) {
+    const categoria = categoriaMap.get(r.strumentoId)
+
+    if (!categoria) {
+      errori.push({ riga: r.rigaOriginale, messaggio: 'Impossibile determinare la categoria dello strumento' })
+      continue
+    }
+
     const { error } = await supabase.from('transazioni').insert({
       strumento_id: r.strumentoId,
       contenitore_id: r.contenitoreId,
-      categoria: categoriaMap.get(r.strumentoId) ?? null,
+      categoria,
       operazione: r.operazione,
       data: r.data,
       valuta: 'EUR',
