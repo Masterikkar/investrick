@@ -52,20 +52,14 @@ export function GraficoStorico({
 }: {
   punti: PuntoStorico[]
   formato?: 'euro' | 'percent'
-  /** Se fornito, mostra il valore attuale in grande con accanto la variazione % rispetto
-   *  all'inizio del periodo selezionato (non un vero rendimento: non tiene conto di eventuali
-   *  versamenti fatti durante il periodo, solo la variazione grezza del valore totale). */
+  /** Il totale in € mostrato in grande. Se formato è 'percent', accanto compare anche
+   *  il valore più recente della serie (stesso numero della card "Rendimento" sotto). */
   valoreAttuale?: number
 }) {
   const [periodo, setPeriodo] = useState<Periodo>('1M')
   const datiFiltrati = useMemo(() => filtraPerPeriodo(punti, periodo), [punti, periodo])
 
-  const variazionePct = useMemo(() => {
-    if (valoreAttuale === undefined || datiFiltrati.length === 0) return null
-    const valoreIniziale = datiFiltrati[0].valore
-    if (valoreIniziale <= 0) return null
-    return ((valoreAttuale - valoreIniziale) / valoreIniziale) * 100
-  }, [datiFiltrati, valoreAttuale])
+  const rendimentoAttuale = formato === 'percent' && punti.length > 0 ? punti[punti.length - 1].valore : null
 
   const formatAsse = formato === 'percent' ? formatPercentAsse : (v: number) => formatEuroCompatto.format(v)
   const formatTooltip =
@@ -77,16 +71,16 @@ export function GraficoStorico({
       {valoreAttuale !== undefined && (
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 16 }}>
           <p style={{ fontFamily: 'Georgia, serif', fontSize: 48, margin: 0 }}>{formatEuro(valoreAttuale)}</p>
-          {variazionePct !== null && (
+          {rendimentoAttuale !== null && (
             <span
               style={{
                 fontSize: 16,
                 fontWeight: 600,
-                color: variazionePct >= 0 ? '#0a7d2c' : '#c0392b',
+                color: rendimentoAttuale >= 0 ? '#0a7d2c' : '#c0392b',
               }}
             >
-              {variazionePct >= 0 ? '+' : ''}
-              {variazionePct.toFixed(2)}%
+              {rendimentoAttuale >= 0 ? '+' : ''}
+              {rendimentoAttuale.toFixed(2)}%
             </span>
           )}
         </div>

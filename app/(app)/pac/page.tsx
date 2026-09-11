@@ -50,10 +50,6 @@ export default async function PacPage() {
     }
   }
 
-  const puntiStorico: PuntoStorico[] = Array.from(storicoValoreMap.entries())
-    .map(([data, valore]) => ({ data, valore }))
-    .sort((a, b) => a.data.localeCompare(b.data))
-
   const puntiRendimento: PuntoStorico[] = Array.from(storicoValoreMap.entries())
     .map(([data, valore]) => {
       const capitale = storicoCapitaleMap.get(data)
@@ -216,12 +212,7 @@ export default async function PacPage() {
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16 }}>{pac?.nome ?? '—'}</h1>
 
       <section>
-        <GraficoStorico punti={puntiStorico} valoreAttuale={valoreTotalePac} />
-      </section>
-
-      <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Rendimento nel tempo</h2>
-        <GraficoStorico punti={puntiRendimento} formato="percent" />
+        <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotalePac} />
       </section>
 
       <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
