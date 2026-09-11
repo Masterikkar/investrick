@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatEuro } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
+import { BarreSottocategoria, type SottoTarget } from '@/components/barre-sottocategoria'
 
 const COLONNE: ColonnaTabella[] = [
   { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
@@ -59,7 +60,7 @@ export default async function PacPage() {
     .filter((id): id is string => id !== null)
 
   const { data: strumenti } = strumentoIds.length
-    ? await supabase.from('strumenti').select('id, nome, tipo, categoria').in('id', strumentoIds)
+    ? await supabase.from('strumenti').select('id, nome, ticker, tipo, categoria').in('id', strumentoIds)
     : { data: null }
 
   const { data: costi } = contenitoreId
@@ -75,6 +76,13 @@ export default async function PacPage() {
 
   const { data: scostamenti } = contenitoreId && contenitoreInfo?.target_attivo
     ? await supabase.from('v_scostamento_target').select('*').eq('contenitore_id', contenitoreId)
+    : { data: null }
+
+  const { data: subTargetRaw } = contenitoreId
+    ? await supabase
+        .from('target_allocazioni_strumento')
+        .select('strumento_id, target_percentuale_categoria')
+        .eq('contenitore_id', contenitoreId)
     : { data: null }
 
   const { data: impostazioni } = await supabase
@@ -118,6 +126,38 @@ export default async function PacPage() {
   const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
   const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
   const plusMinusNonRealizzata = valoreTotalePosizioni - capitaleInvestitoTotale
+
+  // --- Sotto-target per singolo strumento, raggruppati per categoria ---
+  const valorePerCategoria: Record<string, number> = {}
+  for (const r of righe) {
+    const cat = r.categoria as string
+    valorePerCategoria[cat] = (valorePerCategoria[cat] ?? 0) + (r.valore as number)
+  }
+
+  const sottoTargetPerCategoria: Record<string, SottoTarget[]> = {}
+  for (const st of subTargetRaw ?? []) {
+    const strumento = strumenti?.find((s) => s.id === st.strumento_id)
+    if (!strumento) continue
+    const cat = strumento.categoria
+    const rigaStrumento = righe.find((r) => r.strumentoId === st.strumento_id)
+    const valoreStrumento = (rigaStrumento?.valore as number) ?? 0
+    const totaleCategoria = valorePerCategoria[cat] ?? 0
+    const pesoAttualePct = totaleCategoria > 0 ? (valoreStrumento / totaleCategoria) * 100 : 0
+    const targetPct = Number(st.target_percentuale_categoria)
+
+    if (!sottoTargetPerCategoria[cat]) sottoTargetPerCategoria[cat] = []
+    sottoTargetPerCategoria[cat].push({
+      strumentoId: st.strumento_id,
+      nome: strumento.nome,
+      ticker: strumento.ticker,
+      targetPct,
+      pesoAttualePct: Math.round(pesoAttualePct * 100) / 100,
+      scostamentoPp: Math.round((pesoAttualePct - targetPct) * 100) / 100,
+    })
+  }
+  for (const cat of Object.keys(sottoTargetPerCategoria)) {
+    sottoTargetPerCategoria[cat].sort((a, b) => b.targetPct - a.targetPct)
+  }
 
   return (
     <div>
@@ -192,14 +232,16 @@ export default async function PacPage() {
                         }}
                       />
                     </div>
+                    <BarreSottocategoria
+                      items={sottoTargetPerCategoria[c.categoria ?? ''] ?? []}
+                      soglia={soglia}
+                    />
                   </div>
                 )
               })}
             </div>
           )}
         </div>
-
-        {/* Il blocco "Rendimento vs target annuo" arriverà qui come secondo figlio di questo contenitore flex */}
       </section>
 
       <section style={{ marginTop: 32 }}>
