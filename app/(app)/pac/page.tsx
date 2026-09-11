@@ -176,7 +176,6 @@ export default async function PacPage() {
     }
   )
 
-  // --- Contributo al rendimento per singolo strumento, dentro ciascuna categoria ---
   const contributoStrumentoPerCategoria: Record<string, ContributoStrumento[]> = {}
   for (const r of righe) {
     const cat = r.categoria as string
@@ -201,12 +200,9 @@ export default async function PacPage() {
     <div>
       <div style={{ fontSize: 13, color: '#666' }}>PAC</div>
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16 }}>{pac?.nome ?? '—'}</h1>
-      <p style={{ fontFamily: 'Georgia, serif', fontSize: 48, margin: 0 }}>
-        {formatEuro(valoreTotalePac)}
-      </p>
 
-      <section style={{ marginTop: 24 }}>
-        <GraficoStorico punti={puntiStorico} />
+      <section>
+        <GraficoStorico punti={puntiStorico} valoreAttuale={valoreTotalePac} />
       </section>
 
       <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>

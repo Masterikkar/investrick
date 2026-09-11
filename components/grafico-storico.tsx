@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
+import { formatEuro } from '@/lib/format'
 
 export type PuntoStorico = { data: string; valore: number }
 
@@ -37,16 +38,60 @@ const formatEuroCompatto = new Intl.NumberFormat('it-IT', {
 })
 const formatEuroCompleto = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
 
-export function GraficoStorico({ punti }: { punti: PuntoStorico[] }) {
+function formatPercentAsse(v: number) {
+  return `${v.toFixed(0)}%`
+}
+function formatPercentTooltip(v: number) {
+  return `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`
+}
+
+export function GraficoStorico({
+  punti,
+  formato = 'euro',
+  valoreAttuale,
+}: {
+  punti: PuntoStorico[]
+  formato?: 'euro' | 'percent'
+  /** Se fornito, mostra il valore attuale in grande con accanto la variazione % rispetto
+   *  all'inizio del periodo selezionato (non un vero rendimento: non tiene conto di eventuali
+   *  versamenti fatti durante il periodo, solo la variazione grezza del valore totale). */
+  valoreAttuale?: number
+}) {
   const [periodo, setPeriodo] = useState<Periodo>('1M')
   const datiFiltrati = useMemo(() => filtraPerPeriodo(punti, periodo), [punti, periodo])
 
-  if (punti.length === 0) {
-    return <p style={{ color: '#666' }}>Nessuno storico disponibile ancora.</p>
-  }
+  const variazionePct = useMemo(() => {
+    if (valoreAttuale === undefined || datiFiltrati.length === 0) return null
+    const valoreIniziale = datiFiltrati[0].valore
+    if (valoreIniziale <= 0) return null
+    return ((valoreAttuale - valoreIniziale) / valoreIniziale) * 100
+  }, [datiFiltrati, valoreAttuale])
+
+  const formatAsse = formato === 'percent' ? formatPercentAsse : (v: number) => formatEuroCompatto.format(v)
+  const formatTooltip =
+    formato === 'percent' ? (v: number) => formatPercentTooltip(v) : (v: number) => formatEuroCompleto.format(v)
+  const etichettaTooltip = formato === 'percent' ? 'Rendimento' : 'Valore'
 
   return (
     <div>
+      {valoreAttuale !== undefined && (
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 16 }}>
+          <p style={{ fontFamily: 'Georgia, serif', fontSize: 48, margin: 0 }}>{formatEuro(valoreAttuale)}</p>
+          {variazionePct !== null && (
+            <span
+              style={{
+                fontSize: 16,
+                fontWeight: 600,
+                color: variazionePct >= 0 ? '#0a7d2c' : '#c0392b',
+              }}
+            >
+              {variazionePct >= 0 ? '+' : ''}
+              {variazionePct.toFixed(2)}%
+            </span>
+          )}
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         {PERIODI.map((p) => (
           <button
@@ -67,7 +112,9 @@ export function GraficoStorico({ punti }: { punti: PuntoStorico[] }) {
         ))}
       </div>
 
-      {datiFiltrati.length < 2 ? (
+      {punti.length === 0 ? (
+        <p style={{ color: '#666' }}>Nessuno storico disponibile ancora.</p>
+      ) : datiFiltrati.length < 2 ? (
         <p style={{ color: '#666' }}>Non abbastanza dati per questo periodo.</p>
       ) : (
         <ResponsiveContainer width="100%" height={260}>
@@ -78,9 +125,9 @@ export function GraficoStorico({ punti }: { punti: PuntoStorico[] }) {
               tickFormatter={(d) => new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
               fontSize={12}
             />
-            <YAxis tickFormatter={(v) => formatEuroCompatto.format(v)} fontSize={12} width={70} />
+            <YAxis tickFormatter={(v) => formatAsse(Number(v))} fontSize={12} width={70} />
             <Tooltip
-              formatter={(value) => [formatEuroCompleto.format(Number(value)), 'Valore']}
+              formatter={(value) => [formatTooltip(Number(value)), etichettaTooltip]}
               labelFormatter={(label) => (label ? new Date(String(label)).toLocaleDateString('it-IT') : '')}
             />
             <Line type="monotone" dataKey="valore" stroke="#111" strokeWidth={2} dot={false} />
