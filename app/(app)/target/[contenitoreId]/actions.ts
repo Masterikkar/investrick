@@ -23,14 +23,59 @@ export async function salvaTarget(formData: FormData) {
     redirect(`/target/${contenitoreId}?errore=somma`)
   }
 
-  const { data: contenitore, error: erroreContenitore } = await supabase
+  const { data: posizioni } = await supabase
+    .from('v_riepilogo_posizione')
+    .select('strumento_id, quantita_posseduta')
+    .eq('contenitore_id', contenitoreId)
+
+  const strumentoIdsPosseduti = (posizioni ?? [])
+    .filter((p) => Number(p.quantita_posseduta) > 0)
+    .map((p) => p.strumento_id)
+    .filter((id): id is string => id !== null)
+
+  const { data: strumentiInfo } = strumentoIdsPosseduti.length
+    ? await supabase.from('strumenti').select('id, categoria').in('id', strumentoIdsPosseduti)
+    : { data: null }
+
+  const strumentiPerCategoria: Record<string, string[]> = {}
+  for (const s of strumentiInfo ?? []) {
+    if (!strumentiPerCategoria[s.categoria]) strumentiPerCategoria[s.categoria] = []
+    strumentiPerCategoria[s.categoria].push(s.id)
+  }
+
+  const upsertSottotarget: { strumento_id: string; target_percentuale_categoria: number }[] = []
+  const eliminaSottotarget: string[] = []
+
+  for (const cat of Object.keys(strumentiPerCategoria)) {
+    const idsCategoria = strumentiPerCategoria[cat]
+    if (idsCategoria.length <= 1) continue
+
+    const valori = idsCategoria.map((id) => {
+      const raw = formData.get(`sub_${id}`) as string | null
+      return { id, valore: raw ? Number(raw) : 0 }
+    })
+    const sommaCategoria = valori.reduce((acc, v) => acc + v.valore, 0)
+
+    if (sommaCategoria === 0) {
+      eliminaSottotarget.push(...idsCategoria)
+      continue
+    }
+
+    if (Math.abs(sommaCategoria - 100) > 0.01) {
+      redirect(`/target/${contenitoreId}?errore=somma_strumento&erroreCategoria=${encodeURIComponent(cat)}`)
+    }
+
+    for (const v of valori) {
+      upsertSottotarget.push({ strumento_id: v.id, target_percentuale_categoria: v.valore })
+    }
+  }
+
+  const { error: erroreContenitore } = await supabase
     .from('contenitori')
     .update({ target_attivo: targetAttivo })
     .eq('id', contenitoreId)
-    .select('tipo')
-    .single()
 
-  if (erroreContenitore || !contenitore) {
+  if (erroreContenitore) {
     redirect(`/target/${contenitoreId}?errore=1`)
   }
 
@@ -45,12 +90,37 @@ export async function salvaTarget(formData: FormData) {
       },
       { onConflict: 'contenitore_id,categoria' }
     )
-
     if (error) {
       redirect(`/target/${contenitoreId}?errore=1`)
     }
   }
 
-  const destinazione = contenitore.tipo === 'Polizza' ? '/polizze' : '/pac'
+  if (eliminaSottotarget.length > 0) {
+    const { error } = await supabase
+      .from('target_allocazioni_strumento')
+      .delete()
+      .eq('contenitore_id', contenitoreId)
+      .in('strumento_id', eliminaSottotarget)
+    if (error) {
+      redirect(`/target/${contenitoreId}?errore=1`)
+    }
+  }
+
+  if (upsertSottotarget.length > 0) {
+    const { error } = await supabase.from('target_allocazioni_strumento').upsert(
+      upsertSottotarget.map((v) => ({
+        contenitore_id: contenitoreId,
+        strumento_id: v.strumento_id,
+        target_percentuale_categoria: v.target_percentuale_categoria,
+      })),
+      { onConflict: 'contenitore_id,strumento_id' }
+    )
+    if (error) {
+      redirect(`/target/${contenitoreId}?errore=1`)
+    }
+  }
+
+  const { data: contenitore } = await supabase.from('contenitori').select('tipo').eq('id', contenitoreId).maybeSingle()
+  const destinazione = contenitore?.tipo === 'Polizza' ? '/polizze' : '/pac'
   redirect(destinazione)
 }

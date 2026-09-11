@@ -227,6 +227,7 @@ export type Database = {
       }
       storico_valorizzazioni: {
         Row: {
+          contenitore_chiave: string | null
           contenitore_id: string | null
           created_at: string
           data: string
@@ -237,6 +238,7 @@ export type Database = {
           valore: number | null
         }
         Insert: {
+          contenitore_chiave?: string | null
           contenitore_id?: string | null
           created_at?: string
           data: string
@@ -247,6 +249,7 @@ export type Database = {
           valore?: number | null
         }
         Update: {
+          contenitore_chiave?: string | null
           contenitore_id?: string | null
           created_at?: string
           data?: string
@@ -390,6 +393,58 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
+          },
+        ]
+      }
+      target_allocazioni_strumento: {
+        Row: {
+          contenitore_id: string
+          created_at: string
+          id: string
+          strumento_id: string
+          target_percentuale_categoria: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contenitore_id: string
+          created_at?: string
+          id?: string
+          strumento_id: string
+          target_percentuale_categoria: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          contenitore_id?: string
+          created_at?: string
+          id?: string
+          strumento_id?: string
+          target_percentuale_categoria?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "target_allocazioni_strumento_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "contenitori"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "target_allocazioni_strumento_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_valore_per_contenitore"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "target_allocazioni_strumento_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1194,6 +1249,13 @@ export type Database = {
           prezzo_acquisto: number
           quantita_residua: number
           tassa_residua: number
+        }[]
+      }
+      ricostruisci_storico_valorizzazioni: {
+        Args: never
+        Returns: {
+          righe_liquidita: number
+          righe_mercato: number
         }[]
       }
     }
