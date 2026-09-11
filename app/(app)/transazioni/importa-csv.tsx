@@ -50,7 +50,7 @@ type RigaParsata = {
 
 function elabora(righeCsv: Record<string, string>[], mappaContenitori: Map<string, string>): RigaParsata[] {
   return righeCsv.map((riga, idx) => {
-    const numeroRiga = idx + 2 // +1 per l'header, +1 perché idx parte da 0
+    const numeroRiga = idx + 2
     const dataRaw = (riga['Data'] ?? '').trim()
     const isinRaw = (riga['ISIN'] ?? '').trim().toUpperCase()
     const operazioneRaw = (riga['Operazione'] ?? '').trim()
@@ -249,6 +249,7 @@ export function ImportaCsv({
     Papa.parse<Record<string, string>>(file, {
       header: true,
       skipEmptyLines: true,
+      delimiter: ';',
       complete: (esito) => {
         setRighe(elabora(esito.data, mappaContenitori))
       },
