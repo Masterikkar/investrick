@@ -91,8 +91,8 @@ export async function GET(request: Request) {
   }
 
   // --- Snapshot giornaliero di valorizzazione: mercato + liquidità, incluso "Diretto" ---
-  // "valore" NON va scritto esplicitamente: è una colonna GENERATED ALWAYS AS (quantita * prezzo),
-  // calcolata automaticamente da Postgres.
+  // "valore" è colonna GENERATED, non va scritta. "contenitore_chiave" è la colonna generata
+  // usata per l'unicità (NULL normalizzato a un UUID segnaposto), anche lei non va scritta esplicitamente.
   const risultatiSnapshot: { tipo: string; esito: string }[] = []
 
   try {
@@ -116,7 +116,7 @@ export async function GET(request: Request) {
 
       const { error: erroreMercato } = await supabase
         .from('storico_valorizzazioni')
-        .upsert(righeMercato, { onConflict: 'strumento_id,contenitore_id,data', ignoreDuplicates: false })
+        .upsert(righeMercato, { onConflict: 'strumento_id,contenitore_chiave,data', ignoreDuplicates: false })
 
       risultatiSnapshot.push({
         tipo: 'mercato',
@@ -148,7 +148,7 @@ export async function GET(request: Request) {
 
       const { error: erroreLiquidita } = await supabase
         .from('storico_valorizzazioni')
-        .upsert(righeLiquidita, { onConflict: 'strumento_id,contenitore_id,data', ignoreDuplicates: false })
+        .upsert(righeLiquidita, { onConflict: 'strumento_id,contenitore_chiave,data', ignoreDuplicates: false })
 
       risultatiSnapshot.push({
         tipo: 'liquidita',
