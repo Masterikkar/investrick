@@ -4,6 +4,7 @@ import { formatEuro } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { BarreSottocategoria, type SottoTarget } from '@/components/barre-sottocategoria'
+import { BarreSottocategoriaRendimento, type ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
 
 const COLONNE: ColonnaTabella[] = [
   { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
@@ -175,6 +176,27 @@ export default async function PacPage() {
     }
   )
 
+  // --- Contributo al rendimento per singolo strumento, dentro ciascuna categoria ---
+  const contributoStrumentoPerCategoria: Record<string, ContributoStrumento[]> = {}
+  for (const r of righe) {
+    const cat = r.categoria as string
+    const guadagnoCategoria = guadagnoPerCategoria[cat] ?? 0
+    const strumento = strumenti?.find((s) => s.id === r.strumentoId)
+    if (!contributoStrumentoPerCategoria[cat]) contributoStrumentoPerCategoria[cat] = []
+    contributoStrumentoPerCategoria[cat].push({
+      strumentoId: r.strumentoId as string,
+      nome: r.nome as string,
+      ticker: strumento?.ticker ?? null,
+      guadagno: r.rendimentoAssoluto as number,
+      contributoPctCategoria:
+        guadagnoCategoria !== 0 ? ((r.rendimentoAssoluto as number) / guadagnoCategoria) * 100 : null,
+    })
+  }
+  for (const cat of Object.keys(contributoStrumentoPerCategoria)) {
+    if (contributoStrumentoPerCategoria[cat].length <= 1) delete contributoStrumentoPerCategoria[cat]
+    else contributoStrumentoPerCategoria[cat].sort((a, b) => b.guadagno - a.guadagno)
+  }
+
   return (
     <div>
       <div style={{ fontSize: 13, color: '#666' }}>PAC</div>
@@ -271,6 +293,9 @@ export default async function PacPage() {
                         }}
                       />
                     </div>
+                    <BarreSottocategoriaRendimento
+                      items={contributoStrumentoPerCategoria[c.categoria] ?? []}
+                    />
                   </div>
                 )
               })}
