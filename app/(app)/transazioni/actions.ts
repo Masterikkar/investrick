@@ -24,7 +24,6 @@ export async function aggiungiTransazione(formData: FormData) {
 
   if (operazione === 'Costo_contanti') {
     if (strumentoId) {
-      // Costo in contanti richiede strumento vuoto (vincolo DB transazioni_strumento_coerente)
       redirect('/transazioni?errore=1')
     }
     if (!CATEGORIE_VALIDE.includes(categoriaManuale)) {
@@ -71,4 +70,121 @@ export async function aggiungiTransazione(formData: FormData) {
   revalidatePath('/')
   revalidatePath('/transazioni')
   redirect('/transazioni?successo=1')
+}
+
+// --- Import CSV massivo ---
+
+export async function creaAssetPerImport(dati: {
+  categoria: string
+  tipo: string
+  nome: string
+  ticker: string
+  isin: string
+  valuta: string
+  codicePrezzo: string
+  titoloDiStato: boolean
+  percentualeTitoliStato: number | null
+}): Promise<{ id: string } | { errore: string }> {
+  const supabase = await createClient()
+
+  const isin = dati.isin.trim().toUpperCase()
+
+  const { data: esistente } = await supabase
+    .from('strumenti')
+    .select('id')
+    .eq('isin', isin)
+    .maybeSingle()
+
+  if (esistente) {
+    return { id: esistente.id }
+  }
+
+  const { data: nuovo, error } = await supabase
+    .from('strumenti')
+    .insert({
+      categoria: dati.categoria,
+      tipo: dati.tipo,
+      nome: dati.nome.trim(),
+      ticker: dati.ticker.trim() || null,
+      isin,
+      valuta: dati.valuta.trim() || 'EUR',
+      codice_prezzo: dati.codicePrezzo.trim() || null,
+      titolo_di_stato: dati.titoloDiStato,
+      percentuale_titoli_stato: dati.percentualeTitoliStato,
+    })
+    .select('id')
+    .single()
+
+  if (error || !nuovo) {
+    return { errore: error?.message ?? 'Errore sconosciuto durante la creazione' }
+  }
+
+  revalidatePath('/transazioni')
+  return { id: nuovo.id }
+}
+
+export type RigaImport = {
+  rigaOriginale: number
+  data: string
+  strumentoId: string
+  operazione: string
+  quantita: number
+  prezzoUnitario: number
+  commissione: number
+  tassaTrattenuta: number
+  contenitoreId: string | null
+}
+
+export async function importaTransazioniBulk(
+  righe: RigaImport[]
+): Promise<{ inserite: number; errori: { riga: number; messaggio: string }[] }> {
+  const supabase = await createClient()
+
+  if (righe.length === 0) {
+    return { inserite: 0, errori: [] }
+  }
+
+  const strumentoIds = Array.from(new Set(righe.map((r) => r.strumentoId)))
+  const { data: strumentiInfo, error: erroreStrumenti } = await supabase
+    .from('strumenti')
+    .select('id, categoria')
+    .in('id', strumentoIds)
+
+  if (erroreStrumenti || !strumentiInfo) {
+    return {
+      inserite: 0,
+      errori: righe.map((r) => ({ riga: r.rigaOriginale, messaggio: 'Impossibile verificare gli strumenti' })),
+    }
+  }
+
+  const categoriaMap = new Map(strumentiInfo.map((s) => [s.id, s.categoria]))
+
+  let inserite = 0
+  const errori: { riga: number; messaggio: string }[] = []
+
+  for (const r of righe) {
+    const { error } = await supabase.from('transazioni').insert({
+      strumento_id: r.strumentoId,
+      contenitore_id: r.contenitoreId,
+      categoria: categoriaMap.get(r.strumentoId) ?? null,
+      operazione: r.operazione,
+      data: r.data,
+      valuta: 'EUR',
+      quantita: r.quantita,
+      prezzo_unitario: r.prezzoUnitario,
+      commissione: r.commissione,
+      tassa_trattenuta: r.tassaTrattenuta,
+    })
+
+    if (error) {
+      errori.push({ riga: r.rigaOriginale, messaggio: error.message })
+    } else {
+      inserite++
+    }
+  }
+
+  revalidatePath('/')
+  revalidatePath('/transazioni')
+
+  return { inserite, errori }
 }

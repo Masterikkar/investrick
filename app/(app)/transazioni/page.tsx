@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { aggiungiTransazione } from './actions'
+import { ImportaCsv } from './importa-csv'
 
 const OPERAZIONI = [
   { value: 'Acquisto', label: 'Acquisto' },
@@ -24,7 +25,7 @@ export default async function TransazioniPage({
 
   const { data: strumenti } = await supabase
     .from('strumenti')
-    .select('id, nome, ticker, categoria')
+    .select('id, nome, ticker, categoria, isin')
     .order('categoria')
     .order('nome')
 
@@ -33,9 +34,35 @@ export default async function TransazioniPage({
     .select('id, nome')
     .order('nome')
 
+  const { data: tipiRaw } = await supabase
+    .from('tipi_strumento')
+    .select('categoria, tipo')
+    .neq('categoria', 'Liquidita')
+    .order('categoria')
+    .order('tipo')
+
+  const tipiPerCategoria: Record<string, string[]> = {}
+  for (const t of tipiRaw ?? []) {
+    if (!tipiPerCategoria[t.categoria]) tipiPerCategoria[t.categoria] = []
+    tipiPerCategoria[t.categoria].push(t.tipo)
+  }
+
   return (
     <div>
-      <h1>Nuova transazione</h1>
+      <h1>Transazioni</h1>
+
+      <section style={{ marginTop: 16 }}>
+        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Importa da CSV</h2>
+        <ImportaCsv
+          strumenti={(strumenti ?? []).map((s) => ({ id: s.id, isin: s.isin, nome: s.nome }))}
+          contenitori={contenitori ?? []}
+          tipiPerCategoria={tipiPerCategoria}
+        />
+      </section>
+
+      <hr style={{ margin: '32px 0' }} />
+
+      <h2 style={{ fontSize: 18, marginBottom: 12 }}>Nuova transazione manuale</h2>
 
       {params.successo === '1' && <p style={{ color: 'green' }}>Transazione salvata.</p>}
       {params.errore === '1' && <p style={{ color: 'red' }}>Qualcosa è andato storto, riprova.</p>}
