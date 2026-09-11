@@ -80,8 +80,8 @@ export function GraficoStorico({ punti }: { punti: PuntoStorico[] }) {
             />
             <YAxis tickFormatter={(v) => formatEuroCompatto.format(v)} fontSize={12} width={70} />
             <Tooltip
-              formatter={(v: number) => [formatEuroCompleto.format(v), 'Valore']}
-              labelFormatter={(d) => new Date(d).toLocaleDateString('it-IT')}
+              formatter={(value) => [formatEuroCompleto.format(Number(value)), 'Valore']}
+              labelFormatter={(label) => (label ? new Date(String(label)).toLocaleDateString('it-IT') : '')}
             />
             <Line type="monotone" dataKey="valore" stroke="#111" strokeWidth={2} dot={false} />
           </LineChart>
