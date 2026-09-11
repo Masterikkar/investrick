@@ -91,14 +91,22 @@ export async function GET(request: Request) {
   }
 
   // --- Snapshot giornaliero di valorizzazione: mercato + liquidità, incluso "Diretto" ---
-  // "valore" è colonna GENERATED, non va scritta. "contenitore_chiave" è la colonna generata
-  // usata per l'unicità (NULL normalizzato a un UUID segnaposto), anche lei non va scritta esplicitamente.
+  // "valore" è colonna GENERATED, non va scritta. "contenitore_chiave" è colonna generata per
+  // l'unicità, non va scritta. "capitale_investito" alimenta il grafico di rendimento nel tempo.
   const risultatiSnapshot: { tipo: string; esito: string }[] = []
 
   try {
-    const { data: posizioniMercato } = await supabase
-      .from('v_valore_posizioni_attuale')
-      .select('strumento_id, contenitore_id, quantita_corrente, prezzo_attuale')
+    const [{ data: posizioniMercato }, { data: capitaleInvestito }] = await Promise.all([
+      supabase
+        .from('v_valore_posizioni_attuale')
+        .select('strumento_id, contenitore_id, quantita_corrente, prezzo_attuale'),
+      supabase.from('v_capitale_investito').select('strumento_id, contenitore_id, capitale_investito'),
+    ])
+
+    const capitaleMap = new Map<string, number>()
+    for (const c of capitaleInvestito ?? []) {
+      capitaleMap.set(`${c.strumento_id}|${c.contenitore_id ?? ''}`, Number(c.capitale_investito))
+    }
 
     const posizioniValide = (posizioniMercato ?? []).filter(
       (p) => p.strumento_id !== null && p.quantita_corrente !== null && p.prezzo_attuale !== null
@@ -112,6 +120,7 @@ export async function GET(request: Request) {
         data: oggi,
         quantita: p.quantita_corrente as number,
         prezzo: p.prezzo_attuale as number,
+        capitale_investito: capitaleMap.get(`${p.strumento_id}|${p.contenitore_id ?? ''}`) ?? null,
       }))
 
       const { error: erroreMercato } = await supabase

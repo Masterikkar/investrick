@@ -227,6 +227,7 @@ export type Database = {
       }
       storico_valorizzazioni: {
         Row: {
+          capitale_investito: number | null
           contenitore_chiave: string | null
           contenitore_id: string | null
           created_at: string
@@ -238,6 +239,7 @@ export type Database = {
           valore: number | null
         }
         Insert: {
+          capitale_investito?: number | null
           contenitore_chiave?: string | null
           contenitore_id?: string | null
           created_at?: string
@@ -249,6 +251,7 @@ export type Database = {
           valore?: number | null
         }
         Update: {
+          capitale_investito?: number | null
           contenitore_chiave?: string | null
           contenitore_id?: string | null
           created_at?: string
@@ -1250,6 +1253,14 @@ export type Database = {
           quantita_residua: number
           tassa_residua: number
         }[]
+      }
+      capitale_investito_a_data: {
+        Args: {
+          p_contenitore_id: string
+          p_data_limite: string
+          p_strumento_id: string
+        }
+        Returns: number
       }
       ricostruisci_storico_valorizzazioni: {
         Args: never

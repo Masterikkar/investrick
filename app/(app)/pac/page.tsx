@@ -36,17 +36,31 @@ export default async function PacPage() {
   const { data: storicoRaw } = contenitoreId
     ? await supabase
         .from('storico_valorizzazioni')
-        .select('data, valore')
+        .select('data, valore, capitale_investito')
         .eq('contenitore_id', contenitoreId)
         .order('data', { ascending: true })
     : { data: null }
 
-  const storicoMap = new Map<string, number>()
+  const storicoValoreMap = new Map<string, number>()
+  const storicoCapitaleMap = new Map<string, number>()
   for (const r of storicoRaw ?? []) {
-    storicoMap.set(r.data, (storicoMap.get(r.data) ?? 0) + Number(r.valore))
+    storicoValoreMap.set(r.data, (storicoValoreMap.get(r.data) ?? 0) + Number(r.valore))
+    if (r.capitale_investito != null) {
+      storicoCapitaleMap.set(r.data, (storicoCapitaleMap.get(r.data) ?? 0) + Number(r.capitale_investito))
+    }
   }
-  const puntiStorico: PuntoStorico[] = Array.from(storicoMap.entries())
+
+  const puntiStorico: PuntoStorico[] = Array.from(storicoValoreMap.entries())
     .map(([data, valore]) => ({ data, valore }))
+    .sort((a, b) => a.data.localeCompare(b.data))
+
+  const puntiRendimento: PuntoStorico[] = Array.from(storicoValoreMap.entries())
+    .map(([data, valore]) => {
+      const capitale = storicoCapitaleMap.get(data)
+      if (!capitale || capitale <= 0) return null
+      return { data, valore: ((valore - capitale) / capitale) * 100 }
+    })
+    .filter((p): p is PuntoStorico => p !== null)
     .sort((a, b) => a.data.localeCompare(b.data))
 
   const { data: posizioni } = contenitoreId
@@ -203,6 +217,11 @@ export default async function PacPage() {
 
       <section>
         <GraficoStorico punti={puntiStorico} valoreAttuale={valoreTotalePac} />
+      </section>
+
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Rendimento nel tempo</h2>
+        <GraficoStorico punti={puntiRendimento} formato="percent" />
       </section>
 
       <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
