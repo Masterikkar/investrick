@@ -72,7 +72,7 @@ export async function aggiungiTransazione(formData: FormData) {
   redirect('/transazioni?successo=1')
 }
 
-// --- Import CSV massivo ---
+// --- Import Excel massivo ---
 
 export async function creaAssetPerImport(dati: {
   categoria: string
@@ -87,16 +87,19 @@ export async function creaAssetPerImport(dati: {
 }): Promise<{ id: string } | { errore: string }> {
   const supabase = await createClient()
 
-  const isin = dati.isin.trim().toUpperCase()
+  const isinPulito = dati.isin.trim().toUpperCase()
+  const isin = isinPulito || null
 
-  const { data: esistente } = await supabase
-    .from('strumenti')
-    .select('id')
-    .eq('isin', isin)
-    .maybeSingle()
+  if (isin) {
+    const { data: esistente } = await supabase
+      .from('strumenti')
+      .select('id')
+      .eq('isin', isin)
+      .maybeSingle()
 
-  if (esistente) {
-    return { id: esistente.id }
+    if (esistente) {
+      return { id: esistente.id }
+    }
   }
 
   const { data: nuovo, error } = await supabase

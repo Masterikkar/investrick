@@ -54,7 +54,7 @@ export default async function TransazioniPage({
       <section style={{ marginTop: 16 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12 }}>Importa da Excel</h2>
         <ImportaExcel
-          strumenti={(strumenti ?? []).map((s) => ({ id: s.id, isin: s.isin, nome: s.nome }))}
+          strumenti={(strumenti ?? []).map((s) => ({ id: s.id, isin: s.isin, ticker: s.ticker, nome: s.nome }))}
           contenitori={contenitori ?? []}
           tipiPerCategoria={tipiPerCategoria}
         />

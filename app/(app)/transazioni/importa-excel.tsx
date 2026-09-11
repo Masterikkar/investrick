@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import * as XLSX from 'xlsx'
 import { creaAssetPerImport, importaTransazioniBulk, type RigaImport } from './actions'
 
-type StrumentoBase = { id: string; isin: string | null; nome: string }
+type StrumentoBase = { id: string; isin: string | null; ticker: string | null; nome: string }
 type ContenitoreBase = { id: string; nome: string }
 
 const ETICHETTE_OPERAZIONE: Record<string, string> = {
@@ -30,24 +30,19 @@ function parseNumeroCella(v: unknown, permettiVuoto: boolean): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-// Excel conta i giorni a partire dal 30/12/1899 (convenzione standard, incluso il famoso
-// "bug" dell'anno bisestile 1900 — irrilevante per date recenti come le nostre).
 const EPOCA_EXCEL_UTC = Date.UTC(1899, 11, 30)
 
 function parseDataCella(v: unknown): string | null {
-  // Caso normale: la cella è formattata come data in Excel -> arriva già come oggetto Date.
   if (v instanceof Date) {
     const anno = v.getUTCFullYear()
     const mese = v.getUTCMonth() + 1
     const giorno = v.getUTCDate()
     return `${anno}-${String(mese).padStart(2, '0')}-${String(giorno).padStart(2, '0')}`
   }
-  // Caso raro: numero seriale Excel non convertito automaticamente.
   if (typeof v === 'number') {
     const d = new Date(EPOCA_EXCEL_UTC + v * 86400000)
     return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
   }
-  // Caso testo: "02/04/2026" scritto/lasciato come stringa.
   const s = String(v ?? '').trim()
   const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
   if (!m) return null
@@ -59,11 +54,13 @@ function parseDataCella(v: unknown): string | null {
   return `${anno}-${String(mese).padStart(2, '0')}-${String(giorno).padStart(2, '0')}`
 }
 
+type Identificatore = { tipo: 'isin' | 'ticker'; valore: string }
+
 type RigaParsata = {
   numeroRiga: number
   errore: string | null
   data: string
-  isin: string
+  identificatore: Identificatore | null
   operazioneDb: string
   quantita: number
   prezzoUnitario: number
@@ -76,8 +73,15 @@ function elabora(righeExcel: Record<string, unknown>[], mappaContenitori: Map<st
   return righeExcel.map((riga, idx) => {
     const numeroRiga = idx + 2
     const isinRaw = testoCella(riga['ISIN']).toUpperCase()
+    const tickerRaw = testoCella(riga['Ticker']).toUpperCase()
     const operazioneRaw = testoCella(riga['Operazione'])
     const contenitoreRaw = testoCella(riga['Contenitore'])
+
+    const identificatore: Identificatore | null = isinRaw
+      ? { tipo: 'isin', valore: isinRaw }
+      : tickerRaw
+      ? { tipo: 'ticker', valore: tickerRaw }
+      : null
 
     const data = parseDataCella(riga['Data'])
     const operazioneDb = ETICHETTE_OPERAZIONE[operazioneRaw]
@@ -97,7 +101,7 @@ function elabora(righeExcel: Record<string, unknown>[], mappaContenitori: Map<st
     }
 
     let errore: string | null = null
-    if (!isinRaw) errore = 'ISIN mancante'
+    if (!identificatore) errore = 'ISIN o Ticker mancante (serve almeno uno dei due)'
     else if (!data) errore = `data non valida: "${testoCella(riga['Data'])}"`
     else if (!operazioneDb) errore = `operazione non riconosciuta: "${operazioneRaw}"`
     else if (quantita === null || quantita <= 0) errore = `quantità non valida: "${testoCella(riga['Quantità'])}"`
@@ -110,7 +114,7 @@ function elabora(righeExcel: Record<string, unknown>[], mappaContenitori: Map<st
       numeroRiga,
       errore,
       data: data ?? '',
-      isin: isinRaw,
+      identificatore,
       operazioneDb: operazioneDb ?? '',
       quantita: quantita ?? 0,
       prezzoUnitario: prezzoUnitario ?? 0,
@@ -121,20 +125,20 @@ function elabora(righeExcel: Record<string, unknown>[], mappaContenitori: Map<st
   })
 }
 
-function RisolviIsin({
-  isin,
+function RisolviStrumento({
+  identificatore,
   tipiPerCategoria,
   onRisolto,
 }: {
-  isin: string
+  identificatore: Identificatore
   tipiPerCategoria: Record<string, string[]>
-  onRisolto: (isin: string, strumentoId: string) => void
+  onRisolto: (identificatore: Identificatore, strumentoId: string) => void
 }) {
   const categorie = Object.keys(tipiPerCategoria)
   const [categoria, setCategoria] = useState(categorie[0] ?? '')
   const [tipo, setTipo] = useState(tipiPerCategoria[categorie[0]]?.[0] ?? '')
   const [nome, setNome] = useState('')
-  const [ticker, setTicker] = useState('')
+  const [ticker, setTicker] = useState(identificatore.tipo === 'ticker' ? identificatore.valore : '')
   const [valuta, setValuta] = useState('EUR')
   const [codicePrezzo, setCodicePrezzo] = useState('')
   const [titoloDiStato, setTitoloDiStato] = useState(false)
@@ -156,7 +160,7 @@ function RisolviIsin({
       tipo,
       nome,
       ticker,
-      isin,
+      isin: identificatore.tipo === 'isin' ? identificatore.valore : '',
       valuta,
       codicePrezzo,
       titoloDiStato,
@@ -167,12 +171,16 @@ function RisolviIsin({
       setErrore(risultato.errore)
       return
     }
-    onRisolto(isin, risultato.id)
+    onRisolto(identificatore, risultato.id)
   }
 
   return (
     <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, marginTop: 12 }}>
-      <div style={{ fontWeight: 600, marginBottom: 8 }}>ISIN sconosciuto: {isin}</div>
+      <div style={{ fontWeight: 600, marginBottom: 8 }}>
+        {identificatore.tipo === 'isin'
+          ? `ISIN sconosciuto: ${identificatore.valore}`
+          : `Ticker sconosciuto (nessun ISIN nel file): ${identificatore.valore}`}
+      </div>
       {errore && <p style={{ color: 'red', fontSize: 13 }}>{errore}</p>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 380 }}>
         <label>
@@ -255,6 +263,9 @@ export function ImportaExcel({
   const [mappaIsin, setMappaIsin] = useState<Map<string, string>>(
     () => new Map(strumenti.filter((s): s is StrumentoBase & { isin: string } => !!s.isin).map((s) => [s.isin.toUpperCase(), s.id]))
   )
+  const [mappaTicker, setMappaTicker] = useState<Map<string, string>>(
+    () => new Map(strumenti.filter((s): s is StrumentoBase & { ticker: string } => !!s.ticker).map((s) => [s.ticker.toUpperCase(), s.id]))
+  )
   const [risultato, setRisultato] = useState<{ inserite: number; errori: { riga: number; messaggio: string }[] } | null>(null)
   const [importando, setImportando] = useState(false)
   const [erroreFile, setErroreFile] = useState<string | null>(null)
@@ -285,21 +296,32 @@ export function ImportaExcel({
     reader.readAsArrayBuffer(file)
   }
 
+  function trovaStrumentoId(identificatore: Identificatore): string | undefined {
+    return identificatore.tipo === 'isin' ? mappaIsin.get(identificatore.valore) : mappaTicker.get(identificatore.valore)
+  }
+
   const righeValideFormato = (righe ?? []).filter((r) => !r.errore)
   const righeConErrore = (righe ?? []).filter((r) => r.errore)
 
-  const isinDaRisolvere = useMemo(() => {
-    const isins = new Set<string>()
+  const identificatoriDaRisolvere = useMemo(() => {
+    const mappa = new Map<string, Identificatore>()
     for (const r of righeValideFormato) {
-      if (!mappaIsin.has(r.isin)) isins.add(r.isin)
+      if (r.identificatore && trovaStrumentoId(r.identificatore) === undefined) {
+        mappa.set(`${r.identificatore.tipo}:${r.identificatore.valore}`, r.identificatore)
+      }
     }
-    return Array.from(isins)
-  }, [righeValideFormato, mappaIsin])
+    return Array.from(mappa.values())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [righeValideFormato, mappaIsin, mappaTicker])
 
-  const righePronte = righeValideFormato.filter((r) => mappaIsin.has(r.isin))
+  const righePronte = righeValideFormato.filter((r) => r.identificatore && trovaStrumentoId(r.identificatore) !== undefined)
 
-  function handleIsinRisolto(isin: string, strumentoId: string) {
-    setMappaIsin((prev) => new Map(prev).set(isin, strumentoId))
+  function handleRisolto(identificatore: Identificatore, strumentoId: string) {
+    if (identificatore.tipo === 'isin') {
+      setMappaIsin((prev) => new Map(prev).set(identificatore.valore, strumentoId))
+    } else {
+      setMappaTicker((prev) => new Map(prev).set(identificatore.valore, strumentoId))
+    }
   }
 
   async function handleImporta() {
@@ -308,7 +330,7 @@ export function ImportaExcel({
     const daInviare: RigaImport[] = righePronte.map((r) => ({
       rigaOriginale: r.numeroRiga,
       data: r.data,
-      strumentoId: mappaIsin.get(r.isin)!,
+      strumentoId: trovaStrumentoId(r.identificatore!)!,
       operazione: r.operazioneDb,
       quantita: r.quantita,
       prezzoUnitario: r.prezzoUnitario,
@@ -350,7 +372,8 @@ export function ImportaExcel({
       <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 13, flexWrap: 'wrap', alignItems: 'center' }}>
         <a href="/template-transazioni.xlsx" download>Scarica template vuoto</a>
         <span style={{ color: '#666' }}>
-          "Costo (in contanti)" va inserito manualmente qui sotto — non è supportato dal file Excel.
+          "Costo (in contanti)" va inserito manualmente qui sotto — non è supportato dal file Excel. Per le crypto,
+          lascia ISIN vuoto e usa Ticker.
         </span>
       </div>
 
@@ -385,21 +408,26 @@ export function ImportaExcel({
             </ul>
           )}
 
-          {isinDaRisolvere.length > 0 && (
+          {identificatoriDaRisolvere.length > 0 && (
             <div style={{ marginTop: 16 }}>
               <p style={{ color: '#b45309' }}>
-                {isinDaRisolvere.length} ISIN non trovati nel database — crea l'asset per ciascuno prima di poter importare:
+                {identificatoriDaRisolvere.length} strumenti non trovati nel database — crea l'asset per ciascuno prima di poter importare:
               </p>
-              {isinDaRisolvere.map((isin) => (
-                <RisolviIsin key={isin} isin={isin} tipiPerCategoria={tipiPerCategoria} onRisolto={handleIsinRisolto} />
+              {identificatoriDaRisolvere.map((id) => (
+                <RisolviStrumento
+                  key={`${id.tipo}:${id.valore}`}
+                  identificatore={id}
+                  tipiPerCategoria={tipiPerCategoria}
+                  onRisolto={handleRisolto}
+                />
               ))}
             </div>
           )}
 
-          {isinDaRisolvere.length === 0 && (
+          {identificatoriDaRisolvere.length === 0 && (
             <div style={{ marginTop: 16 }}>
               <p style={{ color: 'green' }}>
-                Tutti gli ISIN sono risolti. Pronte da importare: {righePronte.length} transazioni.
+                Tutti gli strumenti sono risolti. Pronte da importare: {righePronte.length} transazioni.
               </p>
               <button type="button" onClick={handleImporta} disabled={importando || righePronte.length === 0}>
                 {importando ? 'Importazione...' : `Importa ${righePronte.length} transazioni`}
