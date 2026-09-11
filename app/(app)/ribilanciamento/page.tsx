@@ -45,6 +45,11 @@ type LottoRaw = {
   commissione_residua: number
 }
 
+type SubTargetRaw = {
+  strumento_id: string
+  target_percentuale_categoria: number
+}
+
 export default async function RibilanciamentoPage({
   searchParams,
 }: {
@@ -66,7 +71,7 @@ export default async function RibilanciamentoPage({
   const { data: impostazioni } = await supabase
     .from('impostazioni_utente')
     .select('soglia_ribilanciamento_pp')
-    .single()
+    .maybeSingle()
 
   const soglia = impostazioni?.soglia_ribilanciamento_pp ?? 3
 
@@ -88,7 +93,11 @@ export default async function RibilanciamentoPage({
   let allocazioneAcquisto: RigaAllocazione[] = []
   let venditeProposte: EsitoVenditaStrumento[] = []
   let poolTotale = 0
-  const allocazioneStrumenti: { categoria: string; strumenti: { nome: string; ticker: string | null; importo: number }[] }[] = []
+  const allocazioneStrumenti: {
+    categoria: string
+    usaTarget: boolean
+    strumenti: { nome: string; ticker: string | null; importo: number }[]
+  }[] = []
 
   if (contenitoreSelezionato) {
     const comparti = (scostamenti ?? []).filter((s) => s.contenitore_id === contenitoreSelezionato)
@@ -103,7 +112,6 @@ export default async function RibilanciamentoPage({
         targetPct: c.target_percentuale / 100,
       }))
 
-      // Budget necessario a bilanciare solo comprando: calcolato sempre, non serve alcun input.
       const risultatoPuro = calcolaRibilanciamentoConVersamento(
         compartiInput,
         valoreTotaleAttuale,
@@ -117,7 +125,6 @@ export default async function RibilanciamentoPage({
         allocazioneAcquisto = distribuisciAcquisto(compartiInput, valoreTotaleAttuale, versamento)
         poolTotale = versamento
       } else {
-        // --- Scenario B: vendo dai comparti sovrappesati per coprire la differenza ---
         const comportiSovrappesati = comparti.filter(
           (c) => c.valore_categoria > (c.target_percentuale / 100) * valoreTotaleAttuale
         )
@@ -157,8 +164,6 @@ export default async function RibilanciamentoPage({
             .order('data_acquisto', { ascending: true })
             .returns<LottoRaw[]>()
 
-          // Nel PAC/Diretto una vendita simulata è imponibile normalmente.
-          // In una Polizza il ribilanciamento avviene sempre via switch interno -> mai imponibile.
           const imponibile = contenitoreTipo !== 'Polizza'
 
           for (const c of comportiSovrappesati) {
@@ -224,7 +229,9 @@ export default async function RibilanciamentoPage({
         allocazioneAcquisto = distribuisciAcquisto(compartiPostVendita, totaleAttualePostVendita, poolTotale)
       }
 
-      // Drill-down a livello di strumento per l'acquisto finale (comune a entrambi gli scenari)
+      // Drill-down a livello di strumento: usa i sotto-target per strumento se disponibili e
+      // completi per tutti gli strumenti posseduti in quella categoria (somma 100), altrimenti
+      // torna ai pesi attuali — stesso comportamento sia nello scenario A sia dopo una vendita.
       for (const a of allocazioneAcquisto.filter((r) => r.importo > 0)) {
         const { data: posizioni } = await supabase
           .from('v_valore_posizioni_attuale')
@@ -242,19 +249,55 @@ export default async function RibilanciamentoPage({
             .select('id, nome, ticker')
             .in('id', righe.map((r) => r.strumento_id))
 
+          const { data: subTargetRaw } = await supabase
+            .from('target_allocazioni_strumento')
+            .select('strumento_id, target_percentuale_categoria')
+            .eq('contenitore_id', contenitoreSelezionato)
+            .in('strumento_id', righe.map((r) => r.strumento_id))
+            .returns<SubTargetRaw[]>()
+
+          const subTargetMap = new Map(
+            (subTargetRaw ?? []).map((t) => [t.strumento_id, Number(t.target_percentuale_categoria)])
+          )
+          const sommaSubTarget = righe.reduce((sum, r) => sum + (subTargetMap.get(r.strumento_id) ?? 0), 0)
+          const subTargetValidi =
+            righe.length > 1 &&
+            righe.every((r) => subTargetMap.has(r.strumento_id)) &&
+            Math.abs(sommaSubTarget - 100) < 0.01
+
+          let importiPerStrumento: Map<string, number>
+
+          if (subTargetValidi) {
+            const compartiStrumento: CompartoTarget[] = righe.map((r) => ({
+              categoria: r.strumento_id, // riuso il campo come chiave strumento
+              valoreAttuale: Number(r.valore_attuale),
+              targetPct: (subTargetMap.get(r.strumento_id) ?? 0) / 100,
+            }))
+            const allocazione = distribuisciAcquisto(compartiStrumento, totaleCategoria, a.importo)
+            importiPerStrumento = new Map(allocazione.map((al) => [al.categoria, al.importo]))
+          } else {
+            importiPerStrumento = new Map(
+              righe.map((r) => [
+                r.strumento_id,
+                Math.round((Number(r.valore_attuale) / totaleCategoria) * a.importo * 100) / 100,
+              ])
+            )
+          }
+
           allocazioneStrumenti.push({
             categoria: a.categoria,
+            usaTarget: subTargetValidi,
             strumenti: righe.map((r) => {
               const info = strumentiInfo?.find((si) => si.id === r.strumento_id)
               return {
                 nome: info?.nome ?? '—',
                 ticker: info?.ticker ?? null,
-                importo: Math.round((Number(r.valore_attuale) / totaleCategoria) * a.importo * 100) / 100,
+                importo: importiPerStrumento.get(r.strumento_id) ?? 0,
               }
             }),
           })
         } else {
-          allocazioneStrumenti.push({ categoria: a.categoria, strumenti: [] })
+          allocazioneStrumenti.push({ categoria: a.categoria, usaTarget: false, strumenti: [] })
         }
       }
     }
@@ -417,9 +460,14 @@ export default async function RibilanciamentoPage({
 
               {allocazioneStrumenti.map((c) => (
                 <div key={c.categoria} style={{ marginTop: 16 }}>
-                  <strong>{c.categoria}</strong>
+                  <strong>{c.categoria}</strong>{' '}
+                  <span style={{ fontSize: 12, color: '#666' }}>
+                    ({c.usaTarget ? 'secondo target per strumento' : 'secondo pesi attuali — nessun target per strumento impostato'})
+                  </span>
                   {c.strumenti.length === 0 ? (
-                    <p style={{ color: '#b45309' }}>Nessuno strumento posseduto qui: scegli manualmente cosa comprare.</p>
+                    <p style={{ color: '#b45309' }}>
+                      Nessuno strumento posseduto qui: scegli manualmente cosa comprare.
+                    </p>
                   ) : (
                     <ul>
                       {c.strumenti.map((s) => (
