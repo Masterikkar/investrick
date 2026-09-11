@@ -17,26 +17,27 @@ const PERIODI: { key: Periodo; label: string }[] = [
   { key: 'SEMPRE', label: 'Da sempre' },
 ]
 
+function dataMinimaTeorica(periodo: Periodo, oggi: Date): Date | null {
+  if (periodo === 'YTD') return new Date(oggi.getFullYear(), 0, 1)
+  if (periodo === '1S' || periodo === '1M' || periodo === '1A') {
+    const giorni = { '1S': 7, '1M': 30, '1A': 365 }[periodo]
+    const d = new Date(oggi)
+    d.setDate(d.getDate() - giorni)
+    return d
+  }
+  return null
+}
+
 function filtraPerPeriodo(punti: PuntoStorico[], periodo: Periodo): PuntoStorico[] {
   if (periodo === 'SEMPRE') return punti
-
   if (periodo === '1G') {
     // Un solo aggiornamento al giorno: "1G" confronta gli ultimi due punti disponibili
-    // (oggi vs il giorno prima), non un vero arco di 24 ore — che con questa cadenza
-    // non avrebbe mai abbastanza dati.
+    // (oggi vs il giorno prima), non un vero arco di 24 ore.
     return punti.slice(-2)
   }
-
-  const oggi = new Date()
-  let dataMinima: Date
-  if (periodo === 'YTD') {
-    dataMinima = new Date(oggi.getFullYear(), 0, 1)
-  } else {
-    const giorni = { '1S': 7, '1M': 30, '1A': 365 }[periodo] ?? 0
-    dataMinima = new Date(oggi)
-    dataMinima.setDate(dataMinima.getDate() - giorni)
-  }
-  return punti.filter((p) => new Date(p.data) >= dataMinima)
+  const soglia = dataMinimaTeorica(periodo, new Date())
+  if (!soglia) return punti
+  return punti.filter((p) => new Date(p.data) >= soglia)
 }
 
 const formatEuroCompatto = new Intl.NumberFormat('it-IT', {
@@ -60,9 +61,6 @@ export function GraficoStorico({
 }: {
   punti: PuntoStorico[]
   formato?: 'euro' | 'percent'
-  /** Il totale in € mostrato in grande. Se formato è 'percent', accanto compare anche un
-   *  badge: per "Da sempre" è il rendimento totale attuale (identico alla card "Rendimento"
-   *  sotto); per gli altri periodi è la variazione del rendimento durante quella finestra. */
   valoreAttuale?: number
 }) {
   const [periodo, setPeriodo] = useState<Periodo>('1M')
@@ -76,6 +74,20 @@ export function GraficoStorico({
     if (datiFiltrati.length < 2) return null
     return datiFiltrati[datiFiltrati.length - 1].valore - datiFiltrati[0].valore
   }, [formato, periodo, punti, datiFiltrati])
+
+  // Se il periodo scelto (es. "1A", "YTD") teoricamente inizierebbe prima del primo dato
+  // storico che abbiamo davvero, lo segnaliamo — invece di far credere che il numero copra
+  // un arco più lungo di quello reale.
+  const notaDatiParziali = useMemo(() => {
+    if (formato !== 'percent' || punti.length === 0) return null
+    const soglia = dataMinimaTeorica(periodo, new Date())
+    if (!soglia) return null
+    const primoDatoReale = new Date(punti[0].data)
+    if (primoDatoReale > soglia) {
+      return `Dati disponibili solo da ${primoDatoReale.toLocaleDateString('it-IT')} — il periodo mostrato è più corto di "${periodo}".`
+    }
+    return null
+  }, [formato, periodo, punti])
 
   const formatAsse = formato === 'percent' ? formatPercentAsse : (v: number) => formatEuroCompatto.format(v)
   const formatTooltip =
@@ -102,7 +114,7 @@ export function GraficoStorico({
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
         {PERIODI.map((p) => (
           <button
             key={p.key}
@@ -122,10 +134,14 @@ export function GraficoStorico({
         ))}
       </div>
 
+      {notaDatiParziali && (
+        <p style={{ fontSize: 12, color: '#b45309', margin: '4px 0 8px' }}>{notaDatiParziali}</p>
+      )}
+
       {punti.length === 0 ? (
-        <p style={{ color: '#666' }}>Nessuno storico disponibile ancora.</p>
+        <p style={{ color: '#666', marginTop: 8 }}>Nessuno storico disponibile ancora.</p>
       ) : datiFiltrati.length < 2 ? (
-        <p style={{ color: '#666' }}>Non abbastanza dati per questo periodo.</p>
+        <p style={{ color: '#666', marginTop: 8 }}>Non abbastanza dati per questo periodo.</p>
       ) : (
         <ResponsiveContainer width="100%" height={260}>
           <LineChart data={datiFiltrati}>
