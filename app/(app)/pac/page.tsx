@@ -1,6 +1,20 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro } from '@/lib/format'
+import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
+
+const COLONNE: ColonnaTabella[] = [
+  { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
+  { key: 'tipo', label: 'Tipo', kind: 'text' },
+  { key: 'categoria', label: 'Categoria', kind: 'text' },
+  { key: 'rendimentoPct', label: 'Rendimento', kind: 'percent-signed' },
+  { key: 'rendimentoAssoluto', label: 'Rendimento (€)', kind: 'euro-signed' },
+  { key: 'valore', label: 'Valore', kind: 'euro' },
+  { key: 'peso', label: 'Peso', kind: 'percent' },
+  { key: 'nav', label: 'NAV', kind: 'euro' },
+  { key: 'prezzoMedioUnitario', label: 'Prezzo medio', kind: 'euro' },
+  { key: 'costo', label: 'Costo', kind: 'euro' },
+]
 
 export default async function PacPage() {
   const supabase = await createClient()
@@ -61,11 +75,12 @@ export default async function PacPage() {
         ORDINE_CATEGORIE_PAC.indexOf(a.categoria ?? '') - ORDINE_CATEGORIE_PAC.indexOf(b.categoria ?? '')
     )
 
-  const righe = (posizioni ?? [])
+  const righe: RigaTabella[] = (posizioni ?? [])
     .map((p) => {
       const strumento = strumenti?.find((s) => s.id === p.strumento_id)
       const costo = costi?.find((c) => c.strumento_id === p.strumento_id)
       return {
+        key: p.strumento_id ?? '—',
         strumentoId: p.strumento_id,
         nome: strumento?.nome ?? '—',
         tipo: strumento?.tipo ?? '—',
@@ -80,11 +95,11 @@ export default async function PacPage() {
         costo: costo?.costo_totale ?? 0,
       }
     })
-    .sort((a, b) => b.valore - a.valore)
+    .sort((a, b) => (b.valore as number) - (a.valore as number))
 
-  const costoTotalePac = righe.reduce((acc, r) => acc + r.costo, 0)
-  const valoreTotalePosizioni = righe.reduce((acc, r) => acc + r.valore, 0)
-  const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + r.capitaleInvestito, 0)
+  const costoTotalePac = righe.reduce((acc, r) => acc + (r.costo as number), 0)
+  const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
+  const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
   const plusMinusNonRealizzata = valoreTotalePosizioni - capitaleInvestitoTotale
 
   return (
@@ -96,7 +111,14 @@ export default async function PacPage() {
       </p>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Composizione vs target</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <h2 style={{ fontSize: 18, margin: 0 }}>Composizione vs target</h2>
+          {contenitoreId && (
+            <Link href={`/target/${contenitoreId}`} style={{ fontSize: 13 }}>
+              Modifica target →
+            </Link>
+          )}
+        </div>
         {!contenitoreInfo?.target_attivo ? (
           <p style={{ color: '#666' }}>Target disattivato per questo contenitore.</p>
         ) : composizione.length === 0 ? (
@@ -157,62 +179,7 @@ export default async function PacPage() {
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12 }}>Strumenti</h2>
-        {righe.length === 0 ? (
-          <p style={{ color: '#666' }}>Nessuno strumento in portafoglio.</p>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'left', borderBottom: '1px solid #ddd' }}>
-                <th style={{ padding: '8px 12px' }}>Strumento</th>
-                <th style={{ padding: '8px 12px' }}>Tipo</th>
-                <th style={{ padding: '8px 12px' }}>Categoria</th>
-                <th style={{ padding: '8px 12px' }}>Rendimento</th>
-                <th style={{ padding: '8px 12px' }}>Rendimento (€)</th>
-                <th style={{ padding: '8px 12px' }}>Valore</th>
-                <th style={{ padding: '8px 12px' }}>Peso</th>
-                <th style={{ padding: '8px 12px' }}>NAV</th>
-                <th style={{ padding: '8px 12px' }}>Prezzo medio</th>
-                <th style={{ padding: '8px 12px' }}>Costo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {righe.map((r) => (
-                <tr key={r.strumentoId} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '8px 12px' }}>
-                    <Link href={`/asset/${r.strumentoId}`} style={{ color: 'inherit', textDecoration: 'underline' }}>
-                      {r.nome}
-                    </Link>
-                  </td>
-                  <td style={{ padding: '8px 12px' }}>{r.tipo}</td>
-                  <td style={{ padding: '8px 12px' }}>{r.categoria}</td>
-                  <td
-                    style={{
-                      padding: '8px 12px',
-                      color: r.rendimentoPct >= 0 ? '#0a7d2c' : '#c0392b',
-                    }}
-                  >
-                    {r.rendimentoPct >= 0 ? '+' : ''}
-                    {r.rendimentoPct.toFixed(2)}%
-                  </td>
-                  <td
-                    style={{
-                      padding: '8px 12px',
-                      color: r.rendimentoAssoluto >= 0 ? '#0a7d2c' : '#c0392b',
-                    }}
-                  >
-                    {r.rendimentoAssoluto >= 0 ? '+' : ''}
-                    {formatEuro(r.rendimentoAssoluto)}
-                  </td>
-                  <td style={{ padding: '8px 12px' }}>{formatEuro(r.valore)}</td>
-                  <td style={{ padding: '8px 12px' }}>{r.peso.toFixed(1)}%</td>
-                  <td style={{ padding: '8px 12px' }}>{formatEuro(r.nav)}</td>
-                  <td style={{ padding: '8px 12px' }}>{formatEuro(r.prezzoMedioUnitario)}</td>
-                  <td style={{ padding: '8px 12px' }}>{formatEuro(r.costo)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <TabellaOrdinabile colonne={COLONNE} righe={righe} />
       </section>
 
       <section style={{ marginTop: 32, display: 'flex', gap: 16, flexWrap: 'wrap' }}>

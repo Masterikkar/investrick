@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro } from '@/lib/format'
 
@@ -182,6 +183,9 @@ export default async function PolizzePage() {
                   Plus/minus: {r.plusMinus >= 0 ? '+' : ''}
                   {formatEuro(r.plusMinus)}
                 </div>
+                <Link href={`/target/${r.id}`} style={{ fontSize: 13, display: 'inline-block', marginTop: 8 }}>
+                  Modifica target →
+                </Link>
               </div>
             ))}
           </div>

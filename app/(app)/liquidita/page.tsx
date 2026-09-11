@@ -1,5 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro } from '@/lib/format'
+import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
+
+const COLONNE: ColonnaTabella[] = [
+  { key: 'nome', label: 'Strumento', kind: 'text' },
+  { key: 'tipo', label: 'Tipo', kind: 'text' },
+  { key: 'provider', label: 'Provider', kind: 'text' },
+  { key: 'valore', label: 'Valore', kind: 'euro' },
+  { key: 'tasso', label: 'Tasso', kind: 'percent' },
+  { key: 'interessi', label: 'Interessi', kind: 'euro' },
+  { key: 'costo', label: 'Costo', kind: 'euro' },
+]
 
 export default async function LiquiditaPage() {
   const supabase = await createClient()
@@ -45,13 +55,13 @@ export default async function LiquiditaPage() {
         .eq('contenitore_id', contenitoreId)
     : { data: null }
 
-  const righe = (saldi ?? [])
+  const righe: RigaTabella[] = (saldi ?? [])
     .map((s) => {
       const strumento = strumenti?.find((str) => str.id === s.strumento_id)
       const costo = costi?.find((c) => c.strumento_id === s.strumento_id)
       const interesse = interessi?.find((i) => i.strumento_id === s.strumento_id)
       return {
-        strumentoId: s.strumento_id,
+        key: s.strumento_id ?? '—',
         nome: strumento?.nome ?? '—',
         tipo: strumento?.tipo ?? '—',
         provider: strumento?.provider ?? '',
@@ -61,7 +71,7 @@ export default async function LiquiditaPage() {
         costo: costo?.costo_totale ?? 0,
       }
     })
-    .sort((a, b) => b.valore - a.valore)
+    .sort((a, b) => (b.valore as number) - (a.valore as number))
 
   return (
     <div>
@@ -70,41 +80,12 @@ export default async function LiquiditaPage() {
         {liquidita?.nome ?? 'Liquidità'}
       </h1>
       <p style={{ fontFamily: 'Georgia, serif', fontSize: 48, margin: 0 }}>
-        {formatEuro(valoreTotale)}
+        {new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(valoreTotale)}
       </p>
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12 }}>Strumenti</h2>
-        {righe.length === 0 ? (
-          <p style={{ color: '#666' }}>Nessuno strumento registrato.</p>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'left', borderBottom: '1px solid #ddd' }}>
-                <th style={{ padding: '8px 12px' }}>Strumento</th>
-                <th style={{ padding: '8px 12px' }}>Tipo</th>
-                <th style={{ padding: '8px 12px' }}>Provider</th>
-                <th style={{ padding: '8px 12px' }}>Valore</th>
-                <th style={{ padding: '8px 12px' }}>Tasso</th>
-                <th style={{ padding: '8px 12px' }}>Interessi</th>
-                <th style={{ padding: '8px 12px' }}>Costo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {righe.map((r) => (
-                <tr key={r.strumentoId} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '8px 12px' }}>{r.nome}</td>
-                  <td style={{ padding: '8px 12px' }}>{r.tipo}</td>
-                  <td style={{ padding: '8px 12px' }}>{r.provider}</td>
-                  <td style={{ padding: '8px 12px' }}>{formatEuro(r.valore)}</td>
-                  <td style={{ padding: '8px 12px' }}>{r.tasso.toFixed(2)}%</td>
-                  <td style={{ padding: '8px 12px' }}>{formatEuro(r.interessi)}</td>
-                  <td style={{ padding: '8px 12px' }}>{formatEuro(r.costo)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <TabellaOrdinabile colonne={COLONNE} righe={righe} />
       </section>
     </div>
   )

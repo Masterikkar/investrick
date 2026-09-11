@@ -5,18 +5,6 @@ export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
   const url = new URL(request.url)
   const secretDaQuery = url.searchParams.get('secret')
-
-  // --- Blocco diagnostico TEMPORANEO: nessun segreto viene mai mostrato, solo presenza/lunghezza ---
-  if (url.searchParams.get('diag') === '1') {
-    return NextResponse.json({
-      cronSecretImpostatoSuVercel: Boolean(process.env.CRON_SECRET),
-      cronSecretLunghezza: process.env.CRON_SECRET?.length ?? 0,
-      secretRicevutoNellUrlLunghezza: secretDaQuery?.length ?? 0,
-      combaciano: secretDaQuery === process.env.CRON_SECRET,
-    })
-  }
-  // --- Fine blocco diagnostico ---
-
   const autorizzato =
     authHeader === `Bearer ${process.env.CRON_SECRET}` || secretDaQuery === process.env.CRON_SECRET
 
@@ -102,5 +90,60 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ data: oggi, risultati, tassoEurUsd })
+  // --- Snapshot giornaliero di valorizzazione: mercato + liquidità, incluso "Diretto" ---
+  const risultatiSnapshot: { tipo: string; esito: string }[] = []
+
+  try {
+    const { data: posizioniMercato } = await supabase
+      .from('v_valore_posizioni_attuale')
+      .select('strumento_id, contenitore_id, quantita_corrente, prezzo_attuale, valore_attuale')
+
+    if (posizioniMercato && posizioniMercato.length > 0) {
+      const righeMercato = posizioniMercato.map((p) => ({
+        strumento_id: p.strumento_id,
+        contenitore_id: p.contenitore_id,
+        data: oggi,
+        quantita: p.quantita_corrente,
+        prezzo: p.prezzo_attuale,
+        valore: p.valore_attuale,
+      }))
+
+      const { error: erroreMercato } = await supabase
+        .from('storico_valorizzazioni')
+        .upsert(righeMercato, { onConflict: 'strumento_id,contenitore_id,data', ignoreDuplicates: false })
+
+      risultatiSnapshot.push({
+        tipo: 'mercato',
+        esito: erroreMercato ? `errore: ${erroreMercato.message}` : `ok (${righeMercato.length} posizioni)`,
+      })
+    }
+
+    const { data: saldiLiquidita } = await supabase
+      .from('v_saldo_liquidita')
+      .select('strumento_id, contenitore_id, saldo_corrente')
+
+    if (saldiLiquidita && saldiLiquidita.length > 0) {
+      const righeLiquidita = saldiLiquidita.map((s) => ({
+        strumento_id: s.strumento_id,
+        contenitore_id: s.contenitore_id,
+        data: oggi,
+        quantita: 1,
+        prezzo: s.saldo_corrente,
+        valore: s.saldo_corrente,
+      }))
+
+      const { error: erroreLiquidita } = await supabase
+        .from('storico_valorizzazioni')
+        .upsert(righeLiquidita, { onConflict: 'strumento_id,contenitore_id,data', ignoreDuplicates: false })
+
+      risultatiSnapshot.push({
+        tipo: 'liquidita',
+        esito: erroreLiquidita ? `errore: ${erroreLiquidita.message}` : `ok (${righeLiquidita.length} conti)`,
+      })
+    }
+  } catch (e) {
+    risultatiSnapshot.push({ tipo: 'snapshot', esito: `errore imprevisto: ${e}` })
+  }
+
+  return NextResponse.json({ data: oggi, risultati, risultatiSnapshot, tassoEurUsd })
 }
