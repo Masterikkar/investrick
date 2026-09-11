@@ -19,12 +19,20 @@ const PERIODI: { key: Periodo; label: string }[] = [
 
 function filtraPerPeriodo(punti: PuntoStorico[], periodo: Periodo): PuntoStorico[] {
   if (periodo === 'SEMPRE') return punti
+
+  if (periodo === '1G') {
+    // Un solo aggiornamento al giorno: "1G" confronta gli ultimi due punti disponibili
+    // (oggi vs il giorno prima), non un vero arco di 24 ore — che con questa cadenza
+    // non avrebbe mai abbastanza dati.
+    return punti.slice(-2)
+  }
+
   const oggi = new Date()
   let dataMinima: Date
   if (periodo === 'YTD') {
     dataMinima = new Date(oggi.getFullYear(), 0, 1)
   } else {
-    const giorni = { '1G': 1, '1S': 7, '1M': 30, '1A': 365 }[periodo] ?? 0
+    const giorni = { '1S': 7, '1M': 30, '1A': 365 }[periodo] ?? 0
     dataMinima = new Date(oggi)
     dataMinima.setDate(dataMinima.getDate() - giorni)
   }
@@ -52,14 +60,22 @@ export function GraficoStorico({
 }: {
   punti: PuntoStorico[]
   formato?: 'euro' | 'percent'
-  /** Il totale in € mostrato in grande. Se formato è 'percent', accanto compare anche
-   *  il valore più recente della serie (stesso numero della card "Rendimento" sotto). */
+  /** Il totale in € mostrato in grande. Se formato è 'percent', accanto compare anche un
+   *  badge: per "Da sempre" è il rendimento totale attuale (identico alla card "Rendimento"
+   *  sotto); per gli altri periodi è la variazione del rendimento durante quella finestra. */
   valoreAttuale?: number
 }) {
   const [periodo, setPeriodo] = useState<Periodo>('1M')
   const datiFiltrati = useMemo(() => filtraPerPeriodo(punti, periodo), [punti, periodo])
 
-  const rendimentoAttuale = formato === 'percent' && punti.length > 0 ? punti[punti.length - 1].valore : null
+  const rendimentoBadge = useMemo(() => {
+    if (formato !== 'percent') return null
+    if (periodo === 'SEMPRE') {
+      return punti.length > 0 ? punti[punti.length - 1].valore : null
+    }
+    if (datiFiltrati.length < 2) return null
+    return datiFiltrati[datiFiltrati.length - 1].valore - datiFiltrati[0].valore
+  }, [formato, periodo, punti, datiFiltrati])
 
   const formatAsse = formato === 'percent' ? formatPercentAsse : (v: number) => formatEuroCompatto.format(v)
   const formatTooltip =
@@ -71,16 +87,16 @@ export function GraficoStorico({
       {valoreAttuale !== undefined && (
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 16 }}>
           <p style={{ fontFamily: 'Georgia, serif', fontSize: 48, margin: 0 }}>{formatEuro(valoreAttuale)}</p>
-          {rendimentoAttuale !== null && (
+          {rendimentoBadge !== null && (
             <span
               style={{
                 fontSize: 16,
                 fontWeight: 600,
-                color: rendimentoAttuale >= 0 ? '#0a7d2c' : '#c0392b',
+                color: rendimentoBadge >= 0 ? '#0a7d2c' : '#c0392b',
               }}
             >
-              {rendimentoAttuale >= 0 ? '+' : ''}
-              {rendimentoAttuale.toFixed(2)}%
+              {rendimentoBadge >= 0 ? '+' : ''}
+              {rendimentoBadge.toFixed(2)}%
             </span>
           )}
         </div>
