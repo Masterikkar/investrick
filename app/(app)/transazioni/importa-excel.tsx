@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import Papa from 'papaparse'
+import * as XLSX from 'xlsx'
 import { creaAssetPerImport, importaTransazioniBulk, type RigaImport } from './actions'
 
 type StrumentoBase = { id: string; isin: string | null; nome: string }
@@ -17,15 +17,39 @@ const ETICHETTE_OPERAZIONE: Record<string, string> = {
   'Scambio (acquisizione)': 'Scambio_acquisizione',
 }
 
-function parseNumero(s: string): number | null {
-  const pulito = s.trim().replace(',', '.')
-  if (pulito === '') return null
+function testoCella(v: unknown): string {
+  return String(v ?? '').trim()
+}
+
+function parseNumeroCella(v: unknown, permettiVuoto: boolean): number | null {
+  if (v === '' || v === null || v === undefined) return permettiVuoto ? 0 : null
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null
+  const pulito = String(v).trim().replace(',', '.')
+  if (pulito === '') return permettiVuoto ? 0 : null
   const n = Number(pulito)
   return Number.isFinite(n) ? n : null
 }
 
-function parseData(s: string): string | null {
-  const m = s.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+// Excel conta i giorni a partire dal 30/12/1899 (convenzione standard, incluso il famoso
+// "bug" dell'anno bisestile 1900 — irrilevante per date recenti come le nostre).
+const EPOCA_EXCEL_UTC = Date.UTC(1899, 11, 30)
+
+function parseDataCella(v: unknown): string | null {
+  // Caso normale: la cella è formattata come data in Excel -> arriva già come oggetto Date.
+  if (v instanceof Date) {
+    const anno = v.getUTCFullYear()
+    const mese = v.getUTCMonth() + 1
+    const giorno = v.getUTCDate()
+    return `${anno}-${String(mese).padStart(2, '0')}-${String(giorno).padStart(2, '0')}`
+  }
+  // Caso raro: numero seriale Excel non convertito automaticamente.
+  if (typeof v === 'number') {
+    const d = new Date(EPOCA_EXCEL_UTC + v * 86400000)
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
+  }
+  // Caso testo: "02/04/2026" scritto/lasciato come stringa.
+  const s = String(v ?? '').trim()
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
   if (!m) return null
   const giorno = Number(m[1])
   const mese = Number(m[2])
@@ -48,24 +72,19 @@ type RigaParsata = {
   contenitoreId: string | null
 }
 
-function elabora(righeCsv: Record<string, string>[], mappaContenitori: Map<string, string>): RigaParsata[] {
-  return righeCsv.map((riga, idx) => {
+function elabora(righeExcel: Record<string, unknown>[], mappaContenitori: Map<string, string>): RigaParsata[] {
+  return righeExcel.map((riga, idx) => {
     const numeroRiga = idx + 2
-    const dataRaw = (riga['Data'] ?? '').trim()
-    const isinRaw = (riga['ISIN'] ?? '').trim().toUpperCase()
-    const operazioneRaw = (riga['Operazione'] ?? '').trim()
-    const quantitaRaw = (riga['Quantità'] ?? '').trim()
-    const prezzoRaw = (riga['Prezzo unitario'] ?? '').trim()
-    const commissioneRaw = (riga['Commissione'] ?? '').trim()
-    const tassaRaw = (riga['Tassa trattenuta'] ?? '').trim()
-    const contenitoreRaw = (riga['Contenitore'] ?? '').trim()
+    const isinRaw = testoCella(riga['ISIN']).toUpperCase()
+    const operazioneRaw = testoCella(riga['Operazione'])
+    const contenitoreRaw = testoCella(riga['Contenitore'])
 
-    const data = parseData(dataRaw)
+    const data = parseDataCella(riga['Data'])
     const operazioneDb = ETICHETTE_OPERAZIONE[operazioneRaw]
-    const quantita = parseNumero(quantitaRaw)
-    const prezzoUnitario = parseNumero(prezzoRaw)
-    const commissione = commissioneRaw ? parseNumero(commissioneRaw) : 0
-    const tassaTrattenuta = tassaRaw ? parseNumero(tassaRaw) : 0
+    const quantita = parseNumeroCella(riga['Quantità'], false)
+    const prezzoUnitario = parseNumeroCella(riga['Prezzo unitario'], false)
+    const commissione = parseNumeroCella(riga['Commissione'], true)
+    const tassaTrattenuta = parseNumeroCella(riga['Tassa trattenuta'], true)
 
     let contenitoreId: string | null = null
     let contenitoreNonTrovato: string | null = null
@@ -79,12 +98,12 @@ function elabora(righeCsv: Record<string, string>[], mappaContenitori: Map<strin
 
     let errore: string | null = null
     if (!isinRaw) errore = 'ISIN mancante'
-    else if (!data) errore = `data non valida: "${dataRaw}"`
+    else if (!data) errore = `data non valida: "${testoCella(riga['Data'])}"`
     else if (!operazioneDb) errore = `operazione non riconosciuta: "${operazioneRaw}"`
-    else if (quantita === null || quantita <= 0) errore = `quantità non valida: "${quantitaRaw}"`
-    else if (prezzoUnitario === null || prezzoUnitario < 0) errore = `prezzo unitario non valido: "${prezzoRaw}"`
-    else if (commissione === null) errore = `commissione non valida: "${commissioneRaw}"`
-    else if (tassaTrattenuta === null) errore = `tassa trattenuta non valida: "${tassaRaw}"`
+    else if (quantita === null || quantita <= 0) errore = `quantità non valida: "${testoCella(riga['Quantità'])}"`
+    else if (prezzoUnitario === null || prezzoUnitario < 0) errore = `prezzo unitario non valido: "${testoCella(riga['Prezzo unitario'])}"`
+    else if (commissione === null) errore = `commissione non valida: "${testoCella(riga['Commissione'])}"`
+    else if (tassaTrattenuta === null) errore = `tassa trattenuta non valida: "${testoCella(riga['Tassa trattenuta'])}"`
     else if (contenitoreNonTrovato) errore = `contenitore non trovato: "${contenitoreNonTrovato}"`
 
     return {
@@ -223,7 +242,7 @@ function RisolviIsin({
   )
 }
 
-export function ImportaCsv({
+export function ImportaExcel({
   strumenti,
   contenitori,
   tipiPerCategoria,
@@ -238,6 +257,7 @@ export function ImportaCsv({
   )
   const [risultato, setRisultato] = useState<{ inserite: number; errori: { riga: number; messaggio: string }[] } | null>(null)
   const [importando, setImportando] = useState(false)
+  const [erroreFile, setErroreFile] = useState<string | null>(null)
 
   const mappaContenitori = useMemo(
     () => new Map(contenitori.map((c) => [c.nome.toLowerCase(), c.id])),
@@ -246,14 +266,23 @@ export function ImportaCsv({
 
   function gestisciFile(file: File) {
     setRisultato(null)
-    Papa.parse<Record<string, string>>(file, {
-      header: true,
-      skipEmptyLines: true,
-      delimiter: ';',
-      complete: (esito) => {
-        setRighe(elabora(esito.data, mappaContenitori))
-      },
-    })
+    setErroreFile(null)
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const dati = e.target?.result
+        if (!dati) throw new Error('File vuoto')
+        const workbook = XLSX.read(dati, { type: 'array', cellDates: true })
+        const primoFoglio = workbook.SheetNames[0]
+        if (!primoFoglio) throw new Error('Nessun foglio trovato nel file')
+        const foglio = workbook.Sheets[primoFoglio]
+        const righeGrezze = XLSX.utils.sheet_to_json<Record<string, unknown>>(foglio, { defval: '' })
+        setRighe(elabora(righeGrezze, mappaContenitori))
+      } catch (err) {
+        setErroreFile(err instanceof Error ? err.message : 'Impossibile leggere il file')
+      }
+    }
+    reader.readAsArrayBuffer(file)
   }
 
   const righeValideFormato = (righe ?? []).filter((r) => !r.errore)
@@ -304,10 +333,10 @@ export function ImportaCsv({
         }}
         style={{ border: '2px dashed #ccc', borderRadius: 8, padding: 24, textAlign: 'center', color: '#666' }}
       >
-        <p style={{ margin: 0 }}>Trascina qui il file CSV delle transazioni, oppure</p>
+        <p style={{ margin: 0 }}>Trascina qui il file Excel (.xlsx) delle transazioni, oppure</p>
         <input
           type="file"
-          accept=".csv"
+          accept=".xlsx,.xls"
           onChange={(e) => {
             const file = e.target.files?.[0]
             if (file) gestisciFile(file)
@@ -316,10 +345,12 @@ export function ImportaCsv({
         />
       </div>
 
+      {erroreFile && <p style={{ color: 'red', marginTop: 8 }}>{erroreFile}</p>}
+
       <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 13, flexWrap: 'wrap', alignItems: 'center' }}>
-        <a href="/template-transazioni.csv" download>Scarica template vuoto</a>
+        <a href="/template-transazioni.xlsx" download>Scarica template vuoto</a>
         <span style={{ color: '#666' }}>
-          "Costo (in contanti)" va inserito manualmente qui sotto — non è supportato dal CSV.
+          "Costo (in contanti)" va inserito manualmente qui sotto — non è supportato dal file Excel.
         </span>
       </div>
 

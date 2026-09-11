@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { aggiungiTransazione } from './actions'
-import { ImportaCsv } from './importa-csv'
+import { ImportaExcel } from './importa-excel'
 
 const OPERAZIONI = [
   { value: 'Acquisto', label: 'Acquisto' },
@@ -52,8 +52,8 @@ export default async function TransazioniPage({
       <h1>Transazioni</h1>
 
       <section style={{ marginTop: 16 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Importa da CSV</h2>
-        <ImportaCsv
+        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Importa da Excel</h2>
+        <ImportaExcel
           strumenti={(strumenti ?? []).map((s) => ({ id: s.id, isin: s.isin, nome: s.nome }))}
           contenitori={contenitori ?? []}
           tipiPerCategoria={tipiPerCategoria}
