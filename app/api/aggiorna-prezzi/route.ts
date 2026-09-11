@@ -91,12 +91,14 @@ export async function GET(request: Request) {
   }
 
   // --- Snapshot giornaliero di valorizzazione: mercato + liquidità, incluso "Diretto" ---
+  // "valore" NON va scritto esplicitamente: è una colonna GENERATED ALWAYS AS (quantita * prezzo),
+  // calcolata automaticamente da Postgres.
   const risultatiSnapshot: { tipo: string; esito: string }[] = []
 
   try {
     const { data: posizioniMercato } = await supabase
       .from('v_valore_posizioni_attuale')
-      .select('strumento_id, contenitore_id, quantita_corrente, prezzo_attuale, valore_attuale')
+      .select('strumento_id, contenitore_id, quantita_corrente, prezzo_attuale')
 
     const posizioniValide = (posizioniMercato ?? []).filter(
       (p) => p.strumento_id !== null && p.quantita_corrente !== null && p.prezzo_attuale !== null
@@ -110,7 +112,6 @@ export async function GET(request: Request) {
         data: oggi,
         quantita: p.quantita_corrente as number,
         prezzo: p.prezzo_attuale as number,
-        valore: (p.valore_attuale as number | null) ?? (p.quantita_corrente as number) * (p.prezzo_attuale as number),
       }))
 
       const { error: erroreMercato } = await supabase
@@ -143,7 +144,6 @@ export async function GET(request: Request) {
         data: oggi,
         quantita: 1,
         prezzo: s.saldo_corrente as number,
-        valore: s.saldo_corrente as number,
       }))
 
       const { error: erroreLiquidita } = await supabase
