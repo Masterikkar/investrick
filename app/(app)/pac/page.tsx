@@ -39,8 +39,7 @@ export default async function PacPage() {
 
   const storicoMap = new Map<string, number>()
   for (const r of storicoRaw ?? []) {
-    const attuale = storicoMap.get(r.data) ?? 0
-    storicoMap.set(r.data, attuale + Number(r.valore))
+    storicoMap.set(r.data, (storicoMap.get(r.data) ?? 0) + Number(r.valore))
   }
   const puntiStorico: PuntoStorico[] = Array.from(storicoMap.entries())
     .map(([data, valore]) => ({ data, valore }))
@@ -132,71 +131,75 @@ export default async function PacPage() {
         <GraficoStorico punti={puntiStorico} />
       </section>
 
-      <section style={{ marginTop: 32 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h2 style={{ fontSize: 18, margin: 0 }}>Composizione vs target</h2>
-          {contenitoreId && (
-            <Link href={`/target/${contenitoreId}`} style={{ fontSize: 13 }}>
-              Modifica target →
-            </Link>
+      <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h2 style={{ fontSize: 18, margin: 0 }}>Composizione vs target</h2>
+            {contenitoreId && (
+              <Link href={`/target/${contenitoreId}`} style={{ fontSize: 13 }}>
+                Modifica target →
+              </Link>
+            )}
+          </div>
+          {!contenitoreInfo?.target_attivo ? (
+            <p style={{ color: '#666' }}>Target disattivato per questo contenitore.</p>
+          ) : composizione.length === 0 ? (
+            <p style={{ color: '#666' }}>Nessun target impostato.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {composizione.map((c) => {
+                const fuoriSoglia = Math.abs(c.scostamento_pp ?? 0) >= soglia
+                const colore = fuoriSoglia ? '#e6a400' : '#0a7d2c'
+                const pesoAttuale = Math.min(c.peso_attuale_pct ?? 0, 100)
+                const target = Math.min(c.target_percentuale ?? 0, 100)
+                return (
+                  <div key={c.categoria}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: 14,
+                        marginBottom: 4,
+                      }}
+                    >
+                      <span>{c.categoria}</span>
+                      <span>
+                        {(c.peso_attuale_pct ?? 0).toFixed(1)}% attuale · {c.target_percentuale}% target (
+                        {(c.scostamento_pp ?? 0) > 0 ? '+' : ''}
+                        {c.scostamento_pp} pp)
+                      </span>
+                    </div>
+                    <div style={{ position: 'relative', height: 10, background: '#eee', borderRadius: 4 }}>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          height: '100%',
+                          width: `${pesoAttuale}%`,
+                          background: colore,
+                          borderRadius: 4,
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: -3,
+                          left: `${target}%`,
+                          width: 2,
+                          height: 16,
+                          background: '#333',
+                        }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
-        {!contenitoreInfo?.target_attivo ? (
-          <p style={{ color: '#666' }}>Target disattivato per questo contenitore.</p>
-        ) : composizione.length === 0 ? (
-          <p style={{ color: '#666' }}>Nessun target impostato.</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {composizione.map((c) => {
-              const fuoriSoglia = Math.abs(c.scostamento_pp ?? 0) >= soglia
-              const colore = fuoriSoglia ? '#e6a400' : '#0a7d2c'
-              const pesoAttuale = Math.min(c.peso_attuale_pct ?? 0, 100)
-              const target = Math.min(c.target_percentuale ?? 0, 100)
-              return (
-                <div key={c.categoria}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      fontSize: 14,
-                      marginBottom: 4,
-                    }}
-                  >
-                    <span>{c.categoria}</span>
-                    <span>
-                      {(c.peso_attuale_pct ?? 0).toFixed(1)}% attuale · {c.target_percentuale}% target (
-                      {(c.scostamento_pp ?? 0) > 0 ? '+' : ''}
-                      {c.scostamento_pp} pp)
-                    </span>
-                  </div>
-                  <div style={{ position: 'relative', height: 10, background: '#eee', borderRadius: 4 }}>
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        height: '100%',
-                        width: `${pesoAttuale}%`,
-                        background: colore,
-                        borderRadius: 4,
-                      }}
-                    />
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: -3,
-                        left: `${target}%`,
-                        width: 2,
-                        height: 16,
-                        background: '#333',
-                      }}
-                    />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+
+        {/* Il blocco "Rendimento vs target annuo" arriverà qui come secondo figlio di questo contenitore flex */}
       </section>
 
       <section style={{ marginTop: 32 }}>
