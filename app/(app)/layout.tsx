@@ -58,7 +58,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Link href="/polizze">Polizze</Link>
           <details style={{ position: 'relative' }}>
             <summary style={{ cursor: 'pointer' }}>Categorie</summary>
-            <div style={{ ...stilePannello, left: 0 }}>
+            <div style={{ ...stilePannello, right: 0 }}>
               <Link href="/azioni">Azioni</Link>
               <Link href="/obbligazioni">Obbligazioni</Link>
               <Link href="/materie-prime">Materie prime</Link>
@@ -66,9 +66,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <Link href="/multiasset">Multiasset</Link>
             </div>
           </details>
-        </nav>
-
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
           <details style={{ position: 'relative' }}>
             <summary style={{ cursor: 'pointer' }}>Altro</summary>
             <div style={{ ...stilePannello, right: 0 }}>
@@ -79,10 +76,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <Link href="/asset/nuovo">Crea nuovo asset</Link>
             </div>
           </details>
-          <form action={logout}>
-            <button type="submit">Esci</button>
-          </form>
-        </div>
+          <details style={{ position: 'relative' }}>
+            <summary style={{ cursor: 'pointer' }}>Account</summary>
+            <div style={{ ...stilePannello, right: 0 }}>
+              <form action={logout}>
+                <button type="submit">Esci</button>
+              </form>
+            </div>
+          </details>
+        </nav>
       </header>
       <main style={{ padding: 24 }}>{children}</main>
     </div>
