@@ -72,6 +72,34 @@ export async function aggiungiTransazione(formData: FormData) {
   redirect('/transazioni?successo=1')
 }
 
+// --- Storico transazioni: riallocazione contenitore ---
+
+export async function aggiornaContenitoreTransazione(
+  transazioneId: string,
+  nuovoContenitoreId: string | null
+): Promise<{ successo: true } | { errore: string }> {
+  const supabase = await createClient()
+
+  const { error: erroreUpdate } = await supabase
+    .from('transazioni')
+    .update({ contenitore_id: nuovoContenitoreId })
+    .eq('id', transazioneId)
+
+  if (erroreUpdate) {
+    return { errore: erroreUpdate.message }
+  }
+
+  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+
+  if (erroreRicostruzione) {
+    return { errore: erroreRicostruzione.message }
+  }
+
+  revalidatePath('/', 'layout')
+
+  return { successo: true }
+}
+
 // --- Import Excel massivo ---
 
 export async function creaAssetPerImport(dati: {
