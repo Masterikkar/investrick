@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { aggiungiTransazione } from './actions'
 import { ImportaExcel } from './importa-excel'
+import { StoricoTransazioni, type RigaStoricoTransazione } from './storico-transazioni'
 
 const OPERAZIONI = [
   { value: 'Acquisto', label: 'Acquisto' },
@@ -41,11 +42,37 @@ export default async function TransazioniPage({
     .order('categoria')
     .order('tipo')
 
+  const { data: transazioniStoricoRaw } = await supabase
+    .from('transazioni')
+    .select(
+      'id, data, operazione, contenitore_id, quantita, prezzo_unitario, commissione, tassa_trattenuta, strumento_id'
+    )
+    .order('data', { ascending: false })
+
   const tipiPerCategoria: Record<string, string[]> = {}
   for (const t of tipiRaw ?? []) {
     if (!tipiPerCategoria[t.categoria]) tipiPerCategoria[t.categoria] = []
     tipiPerCategoria[t.categoria].push(t.tipo)
   }
+
+  const strumentoMap = new Map((strumenti ?? []).map((s) => [s.id, s]))
+
+  const storicoTransazioni: RigaStoricoTransazione[] = (transazioniStoricoRaw ?? []).map((t) => {
+    const strumento = t.strumento_id ? strumentoMap.get(t.strumento_id) : undefined
+    return {
+      id: t.id,
+      data: t.data,
+      operazione: t.operazione,
+      contenitore_id: t.contenitore_id,
+      quantita: Number(t.quantita),
+      prezzo_unitario: Number(t.prezzo_unitario),
+      commissione: Number(t.commissione),
+      tassa_trattenuta: Number(t.tassa_trattenuta),
+      strumento_id: t.strumento_id,
+      strumento_nome: strumento?.nome ?? '—',
+      strumento_ticker: strumento?.ticker ?? null,
+    }
+  })
 
   return (
     <div>
@@ -149,6 +176,11 @@ export default async function TransazioniPage({
 
         <button type="submit">Salva transazione</button>
       </form>
+
+      <hr style={{ margin: '32px 0' }} />
+
+      <h2 style={{ fontSize: 18, marginBottom: 12 }}>Storico transazioni</h2>
+      <StoricoTransazioni transazioni={storicoTransazioni} contenitori={contenitori ?? []} />
     </div>
   )
 }
