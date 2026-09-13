@@ -1,8 +1,23 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 import { formatEuro } from '@/lib/format'
+import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
+import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 
-const CATEGORIA = 'Materie prime'
+const CATEGORIA = 'Materie Prime'
+
+const COLONNE: ColonnaTabella[] = [
+  { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
+  { key: 'tipo', label: 'Tipo', kind: 'text' },
+  { key: 'rendimentoPct', label: 'Rendimento', kind: 'percent-signed' },
+  { key: 'rendimentoAssoluto', label: 'Rendimento (€)', kind: 'euro-signed' },
+  { key: 'valore', label: 'Valore', kind: 'euro' },
+  { key: 'peso', label: 'Peso', kind: 'percent' },
+  { key: 'nav', label: 'NAV', kind: 'euro' },
+  { key: 'prezzoMedioUnitario', label: 'Prezzo medio', kind: 'euro' },
+  { key: 'costo', label: 'Costo', kind: 'euro' },
+  { key: 'provenienza', label: 'Provenienza', kind: 'text' },
+]
 
 export default async function MateriePrimePage() {
   const supabase = await createClient()
@@ -15,6 +30,31 @@ export default async function MateriePrimePage() {
 
   const valoreTotaleCategoria = categoriaValore?.valore_totale ?? 0
 
+  const { data: storicoRaw } = await supabase
+    .from('v_storico_valorizzazioni_per_categoria')
+    .select('data, valore_totale, capitale_investito_totale')
+    .eq('categoria', CATEGORIA)
+    .order('data', { ascending: true })
+
+  const storicoValoreMap = new Map<string, number>()
+  const storicoCapitaleMap = new Map<string, number>()
+  for (const r of storicoRaw ?? []) {
+    if (!r.data) continue
+    storicoValoreMap.set(r.data, Number(r.valore_totale))
+    if (r.capitale_investito_totale != null) {
+      storicoCapitaleMap.set(r.data, Number(r.capitale_investito_totale))
+    }
+  }
+
+  const puntiRendimento: PuntoStorico[] = Array.from(storicoValoreMap.entries())
+    .map(([data, valore]) => {
+      const capitale = storicoCapitaleMap.get(data)
+      if (!capitale || capitale <= 0) return null
+      return { data, valore: ((valore - capitale) / capitale) * 100 }
+    })
+    .filter((p): p is PuntoStorico => p !== null)
+    .sort((a, b) => a.data.localeCompare(b.data))
+
   const { data: strumentiCategoria } = await supabase
     .from('strumenti')
     .select('id, nome, tipo')
@@ -26,7 +66,7 @@ export default async function MateriePrimePage() {
     ? await supabase
         .from('v_riepilogo_posizione')
         .select(
-          'strumento_id, contenitore_id, valore, rendimento_pct, capitale_investito, prezzo_medio_unitario, prezzo_attuale'
+          'strumento_id, contenitore_id, valore, rendimento_pct, capitale_investito, prezzo_medio_unitario, prezzo_attuale, quantita_posseduta'
         )
         .in('strumento_id', strumentoIds)
     : { data: null }
@@ -50,7 +90,7 @@ export default async function MateriePrimePage() {
     ? await supabase.from('contenitori').select('id, nome').in('id', contenitoreIds)
     : { data: null }
 
-  const righe = (posizioni ?? [])
+  const righe: RigaTabella[] = (posizioni ?? [])
     .map((p) => {
       const strumento = strumentiCategoria?.find((s) => s.id === p.strumento_id)
       const costo = costi?.find(
@@ -67,6 +107,8 @@ export default async function MateriePrimePage() {
         rendimentoPct: p.rendimento_pct ?? 0,
         rendimentoAssoluto: (p.valore ?? 0) - (p.capitale_investito ?? 0),
         valore: p.valore ?? 0,
+        capitaleInvestito: p.capitale_investito ?? 0,
+        capitaleInvestitoNetto: (p.quantita_posseduta ?? 0) * (p.prezzo_medio_unitario ?? 0),
         peso: valoreTotaleCategoria > 0 ? ((p.valore ?? 0) / valoreTotaleCategoria) * 100 : 0,
         nav: p.prezzo_attuale ?? 0,
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
@@ -74,74 +116,101 @@ export default async function MateriePrimePage() {
         provenienza: contenitore?.nome ?? 'Diretto',
       }
     })
-    .sort((a, b) => b.valore - a.valore)
+    .sort((a, b) => (b.valore as number) - (a.valore as number))
+
+  const costoTotaleCategoria = righe.reduce((acc, r) => acc + (r.costo as number), 0)
+  const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
+  const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
+  const capitaleInvestitoNettoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestitoNetto as number), 0)
+  const plusMinusNonRealizzata = valoreTotalePosizioni - capitaleInvestitoTotale
+  const rendimentoPctTotale =
+    capitaleInvestitoTotale > 0 ? (plusMinusNonRealizzata / capitaleInvestitoTotale) * 100 : null
+
+  const rendimentoUltimoSnapshot =
+    puntiRendimento.length > 0 ? puntiRendimento[puntiRendimento.length - 1].valore : null
+
+  const variazioneDaUltimoSnapshot =
+    rendimentoPctTotale != null && rendimentoUltimoSnapshot != null
+      ? rendimentoPctTotale - rendimentoUltimoSnapshot
+      : null
 
   return (
     <div>
       <div style={{ fontSize: 13, color: '#666' }}>Categoria</div>
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16 }}>{CATEGORIA}</h1>
-      <p style={{ fontFamily: 'Georgia, serif', fontSize: 48, margin: 0 }}>
-        {formatEuro(valoreTotaleCategoria)}
-      </p>
+
+      <section>
+        <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotaleCategoria} />
+      </section>
+
+      <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Rendimento Live</div>
+          <div
+            style={{
+              fontSize: 22,
+              marginTop: 4,
+              color: (rendimentoPctTotale ?? 0) >= 0 ? '#0a7d2c' : '#c0392b',
+            }}
+          >
+            {rendimentoPctTotale != null
+              ? `${rendimentoPctTotale >= 0 ? '+' : ''}${rendimentoPctTotale.toFixed(2)}%`
+              : '—'}
+            {variazioneDaUltimoSnapshot != null && (
+              <span style={{ fontSize: 14, marginLeft: 6, color: '#171717' }}>
+                (Oggi{' '}
+                <span
+                  style={{ color: variazioneDaUltimoSnapshot >= 0 ? '#0a7d2c' : '#c0392b' }}
+                >
+                  {variazioneDaUltimoSnapshot >= 0 ? '+' : ''}
+                  {variazioneDaUltimoSnapshot.toFixed(2)}%
+                </span>
+                )
+              </span>
+            )}
+          </div>
+          <Link href="/rendimenti" style={{ fontSize: 13 }}>
+            Vedi dettaglio rendimenti →
+          </Link>
+        </div>
+
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Plus/minusvalenza non realizzata</div>
+          <div
+            style={{
+              fontSize: 22,
+              marginTop: 4,
+              color: plusMinusNonRealizzata >= 0 ? '#0a7d2c' : '#c0392b',
+            }}
+          >
+            {plusMinusNonRealizzata >= 0 ? '+' : ''}
+            {formatEuro(plusMinusNonRealizzata)}
+          </div>
+          <Link href="/fiscalita" style={{ fontSize: 13 }}>
+            Vedi dettaglio fiscalità →
+          </Link>
+        </div>
+
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Capitale investito netto</div>
+          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(capitaleInvestitoNettoTotale)}</div>
+          <Link href="/transazioni" style={{ fontSize: 13 }}>
+            Vedi transazioni →
+          </Link>
+        </div>
+
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Costo totale</div>
+          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(costoTotaleCategoria)}</div>
+          <Link href="/costi" style={{ fontSize: 13 }}>
+            Vedi dettaglio costi →
+          </Link>
+        </div>
+      </section>
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12 }}>Asset</h2>
-        {righe.length === 0 ? (
-          <p style={{ color: '#666' }}>Nessun asset in questa categoria.</p>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'left', borderBottom: '1px solid #ddd' }}>
-                <th style={{ padding: '8px 12px' }}>Strumento</th>
-                <th style={{ padding: '8px 12px' }}>Tipo</th>
-                <th style={{ padding: '8px 12px' }}>Rendimento</th>
-                <th style={{ padding: '8px 12px' }}>Rendimento (€)</th>
-                <th style={{ padding: '8px 12px' }}>Valore</th>
-                <th style={{ padding: '8px 12px' }}>Peso</th>
-                <th style={{ padding: '8px 12px' }}>NAV</th>
-                <th style={{ padding: '8px 12px' }}>Prezzo medio</th>
-                <th style={{ padding: '8px 12px' }}>Costo</th>
-                <th style={{ padding: '8px 12px' }}>Provenienza</th>
-              </tr>
-            </thead>
-            <tbody>
-              {righe.map((r) => (
-                <tr key={r.key} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '8px 12px' }}>
-                    <Link href={`/asset/${r.strumentoId}`} style={{ color: 'inherit', textDecoration: 'underline' }}>
-                      {r.nome}
-                    </Link>
-                  </td>
-                  <td style={{ padding: '8px 12px' }}>{r.tipo}</td>
-                  <td
-                    style={{
-                      padding: '8px 12px',
-                      color: r.rendimentoPct >= 0 ? '#0a7d2c' : '#c0392b',
-                    }}
-                  >
-                    {r.rendimentoPct >= 0 ? '+' : ''}
-                    {r.rendimentoPct.toFixed(2)}%
-                  </td>
-                  <td
-                    style={{
-                      padding: '8px 12px',
-                      color: r.rendimentoAssoluto >= 0 ? '#0a7d2c' : '#c0392b',
-                    }}
-                  >
-                    {r.rendimentoAssoluto >= 0 ? '+' : ''}
-                    {formatEuro(r.rendimentoAssoluto)}
-                  </td>
-                  <td style={{ padding: '8px 12px' }}>{formatEuro(r.valore)}</td>
-                  <td style={{ padding: '8px 12px' }}>{r.peso.toFixed(1)}%</td>
-                  <td style={{ padding: '8px 12px' }}>{formatEuro(r.nav)}</td>
-                  <td style={{ padding: '8px 12px' }}>{formatEuro(r.prezzoMedioUnitario)}</td>
-                  <td style={{ padding: '8px 12px' }}>{formatEuro(r.costo)}</td>
-                  <td style={{ padding: '8px 12px' }}>{r.provenienza}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <TabellaOrdinabile colonne={COLONNE} righe={righe} />
       </section>
     </div>
   )

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro } from '@/lib/format'
+import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 
 type Strumento = {
   id: string
@@ -51,6 +52,11 @@ type Transazione = {
 type Contenitore = { id: string; nome: string }
 type ValorePerContenitore = { contenitore_id: string; valore_totale: number }
 type CostoPerStrumento = { contenitore_id: string | null; costo_totale: number }
+type StoricoValorizzazione = {
+  data: string | null
+  valore_totale: number | null
+  capitale_investito_totale: number | null
+}
 
 const ETICHETTE_OPERAZIONE: Record<string, string> = {
   Acquisto: 'Acquisto',
@@ -81,6 +87,7 @@ export default async function AssetPage({
     { data: transazioniRaw },
     { data: contenitoriRaw },
     { data: costoStrumentoRaw },
+    { data: storicoRaw },
   ] = await Promise.all([
     supabase.from('strumenti').select('id, nome, categoria, ticker, isin, valuta').eq('id', strumentoId).single(),
     supabase
@@ -100,6 +107,12 @@ export default async function AssetPage({
       .returns<Transazione[]>(),
     supabase.from('contenitori').select('id, nome').returns<Contenitore[]>(),
     supabase.from('v_costo_per_strumento').select('contenitore_id, costo_totale').eq('strumento_id', strumentoId).returns<CostoPerStrumento[]>(),
+    supabase
+      .from('v_storico_valorizzazioni_per_strumento')
+      .select('data, valore_totale, capitale_investito_totale')
+      .eq('strumento_id', strumentoId)
+      .order('data', { ascending: true })
+      .returns<StoricoValorizzazione[]>(),
   ])
 
   const strumento = strumentoRaw as Strumento | null
@@ -119,6 +132,26 @@ export default async function AssetPage({
 
   const costoMap = new Map<string, number>()
   for (const c of costoStrumentoRaw ?? []) costoMap.set(chiaveContenitore(c.contenitore_id), Number(c.costo_totale))
+
+  // --- Storico rendimento % per il grafico ---
+  const storicoValoreMap = new Map<string, number>()
+  const storicoCapitaleMap = new Map<string, number>()
+  for (const r of storicoRaw ?? []) {
+    if (!r.data) continue
+    storicoValoreMap.set(r.data, Number(r.valore_totale))
+    if (r.capitale_investito_totale != null) {
+      storicoCapitaleMap.set(r.data, Number(r.capitale_investito_totale))
+    }
+  }
+
+  const puntiRendimento: PuntoStorico[] = Array.from(storicoValoreMap.entries())
+    .map(([data, valore]) => {
+      const capitale = storicoCapitaleMap.get(data)
+      if (!capitale || capitale <= 0) return null
+      return { data, valore: ((valore - capitale) / capitale) * 100 }
+    })
+    .filter((p): p is PuntoStorico => p !== null)
+    .sort((a, b) => a.data.localeCompare(b.data))
 
   // --- Totale valore per contenitore (denominatore del Peso) ---
   const idsContenitoriReali = [...new Set(posizioniAttuali.map((r) => r.contenitore_id).filter((id): id is string => id !== null))]
@@ -184,20 +217,9 @@ export default async function AssetPage({
         </div>
       )}
 
-      {variazione && (
-        <div style={{ marginTop: 24 }}>
-          <span style={{ color: '#666' }}>NAV ({new Date(variazione.data).toLocaleDateString('it-IT')})</span>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-            <span style={{ fontSize: 32 }}>{formatEuro(Number(variazione.prezzo))}</span>
-            {variazione.variazione_pct != null && (
-              <span style={{ color: Number(variazione.variazione_pct) >= 0 ? 'green' : '#b91c1c' }}>
-                {Number(variazione.variazione_pct) >= 0 ? '+' : ''}
-                {Number(variazione.variazione_pct).toFixed(2)}%
-              </span>
-            )}
-          </div>
-        </div>
-      )}
+      <section style={{ marginTop: 24 }}>
+        <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotale} />
+      </section>
 
       <div style={{ display: 'flex', gap: 32, marginTop: 24, flexWrap: 'wrap' }}>
         <div>
@@ -207,8 +229,26 @@ export default async function AssetPage({
           </div>
         </div>
         <div>
-          <span style={{ color: '#666' }}>Valore</span>
-          <div style={{ fontSize: 20 }}>{formatEuro(valoreTotale)}</div>
+          <span style={{ color: '#666' }}>
+            NAV
+            {variazione &&
+              ` (${new Date(variazione.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })})`}
+          </span>
+          <div style={{ fontSize: 20 }}>
+            {variazione ? formatEuro(Number(variazione.prezzo)) : '—'}
+            {variazione?.variazione_pct != null && (
+              <span
+                style={{
+                  fontSize: 14,
+                  marginLeft: 6,
+                  color: Number(variazione.variazione_pct) >= 0 ? 'green' : '#b91c1c',
+                }}
+              >
+                {Number(variazione.variazione_pct) >= 0 ? '+' : ''}
+                {Number(variazione.variazione_pct).toFixed(2)}%
+              </span>
+            )}
+          </div>
         </div>
         <div>
           <span style={{ color: '#666' }}>Prezzo medio unitario</span>

@@ -43,7 +43,12 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
   }
 
   function handleElimina(id: string, nome: string) {
-    if (!window.confirm(`Eliminare il contenitore "${nome}"? L'operazione non è reversibile.`)) return
+    if (
+      !window.confirm(
+        `Eliminare il contenitore "${nome}"?\n\nLe transazioni e i movimenti collegati verranno spostati nel contenitore 'Diretto'; eventuali target impostati su questo contenitore verranno cancellati.\n\nL'operazione non è reversibile.`
+      )
+    )
+      return
     setErroreId(null)
     setMessaggioErrore(null)
     setPendingId(id)

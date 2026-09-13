@@ -19,7 +19,7 @@ const COLONNE: ColonnaTabella[] = [
   { key: 'costo', label: 'Costo', kind: 'euro' },
 ]
 
-const ORDINE_CATEGORIE_PAC = ['Azioni', 'Obbligazioni', 'Materie prime', 'Crypto', 'Multiasset']
+const ORDINE_CATEGORIE_PAC = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
 export default async function PacDettaglioPage({
   params,
@@ -42,17 +42,18 @@ export default async function PacDettaglioPage({
   const valoreTotalePac = pac.valore_totale ?? 0
 
   const { data: storicoRaw } = await supabase
-    .from('storico_valorizzazioni')
-    .select('data, valore, capitale_investito')
+    .from('v_storico_valorizzazioni_per_contenitore')
+    .select('data, valore_totale, capitale_investito_totale')
     .eq('contenitore_id', contenitoreId)
     .order('data', { ascending: true })
 
   const storicoValoreMap = new Map<string, number>()
   const storicoCapitaleMap = new Map<string, number>()
   for (const r of storicoRaw ?? []) {
-    storicoValoreMap.set(r.data, (storicoValoreMap.get(r.data) ?? 0) + Number(r.valore))
-    if (r.capitale_investito != null) {
-      storicoCapitaleMap.set(r.data, (storicoCapitaleMap.get(r.data) ?? 0) + Number(r.capitale_investito))
+    if (!r.data) continue
+    storicoValoreMap.set(r.data, (storicoValoreMap.get(r.data) ?? 0) + Number(r.valore_totale))
+    if (r.capitale_investito_totale != null) {
+      storicoCapitaleMap.set(r.data, (storicoCapitaleMap.get(r.data) ?? 0) + Number(r.capitale_investito_totale))
     }
   }
 
@@ -68,7 +69,7 @@ export default async function PacDettaglioPage({
   const { data: posizioni } = await supabase
     .from('v_riepilogo_posizione')
     .select(
-      'strumento_id, valore, rendimento_pct, capitale_investito, prezzo_medio_unitario, prezzo_attuale'
+      'strumento_id, valore, rendimento_pct, capitale_investito, prezzo_medio_unitario, prezzo_attuale, quantita_posseduta'
     )
     .eq('contenitore_id', contenitoreId)
 
@@ -128,6 +129,7 @@ export default async function PacDettaglioPage({
         rendimentoAssoluto: (p.valore ?? 0) - (p.capitale_investito ?? 0),
         valore: p.valore ?? 0,
         capitaleInvestito: p.capitale_investito ?? 0,
+        capitaleInvestitoNetto: (p.quantita_posseduta ?? 0) * (p.prezzo_medio_unitario ?? 0),
         nav: p.prezzo_attuale ?? 0,
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
         peso: valoreTotalePac > 0 ? ((p.valore ?? 0) / valoreTotalePac) * 100 : 0,
@@ -139,6 +141,7 @@ export default async function PacDettaglioPage({
   const costoTotalePac = righe.reduce((acc, r) => acc + (r.costo as number), 0)
   const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
   const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
+  const capitaleInvestitoNettoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestitoNetto as number), 0)
   const plusMinusNonRealizzata = valoreTotalePosizioni - capitaleInvestitoTotale
   const rendimentoPctTotale = capitaleInvestitoTotale > 0 ? (plusMinusNonRealizzata / capitaleInvestitoTotale) * 100 : null
 
@@ -255,6 +258,14 @@ export default async function PacDettaglioPage({
         </div>
 
         <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Capitale investito netto</div>
+          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(capitaleInvestitoNettoTotale)}</div>
+          <Link href="/transazioni" style={{ fontSize: 13 }}>
+            Vedi transazioni →
+          </Link>
+        </div>
+
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
           <div style={{ fontSize: 13, color: '#666' }}>Costo totale</div>
           <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(costoTotalePac)}</div>
           <Link href="/costi" style={{ fontSize: 13 }}>
@@ -315,7 +326,7 @@ export default async function PacDettaglioPage({
 
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 18, margin: 0 }}>Composizione</h2>
+            <h2 style={{ fontSize: 18, margin: 0 }}>Analisi composizione</h2>
             <Link href={`/target/${contenitoreId}`} style={{ fontSize: 13 }}>
               Modifica target →
             </Link>

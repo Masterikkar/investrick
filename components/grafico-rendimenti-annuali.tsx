@@ -47,7 +47,7 @@ export function GraficoRendimentiAnnuali({
             <Tooltip
               formatter={(value) => [value != null ? formatPercent(Number(value)) : '—', 'Rendimento']}
             />
-            <Bar dataKey="valore" radius={[4, 4, 0, 0]}>
+            <Bar dataKey="valore" radius={[4, 4, 0, 0]} maxBarSize={48}>
               {dati.map((d, i) => (
                 <Cell key={i} fill={(d.valore ?? 0) >= 0 ? '#0a7d2c' : '#c0392b'} />
               ))}

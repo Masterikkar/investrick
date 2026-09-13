@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatEuro } from '@/lib/format'
-import { aggiornaContenitoreTransazione } from './actions'
+import { aggiornaContenitoreTransazione, eliminaTransazione } from './actions'
 
 export type RigaStoricoTransazione = {
   id: string
@@ -80,6 +80,29 @@ export function StoricoTransazioni({
     })
   }
 
+  function handleElimina(riga: RigaStoricoTransazione) {
+    const descrizione = `${ETICHETTE_OPERAZIONE[riga.operazione] ?? riga.operazione} del ${new Date(
+      riga.data
+    ).toLocaleDateString('it-IT')}${riga.strumento_nome !== '—' ? ` — ${riga.strumento_nome}` : ''}`
+
+    if (!window.confirm(`Eliminare questa transazione?\n\n${descrizione}\n\nL'operazione non è reversibile.`)) {
+      return
+    }
+
+    setErroreId(null)
+    setPendingId(riga.id)
+
+    startTransition(async () => {
+      const risultato = await eliminaTransazione(riga.id)
+      setPendingId(null)
+      if ('errore' in risultato) {
+        setErroreId(riga.id)
+      } else {
+        router.refresh()
+      }
+    })
+  }
+
   return (
     <div>
       <input
@@ -98,7 +121,7 @@ export function StoricoTransazioni({
 
       {erroreId && (
         <p style={{ color: 'red', marginTop: 8 }}>
-          Non è stato possibile spostare quella transazione. Riprova.
+          Non è stato possibile completare l'operazione su quella transazione. Riprova.
         </p>
       )}
 
@@ -116,48 +139,94 @@ export function StoricoTransazioni({
               <th style={{ padding: 8 }}>Prezzo unitario</th>
               <th style={{ padding: 8 }}>Commissione</th>
               <th style={{ padding: 8 }}>Tassa trattenuta</th>
-              <th style={{ padding: 8 }}>Sposta in</th>
+              <th style={{ padding: 8 }}>Azioni</th>
             </tr>
           </thead>
           <tbody>
-            {righeFiltrate.map((t) => (
-              <tr key={t.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: 8 }}>{new Date(t.data).toLocaleDateString('it-IT')}</td>
-                <td style={{ padding: 8 }}>
-                  {t.strumento_id ? (
-                    <Link href={`/asset/${t.strumento_id}`} style={{ color: 'inherit' }}>
-                      {t.strumento_nome}
-                    </Link>
-                  ) : (
-                    t.strumento_nome
-                  )}
-                </td>
-                <td style={{ padding: 8 }}>{ETICHETTE_OPERAZIONE[t.operazione] ?? t.operazione}</td>
-                <td style={{ padding: 8 }}>{nomeContenitore(t.contenitore_id)}</td>
-                <td style={{ padding: 8 }}>{t.quantita.toFixed(6)}</td>
-                <td style={{ padding: 8 }}>{formatEuro(t.prezzo_unitario)}</td>
-                <td style={{ padding: 8 }}>{formatEuro(t.commissione)}</td>
-                <td style={{ padding: 8 }}>{formatEuro(t.tassa_trattenuta)}</td>
-                <td style={{ padding: 8 }}>
-                  <select
-                    value=""
-                    disabled={pendingId === t.id}
-                    onChange={(e) => handleSposta(t.id, e.target.value)}
-                    style={{ padding: '4px 6px' }}
-                  >
-                    <option value="">{pendingId === t.id ? 'Spostamento...' : 'Sposta in...'}</option>
-                    {t.contenitore_id !== null && <option value="diretto">Diretto</option>}
-                    {contenitori
-                      .filter((c) => c.id !== t.contenitore_id)
-                      .map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.nome}
-                        </option>
-                      ))}
-                  </select>
-                </td>
-              </tr>
-            ))}
+            {righeFiltrate.map((t) => {
+              const inCorso = pendingId === t.id
+              return (
+                <tr key={t.id} style={{ borderBottom: '1px solid #eee' }}>
+                  <td style={{ padding: 8 }}>{new Date(t.data).toLocaleDateString('it-IT')}</td>
+                  <td style={{ padding: 8 }}>
+                    {t.strumento_id ? (
+                      <Link href={`/asset/${t.strumento_id}`} style={{ color: 'inherit' }}>
+                        {t.strumento_nome}
+                      </Link>
+                    ) : (
+                      t.strumento_nome
+                    )}
+                  </td>
+                  <td style={{ padding: 8 }}>{ETICHETTE_OPERAZIONE[t.operazione] ?? t.operazione}</td>
+                  <td style={{ padding: 8 }}>{nomeContenitore(t.contenitore_id)}</td>
+                  <td style={{ padding: 8 }}>{t.quantita.toFixed(6)}</td>
+                  <td style={{ padding: 8 }}>{formatEuro(t.prezzo_unitario)}</td>
+                  <td style={{ padding: 8 }}>{formatEuro(t.commissione)}</td>
+                  <td style={{ padding: 8 }}>{formatEuro(t.tassa_trattenuta)}</td>
+                  <td style={{ padding: 8 }}>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                      <div style={{ position: 'relative', display: 'inline-flex' }}>
+                        <button
+                          type="button"
+                          disabled={inCorso}
+                          title="Sposta in un altro contenitore"
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            cursor: inCorso ? 'default' : 'pointer',
+                            fontSize: 16,
+                            padding: '2px 4px',
+                            opacity: inCorso ? 0.4 : 1,
+                          }}
+                        >
+                          →
+                        </button>
+                        <select
+                          value=""
+                          disabled={inCorso}
+                          onChange={(e) => handleSposta(t.id, e.target.value)}
+                          aria-label="Sposta in un altro contenitore"
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            opacity: 0,
+                            cursor: inCorso ? 'default' : 'pointer',
+                          }}
+                        >
+                          <option value="">Sposta in...</option>
+                          {t.contenitore_id !== null && <option value="diretto">Diretto</option>}
+                          {contenitori
+                            .filter((c) => c.id !== t.contenitore_id)
+                            .map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.nome}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleElimina(t)}
+                        disabled={inCorso}
+                        title="Elimina transazione"
+                        style={{
+                          border: 'none',
+                          background: 'none',
+                          cursor: inCorso ? 'default' : 'pointer',
+                          fontSize: 16,
+                          padding: '2px 4px',
+                          color: '#c0392b',
+                          opacity: inCorso ? 0.4 : 1,
+                        }}
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       )}

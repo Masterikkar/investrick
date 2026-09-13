@@ -20,7 +20,7 @@ const COLONNE: ColonnaTabella[] = [
   { key: 'provenienza', label: 'Provenienza', kind: 'text' },
 ]
 
-const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Crypto', 'Multiasset']
+const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
 export default async function PolizzePage() {
   const supabase = await createClient()
@@ -41,12 +41,17 @@ export default async function PolizzePage() {
         .in('contenitore_id', polizzeIds)
     : { data: null }
 
+  const valoreContainerMap = new Map<string, number>(
+    (valoriContenitore ?? [])
+      .filter((v): v is { contenitore_id: string; valore_totale: number | null } => v.contenitore_id !== null)
+      .map((v) => [v.contenitore_id, v.valore_totale ?? 0])
+  )
   const valoreTotalePolizze = (valoriContenitore ?? []).reduce((acc, v) => acc + (v.valore_totale ?? 0), 0)
 
   const { data: storicoRaw } = polizzeIds.length
     ? await supabase
-        .from('storico_valorizzazioni')
-        .select('data, valore, capitale_investito')
+        .from('v_storico_valorizzazioni_per_contenitore')
+        .select('data, valore_totale, capitale_investito_totale')
         .in('contenitore_id', polizzeIds)
         .order('data', { ascending: true })
     : { data: null }
@@ -54,9 +59,10 @@ export default async function PolizzePage() {
   const storicoValoreMap = new Map<string, number>()
   const storicoCapitaleMap = new Map<string, number>()
   for (const r of storicoRaw ?? []) {
-    storicoValoreMap.set(r.data, (storicoValoreMap.get(r.data) ?? 0) + Number(r.valore))
-    if (r.capitale_investito != null) {
-      storicoCapitaleMap.set(r.data, (storicoCapitaleMap.get(r.data) ?? 0) + Number(r.capitale_investito))
+    if (!r.data) continue
+    storicoValoreMap.set(r.data, (storicoValoreMap.get(r.data) ?? 0) + Number(r.valore_totale))
+    if (r.capitale_investito_totale != null) {
+      storicoCapitaleMap.set(r.data, (storicoCapitaleMap.get(r.data) ?? 0) + Number(r.capitale_investito_totale))
     }
   }
 
@@ -69,11 +75,14 @@ export default async function PolizzePage() {
     .filter((p): p is PuntoStorico => p !== null)
     .sort((a, b) => a.data.localeCompare(b.data))
 
+  const rendimentoUltimoSnapshot =
+    puntiRendimento.length > 0 ? puntiRendimento[puntiRendimento.length - 1].valore : null
+
   const { data: posizioni } = polizzeIds.length
     ? await supabase
         .from('v_riepilogo_posizione')
         .select(
-          'strumento_id, contenitore_id, valore, rendimento_pct, capitale_investito, prezzo_medio_unitario, prezzo_attuale'
+          'strumento_id, contenitore_id, valore, rendimento_pct, capitale_investito, prezzo_medio_unitario, prezzo_attuale, quantita_posseduta'
         )
         .in('contenitore_id', polizzeIds)
     : { data: null }
@@ -94,17 +103,21 @@ export default async function PolizzePage() {
     : { data: null }
 
   const polizzeConTargetAttivo = (polizze ?? []).filter((p) => p.target_attivo)
-  const idPolizzaTargetAttivo = polizzeConTargetAttivo.length === 1 ? polizzeConTargetAttivo[0].id : null
+  const idsConTargetAttivo = polizzeConTargetAttivo.map((p) => p.id)
 
-  const { data: scostamenti } = idPolizzaTargetAttivo
-    ? await supabase.from('v_scostamento_target').select('*').eq('contenitore_id', idPolizzaTargetAttivo)
+  const { data: targetAllocazioniRaw } = idsConTargetAttivo.length
+    ? await supabase
+        .from('target_allocazioni')
+        .select('contenitore_id, categoria, target_percentuale')
+        .in('contenitore_id', idsConTargetAttivo)
+        .eq('attivo', true)
     : { data: null }
 
-  const { data: subTargetRaw } = idPolizzaTargetAttivo
+  const { data: subTargetRaw } = idsConTargetAttivo.length
     ? await supabase
         .from('target_allocazioni_strumento')
-        .select('strumento_id, target_percentuale_categoria')
-        .eq('contenitore_id', idPolizzaTargetAttivo)
+        .select('contenitore_id, strumento_id, target_percentuale_categoria')
+        .in('contenitore_id', idsConTargetAttivo)
     : { data: null }
 
   const { data: impostazioni } = await supabase
@@ -113,10 +126,6 @@ export default async function PolizzePage() {
     .maybeSingle()
 
   const soglia = impostazioni?.soglia_ribilanciamento_pp ?? 3
-
-  const composizione = (scostamenti ?? [])
-    .slice()
-    .sort((a, b) => ORDINE_CATEGORIE.indexOf(a.categoria ?? '') - ORDINE_CATEGORIE.indexOf(b.categoria ?? ''))
 
   const righe: RigaTabella[] = (posizioni ?? [])
     .map((p) => {
@@ -135,6 +144,7 @@ export default async function PolizzePage() {
         rendimentoAssoluto: (p.valore ?? 0) - (p.capitale_investito ?? 0),
         valore: p.valore ?? 0,
         capitaleInvestito: p.capitale_investito ?? 0,
+        capitaleInvestitoNetto: (p.quantita_posseduta ?? 0) * (p.prezzo_medio_unitario ?? 0),
         nav: p.prezzo_attuale ?? 0,
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
         peso: valoreTotalePolizze > 0 ? ((p.valore ?? 0) / valoreTotalePolizze) * 100 : 0,
@@ -147,9 +157,15 @@ export default async function PolizzePage() {
   const costoTotalePolizze = righe.reduce((acc, r) => acc + (r.costo as number), 0)
   const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
   const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
+  const capitaleInvestitoNettoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestitoNetto as number), 0)
   const plusMinusNonRealizzata = valoreTotalePosizioni - capitaleInvestitoTotale
   const rendimentoPctTotale =
     capitaleInvestitoTotale > 0 ? (plusMinusNonRealizzata / capitaleInvestitoTotale) * 100 : null
+
+  const variazioneDaUltimoSnapshot =
+    rendimentoPctTotale != null && rendimentoUltimoSnapshot != null
+      ? rendimentoPctTotale - rendimentoUltimoSnapshot
+      : null
 
   const valorePerCategoria: Record<string, number> = {}
   for (const r of righe) {
@@ -157,25 +173,93 @@ export default async function PolizzePage() {
     valorePerCategoria[cat] = (valorePerCategoria[cat] ?? 0) + (r.valore as number)
   }
 
-  const sottoTargetPerCategoria: Record<string, SottoTarget[]> = {}
+  // --- Aggregazione multi-contenitore per la Composizione ---
+  // Il target combinato per categoria è la media dei target dei singoli contenitori,
+  // pesata per il valore di ciascun contenitore (un contenitore più grande pesa di più
+  // sul target complessivo). Un contenitore senza una riga di target per una categoria
+  // conta come target 0% per quella categoria in quel contenitore.
+  const valoreTotaleConTarget = idsConTargetAttivo.reduce((acc, id) => acc + (valoreContainerMap.get(id) ?? 0), 0)
+
+  const valorePerCategoriaConTarget: Record<string, number> = {}
+  const valoreCategoriaPerContenitore: Record<string, Record<string, number>> = {}
+  for (const r of righe) {
+    const cId = r.contenitoreId as string | null
+    if (!cId || !idsConTargetAttivo.includes(cId)) continue
+    const cat = r.categoria as string
+    valorePerCategoriaConTarget[cat] = (valorePerCategoriaConTarget[cat] ?? 0) + (r.valore as number)
+    if (!valoreCategoriaPerContenitore[cat]) valoreCategoriaPerContenitore[cat] = {}
+    valoreCategoriaPerContenitore[cat][cId] = (valoreCategoriaPerContenitore[cat][cId] ?? 0) + (r.valore as number)
+  }
+
+  const targetPerCategoriaEContenitore: Record<string, Record<string, number>> = {}
+  for (const t of targetAllocazioniRaw ?? []) {
+    if (!t.contenitore_id) continue
+    if (!targetPerCategoriaEContenitore[t.categoria]) targetPerCategoriaEContenitore[t.categoria] = {}
+    targetPerCategoriaEContenitore[t.categoria][t.contenitore_id] = Number(t.target_percentuale)
+  }
+
+  const categorieConTarget = ORDINE_CATEGORIE.filter((cat) =>
+    idsConTargetAttivo.some((id) => targetPerCategoriaEContenitore[cat]?.[id] !== undefined)
+  )
+
+  const composizioneAggregata = categorieConTarget.map((cat) => {
+    const valoreCategoria = valorePerCategoriaConTarget[cat] ?? 0
+    const pesoAttualePct = valoreTotaleConTarget > 0 ? (valoreCategoria / valoreTotaleConTarget) * 100 : 0
+
+    let targetPesato = 0
+    for (const id of idsConTargetAttivo) {
+      const targetContenitore = targetPerCategoriaEContenitore[cat]?.[id] ?? 0
+      targetPesato += targetContenitore * (valoreContainerMap.get(id) ?? 0)
+    }
+    const targetPercentuale = valoreTotaleConTarget > 0 ? targetPesato / valoreTotaleConTarget : 0
+
+    return {
+      categoria: cat,
+      peso_attuale_pct: Math.round(pesoAttualePct * 100) / 100,
+      target_percentuale: Math.round(targetPercentuale * 100) / 100,
+      scostamento_pp: Math.round((pesoAttualePct - targetPercentuale) * 100) / 100,
+    }
+  })
+
+  // Sotto-target per strumento: media pesata sul valore che ciascun contenitore ha
+  // in quella specifica categoria (non sul valore totale del contenitore).
+  const subTargetPerStrumento: Record<string, { contenitoreId: string; targetPct: number }[]> = {}
   for (const st of subTargetRaw ?? []) {
-    const strumento = strumenti?.find((s) => s.id === st.strumento_id)
+    if (!subTargetPerStrumento[st.strumento_id]) subTargetPerStrumento[st.strumento_id] = []
+    subTargetPerStrumento[st.strumento_id].push({
+      contenitoreId: st.contenitore_id,
+      targetPct: Number(st.target_percentuale_categoria),
+    })
+  }
+
+  const sottoTargetPerCategoria: Record<string, SottoTarget[]> = {}
+  for (const [strumentoId, voci] of Object.entries(subTargetPerStrumento)) {
+    const strumento = strumenti?.find((s) => s.id === strumentoId)
     if (!strumento) continue
     const cat = strumento.categoria
-    const rigaStrumento = righe.find(
-      (r) => r.strumentoId === st.strumento_id && r.contenitoreId === idPolizzaTargetAttivo
-    )
-    const valoreStrumento = (rigaStrumento?.valore as number) ?? 0
-    const totaleCategoria = valorePerCategoria[cat] ?? 0
+
+    let pesoTotale = 0
+    let targetPesato = 0
+    for (const voce of voci) {
+      const peso = valoreCategoriaPerContenitore[cat]?.[voce.contenitoreId] ?? 0
+      pesoTotale += peso
+      targetPesato += voce.targetPct * peso
+    }
+    const targetPct =
+      pesoTotale > 0 ? targetPesato / pesoTotale : voci.reduce((s, v) => s + v.targetPct, 0) / voci.length
+
+    const valoreStrumento = righe
+      .filter((r) => r.strumentoId === strumentoId && idsConTargetAttivo.includes(r.contenitoreId as string))
+      .reduce((acc, r) => acc + (r.valore as number), 0)
+    const totaleCategoria = valorePerCategoriaConTarget[cat] ?? 0
     const pesoAttualePct = totaleCategoria > 0 ? (valoreStrumento / totaleCategoria) * 100 : 0
-    const targetPct = Number(st.target_percentuale_categoria)
 
     if (!sottoTargetPerCategoria[cat]) sottoTargetPerCategoria[cat] = []
     sottoTargetPerCategoria[cat].push({
-      strumentoId: st.strumento_id,
+      strumentoId,
       nome: strumento.nome,
       ticker: strumento.ticker,
-      targetPct,
+      targetPct: Math.round(targetPct * 100) / 100,
       pesoAttualePct: Math.round(pesoAttualePct * 100) / 100,
       scostamentoPp: Math.round((pesoAttualePct - targetPct) * 100) / 100,
     })
@@ -221,7 +305,7 @@ export default async function PolizzePage() {
 
   // --- Card per singola polizza ---
   const righePolizze = (polizze ?? []).map((p) => {
-    const valore = valoriContenitore?.find((v) => v.contenitore_id === p.id)?.valore_totale ?? 0
+    const valore = valoreContainerMap.get(p.id) ?? 0
     const costo = righe
       .filter((r) => r.contenitoreId === p.id)
       .reduce((acc, r) => acc + (r.costo as number), 0)
@@ -250,7 +334,7 @@ export default async function PolizzePage() {
 
       <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Rendimento</div>
+          <div style={{ fontSize: 13, color: '#666' }}>Rendimento Live</div>
           <div
             style={{
               fontSize: 22,
@@ -261,7 +345,22 @@ export default async function PolizzePage() {
             {rendimentoPctTotale != null
               ? `${rendimentoPctTotale >= 0 ? '+' : ''}${rendimentoPctTotale.toFixed(2)}%`
               : '—'}
+            {variazioneDaUltimoSnapshot != null && (
+              <span style={{ fontSize: 14, marginLeft: 6, color: '#171717' }}>
+                (Oggi{' '}
+                <span
+                  style={{ color: variazioneDaUltimoSnapshot >= 0 ? '#0a7d2c' : '#c0392b' }}
+                >
+                  {variazioneDaUltimoSnapshot >= 0 ? '+' : ''}
+                  {variazioneDaUltimoSnapshot.toFixed(2)}%
+                </span>
+                )
+              </span>
+            )}
           </div>
+          <Link href="/rendimenti" style={{ fontSize: 13 }}>
+            Vedi dettaglio rendimenti →
+          </Link>
         </div>
 
         <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
@@ -278,6 +377,14 @@ export default async function PolizzePage() {
           </div>
           <Link href="/fiscalita" style={{ fontSize: 13 }}>
             Vedi dettaglio fiscalità →
+          </Link>
+        </div>
+
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Capitale investito netto</div>
+          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(capitaleInvestitoNettoTotale)}</div>
+          <Link href="/transazioni" style={{ fontSize: 13 }}>
+            Vedi transazioni →
           </Link>
         </div>
 
@@ -342,24 +449,20 @@ export default async function PolizzePage() {
 
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 18, margin: 0 }}>Composizione</h2>
-            {idPolizzaTargetAttivo && (
-              <Link href={`/target/${idPolizzaTargetAttivo}`} style={{ fontSize: 13 }}>
+            <h2 style={{ fontSize: 18, margin: 0 }}>Analisi composizione</h2>
+            {idsConTargetAttivo.length === 1 && (
+              <Link href={`/target/${idsConTargetAttivo[0]}`} style={{ fontSize: 13 }}>
                 Modifica target →
               </Link>
             )}
           </div>
-          {polizzeConTargetAttivo.length === 0 ? (
+          {idsConTargetAttivo.length === 0 ? (
             <p style={{ color: '#666' }}>Nessuna polizza ha un target attivo.</p>
-          ) : polizzeConTargetAttivo.length > 1 ? (
-            <p style={{ color: '#666' }}>
-              Più polizze con target attivo: aggregazione non ancora supportata.
-            </p>
-          ) : composizione.length === 0 ? (
+          ) : composizioneAggregata.length === 0 ? (
             <p style={{ color: '#666' }}>Nessun target impostato.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {composizione.map((c) => {
+              {composizioneAggregata.map((c) => {
                 const fuoriSoglia = Math.abs(c.scostamento_pp ?? 0) >= soglia
                 const colore = fuoriSoglia ? '#e6a400' : '#0a7d2c'
                 const pesoAttuale = Math.min(c.peso_attuale_pct ?? 0, 100)
@@ -376,7 +479,7 @@ export default async function PolizzePage() {
                     >
                       <span>{c.categoria}</span>
                       <span>
-                        {(c.peso_attuale_pct ?? 0).toFixed(1)}% attuale · {c.target_percentuale}% target (
+                        {(c.peso_attuale_pct ?? 0).toFixed(1)}% attuale · {c.target_percentuale.toFixed(1)}% target (
                         {(c.scostamento_pp ?? 0) > 0 ? '+' : ''}
                         {c.scostamento_pp} pp)
                       </span>
@@ -414,11 +517,6 @@ export default async function PolizzePage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Strumenti</h2>
-        <TabellaOrdinabile colonne={COLONNE} righe={righe} />
-      </section>
-
-      <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12 }}>Le tue polizze</h2>
         {righePolizze.length === 0 ? (
           <p style={{ color: '#666' }}>Nessuna polizza registrata.</p>
@@ -451,6 +549,11 @@ export default async function PolizzePage() {
             ))}
           </div>
         )}
+      </section>
+
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Strumenti</h2>
+        <TabellaOrdinabile colonne={COLONNE} righe={righe} />
       </section>
     </div>
   )

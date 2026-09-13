@@ -872,6 +872,72 @@ export type Database = {
           },
         ]
       }
+      v_non_realizzato_dettaglio: {
+        Row: {
+          capitale_investito: number | null
+          categoria: string | null
+          contenitore_id: string | null
+          contenitore_tipo: string | null
+          strumento_id: string | null
+          valore: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "contenitori"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_valore_per_contenitore"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "transazioni_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_non_realizzato_inizio_anno: {
+        Row: {
+          capitale_investito: number | null
+          categoria: string | null
+          contenitore_id: string | null
+          contenitore_tipo: string | null
+          strumento_id: string | null
+          valore: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "contenitori"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_valore_per_contenitore"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "storico_valorizzazioni_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_plusvalenze_realizzate: {
         Row: {
           anno: number | null
@@ -952,6 +1018,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      v_realizzato_per_anno: {
+        Row: {
+          anno: number | null
+          imponibile_dividendi: number | null
+          imponibile_vendite: number | null
+          netto_dividendi: number | null
+          netto_switch_polizze: number | null
+          netto_vendite: number | null
+          realizzato_netto_totale: number | null
+          tasse_dividendi: number | null
+          tasse_totali: number | null
+          tasse_vendite: number | null
+        }
+        Relationships: []
       }
       v_ricavi_da_vendite: {
         Row: {
@@ -1082,6 +1163,98 @@ export type Database = {
             referencedColumns: ["contenitore_id"]
           },
         ]
+      }
+      v_storico_valorizzazioni_dettaglio: {
+        Row: {
+          capitale_investito: number | null
+          categoria: string | null
+          contenitore_id: string | null
+          contenitore_tipo: string | null
+          data: string | null
+          strumento_id: string | null
+          valore: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "contenitori"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_valore_per_contenitore"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "storico_valorizzazioni_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_storico_valorizzazioni_per_categoria: {
+        Row: {
+          capitale_investito_totale: number | null
+          categoria: string | null
+          data: string | null
+          valore_totale: number | null
+        }
+        Relationships: []
+      }
+      v_storico_valorizzazioni_per_contenitore: {
+        Row: {
+          capitale_investito_totale: number | null
+          contenitore_id: string | null
+          data: string | null
+          valore_totale: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "contenitori"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_valore_per_contenitore"
+            referencedColumns: ["contenitore_id"]
+          },
+        ]
+      }
+      v_storico_valorizzazioni_per_strumento: {
+        Row: {
+          capitale_investito_totale: number | null
+          data: string | null
+          strumento_id: string | null
+          valore_totale: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storico_valorizzazioni_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_storico_valorizzazioni_totale: {
+        Row: {
+          capitale_investito_totale: number | null
+          data: string | null
+          valore_totale: number | null
+        }
+        Relationships: []
       }
       v_tasse_trattenute_annuali: {
         Row: {

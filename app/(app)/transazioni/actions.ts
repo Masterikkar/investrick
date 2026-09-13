@@ -72,7 +72,7 @@ export async function aggiungiTransazione(formData: FormData) {
   redirect('/transazioni?successo=1')
 }
 
-// --- Storico transazioni: riallocazione contenitore ---
+// --- Storico transazioni: riallocazione contenitore ed eliminazione ---
 
 export async function aggiornaContenitoreTransazione(
   transazioneId: string,
@@ -87,6 +87,26 @@ export async function aggiornaContenitoreTransazione(
 
   if (erroreUpdate) {
     return { errore: erroreUpdate.message }
+  }
+
+  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+
+  if (erroreRicostruzione) {
+    return { errore: erroreRicostruzione.message }
+  }
+
+  revalidatePath('/', 'layout')
+
+  return { successo: true }
+}
+
+export async function eliminaTransazione(id: string): Promise<{ successo: true } | { errore: string }> {
+  const supabase = await createClient()
+
+  const { error: erroreDelete } = await supabase.from('transazioni').delete().eq('id', id)
+
+  if (erroreDelete) {
+    return { errore: erroreDelete.message }
   }
 
   const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')

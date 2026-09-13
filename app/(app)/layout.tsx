@@ -62,24 +62,26 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <Link href="/azioni">Azioni</Link>
               <Link href="/obbligazioni">Obbligazioni</Link>
               <Link href="/materie-prime">Materie prime</Link>
-              <Link href="/crypto">Crypto</Link>
+              <Link href="/monetario">Monetario</Link>
               <Link href="/multiasset">Multiasset</Link>
+              <Link href="/crypto">Crypto</Link>
             </div>
           </details>
           <details style={{ position: 'relative' }}>
-            <summary style={{ cursor: 'pointer' }}>Altro</summary>
+            <summary style={{ cursor: 'pointer' }}>Analisi</summary>
             <div style={{ ...stilePannello, right: 0 }}>
               <Link href="/costi">Costi</Link>
               <Link href="/fiscalita">Fiscalità</Link>
-              <Link href="/ribilanciamento">Ribilanciamento</Link>
               <Link href="/rendimenti">Rendimenti</Link>
+              <Link href="/ribilanciamento">Ribilanciamento</Link>
               <Link href="/transazioni">Transazioni</Link>
-              <Link href="/asset/nuovo">Gestione strumenti</Link>
             </div>
           </details>
           <details style={{ position: 'relative' }}>
             <summary style={{ cursor: 'pointer' }}>Account</summary>
             <div style={{ ...stilePannello, right: 0 }}>
+              <Link href="/asset/nuovo">Gestione strumenti</Link>
+              <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: 0 }} />
               <form action={logout}>
                 <button type="submit">Esci</button>
               </form>

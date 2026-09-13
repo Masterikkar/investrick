@@ -4,7 +4,7 @@ import { formatEuro } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 
-const CATEGORIA = 'Multiasset'
+const CATEGORIA = 'Monetario'
 
 const COLONNE: ColonnaTabella[] = [
   { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
@@ -19,7 +19,7 @@ const COLONNE: ColonnaTabella[] = [
   { key: 'provenienza', label: 'Provenienza', kind: 'text' },
 ]
 
-export default async function MultiassetPage() {
+export default async function MonetarioPage() {
   const supabase = await createClient()
 
   const { data: categoriaValore } = await supabase

@@ -59,35 +59,52 @@ export async function rinominaContenitore(
 export async function eliminaContenitore(id: string): Promise<{ successo: true } | { errore: string }> {
   const supabase = await createClient()
 
-  const [
-    { count: numTransazioni },
-    { count: numMovimenti },
-    { count: numTarget },
-    { count: numTargetStrumento },
-  ] = await Promise.all([
-    supabase.from('transazioni').select('id', { count: 'exact', head: true }).eq('contenitore_id', id),
-    supabase.from('movimenti_liquidita').select('id', { count: 'exact', head: true }).eq('contenitore_id', id),
-    supabase.from('target_allocazioni').select('id', { count: 'exact', head: true }).eq('contenitore_id', id),
-    supabase
-      .from('target_allocazioni_strumento')
-      .select('id', { count: 'exact', head: true })
-      .eq('contenitore_id', id),
-  ])
+  const { error: erroreTransazioni } = await supabase
+    .from('transazioni')
+    .update({ contenitore_id: null })
+    .eq('contenitore_id', id)
 
-  const totaleCollegati =
-    (numTransazioni ?? 0) + (numMovimenti ?? 0) + (numTarget ?? 0) + (numTargetStrumento ?? 0)
-
-  if (totaleCollegati > 0) {
-    return {
-      errore:
-        'Non puoi eliminare questo contenitore: ha ancora transazioni, movimenti o target collegati. Spostali (da Transazioni) o rimuovili prima di eliminarlo.',
-    }
+  if (erroreTransazioni) {
+    return { errore: erroreTransazioni.message }
   }
 
-  const { error } = await supabase.from('contenitori').delete().eq('id', id)
+  const { error: erroreMovimenti } = await supabase
+    .from('movimenti_liquidita')
+    .update({ contenitore_id: null })
+    .eq('contenitore_id', id)
 
-  if (error) {
-    return { errore: error.message }
+  if (erroreMovimenti) {
+    return { errore: erroreMovimenti.message }
+  }
+
+  const { error: erroreTarget } = await supabase
+    .from('target_allocazioni')
+    .delete()
+    .eq('contenitore_id', id)
+
+  if (erroreTarget) {
+    return { errore: erroreTarget.message }
+  }
+
+  const { error: erroreTargetStrumento } = await supabase
+    .from('target_allocazioni_strumento')
+    .delete()
+    .eq('contenitore_id', id)
+
+  if (erroreTargetStrumento) {
+    return { errore: erroreTargetStrumento.message }
+  }
+
+  const { error: erroreContenitore } = await supabase.from('contenitori').delete().eq('id', id)
+
+  if (erroreContenitore) {
+    return { errore: erroreContenitore.message }
+  }
+
+  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+
+  if (erroreRicostruzione) {
+    return { errore: erroreRicostruzione.message }
   }
 
   revalidatePath('/', 'layout')

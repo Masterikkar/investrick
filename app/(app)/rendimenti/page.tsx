@@ -57,21 +57,20 @@ export default async function RendimentiPage() {
 
   const { data: storicoRaw } = ids.length
     ? await supabase
-        .from('storico_valorizzazioni')
-        .select('contenitore_id, data, valore, capitale_investito')
+        .from('v_storico_valorizzazioni_per_contenitore')
+        .select('contenitore_id, data, valore_totale, capitale_investito_totale')
         .in('contenitore_id', ids)
         .order('data', { ascending: true })
     : { data: null }
 
   const perContenitore = new Map<string, Map<string, { valore: number; capitaleInvestito: number }>>()
   for (const r of storicoRaw ?? []) {
-    if (!r.contenitore_id) continue
+    if (!r.contenitore_id || !r.data) continue
     if (!perContenitore.has(r.contenitore_id)) perContenitore.set(r.contenitore_id, new Map())
     const mappaDate = perContenitore.get(r.contenitore_id)!
-    const esistente = mappaDate.get(r.data) ?? { valore: 0, capitaleInvestito: 0 }
     mappaDate.set(r.data, {
-      valore: esistente.valore + Number(r.valore),
-      capitaleInvestito: esistente.capitaleInvestito + Number(r.capitale_investito ?? 0),
+      valore: Number(r.valore_totale),
+      capitaleInvestito: Number(r.capitale_investito_totale ?? 0),
     })
   }
 
