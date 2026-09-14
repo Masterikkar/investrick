@@ -1,50 +1,269 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro } from '@/lib/format'
+import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
+import { GraficoTorta, type FettaTorta } from '@/components/grafico-torta'
 
-const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Crypto', 'Multiasset']
+type Posizione = {
+  strumento_id: string
+  contenitore_id: string | null
+  valore: number | null
+  capitale_investito: number
+  quantita_posseduta: number
+  prezzo_medio_unitario: number
+}
+type NonRealizzatoDettaglio = {
+  strumento_id: string
+  contenitore_id: string | null
+  categoria: string
+  contenitore_tipo: string | null
+  valore: number | null
+  capitale_investito: number
+}
+type SaldoLiquidita = { strumento_id: string; contenitore_id: string | null; saldo_corrente: number }
+type CostoRiga = { strumento_id: string; contenitore_id: string | null; costo_totale: number }
+type StoricoTotale = {
+  data: string | null
+  valore_totale: number | null
+  capitale_investito_totale: number | null
+}
+type RealizzatoAnno = { anno: number; realizzato_netto_totale: number }
+
+const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
 export default async function DashboardPage() {
   const supabase = await createClient()
+  const annoCorrente = new Date().getFullYear()
 
-  const { data: totale } = await supabase
-    .from('v_valore_totale_portafoglio')
-    .select('valore_totale')
-    .single()
+  const [
+    { data: totale },
+    { data: posizioniRaw },
+    { data: saldiLiquiditaRaw },
+    { data: costoMercatoRaw },
+    { data: costoLiquiditaRaw },
+    { data: storicoRaw },
+    { data: realizzatoAnnoRaw },
+    { data: contenitori },
+    { data: categorieData },
+    { data: scostamenti },
+    { data: impostazioni },
+    { data: nonRealizzatoRaw },
+  ] = await Promise.all([
+    supabase.from('v_valore_totale_portafoglio').select('valore_totale').single(),
+    supabase
+      .from('v_riepilogo_posizione')
+      .select('strumento_id, contenitore_id, valore, capitale_investito, quantita_posseduta, prezzo_medio_unitario')
+      .returns<Posizione[]>(),
+    supabase.from('v_saldo_liquidita').select('strumento_id, contenitore_id, saldo_corrente').returns<SaldoLiquidita[]>(),
+    supabase.from('v_costo_per_strumento').select('strumento_id, contenitore_id, costo_totale').returns<CostoRiga[]>(),
+    supabase.from('v_costo_liquidita').select('strumento_id, contenitore_id, costo_totale').returns<CostoRiga[]>(),
+    supabase
+      .from('v_storico_valorizzazioni_totale')
+      .select('data, valore_totale, capitale_investito_totale')
+      .order('data', { ascending: true })
+      .returns<StoricoTotale[]>(),
+    supabase.from('v_realizzato_per_anno').select('anno, realizzato_netto_totale').eq('anno', annoCorrente).maybeSingle().returns<RealizzatoAnno>(),
+    supabase.from('v_valore_per_contenitore').select('contenitore_id, tipo, nome, valore_totale').order('tipo'),
+    supabase.from('v_valore_per_categoria').select('categoria, valore_totale'),
+    supabase.from('v_scostamento_target').select('*'),
+    supabase.from('impostazioni_utente').select('soglia_ribilanciamento_pp').maybeSingle(),
+    supabase
+      .from('v_non_realizzato_dettaglio')
+      .select('strumento_id, contenitore_id, categoria, contenitore_tipo, valore, capitale_investito')
+      .returns<NonRealizzatoDettaglio[]>(),
+  ])
 
-  const { data: contenitori } = await supabase
-    .from('v_valore_per_contenitore')
-    .select('contenitore_id, tipo, nome, valore_totale')
-    .order('tipo')
+  const posizioni = posizioniRaw ?? []
+  const saldiLiquidita = saldiLiquiditaRaw ?? []
+  const valoreTotalePortafoglio = totale?.valore_totale ?? 0
 
-  const { data: categorieData } = await supabase
-    .from('v_valore_per_categoria')
-    .select('categoria, valore_totale')
+  // --- Aggregati mercato (esclusa liquidità: rendimento, plus/minus, capitale netto) ---
+  const valoreTotaleMercato = posizioni.reduce((s, p) => s + (p.valore ?? 0), 0)
+  const valoreTotaleLiquidita = saldiLiquidita.reduce((s, x) => s + Number(x.saldo_corrente ?? 0), 0)
 
-  const categorie = ORDINE_CATEGORIE.map((nome) => ({
-    categoria: nome,
-    valore_totale: categorieData?.find((c) => c.categoria === nome)?.valore_totale ?? 0,
-  }))
+  const capitaleInvestitoLordo = posizioni.reduce((s, p) => s + (p.capitale_investito ?? 0), 0)
+  const plusMinusNonRealizzata = valoreTotaleMercato - capitaleInvestitoLordo
+  const rendimentoPctTotale = capitaleInvestitoLordo > 0 ? (plusMinusNonRealizzata / capitaleInvestitoLordo) * 100 : null
 
-  const { data: scostamenti } = await supabase
-    .from('v_scostamento_target')
-    .select('*')
+  const capitaleInvestitoNetto = posizioni.reduce(
+    (s, p) => s + (p.quantita_posseduta ?? 0) * (p.prezzo_medio_unitario ?? 0),
+    0
+  )
 
-  const { data: impostazioni } = await supabase
-    .from('impostazioni_utente')
-    .select('soglia_ribilanciamento_pp')
-    .maybeSingle()
+  const costoTotale =
+    (costoMercatoRaw ?? []).reduce((s, c) => s + (c.costo_totale ?? 0), 0) +
+    (costoLiquiditaRaw ?? []).reduce((s, c) => s + (c.costo_totale ?? 0), 0)
 
+  const realizzatoNettoAnno = realizzatoAnnoRaw?.realizzato_netto_totale ?? 0
+
+  // --- Storico per il grafico ---
+  const storicoValoreMap = new Map<string, number>()
+  const storicoCapitaleMap = new Map<string, number>()
+  for (const r of storicoRaw ?? []) {
+    if (!r.data) continue
+    storicoValoreMap.set(r.data, Number(r.valore_totale))
+    if (r.capitale_investito_totale != null) {
+      storicoCapitaleMap.set(r.data, Number(r.capitale_investito_totale))
+    }
+  }
+
+  const puntiRendimento: PuntoStorico[] = Array.from(storicoValoreMap.entries())
+    .map(([data, valore]) => {
+      const capitale = storicoCapitaleMap.get(data)
+      if (!capitale || capitale <= 0) return null
+      return { data, valore: ((valore - capitale) / capitale) * 100 }
+    })
+    .filter((p): p is PuntoStorico => p !== null)
+    .sort((a, b) => a.data.localeCompare(b.data))
+
+  const rendimentoUltimoSnapshot =
+    puntiRendimento.length > 0 ? puntiRendimento[puntiRendimento.length - 1].valore : null
+
+  const variazioneDaUltimoSnapshot =
+    rendimentoPctTotale != null && rendimentoUltimoSnapshot != null
+      ? rendimentoPctTotale - rendimentoUltimoSnapshot
+      : null
+
+  // --- Ribilanciamento ---
   const soglia = impostazioni?.soglia_ribilanciamento_pp ?? 3
 
   const alert = (scostamenti ?? [])
     .filter((s) => Math.abs(s.scostamento_pp ?? 0) >= soglia)
     .sort((a, b) => Math.abs(b.scostamento_pp ?? 0) - Math.abs(a.scostamento_pp ?? 0))
 
+  // --- Categorie ---
+  const categorie = ORDINE_CATEGORIE.map((nome) => ({
+    categoria: nome,
+    valore_totale: categorieData?.find((c) => c.categoria === nome)?.valore_totale ?? 0,
+  }))
+
+  // --- Composizione: per categoria + Liquidità ---
+  const valorePerCategoria = new Map<string, number>()
+  for (const r of nonRealizzatoRaw ?? []) {
+    if (r.valore == null) continue
+    valorePerCategoria.set(r.categoria, (valorePerCategoria.get(r.categoria) ?? 0) + Number(r.valore))
+  }
+  const fetteCategorie: FettaTorta[] = [
+    ...ORDINE_CATEGORIE.map((cat) => ({ nome: cat, valore: valorePerCategoria.get(cat) ?? 0 })),
+    { nome: 'Liquidità', valore: valoreTotaleLiquidita },
+  ]
+
+  // --- Composizione: PAC / Polizze / Diretto / Liquidità ---
+  let valorePac = 0
+  let valorePolizze = 0
+  let valoreDiretto = 0
+  for (const r of nonRealizzatoRaw ?? []) {
+    if (r.valore == null) continue
+    if (r.contenitore_tipo === 'PAC') valorePac += Number(r.valore)
+    else if (r.contenitore_tipo === 'Polizza') valorePolizze += Number(r.valore)
+    else if (r.contenitore_tipo == null) valoreDiretto += Number(r.valore)
+  }
+  const fetteContenitori: FettaTorta[] = [
+    { nome: 'PAC', valore: valorePac },
+    { nome: 'Polizze', valore: valorePolizze },
+    { nome: 'Diretto', valore: valoreDiretto },
+    { nome: 'Liquidità', valore: valoreTotaleLiquidita },
+  ]
+
   return (
     <div>
-      <p style={{ fontFamily: 'Georgia, serif', fontSize: 48, margin: 0 }}>
-        {formatEuro(totale?.valore_totale ?? 0)}
-      </p>
+      <div style={{ fontSize: 13, color: '#666' }}>Dashboard</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16 }}>Il tuo portafoglio</h1>
+
+      <section>
+        <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotalePortafoglio} />
+      </section>
+
+      <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Rendimento Live</div>
+          <div
+            style={{
+              fontSize: 22,
+              marginTop: 4,
+              color: (rendimentoPctTotale ?? 0) >= 0 ? '#0a7d2c' : '#c0392b',
+            }}
+          >
+            {rendimentoPctTotale != null
+              ? `${rendimentoPctTotale >= 0 ? '+' : ''}${rendimentoPctTotale.toFixed(2)}%`
+              : '—'}
+            {variazioneDaUltimoSnapshot != null && (
+              <span style={{ fontSize: 14, marginLeft: 6, color: '#171717' }}>
+                (Oggi{' '}
+                <span style={{ color: variazioneDaUltimoSnapshot >= 0 ? '#0a7d2c' : '#c0392b' }}>
+                  {variazioneDaUltimoSnapshot >= 0 ? '+' : ''}
+                  {variazioneDaUltimoSnapshot.toFixed(2)}%
+                </span>
+                )
+              </span>
+            )}
+          </div>
+          <Link href="/rendimenti" style={{ fontSize: 13 }}>
+            Vedi dettaglio rendimenti →
+          </Link>
+        </div>
+
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Plus/minusvalenza non realizzata</div>
+          <div
+            style={{
+              fontSize: 22,
+              marginTop: 4,
+              color: plusMinusNonRealizzata >= 0 ? '#0a7d2c' : '#c0392b',
+            }}
+          >
+            {plusMinusNonRealizzata >= 0 ? '+' : ''}
+            {formatEuro(plusMinusNonRealizzata)}
+          </div>
+          <Link href="/fiscalita" style={{ fontSize: 13 }}>
+            Vedi dettaglio fiscalità →
+          </Link>
+        </div>
+
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Plus/minusvalenza realizzate nette — {annoCorrente}</div>
+          <div
+            style={{
+              fontSize: 22,
+              marginTop: 4,
+              color: realizzatoNettoAnno >= 0 ? '#0a7d2c' : '#c0392b',
+            }}
+          >
+            {realizzatoNettoAnno >= 0 ? '+' : ''}
+            {formatEuro(realizzatoNettoAnno)}
+          </div>
+          <Link href="/fiscalita" style={{ fontSize: 13 }}>
+            Vedi dettaglio fiscalità →
+          </Link>
+        </div>
+
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Costo totale</div>
+          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(costoTotale)}</div>
+          <Link href="/costi" style={{ fontSize: 13 }}>
+            Vedi dettaglio costi →
+          </Link>
+        </div>
+
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Capitale investito netto</div>
+          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(capitaleInvestitoNetto)}</div>
+          <Link href="/transazioni" style={{ fontSize: 13 }}>
+            Vedi transazioni →
+          </Link>
+        </div>
+      </section>
+
+      <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
+          <h2 style={{ fontSize: 18, marginBottom: 12 }}>Composizione per categoria</h2>
+          <GraficoTorta fette={fetteCategorie} />
+        </div>
+        <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
+          <h2 style={{ fontSize: 18, marginBottom: 12 }}>Composizione per contenitore</h2>
+          <GraficoTorta fette={fetteContenitori} />
+        </div>
+      </section>
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12 }}>Ribilanciamento</h2>

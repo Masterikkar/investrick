@@ -50,6 +50,38 @@ export type Database = {
         }
         Relationships: []
       }
+      fonti_prezzo_scraping: {
+        Row: {
+          created_at: string
+          id: string
+          strumento_id: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          strumento_id: string
+          url: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          strumento_id?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fonti_prezzo_scraping_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       importazioni: {
         Row: {
           categoria: string
