@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-const CATEGORIE_VALIDE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Crypto', 'Multiasset']
+const CATEGORIE_VALIDE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
 export async function aggiungiTransazione(formData: FormData) {
   const supabase = await createClient()
@@ -64,6 +64,50 @@ export async function aggiungiTransazione(formData: FormData) {
   })
 
   if (error) {
+    redirect('/transazioni?errore=1')
+  }
+
+  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+
+  if (erroreRicostruzione) {
+    redirect('/transazioni?errore=1')
+  }
+
+  revalidatePath('/')
+  revalidatePath('/transazioni')
+  redirect('/transazioni?successo=1')
+}
+
+export async function aggiungiMovimentoLiquidita(formData: FormData) {
+  const supabase = await createClient()
+
+  const strumentoId = formData.get('strumento_id') as string
+  const contenitoreId = formData.get('contenitore_id') as string
+  const tipoMovimento = formData.get('tipo_movimento') as string
+  const data = formData.get('data') as string
+  const importo = Number(formData.get('importo'))
+  const tassaTrattenuta = Number(formData.get('tassa_trattenuta') || 0)
+
+  if (!strumentoId) {
+    redirect('/transazioni?errore=1')
+  }
+
+  const { error } = await supabase.from('movimenti_liquidita').insert({
+    strumento_id: strumentoId,
+    contenitore_id: contenitoreId === 'diretto' ? null : contenitoreId,
+    tipo_movimento: tipoMovimento,
+    data,
+    importo,
+    tassa_trattenuta: tassaTrattenuta,
+  })
+
+  if (error) {
+    redirect('/transazioni?errore=1')
+  }
+
+  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+
+  if (erroreRicostruzione) {
     redirect('/transazioni?errore=1')
   }
 
@@ -188,7 +232,7 @@ export type RigaImport = {
 
 export async function importaTransazioniBulk(
   righe: RigaImport[]
-): Promise<{ inserite: number; errori: { riga: number; messaggio: string }[] }> {
+): Promise<{ inserite: number; errori: { riga: number; messaggio: string }[]; avvisoRicostruzione?: string }> {
   const supabase = await createClient()
 
   if (righe.length === 0) {
@@ -238,6 +282,29 @@ export async function importaTransazioniBulk(
       errori.push({ riga: r.rigaOriginale, messaggio: error.message })
     } else {
       inserite++
+    }
+  }
+
+  if (inserite > 0) {
+    const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+    if (erroreRicostruzione) {
+      errori.push({
+        riga: 0,
+        messaggio: `Import riuscito ma la ricostruzione dello storico è fallita: ${erroreRicostruzione.message}. Rilanciala manualmente.`,
+      })
+    }
+  }
+
+  if (inserite > 0) {
+    const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+    if (erroreRicostruzione) {
+      revalidatePath('/')
+      revalidatePath('/transazioni')
+      return {
+        inserite,
+        errori,
+        avvisoRicostruzione: `La ricostruzione dello storico è fallita (${erroreRicostruzione.message}). Rilanciala manualmente dallo SQL Editor.`,
+      }
     }
   }
 

@@ -809,8 +809,10 @@ export type Database = {
       v_interessi_liquidita: {
         Row: {
           contenitore_id: string | null
+          interessi_lordi: number | null
           interessi_totali: number | null
           strumento_id: string | null
+          tasse_trattenute: number | null
           user_id: string | null
         }
         Relationships: [

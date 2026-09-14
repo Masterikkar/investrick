@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { aggiungiTransazione } from './actions'
+import { aggiungiTransazione, aggiungiMovimentoLiquidita } from './actions'
 import { ImportaExcel } from './importa-excel'
 import { StoricoTransazioni, type RigaStoricoTransazione } from './storico-transazioni'
 
@@ -14,7 +14,14 @@ const OPERAZIONI = [
   { value: 'Scambio_acquisizione', label: 'Scambio (acquisizione)' },
 ]
 
-const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Crypto', 'Multiasset']
+const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
+
+const TIPI_MOVIMENTO_LIQUIDITA = [
+  { value: 'Versamento', label: 'Versamento' },
+  { value: 'Prelievo', label: 'Prelievo' },
+  { value: 'Interesse', label: 'Interesse' },
+  { value: 'Costo', label: 'Costo' },
+]
 
 export default async function TransazioniPage({
   searchParams,
@@ -56,6 +63,7 @@ export default async function TransazioniPage({
   }
 
   const strumentoMap = new Map((strumenti ?? []).map((s) => [s.id, s]))
+  const strumentiLiquidita = (strumenti ?? []).filter((s) => s.categoria === 'Liquidita')
 
   const storicoTransazioni: RigaStoricoTransazione[] = (transazioniStoricoRaw ?? []).map((t) => {
     const strumento = t.strumento_id ? strumentoMap.get(t.strumento_id) : undefined
@@ -176,6 +184,78 @@ export default async function TransazioniPage({
 
         <button type="submit">Salva transazione</button>
       </form>
+
+      <hr style={{ margin: '32px 0' }} />
+
+      <h2 style={{ fontSize: 18, marginBottom: 12 }}>Nuova operazione Liquidità</h2>
+
+      {params.successo === '1' && <p style={{ color: 'green' }}>Transazione salvata.</p>}
+      {params.errore === '1' && <p style={{ color: 'red' }}>Qualcosa è andato storto, riprova.</p>}
+
+      {strumentiLiquidita.length === 0 ? (
+        <p style={{ color: '#666' }}>
+          Nessuno strumento di categoria Liquidità trovato. Creane uno da "Gestione strumenti" prima di registrare
+          movimenti.
+        </p>
+      ) : (
+        <form
+          action={aggiungiMovimentoLiquidita}
+          style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400, marginTop: 16 }}
+        >
+          <label>
+            Strumento
+            <select name="strumento_id" required style={{ width: '100%' }}>
+              <option value="">Seleziona...</option>
+              {strumentiLiquidita.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.nome}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Contenitore
+            <select name="contenitore_id" required style={{ width: '100%' }}>
+              <option value="diretto">Diretto</option>
+              {contenitori?.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Tipo movimento
+            <select name="tipo_movimento" required style={{ width: '100%' }}>
+              {TIPI_MOVIMENTO_LIQUIDITA.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Data
+            <input type="date" name="data" required style={{ width: '100%' }} />
+          </label>
+
+          <label>
+            Importo lordo (€)
+            <input type="number" name="importo" step="any" required style={{ width: '100%' }} />
+          </label>
+
+          <label>
+            Tassa trattenuta (€)
+            <input type="number" name="tassa_trattenuta" step="any" defaultValue={0} style={{ width: '100%' }} />
+            <small style={{ color: '#666' }}>Rilevante solo per "Interesse".</small>
+          </label>
+
+          <button type="submit">Salva operazione</button>
+        </form>
+      )}
 
       <hr style={{ margin: '32px 0' }} />
 

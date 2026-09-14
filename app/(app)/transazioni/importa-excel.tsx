@@ -266,7 +266,7 @@ export function ImportaExcel({
   const [mappaTicker, setMappaTicker] = useState<Map<string, string>>(
     () => new Map(strumenti.filter((s): s is StrumentoBase & { ticker: string } => !!s.ticker).map((s) => [s.ticker.toUpperCase(), s.id]))
   )
-  const [risultato, setRisultato] = useState<{ inserite: number; errori: { riga: number; messaggio: string }[] } | null>(null)
+  const [risultato, setRisultato] = useState<{ inserite: number; errori: { riga: number; messaggio: string }[]; avvisoRicostruzione?: string } | null>(null)
   const [importando, setImportando] = useState(false)
   const [erroreFile, setErroreFile] = useState<string | null>(null)
 
@@ -389,6 +389,9 @@ export function ImportaExcel({
                 <li key={i}>Riga {e.riga}: {e.messaggio}</li>
               ))}
             </ul>
+          )}
+          {risultato.avvisoRicostruzione && (
+            <p style={{ color: '#b45309', fontSize: 13, marginTop: 8 }}>{risultato.avvisoRicostruzione}</p>
           )}
         </div>
       )}
