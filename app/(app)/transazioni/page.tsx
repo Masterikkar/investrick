@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { aggiungiTransazione, aggiungiMovimentoLiquidita } from './actions'
 import { ImportaExcel } from './importa-excel'
 import { StoricoTransazioni, type RigaStoricoTransazione } from './storico-transazioni'
+import { StoricoMovimentiLiquidita, type RigaStoricoMovimentoLiquidita } from './storico-movimenti-liquidita'
 
 const OPERAZIONI = [
   { value: 'Acquisto', label: 'Acquisto' },
@@ -56,6 +57,11 @@ export default async function TransazioniPage({
     )
     .order('data', { ascending: false })
 
+  const { data: movimentiLiquiditaStoricoRaw } = await supabase
+    .from('movimenti_liquidita')
+    .select('id, data, tipo_movimento, contenitore_id, importo, tassa_trattenuta, strumento_id')
+    .order('data', { ascending: false })
+
   const tipiPerCategoria: Record<string, string[]> = {}
   for (const t of tipiRaw ?? []) {
     if (!tipiPerCategoria[t.categoria]) tipiPerCategoria[t.categoria] = []
@@ -79,6 +85,20 @@ export default async function TransazioniPage({
       strumento_id: t.strumento_id,
       strumento_nome: strumento?.nome ?? '—',
       strumento_ticker: strumento?.ticker ?? null,
+    }
+  })
+
+  const storicoMovimentiLiquidita: RigaStoricoMovimentoLiquidita[] = (movimentiLiquiditaStoricoRaw ?? []).map((m) => {
+    const strumento = strumentoMap.get(m.strumento_id)
+    return {
+      id: m.id,
+      data: m.data,
+      tipo_movimento: m.tipo_movimento,
+      contenitore_id: m.contenitore_id,
+      importo: Number(m.importo),
+      tassa_trattenuta: Number(m.tassa_trattenuta),
+      strumento_id: m.strumento_id,
+      strumento_nome: strumento?.nome ?? '—',
     }
   })
 
@@ -261,6 +281,11 @@ export default async function TransazioniPage({
 
       <h2 style={{ fontSize: 18, marginBottom: 12 }}>Storico transazioni</h2>
       <StoricoTransazioni transazioni={storicoTransazioni} contenitori={contenitori ?? []} />
+
+      <hr style={{ margin: '32px 0' }} />
+
+      <h2 style={{ fontSize: 18, marginBottom: 12 }}>Storico movimenti Liquidità</h2>
+      <StoricoMovimentiLiquidita movimenti={storicoMovimentiLiquidita} contenitori={contenitori ?? []} />
     </div>
   )
 }

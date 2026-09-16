@@ -164,6 +164,102 @@ export async function eliminaTransazione(id: string): Promise<{ successo: true }
   return { successo: true }
 }
 
+// --- Storico movimenti liquidità: riallocazione contenitore ed eliminazione ---
+
+export async function aggiornaContenitoreMovimentoLiquidita(
+  movimentoId: string,
+  nuovoContenitoreId: string | null
+): Promise<{ successo: true } | { errore: string }> {
+  const supabase = await createClient()
+
+  const { error: erroreUpdate } = await supabase
+    .from('movimenti_liquidita')
+    .update({ contenitore_id: nuovoContenitoreId })
+    .eq('id', movimentoId)
+
+  if (erroreUpdate) {
+    return { errore: erroreUpdate.message }
+  }
+
+  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+
+  if (erroreRicostruzione) {
+    return { errore: erroreRicostruzione.message }
+  }
+
+  revalidatePath('/', 'layout')
+
+  return { successo: true }
+}
+
+export async function eliminaMovimentoLiquidita(id: string): Promise<{ successo: true } | { errore: string }> {
+  const supabase = await createClient()
+
+  const { error: erroreDelete } = await supabase.from('movimenti_liquidita').delete().eq('id', id)
+
+  if (erroreDelete) {
+    return { errore: erroreDelete.message }
+  }
+
+  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+
+  if (erroreRicostruzione) {
+    return { errore: erroreRicostruzione.message }
+  }
+
+  revalidatePath('/', 'layout')
+
+  return { successo: true }
+}
+
+// --- Storico movimenti liquidità: riallocazione contenitore ed eliminazione ---
+
+export async function aggiornaContenitoreMovimentoLiquidita(
+  movimentoId: string,
+  nuovoContenitoreId: string | null
+): Promise<{ successo: true } | { errore: string }> {
+  const supabase = await createClient()
+
+  const { error: erroreUpdate } = await supabase
+    .from('movimenti_liquidita')
+    .update({ contenitore_id: nuovoContenitoreId })
+    .eq('id', movimentoId)
+
+  if (erroreUpdate) {
+    return { errore: erroreUpdate.message }
+  }
+
+  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+
+  if (erroreRicostruzione) {
+    return { errore: erroreRicostruzione.message }
+  }
+
+  revalidatePath('/', 'layout')
+
+  return { successo: true }
+}
+
+export async function eliminaMovimentoLiquidita(id: string): Promise<{ successo: true } | { errore: string }> {
+  const supabase = await createClient()
+
+  const { error: erroreDelete } = await supabase.from('movimenti_liquidita').delete().eq('id', id)
+
+  if (erroreDelete) {
+    return { errore: erroreDelete.message }
+  }
+
+  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+
+  if (erroreRicostruzione) {
+    return { errore: erroreRicostruzione.message }
+  }
+
+  revalidatePath('/', 'layout')
+
+  return { successo: true }
+}
+
 // --- Import Excel massivo ---
 
 export async function creaAssetPerImport(dati: {

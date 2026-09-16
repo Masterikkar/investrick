@@ -4,7 +4,7 @@ import { formatEuro } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 
-const CATEGORIA = 'Materie Prime'
+const CATEGORIA = 'Materie prime'
 
 const COLONNE: ColonnaTabella[] = [
   { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },

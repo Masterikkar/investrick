@@ -3,6 +3,10 @@
     {
       "path": "/api/aggiorna-prezzi",
       "schedule": "0 22 * * *"
+    },
+    {
+      "path": "/api/aggiorna-prezzi-scraping",
+      "schedule": "45 21 * * *"
     }
   ]
 }

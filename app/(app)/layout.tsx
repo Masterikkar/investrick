@@ -53,18 +53,43 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
 
         <nav style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-          <Link href="/liquidita">Liquidità</Link>
-          <Link href="/pac">PAC</Link>
-          <Link href="/polizze">Polizze</Link>
+          <style>{`
+            .submenu-asset > summary {
+              list-style: none;
+              cursor: pointer;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .submenu-asset > summary::-webkit-details-marker { display: none; }
+            .submenu-asset > summary::after {
+              content: '⌄';
+              margin-left: 12px;
+              transition: transform 0.15s ease;
+            }
+            .submenu-asset[open] > summary::after {
+              transform: rotate(180deg);
+            }
+          `}</style>
           <details style={{ position: 'relative' }}>
-            <summary style={{ cursor: 'pointer' }}>Asset</summary>
+            <summary style={{ cursor: 'pointer' }}>Portafoglio</summary>
             <div style={{ ...stilePannello, right: 0 }}>
-              <Link href="/azioni">Azioni</Link>
-              <Link href="/obbligazioni">Obbligazioni</Link>
-              <Link href="/materie-prime">Materie prime</Link>
-              <Link href="/monetario">Monetario</Link>
-              <Link href="/multiasset">Multiasset</Link>
-              <Link href="/crypto">Crypto</Link>
+              <Link href="/pac">Piani di Accumulo</Link>
+              <Link href="/polizze">Polizze</Link>
+              <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: 0 }} />
+              <details className="submenu-asset">
+                <summary>Asset</summary>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8, paddingLeft: 12 }}>
+                  <Link href="/azioni">Azioni</Link>
+                  <Link href="/obbligazioni">Obbligazioni</Link>
+                  <Link href="/materie-prime">Materie prime</Link>
+                  <Link href="/monetario">Monetario</Link>
+                  <Link href="/multiasset">Multiasset</Link>
+                  <Link href="/crypto">Crypto</Link>
+                </div>
+              </details>
+              <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: 0 }} />
+              <Link href="/liquidita">Liquidità</Link>
             </div>
           </details>
           <details style={{ position: 'relative' }}>
