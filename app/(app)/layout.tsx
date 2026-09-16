@@ -3,20 +3,29 @@ import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/login/actions'
 import { ChiudiTendineAutomaticamente } from '@/components/chiudi-tendine-automaticamente'
 import { BarraRicerca } from '@/components/barra-ricerca'
-
-const OFFSET_TENDINA = 'calc(100% + 17px)' // = padding verticale header (16px) + bordo (1px)
+import { RippleLink } from '@/components/ripple-link'
+import {
+  IconaChevron,
+  IconaPortafoglio,
+  IconaAnalisi,
+  IconaAccount,
+  IconaAsset,
+  IconaLiquidita,
+  IconaPac,
+  IconaPolizze,
+  IconaCosti,
+  IconaFiscalita,
+  IconaRendimenti,
+  IconaRibilanciamento,
+  IconaStorico,
+  IconaGestione,
+  IconaEsci,
+} from '@/components/icone-menu'
 
 const stilePannello: React.CSSProperties = {
   position: 'absolute',
-  top: OFFSET_TENDINA,
-  background: '#fff',
-  border: '1px solid #ddd',
-  borderRadius: 4,
-  padding: 8,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 8,
-  minWidth: 160,
+  top: 'calc(100% + 8px)',
+  right: 0,
   zIndex: 10,
 }
 
@@ -40,93 +49,194 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '16px 24px',
-          borderBottom: '1px solid #ddd',
+          padding: '16px 48px',
+          borderBottom: '1px solid var(--border-default)',
           gap: 24,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link href="/" style={{ textDecoration: 'none', color: 'var(--text-primary)' }}>
             <strong>Investrick</strong>
           </Link>
           <BarraRicerca strumenti={strumenti ?? []} contenitori={contenitori ?? []} />
         </div>
 
-        <nav style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-          <style>{`
-            .submenu-asset > summary {
-              list-style: none;
-              cursor: pointer;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-            }
-            .submenu-asset > summary::-webkit-details-marker { display: none; }
-            .submenu-asset > summary::after {
-              content: '⌄';
-              margin-left: 12px;
-              transition: transform 0.15s ease;
-            }
-            .submenu-asset[open] > summary::after {
-              transform: rotate(180deg);
-            }
-          `}</style>
+        <nav style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           <details style={{ position: 'relative' }}>
-            <summary style={{ cursor: 'pointer' }}>Portafoglio</summary>
-            <div style={{ ...stilePannello, right: 0 }}>
-              <details className="submenu-asset">
-                <summary>Asset</summary>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8, paddingLeft: 12 }}>
-                  <Link href="/azioni">Azioni</Link>
-                  <Link href="/obbligazioni">Obbligazioni</Link>
-                  <Link href="/materie-prime">Materie prime</Link>
-                  <Link href="/monetario">Monetario</Link>
-                  <Link href="/multiasset">Multiasset</Link>
-                  <Link href="/crypto">Crypto</Link>
+            <summary className="menu-toggle">
+              <IconaPortafoglio />
+              Portafoglio
+              <span className="menu-chevron">
+                <IconaChevron />
+              </span>
+            </summary>
+            <div className="menu-panel" style={stilePannello}>
+              <details>
+                <summary className="menu-toggle" style={{ padding: '9px 10px' }}>
+                  <span className="menu-row-left">
+                    <IconaAsset /> Asset
+                  </span>
+                  <span className="menu-chevron">
+                    <IconaChevron />
+                  </span>
+                </summary>
+                <div className="menu-submenu-items">
+                  <RippleLink href="/azioni" className="menu-row link-interattivo">
+                    Azioni
+                  </RippleLink>
+                  <RippleLink href="/obbligazioni" className="menu-row link-interattivo">
+                    Obbligazioni
+                  </RippleLink>
+                  <RippleLink href="/materie-prime" className="menu-row link-interattivo">
+                    Materie prime
+                  </RippleLink>
+                  <RippleLink href="/monetario" className="menu-row link-interattivo">
+                    Monetario
+                  </RippleLink>
+                  <RippleLink href="/multiasset" className="menu-row link-interattivo">
+                    Multiasset
+                  </RippleLink>
+                  <RippleLink href="/crypto" className="menu-row link-interattivo">
+                    Crypto
+                  </RippleLink>
                 </div>
               </details>
-              <Link href="/liquidita">Liquidità</Link>
-              <Link href="/pac">Piani di Accumulo</Link>
-              <Link href="/polizze">Polizze</Link>
+              <RippleLink
+                href="/liquidita"
+                className="menu-row link-interattivo"
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
+              >
+                <IconaLiquidita /> Liquidità
+              </RippleLink>
+              <RippleLink
+                href="/pac"
+                className="menu-row link-interattivo"
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
+              >
+                <IconaPac /> Piani di Accumulo
+              </RippleLink>
+              <RippleLink
+                href="/polizze"
+                className="menu-row link-interattivo"
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
+              >
+                <IconaPolizze /> Polizze
+              </RippleLink>
             </div>
           </details>
+
           <details style={{ position: 'relative' }}>
-            <summary style={{ cursor: 'pointer' }}>Analisi</summary>
-            <div style={{ ...stilePannello, right: 0 }}>
-              <Link href="/costi">Costi</Link>
-              <Link href="/fiscalita">Fiscalità</Link>
-              <Link href="/rendimenti">Rendimenti</Link>
-              <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: 0 }} />
-              <Link href="/ribilanciamento">Ribilanciamento</Link>
-              <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: 0 }} />
-              <details className="submenu-asset">
-                <summary>Storico</summary>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8, paddingLeft: 12 }}>
-                  <Link href="/transazioni/liquidita">Liquidità</Link>
-                  <Link href="/transazioni/asset">Transazioni</Link>
+            <summary className="menu-toggle">
+              <IconaAnalisi />
+              Analisi
+              <span className="menu-chevron">
+                <IconaChevron />
+              </span>
+            </summary>
+            <div className="menu-panel" style={stilePannello}>
+              <RippleLink
+                href="/costi"
+                className="menu-row link-interattivo"
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
+              >
+                <IconaCosti /> Costi
+              </RippleLink>
+              <RippleLink
+                href="/fiscalita"
+                className="menu-row link-interattivo"
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
+              >
+                <IconaFiscalita /> Fiscalità
+              </RippleLink>
+              <RippleLink
+                href="/rendimenti"
+                className="menu-row link-interattivo"
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
+              >
+                <IconaRendimenti /> Rendimenti
+              </RippleLink>
+              <hr className="menu-divider" />
+              <RippleLink
+                href="/ribilanciamento"
+                className="menu-row link-interattivo"
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
+              >
+                <IconaRibilanciamento /> Ribilanciamento
+              </RippleLink>
+              <hr className="menu-divider" />
+              <details>
+                <summary className="menu-toggle" style={{ padding: '9px 10px' }}>
+                  <span className="menu-row-left">
+                    <IconaStorico /> Storico
+                  </span>
+                  <span className="menu-chevron">
+                    <IconaChevron />
+                  </span>
+                </summary>
+                <div className="menu-submenu-items">
+                  <RippleLink href="/transazioni/liquidita" className="menu-row link-interattivo">
+                    Liquidità
+                  </RippleLink>
+                  <RippleLink href="/transazioni/asset" className="menu-row link-interattivo">
+                    Transazioni
+                  </RippleLink>
                 </div>
               </details>
             </div>
           </details>
+
           <details style={{ position: 'relative' }}>
-            <summary style={{ cursor: 'pointer' }}>Account</summary>
-            <div style={{ ...stilePannello, right: 0 }}>
-              <details className="submenu-asset">
-                <summary>Gestione</summary>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8, paddingLeft: 12 }}>
-                  <Link href="/asset/nuovo">Strumenti</Link>
-                  <Link href="/transazioni">Transazioni</Link>
+            <summary className="menu-toggle">
+              <IconaAccount />
+              Account
+              <span className="menu-chevron">
+                <IconaChevron />
+              </span>
+            </summary>
+            <div className="menu-panel" style={stilePannello}>
+              <details>
+                <summary className="menu-toggle" style={{ padding: '9px 10px' }}>
+                  <span className="menu-row-left">
+                    <IconaGestione /> Gestione
+                  </span>
+                  <span className="menu-chevron">
+                    <IconaChevron />
+                  </span>
+                </summary>
+                <div className="menu-submenu-items">
+                  <RippleLink href="/asset/nuovo" className="menu-row link-interattivo">
+                    Strumenti
+                  </RippleLink>
+                  <RippleLink href="/transazioni" className="menu-row link-interattivo">
+                    Transazioni
+                  </RippleLink>
                 </div>
               </details>
-              <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: 0 }} />
+              <hr className="menu-divider" />
               <form action={logout}>
-                <button type="submit">Esci</button>
+                <button
+                  type="submit"
+                  className="menu-row"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    width: '100%',
+                    background: 'none',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <IconaEsci /> Esci
+                </button>
               </form>
             </div>
           </details>
         </nav>
       </header>
-      <main style={{ padding: 24 }}>{children}</main>
+      <main style={{ padding: '32px 48px' }}>{children}</main>
     </div>
   )
 }

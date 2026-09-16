@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
+import { RippleLink } from '@/components/ripple-link'
 
 type Strumento = { id: string; nome: string; categoria: string; ticker: string | null }
 type Contenitore = { id: string; nome: string; tipo: string }
@@ -111,9 +111,10 @@ export function BarraRicerca({
             <div style={{ padding: 12, color: 'var(--text-secondary)', fontSize: 14 }}>Nessun risultato.</div>
           ) : (
             risultati.map((r) => (
-              <Link
+              <RippleLink
                 key={r.key}
                 href={r.href}
+                className="riga-interattiva"
                 onClick={() => {
                   setAperto(false)
                   setQuery('')
@@ -121,14 +122,12 @@ export function BarraRicerca({
                 style={{
                   display: 'block',
                   padding: '8px 12px',
-                  color: 'inherit',
-                  textDecoration: 'none',
                   borderBottom: '1px solid var(--border-default)',
                 }}
               >
                 <div style={{ fontSize: 14 }}>{r.label}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{r.sottotitolo}</div>
-              </Link>
+              </RippleLink>
             ))
           )}
         </div>

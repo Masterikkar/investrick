@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import Link from 'next/link'
+import { RippleLink } from '@/components/ripple-link'
 import { formatEuro } from '@/lib/format'
 
 export type ColonnaTabella = {
@@ -60,12 +60,9 @@ export function TabellaOrdinabile({
           return valore ?? '—'
         }
         return (
-          <Link
-            href={`${colonna.linkPrefix ?? ''}${id}`}
-            style={{ color: 'var(--text-primary)', textDecoration: 'underline' }}
-          >
+          <RippleLink href={`${colonna.linkPrefix ?? ''}${id}`} className="link-interattivo">
             {valore ?? '—'}
-          </Link>
+          </RippleLink>
         )
       }
       case 'euro':

@@ -139,19 +139,19 @@ export default async function LiquiditaPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: '#666' }}>Contenitore</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16 }}>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Contenitore</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>
         {liquidita?.nome ?? 'Liquidità'}
       </h1>
-      <p style={{ fontFamily: 'Georgia, serif', fontSize: 48, margin: 0 }}>
+      <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 48, margin: 0, color: 'var(--text-primary)' }}>
         {new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(valoreTotale)}
       </p>
 
-      <h2 style={{ marginTop: 32 }}>Interessi — {annoCorrente}</h2>
-      <p style={{ fontFamily: 'Georgia, serif', fontSize: 36, margin: 0, color: interesseNettoYtd >= 0 ? '#0a7d2c' : '#c0392b' }}>
+      <h2 style={{ marginTop: 32, fontSize: 18, fontWeight: 500 }}>Interessi — {annoCorrente}</h2>
+      <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 36, margin: 0, color: interesseNettoYtd >= 0 ? 'var(--success)' : 'var(--danger)' }}>
         {formatEuro(interesseNettoYtd)}
       </p>
-      <p style={{ color: '#666', fontSize: 13, marginTop: 4 }}>Netto, da inizio anno</p>
+      <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4 }}>Netto, da inizio anno</p>
 
       <div style={{ marginTop: 16, maxWidth: 1024 }}>
         <GraficoLineaSemplice punti={puntiCumulati} />
@@ -161,23 +161,23 @@ export default async function LiquiditaPage() {
         <GraficoBarreMensili punti={puntiMensili} />
       </div>
 
-      <h2 style={{ marginTop: 32 }}>Storico interessi</h2>
+      <h2 style={{ marginTop: 32, fontSize: 18, fontWeight: 500 }}>Storico interessi</h2>
       {righeStoricoAnni.length === 0 ? (
-        <p style={{ color: '#666' }}>Nessun interesse registrato finora.</p>
+        <p style={{ color: 'var(--text-secondary)' }}>Nessun interesse registrato finora.</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, maxWidth: 480 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, maxWidth: 480, color: 'var(--text-primary)' }}>
           <thead>
-            <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-              <th style={{ padding: 8 }}>Anno</th>
-              <th style={{ padding: 8 }}>Netto ricevuto</th>
-              <th style={{ padding: 8 }}>Tasse pagate</th>
+            <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
+              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Anno</th>
+              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Netto ricevuto</th>
+              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tasse pagate</th>
             </tr>
           </thead>
           <tbody>
             {righeStoricoAnni.map((r) => (
-              <tr key={r.anno} style={{ borderBottom: '1px solid #eee' }}>
+              <tr key={r.anno} style={{ borderBottom: '1px solid var(--border-default)' }}>
                 <td style={{ padding: 8 }}>{r.anno}</td>
-                <td style={{ padding: 8, color: r.netto >= 0 ? 'green' : '#b91c1c' }}>{formatEuro(r.netto)}</td>
+                <td style={{ padding: 8, color: r.netto >= 0 ? 'var(--success)' : 'var(--danger)' }}>{formatEuro(r.netto)}</td>
                 <td style={{ padding: 8 }}>{formatEuro(r.tasse)}</td>
               </tr>
             ))}
@@ -186,7 +186,7 @@ export default async function LiquiditaPage() {
       )}
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Strumenti</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Strumenti</h2>
         <TabellaOrdinabile colonne={COLONNE} righe={righe} />
       </section>
     </div>

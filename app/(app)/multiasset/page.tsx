@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
+import { RippleLink } from '@/components/ripple-link'
 import { formatEuro } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
@@ -18,6 +18,14 @@ const COLONNE: ColonnaTabella[] = [
   { key: 'costo', label: 'Costo', kind: 'euro' },
   { key: 'provenienza', label: 'Provenienza', kind: 'text' },
 ]
+
+const stileCard: React.CSSProperties = {
+  background: 'var(--bg-surface)',
+  border: '1px solid var(--border-default)',
+  borderRadius: 0,
+  padding: 16,
+  minWidth: 200,
+}
 
 export default async function MultiassetPage() {
   const supabase = await createClient()
@@ -136,31 +144,32 @@ export default async function MultiassetPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: '#666' }}>Categoria</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16 }}>{CATEGORIA}</h1>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Categoria</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{CATEGORIA}</h1>
 
       <section>
         <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotaleCategoria} />
       </section>
 
       <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Rendimento Live</div>
+        <div style={stileCard}>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Rendimento Live</div>
           <div
             style={{
               fontSize: 22,
+              fontWeight: 500,
               marginTop: 4,
-              color: (rendimentoPctTotale ?? 0) >= 0 ? '#0a7d2c' : '#c0392b',
+              color: (rendimentoPctTotale ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)',
             }}
           >
             {rendimentoPctTotale != null
               ? `${rendimentoPctTotale >= 0 ? '+' : ''}${rendimentoPctTotale.toFixed(2)}%`
               : '—'}
             {variazioneDaUltimoSnapshot != null && (
-              <span style={{ fontSize: 14, marginLeft: 6, color: '#171717' }}>
+              <span style={{ fontSize: 14, marginLeft: 6, color: 'var(--text-secondary)' }}>
                 (Oggi{' '}
                 <span
-                  style={{ color: variazioneDaUltimoSnapshot >= 0 ? '#0a7d2c' : '#c0392b' }}
+                  style={{ color: variazioneDaUltimoSnapshot >= 0 ? 'var(--success)' : 'var(--danger)' }}
                 >
                   {variazioneDaUltimoSnapshot >= 0 ? '+' : ''}
                   {variazioneDaUltimoSnapshot.toFixed(2)}%
@@ -169,47 +178,48 @@ export default async function MultiassetPage() {
               </span>
             )}
           </div>
-          <Link href="/rendimenti" style={{ fontSize: 13 }}>
+          <RippleLink href="/rendimenti" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
             Vedi dettaglio rendimenti →
-          </Link>
+          </RippleLink>
         </div>
 
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Plus/minusvalenza non realizzata</div>
+        <div style={stileCard}>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Plus/minusvalenza non realizzata</div>
           <div
             style={{
               fontSize: 22,
+              fontWeight: 500,
               marginTop: 4,
-              color: plusMinusNonRealizzata >= 0 ? '#0a7d2c' : '#c0392b',
+              color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)',
             }}
           >
             {plusMinusNonRealizzata >= 0 ? '+' : ''}
             {formatEuro(plusMinusNonRealizzata)}
           </div>
-          <Link href="/fiscalita" style={{ fontSize: 13 }}>
+          <RippleLink href="/fiscalita" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
             Vedi dettaglio fiscalità →
-          </Link>
+          </RippleLink>
         </div>
 
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Capitale investito netto</div>
-          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(capitaleInvestitoNettoTotale)}</div>
-          <Link href="/transazioni" style={{ fontSize: 13 }}>
+        <div style={stileCard}>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Capitale investito netto</div>
+          <div style={{ fontSize: 22, fontWeight: 500, marginTop: 4 }}>{formatEuro(capitaleInvestitoNettoTotale)}</div>
+          <RippleLink href="/transazioni" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
             Vedi transazioni →
-          </Link>
+          </RippleLink>
         </div>
 
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Costo totale</div>
-          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(costoTotaleCategoria)}</div>
-          <Link href="/costi" style={{ fontSize: 13 }}>
+        <div style={stileCard}>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Costo totale</div>
+          <div style={{ fontSize: 22, fontWeight: 500, marginTop: 4 }}>{formatEuro(costoTotaleCategoria)}</div>
+          <RippleLink href="/costi" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
             Vedi dettaglio costi →
-          </Link>
+          </RippleLink>
         </div>
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Asset</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Asset</h2>
         <TabellaOrdinabile colonne={COLONNE} righe={righe} />
       </section>
     </div>
