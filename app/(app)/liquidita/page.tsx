@@ -5,7 +5,7 @@ import { GraficoLineaSemplice, type PuntoLineaSemplice } from '@/components/graf
 import { GraficoBarreMensili, type PuntoMensile } from '@/components/grafico-barre-mensili'
 
 const COLONNE: ColonnaTabella[] = [
-  { key: 'nome', label: 'Strumento', kind: 'text' },
+  { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/liquidita/', linkKey: 'strumentoId' },
   { key: 'tipo', label: 'Tipo', kind: 'text' },
   { key: 'provider', label: 'Provider', kind: 'text' },
   { key: 'valore', label: 'Valore', kind: 'euro' },
@@ -85,6 +85,7 @@ export default async function LiquiditaPage() {
       const interesse = interessiAggregati?.find((i) => i.strumento_id === s.strumento_id)
       return {
         key: s.strumento_id ?? '—',
+        strumentoId: s.strumento_id,
         nome: strumento?.nome ?? '—',
         tipo: strumento?.tipo ?? '—',
         provider: strumento?.provider ?? '',

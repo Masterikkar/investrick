@@ -74,9 +74,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <details style={{ position: 'relative' }}>
             <summary style={{ cursor: 'pointer' }}>Portafoglio</summary>
             <div style={{ ...stilePannello, right: 0 }}>
-              <Link href="/pac">Piani di Accumulo</Link>
-              <Link href="/polizze">Polizze</Link>
-              <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: 0 }} />
               <details className="submenu-asset">
                 <summary>Asset</summary>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8, paddingLeft: 12 }}>
@@ -88,8 +85,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                   <Link href="/crypto">Crypto</Link>
                 </div>
               </details>
-              <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: 0 }} />
               <Link href="/liquidita">Liquidità</Link>
+              <Link href="/pac">Piani di Accumulo</Link>
+              <Link href="/polizze">Polizze</Link>
             </div>
           </details>
           <details style={{ position: 'relative' }}>
