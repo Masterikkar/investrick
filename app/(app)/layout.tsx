@@ -98,14 +98,28 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <Link href="/costi">Costi</Link>
               <Link href="/fiscalita">Fiscalità</Link>
               <Link href="/rendimenti">Rendimenti</Link>
+              <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: 0 }} />
               <Link href="/ribilanciamento">Ribilanciamento</Link>
-              <Link href="/transazioni">Transazioni</Link>
+              <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: 0 }} />
+              <details className="submenu-asset">
+                <summary>Storico</summary>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8, paddingLeft: 12 }}>
+                  <Link href="/transazioni/liquidita">Liquidità</Link>
+                  <Link href="/transazioni/asset">Transazioni</Link>
+                </div>
+              </details>
             </div>
           </details>
           <details style={{ position: 'relative' }}>
             <summary style={{ cursor: 'pointer' }}>Account</summary>
             <div style={{ ...stilePannello, right: 0 }}>
-              <Link href="/asset/nuovo">Gestione strumenti</Link>
+              <details className="submenu-asset">
+                <summary>Gestione</summary>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8, paddingLeft: 12 }}>
+                  <Link href="/asset/nuovo">Strumenti</Link>
+                  <Link href="/transazioni">Transazioni</Link>
+                </div>
+              </details>
               <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: 0 }} />
               <form action={logout}>
                 <button type="submit">Esci</button>

@@ -1,8 +1,7 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { aggiungiTransazione, aggiungiMovimentoLiquidita } from './actions'
 import { ImportaExcel } from './importa-excel'
-import { StoricoTransazioni, type RigaStoricoTransazione } from './storico-transazioni'
-import { StoricoMovimentiLiquidita, type RigaStoricoMovimentoLiquidita } from './storico-movimenti-liquidita'
 
 const OPERAZIONI = [
   { value: 'Acquisto', label: 'Acquisto' },
@@ -50,61 +49,22 @@ export default async function TransazioniPage({
     .order('categoria')
     .order('tipo')
 
-  const { data: transazioniStoricoRaw } = await supabase
-    .from('transazioni')
-    .select(
-      'id, data, operazione, contenitore_id, quantita, prezzo_unitario, commissione, tassa_trattenuta, strumento_id'
-    )
-    .order('data', { ascending: false })
-
-  const { data: movimentiLiquiditaStoricoRaw } = await supabase
-    .from('movimenti_liquidita')
-    .select('id, data, tipo_movimento, contenitore_id, importo, tassa_trattenuta, strumento_id')
-    .order('data', { ascending: false })
-
   const tipiPerCategoria: Record<string, string[]> = {}
   for (const t of tipiRaw ?? []) {
     if (!tipiPerCategoria[t.categoria]) tipiPerCategoria[t.categoria] = []
     tipiPerCategoria[t.categoria].push(t.tipo)
   }
 
-  const strumentoMap = new Map((strumenti ?? []).map((s) => [s.id, s]))
   const strumentiLiquidita = (strumenti ?? []).filter((s) => s.categoria === 'Liquidita')
-
-  const storicoTransazioni: RigaStoricoTransazione[] = (transazioniStoricoRaw ?? []).map((t) => {
-    const strumento = t.strumento_id ? strumentoMap.get(t.strumento_id) : undefined
-    return {
-      id: t.id,
-      data: t.data,
-      operazione: t.operazione,
-      contenitore_id: t.contenitore_id,
-      quantita: Number(t.quantita),
-      prezzo_unitario: Number(t.prezzo_unitario),
-      commissione: Number(t.commissione),
-      tassa_trattenuta: Number(t.tassa_trattenuta),
-      strumento_id: t.strumento_id,
-      strumento_nome: strumento?.nome ?? '—',
-      strumento_ticker: strumento?.ticker ?? null,
-    }
-  })
-
-  const storicoMovimentiLiquidita: RigaStoricoMovimentoLiquidita[] = (movimentiLiquiditaStoricoRaw ?? []).map((m) => {
-    const strumento = strumentoMap.get(m.strumento_id)
-    return {
-      id: m.id,
-      data: m.data,
-      tipo_movimento: m.tipo_movimento,
-      contenitore_id: m.contenitore_id,
-      importo: Number(m.importo),
-      tassa_trattenuta: Number(m.tassa_trattenuta),
-      strumento_id: m.strumento_id,
-      strumento_nome: strumento?.nome ?? '—',
-    }
-  })
 
   return (
     <div>
       <h1>Transazioni</h1>
+
+      <div style={{ display: 'flex', gap: 16, fontSize: 13, marginTop: 8 }}>
+        <Link href="/transazioni/asset">Vedi storico Transazioni Asset →</Link>
+        <Link href="/transazioni/liquidita">Vedi storico Transazioni Liquidità →</Link>
+      </div>
 
       <section style={{ marginTop: 16 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12 }}>Importa da Excel</h2>
@@ -276,16 +236,6 @@ export default async function TransazioniPage({
           <button type="submit">Salva operazione</button>
         </form>
       )}
-
-      <hr style={{ margin: '32px 0' }} />
-
-      <h2 style={{ fontSize: 18, marginBottom: 12 }}>Storico transazioni</h2>
-      <StoricoTransazioni transazioni={storicoTransazioni} contenitori={contenitori ?? []} />
-
-      <hr style={{ margin: '32px 0' }} />
-
-      <h2 style={{ fontSize: 18, marginBottom: 12 }}>Storico movimenti Liquidità</h2>
-      <StoricoMovimentiLiquidita movimenti={storicoMovimentiLiquidita} contenitori={contenitori ?? []} />
     </div>
   )
 }
