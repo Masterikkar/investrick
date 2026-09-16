@@ -10,7 +10,10 @@
   --primary: #4C5FE0;
   --primary-vivid: #7C8CFF;
   --success: #34C77B;
+  --success-light: #7DDBA8;
   --danger: #E5484D;
+  --danger-light: #F09A9D;
+  --warning: #E8A23B;
 }
 
 @theme inline {
@@ -24,6 +27,7 @@
   --color-primary-vivid: var(--primary-vivid);
   --color-success: var(--success);
   --color-danger: var(--danger);
+  --color-warning: var(--warning);
   --font-sans: var(--font-plex-sans);
   --font-mono: var(--font-plex-mono);
   --font-hero: var(--font-zilla-slab);

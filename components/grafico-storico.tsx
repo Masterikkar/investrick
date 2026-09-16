@@ -17,6 +17,10 @@ const PERIODI: { key: Periodo; label: string }[] = [
   { key: 'SEMPRE', label: 'Da sempre' },
 ]
 
+const GRIGLIA = '#2B3350'
+const TESTO_ASSI = '#9198AD'
+const LINEA = '#7C8CFF'
+
 function dataMinimaTeorica(periodo: Periodo, oggi: Date): Date | null {
   if (periodo === 'YTD') return new Date(oggi.getFullYear(), 0, 1)
   if (periodo === '1S' || periodo === '1M' || periodo === '1A') {
@@ -98,13 +102,15 @@ export function GraficoStorico({
     <div>
       {valoreAttuale !== undefined && (
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 16 }}>
-          <p style={{ fontFamily: 'Georgia, serif', fontSize: 48, margin: 0 }}>{formatEuro(valoreAttuale)}</p>
+          <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 48, margin: 0, color: 'var(--text-primary)' }}>
+            {formatEuro(valoreAttuale)}
+          </p>
           {rendimentoBadge !== null && (
             <span
               style={{
                 fontSize: 16,
-                fontWeight: 600,
-                color: rendimentoBadge >= 0 ? '#0a7d2c' : '#c0392b',
+                fontWeight: 500,
+                color: rendimentoBadge >= 0 ? 'var(--success)' : 'var(--danger)',
               }}
             >
               {rendimentoBadge >= 0 ? '+' : ''}
@@ -121,10 +127,10 @@ export function GraficoStorico({
             onClick={() => setPeriodo(p.key)}
             style={{
               padding: '4px 10px',
-              borderRadius: 4,
-              border: '1px solid #ddd',
-              background: periodo === p.key ? '#111' : '#fff',
-              color: periodo === p.key ? '#fff' : '#111',
+              borderRadius: 0,
+              border: '1px solid var(--border-default)',
+              background: periodo === p.key ? 'var(--primary)' : 'var(--bg-surface)',
+              color: periodo === p.key ? '#FFFFFF' : 'var(--text-secondary)',
               cursor: 'pointer',
               fontSize: 13,
             }}
@@ -135,28 +141,34 @@ export function GraficoStorico({
       </div>
 
       {notaDatiParziali && (
-        <p style={{ fontSize: 12, color: '#b45309', margin: '4px 0 8px' }}>{notaDatiParziali}</p>
+        <p style={{ fontSize: 12, color: 'var(--warning)', margin: '4px 0 8px' }}>{notaDatiParziali}</p>
       )}
 
       {punti.length === 0 ? (
-        <p style={{ color: '#666', marginTop: 8 }}>Nessuno storico disponibile ancora.</p>
+        <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>Nessuno storico disponibile ancora.</p>
       ) : datiFiltrati.length < 2 ? (
-        <p style={{ color: '#666', marginTop: 8 }}>Non abbastanza dati per questo periodo.</p>
+        <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>Non abbastanza dati per questo periodo.</p>
       ) : (
         <ResponsiveContainer width="100%" height={260}>
           <LineChart data={datiFiltrati}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+            <CartesianGrid strokeDasharray="3 3" stroke={GRIGLIA} />
             <XAxis
               dataKey="data"
               tickFormatter={(d) => new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
               fontSize={12}
+              tick={{ fill: TESTO_ASSI }}
+              axisLine={{ stroke: GRIGLIA }}
+              tickLine={{ stroke: GRIGLIA }}
             />
-            <YAxis tickFormatter={(v) => formatAsse(Number(v))} fontSize={12} width={70} />
+            <YAxis tickFormatter={(v) => formatAsse(Number(v))} fontSize={12} width={70} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <Tooltip
               formatter={(value) => [formatTooltip(Number(value)), etichettaTooltip]}
               labelFormatter={(label) => (label ? new Date(String(label)).toLocaleDateString('it-IT') : '')}
+              contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
+              labelStyle={{ color: '#E8EBF2' }}
+              itemStyle={{ color: '#E8EBF2' }}
             />
-            <Line type="monotone" dataKey="valore" stroke="#111" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="valore" stroke={LINEA} strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       )}

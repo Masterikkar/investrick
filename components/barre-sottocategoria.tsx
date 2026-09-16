@@ -23,11 +23,11 @@ export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; s
         style={{
           fontSize: 12,
           background: 'none',
-          border: '1px solid #ddd',
-          borderRadius: 4,
+          border: '1px solid var(--border-default)',
+          borderRadius: 0,
           padding: '2px 8px',
           cursor: 'pointer',
-          color: '#666',
+          color: 'var(--text-secondary)',
         }}
       >
         {aperto ? '▾' : '▸'} Dettaglio per strumento
@@ -37,7 +37,7 @@ export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; s
         <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {items.map((it) => {
             const fuoriSoglia = Math.abs(it.scostamentoPp) >= soglia
-            const colore = fuoriSoglia ? '#e6a400' : '#0a7d2c'
+            const colore = fuoriSoglia ? 'var(--warning)' : 'var(--success)'
             const pesoAttuale = Math.min(it.pesoAttualePct, 100)
             const target = Math.min(it.targetPct, 100)
             return (
@@ -48,7 +48,7 @@ export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; s
                     justifyContent: 'space-between',
                     fontSize: 12,
                     marginBottom: 3,
-                    color: '#444',
+                    color: 'var(--text-secondary)',
                   }}
                 >
                   <span>
@@ -60,7 +60,7 @@ export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; s
                     {it.scostamentoPp} pp)
                   </span>
                 </div>
-                <div style={{ position: 'relative', height: 7, background: '#eee', borderRadius: 3 }}>
+                <div style={{ position: 'relative', height: 7, background: 'var(--border-default)', borderRadius: 0 }}>
                   <div
                     style={{
                       position: 'absolute',
@@ -69,7 +69,7 @@ export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; s
                       height: '100%',
                       width: `${pesoAttuale}%`,
                       background: colore,
-                      borderRadius: 3,
+                      borderRadius: 0,
                     }}
                   />
                   <div
@@ -79,7 +79,7 @@ export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; s
                       left: `${target}%`,
                       width: 2,
                       height: 11,
-                      background: '#333',
+                      background: 'var(--primary-vivid)',
                     }}
                   />
                 </div>

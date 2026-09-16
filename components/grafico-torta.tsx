@@ -5,13 +5,13 @@ import { formatEuro } from '@/lib/format'
 
 export type FettaTorta = { nome: string; valore: number }
 
-const COLORI = ['#171717', '#2563eb', '#16a34a', '#e6a400', '#b91c1c', '#7c3aed', '#0891b2', '#db2777']
+const COLORI = ['#D9922E', '#2AC6B8', '#4FA0E0', '#C65FC9', '#E85D8A', '#8B93A8']
 
 export function GraficoTorta({ fette }: { fette: FettaTorta[] }) {
   const fetteValide = fette.filter((f) => f.valore > 0)
 
   if (fetteValide.length === 0) {
-    return <p style={{ color: '#666' }}>Nessun dato da mostrare.</p>
+    return <p style={{ color: 'var(--text-secondary)' }}>Nessun dato da mostrare.</p>
   }
 
   return (
@@ -30,8 +30,13 @@ export function GraficoTorta({ fette }: { fette: FettaTorta[] }) {
             <Cell key={i} fill={COLORI[i % COLORI.length]} />
           ))}
         </Pie>
-        <Tooltip formatter={(value) => formatEuro(Number(value))} />
-        <Legend />
+        <Tooltip
+          formatter={(value) => formatEuro(Number(value))}
+          contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
+          labelStyle={{ color: '#E8EBF2' }}
+          itemStyle={{ color: '#E8EBF2' }}
+        />
+        <Legend wrapperStyle={{ color: '#9198AD', fontSize: 13 }} />
       </PieChart>
     </ResponsiveContainer>
   )

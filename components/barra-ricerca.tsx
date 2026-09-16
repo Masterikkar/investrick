@@ -82,10 +82,12 @@ export function BarraRicerca({
         }}
         style={{
           padding: '6px 10px',
-          border: '1px solid #ddd',
-          borderRadius: 6,
+          border: '1px solid var(--border-default)',
+          borderRadius: 0,
           width: 220,
           fontSize: 14,
+          background: 'var(--bg-surface)',
+          color: 'var(--text-primary)',
         }}
       />
 
@@ -95,17 +97,18 @@ export function BarraRicerca({
             position: 'absolute',
             top: 'calc(100% + 4px)',
             left: 0,
-            background: '#fff',
-            border: '1px solid #ddd',
-            borderRadius: 6,
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
+            borderRadius: 0,
             minWidth: 260,
             maxHeight: 320,
             overflowY: 'auto',
             zIndex: 20,
+            color: 'var(--text-primary)',
           }}
         >
           {risultati.length === 0 ? (
-            <div style={{ padding: 12, color: '#666', fontSize: 14 }}>Nessun risultato.</div>
+            <div style={{ padding: 12, color: 'var(--text-secondary)', fontSize: 14 }}>Nessun risultato.</div>
           ) : (
             risultati.map((r) => (
               <Link
@@ -120,11 +123,11 @@ export function BarraRicerca({
                   padding: '8px 12px',
                   color: 'inherit',
                   textDecoration: 'none',
-                  borderBottom: '1px solid #f0f0f0',
+                  borderBottom: '1px solid var(--border-default)',
                 }}
               >
                 <div style={{ fontSize: 14 }}>{r.label}</div>
-                <div style={{ fontSize: 12, color: '#666' }}>{r.sottotitolo}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{r.sottotitolo}</div>
               </Link>
             ))
           )}

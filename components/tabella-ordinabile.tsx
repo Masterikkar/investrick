@@ -62,7 +62,7 @@ export function TabellaOrdinabile({
         return (
           <Link
             href={`${colonna.linkPrefix ?? ''}${id}`}
-            style={{ color: 'inherit', textDecoration: 'underline' }}
+            style={{ color: 'var(--text-primary)', textDecoration: 'underline' }}
           >
             {valore ?? '—'}
           </Link>
@@ -73,7 +73,7 @@ export function TabellaOrdinabile({
       case 'euro-signed': {
         const n = Number(valore) || 0
         return (
-          <span style={{ color: n >= 0 ? '#0a7d2c' : '#c0392b' }}>
+          <span style={{ color: n >= 0 ? 'var(--success)' : 'var(--danger)' }}>
             {n >= 0 ? '+' : ''}
             {formatEuro(n)}
           </span>
@@ -84,7 +84,7 @@ export function TabellaOrdinabile({
       case 'percent-signed': {
         const n = Number(valore) || 0
         return (
-          <span style={{ color: n >= 0 ? '#0a7d2c' : '#c0392b' }}>
+          <span style={{ color: n >= 0 ? 'var(--success)' : 'var(--danger)' }}>
             {n >= 0 ? '+' : ''}
             {n.toFixed(2)}%
           </span>
@@ -98,14 +98,14 @@ export function TabellaOrdinabile({
   }
 
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
       <thead>
-        <tr style={{ textAlign: 'left', borderBottom: '1px solid #ddd' }}>
+        <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
           {colonne.map((c) => (
             <th
               key={c.key}
               onClick={() => handleClickHeader(c)}
-              style={{ padding: '8px 12px', cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}
+              style={{ padding: '8px 12px', cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap', color: 'var(--text-secondary)', fontWeight: 500 }}
             >
               {c.label}
               {sortKey === c.key ? (sortAsc ? ' ▲' : ' ▼') : ''}
@@ -116,13 +116,13 @@ export function TabellaOrdinabile({
       <tbody>
         {righeOrdinate.length === 0 ? (
           <tr>
-            <td colSpan={colonne.length} style={{ padding: '8px 12px', color: '#666' }}>
+            <td colSpan={colonne.length} style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>
               Nessun dato.
             </td>
           </tr>
         ) : (
           righeOrdinate.map((r) => (
-            <tr key={r.key} style={{ borderBottom: '1px solid #eee' }}>
+            <tr key={r.key} style={{ borderBottom: '1px solid var(--border-default)' }}>
               {colonne.map((c) => (
                 <td key={c.key} style={{ padding: '8px 12px' }}>
                   {renderCella(c, r)}
