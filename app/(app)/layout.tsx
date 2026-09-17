@@ -22,9 +22,10 @@ import {
   IconaEsci,
 } from '@/components/icone-menu'
 
+// top: 100% = bordo inferiore reale dell'header. +1px bordo header, +5px distacco richiesto.
 const stilePannello: React.CSSProperties = {
   position: 'absolute',
-  top: 'calc(100% + 3px)',
+  top: 'calc(100% + 6px)',
   right: 0,
   zIndex: 10,
 }

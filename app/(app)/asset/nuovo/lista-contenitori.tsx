@@ -12,6 +12,15 @@ const ETICHETTA_TIPO: Record<string, string> = {
   Liquidita: 'Liquidità',
 }
 
+const stileBottoneOutline: React.CSSProperties = {
+  border: '1px solid var(--border-default)',
+  background: 'var(--bg-surface)',
+  color: 'var(--text-primary)',
+  padding: '6px 12px',
+  fontSize: 13,
+  cursor: 'pointer',
+}
+
 export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }) {
   const router = useRouter()
   const [nomi, setNomi] = useState<Record<string, string>>(() =>
@@ -66,7 +75,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
   }
 
   if (contenitori.length === 0) {
-    return <p style={{ color: '#666' }}>Nessun contenitore creato.</p>
+    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessun contenitore creato.</p>
   }
 
   return (
@@ -79,15 +88,22 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
               value={nomi[c.id] ?? ''}
               onChange={(e) => setNomi((stato) => ({ ...stato, [c.id]: e.target.value }))}
               disabled={pendingId === c.id}
-              style={{ padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, flex: 1 }}
+              style={{
+                padding: '6px 8px',
+                border: '1px solid var(--border-default)',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                flex: 1,
+              }}
             />
-            <span style={{ fontSize: 12, color: '#666', minWidth: 80 }}>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)', minWidth: 80 }}>
               {ETICHETTA_TIPO[c.tipo] ?? c.tipo}
             </span>
             <button
               type="button"
               onClick={() => handleRinomina(c.id)}
               disabled={pendingId === c.id || (nomi[c.id] ?? '').trim() === c.nome}
+              style={{ ...stileBottoneOutline, opacity: pendingId === c.id || (nomi[c.id] ?? '').trim() === c.nome ? 0.5 : 1 }}
             >
               Salva
             </button>
@@ -95,7 +111,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
               type="button"
               onClick={() => handleElimina(c.id, c.nome)}
               disabled={pendingId === c.id}
-              style={{ color: '#c0392b' }}
+              style={{ ...stileBottoneOutline, color: 'var(--danger)', opacity: pendingId === c.id ? 0.5 : 1 }}
             >
               Elimina
             </button>
@@ -103,7 +119,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
         ))}
       </div>
 
-      {erroreId && messaggioErrore && <p style={{ color: 'red', marginTop: 12 }}>{messaggioErrore}</p>}
+      {erroreId && messaggioErrore && <p style={{ color: 'var(--danger)', marginTop: 12 }}>{messaggioErrore}</p>}
     </div>
   )
 }

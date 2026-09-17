@@ -1,5 +1,6 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { RippleLink } from '@/components/ripple-link'
+import { Sezione } from '@/components/sezione'
 import { StoricoTransazioni, type RigaStoricoTransazione } from '../storico-transazioni'
 
 export default async function TransazioniAssetPage() {
@@ -37,11 +38,16 @@ export default async function TransazioniAssetPage() {
 
   return (
     <div>
-      <Link href="/transazioni" style={{ fontSize: 13 }}>
+      <RippleLink href="/transazioni" className="link-interattivo" style={{ fontSize: 13 }}>
         ← Nuova transazione
-      </Link>
-      <h1 style={{ marginTop: 12 }}>Transazioni Asset</h1>
-      <StoricoTransazioni transazioni={storicoTransazioni} contenitori={contenitori ?? []} />
+      </RippleLink>
+
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>Analisi</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Transazioni Asset</h1>
+
+      <Sezione>
+        <StoricoTransazioni transazioni={storicoTransazioni} contenitori={contenitori ?? []} />
+      </Sezione>
     </div>
   )
 }

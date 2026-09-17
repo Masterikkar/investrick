@@ -125,6 +125,26 @@ function elabora(righeExcel: Record<string, unknown>[], mappaContenitori: Map<st
   })
 }
 
+const stileCampo: React.CSSProperties = {
+  display: 'block',
+  width: '100%',
+  marginTop: 4,
+  padding: '6px 10px',
+  background: 'var(--bg-surface)',
+  color: 'var(--text-primary)',
+  border: '1px solid var(--border-default)',
+}
+
+const stileBottonePrimario: React.CSSProperties = {
+  background: 'var(--primary)',
+  color: '#fff',
+  border: 'none',
+  padding: '8px 16px',
+  fontSize: 14,
+  fontWeight: 500,
+  cursor: 'pointer',
+}
+
 function RisolviStrumento({
   identificatore,
   tipiPerCategoria,
@@ -175,13 +195,13 @@ function RisolviStrumento({
   }
 
   return (
-    <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, marginTop: 12 }}>
-      <div style={{ fontWeight: 600, marginBottom: 8 }}>
+    <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--warning)', padding: 16, marginTop: 12, color: 'var(--text-primary)' }}>
+      <div style={{ fontWeight: 500, marginBottom: 8 }}>
         {identificatore.tipo === 'isin'
           ? `ISIN sconosciuto: ${identificatore.valore}`
           : `Ticker sconosciuto (nessun ISIN nel file): ${identificatore.valore}`}
       </div>
-      {errore && <p style={{ color: 'red', fontSize: 13 }}>{errore}</p>}
+      {errore && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{errore}</p>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 380 }}>
         <label>
           Categoria
@@ -191,7 +211,7 @@ function RisolviStrumento({
               setCategoria(e.target.value)
               setTipo(tipiPerCategoria[e.target.value]?.[0] ?? '')
             }}
-            style={{ width: '100%' }}
+            style={stileCampo}
           >
             {categorie.map((c) => (
               <option key={c} value={c}>{c}</option>
@@ -200,7 +220,7 @@ function RisolviStrumento({
         </label>
         <label>
           Tipo
-          <select value={tipo} onChange={(e) => setTipo(e.target.value)} style={{ width: '100%' }}>
+          <select value={tipo} onChange={(e) => setTipo(e.target.value)} style={stileCampo}>
             {(tipiPerCategoria[categoria] ?? []).map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
@@ -208,24 +228,24 @@ function RisolviStrumento({
         </label>
         <label>
           Nome
-          <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} style={{ width: '100%' }} />
+          <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} style={stileCampo} />
         </label>
         <label>
           Ticker
-          <input type="text" value={ticker} onChange={(e) => setTicker(e.target.value)} style={{ width: '100%' }} />
+          <input type="text" value={ticker} onChange={(e) => setTicker(e.target.value)} style={stileCampo} />
         </label>
         <label>
           Valuta
-          <input type="text" value={valuta} onChange={(e) => setValuta(e.target.value)} style={{ width: '100%' }} />
+          <input type="text" value={valuta} onChange={(e) => setValuta(e.target.value)} style={stileCampo} />
         </label>
         <label>
           Codice prezzo (EODHD)
-          <input type="text" value={codicePrezzo} onChange={(e) => setCodicePrezzo(e.target.value)} style={{ width: '100%' }} />
+          <input type="text" value={codicePrezzo} onChange={(e) => setCodicePrezzo(e.target.value)} style={stileCampo} />
         </label>
         {isObbligazioni && (
           <>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="checkbox" checked={titoloDiStato} onChange={(e) => setTitoloDiStato(e.target.checked)} />
+              <input type="checkbox" checked={titoloDiStato} onChange={(e) => setTitoloDiStato(e.target.checked)} style={{ accentColor: 'var(--primary)' }} />
               Titolo di Stato
             </label>
             <label>
@@ -237,12 +257,17 @@ function RisolviStrumento({
                 step="any"
                 value={percentualeTitoliStato}
                 onChange={(e) => setPercentualeTitoliStato(e.target.value)}
-                style={{ width: '100%' }}
+                style={stileCampo}
               />
             </label>
           </>
         )}
-        <button type="button" onClick={handleSalva} disabled={salvataggio}>
+        <button
+          type="button"
+          onClick={handleSalva}
+          disabled={salvataggio}
+          style={{ ...stileBottonePrimario, alignSelf: 'flex-start', opacity: salvataggio ? 0.6 : 1 }}
+        >
           {salvataggio ? 'Creazione...' : 'Crea asset'}
         </button>
       </div>
@@ -353,7 +378,13 @@ export function ImportaExcel({
           const file = e.dataTransfer.files[0]
           if (file) gestisciFile(file)
         }}
-        style={{ border: '2px dashed #ccc', borderRadius: 8, padding: 24, textAlign: 'center', color: '#666' }}
+        style={{
+          border: '2px dashed var(--border-default)',
+          background: 'var(--bg-surface)',
+          padding: 24,
+          textAlign: 'center',
+          color: 'var(--text-secondary)',
+        }}
       >
         <p style={{ margin: 0 }}>Trascina qui il file Excel (.xlsx) delle transazioni, oppure</p>
         <input
@@ -367,31 +398,33 @@ export function ImportaExcel({
         />
       </div>
 
-      {erroreFile && <p style={{ color: 'red', marginTop: 8 }}>{erroreFile}</p>}
+      {erroreFile && <p style={{ color: 'var(--danger)', marginTop: 8 }}>{erroreFile}</p>}
 
       <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 13, flexWrap: 'wrap', alignItems: 'center' }}>
-        <a href="/template-transazioni.xlsx" download>Scarica template vuoto</a>
-        <span style={{ color: '#666' }}>
-          "Costo (in contanti)" va inserito manualmente qui sotto — non è supportato dal file Excel. Per le crypto,
+        <a href="/template-transazioni.xlsx" download className="link-interattivo">
+          Scarica template vuoto
+        </a>
+        <span style={{ color: 'var(--text-secondary)' }}>
+          &quot;Costo (in contanti)&quot; va inserito manualmente qui sotto — non è supportato dal file Excel. Per le crypto,
           lascia ISIN vuoto e usa Ticker.
         </span>
       </div>
 
       {risultato && (
         <div style={{ marginTop: 16 }}>
-          <p style={{ color: risultato.errori.length === 0 ? 'green' : '#b45309' }}>
+          <p style={{ color: risultato.errori.length === 0 ? 'var(--success)' : 'var(--warning)' }}>
             {risultato.inserite} transazioni importate.
             {risultato.errori.length > 0 && ` ${risultato.errori.length} righe non importate:`}
           </p>
           {risultato.errori.length > 0 && (
-            <ul style={{ fontSize: 13, color: '#b91c1c' }}>
+            <ul style={{ fontSize: 13, color: 'var(--danger)' }}>
               {risultato.errori.map((e, i) => (
                 <li key={i}>Riga {e.riga}: {e.messaggio}</li>
               ))}
             </ul>
           )}
           {risultato.avvisoRicostruzione && (
-            <p style={{ color: '#b45309', fontSize: 13, marginTop: 8 }}>{risultato.avvisoRicostruzione}</p>
+            <p style={{ color: 'var(--warning)', fontSize: 13, marginTop: 8 }}>{risultato.avvisoRicostruzione}</p>
           )}
         </div>
       )}
@@ -404,7 +437,7 @@ export function ImportaExcel({
           </p>
 
           {righeConErrore.length > 0 && (
-            <ul style={{ fontSize: 13, color: '#b91c1c', maxHeight: 160, overflowY: 'auto' }}>
+            <ul style={{ fontSize: 13, color: 'var(--danger)', maxHeight: 160, overflowY: 'auto' }}>
               {righeConErrore.map((r) => (
                 <li key={r.numeroRiga}>Riga {r.numeroRiga}: {r.errore}</li>
               ))}
@@ -413,8 +446,8 @@ export function ImportaExcel({
 
           {identificatoriDaRisolvere.length > 0 && (
             <div style={{ marginTop: 16 }}>
-              <p style={{ color: '#b45309' }}>
-                {identificatoriDaRisolvere.length} strumenti non trovati nel database — crea l'asset per ciascuno prima di poter importare:
+              <p style={{ color: 'var(--warning)' }}>
+                {identificatoriDaRisolvere.length} strumenti non trovati nel database — crea l&apos;asset per ciascuno prima di poter importare:
               </p>
               {identificatoriDaRisolvere.map((id) => (
                 <RisolviStrumento
@@ -429,10 +462,15 @@ export function ImportaExcel({
 
           {identificatoriDaRisolvere.length === 0 && (
             <div style={{ marginTop: 16 }}>
-              <p style={{ color: 'green' }}>
+              <p style={{ color: 'var(--success)' }}>
                 Tutti gli strumenti sono risolti. Pronte da importare: {righePronte.length} transazioni.
               </p>
-              <button type="button" onClick={handleImporta} disabled={importando || righePronte.length === 0}>
+              <button
+                type="button"
+                onClick={handleImporta}
+                disabled={importando || righePronte.length === 0}
+                style={{ ...stileBottonePrimario, opacity: importando || righePronte.length === 0 ? 0.6 : 1 }}
+              >
                 {importando ? 'Importazione...' : `Importa ${righePronte.length} transazioni`}
               </button>
             </div>

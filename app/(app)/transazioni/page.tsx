@@ -1,5 +1,6 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { RippleLink } from '@/components/ripple-link'
+import { Sezione } from '@/components/sezione'
 import { aggiungiTransazione, aggiungiMovimentoLiquidita } from './actions'
 import { ImportaExcel } from './importa-excel'
 
@@ -22,6 +23,27 @@ const TIPI_MOVIMENTO_LIQUIDITA = [
   { value: 'Interesse', label: 'Interesse' },
   { value: 'Costo', label: 'Costo' },
 ]
+
+const stileCampo: React.CSSProperties = {
+  display: 'block',
+  width: '100%',
+  marginTop: 4,
+  padding: '6px 10px',
+  background: 'var(--bg-surface)',
+  color: 'var(--text-primary)',
+  border: '1px solid var(--border-default)',
+}
+
+const stileBottonePrimario: React.CSSProperties = {
+  background: 'var(--primary)',
+  color: '#fff',
+  border: 'none',
+  padding: '8px 16px',
+  fontSize: 14,
+  fontWeight: 500,
+  cursor: 'pointer',
+  alignSelf: 'flex-start',
+}
 
 export default async function TransazioniPage({
   searchParams,
@@ -59,183 +81,206 @@ export default async function TransazioniPage({
 
   return (
     <div>
-      <h1>Transazioni</h1>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Account</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 4, fontWeight: 500 }}>Transazioni</h1>
 
-      <div style={{ display: 'flex', gap: 16, fontSize: 13, marginTop: 8 }}>
-        <Link href="/transazioni/asset">Vedi storico Transazioni Asset →</Link>
-        <Link href="/transazioni/liquidita">Vedi storico Transazioni Liquidità →</Link>
+      <div style={{ display: 'flex', gap: 16, fontSize: 13, marginTop: 12, marginBottom: 16 }}>
+        <RippleLink href="/transazioni/asset" className="link-interattivo">
+          Vedi storico Transazioni Asset →
+        </RippleLink>
+        <RippleLink href="/transazioni/liquidita" className="link-interattivo">
+          Vedi storico Transazioni Liquidità →
+        </RippleLink>
       </div>
 
-      <section style={{ marginTop: 16 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Importa da Excel</h2>
-        <ImportaExcel
-          strumenti={(strumenti ?? []).map((s) => ({ id: s.id, isin: s.isin, ticker: s.ticker, nome: s.nome }))}
-          contenitori={contenitori ?? []}
-          tipiPerCategoria={tipiPerCategoria}
-        />
+      <section>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Importa da Excel</h2>
+        <Sezione>
+          <ImportaExcel
+            strumenti={(strumenti ?? []).map((s) => ({ id: s.id, isin: s.isin, ticker: s.ticker, nome: s.nome }))}
+            contenitori={contenitori ?? []}
+            tipiPerCategoria={tipiPerCategoria}
+          />
+        </Sezione>
       </section>
 
-      <hr style={{ margin: '32px 0' }} />
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Nuova transazione manuale</h2>
+        <Sezione>
+          {params.successo === '1' && <p style={{ color: 'var(--success)', marginBottom: 12 }}>Transazione salvata.</p>}
+          {params.errore === '1' && <p style={{ color: 'var(--danger)', marginBottom: 12 }}>Qualcosa è andato storto, riprova.</p>}
 
-      <h2 style={{ fontSize: 18, marginBottom: 12 }}>Nuova transazione manuale</h2>
+          <form
+            action={aggiungiTransazione}
+            style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400, color: 'var(--text-primary)' }}
+          >
+            <label>
+              Strumento
+              <select name="strumento_id" style={stileCampo}>
+                <option value="">Seleziona...</option>
+                {strumenti?.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nome} {s.ticker ? `(${s.ticker})` : ''} — {s.categoria}
+                  </option>
+                ))}
+              </select>
+              <small style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 4, display: 'block' }}>
+                Lascia vuoto solo per &quot;Costo (in contanti)&quot;.
+              </small>
+            </label>
 
-      {params.successo === '1' && <p style={{ color: 'green' }}>Transazione salvata.</p>}
-      {params.errore === '1' && <p style={{ color: 'red' }}>Qualcosa è andato storto, riprova.</p>}
+            <label>
+              Categoria
+              <select name="categoria_manuale" style={stileCampo}>
+                <option value="">—</option>
+                {CATEGORIE.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <small style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 4, display: 'block' }}>
+                Necessaria solo se Strumento è vuoto (operazione &quot;Costo in contanti&quot;).
+              </small>
+            </label>
 
-      <form
-        action={aggiungiTransazione}
-        style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400, marginTop: 16 }}
-      >
-        <label>
-          Strumento
-          <select name="strumento_id" style={{ width: '100%' }}>
-            <option value="">Seleziona...</option>
-            {strumenti?.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.nome} {s.ticker ? `(${s.ticker})` : ''} — {s.categoria}
-              </option>
-            ))}
-          </select>
-          <small style={{ color: '#666' }}>Lascia vuoto solo per "Costo (in contanti)".</small>
-        </label>
+            <label>
+              Contenitore
+              <select name="contenitore_id" required style={stileCampo}>
+                <option value="diretto">Diretto</option>
+                {contenitori?.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-        <label>
-          Categoria
-          <select name="categoria_manuale" style={{ width: '100%' }}>
-            <option value="">—</option>
-            {CATEGORIE.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-          <small style={{ color: '#666' }}>Necessaria solo se Strumento è vuoto (operazione "Costo in contanti").</small>
-        </label>
+            <label>
+              Operazione
+              <select name="operazione" required style={stileCampo}>
+                {OPERAZIONI.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-        <label>
-          Contenitore
-          <select name="contenitore_id" required style={{ width: '100%' }}>
-            <option value="diretto">Diretto</option>
-            {contenitori?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nome}
-              </option>
-            ))}
-          </select>
-        </label>
+            <label>
+              Data
+              <input type="date" name="data" required style={stileCampo} />
+            </label>
 
-        <label>
-          Operazione
-          <select name="operazione" required style={{ width: '100%' }}>
-            {OPERAZIONI.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
+            <label>
+              Quantità
+              <input type="number" name="quantita" step="any" required style={stileCampo} />
+              <small style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 4, display: 'block' }}>
+                Per &quot;Costo in contanti&quot; usa 1.
+              </small>
+            </label>
 
-        <label>
-          Data
-          <input type="date" name="data" required style={{ width: '100%' }} />
-        </label>
+            <label>
+              Prezzo unitario (€)
+              <input type="number" name="prezzo_unitario" step="any" required style={stileCampo} />
+              <small style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 4, display: 'block' }}>
+                Per &quot;Costo in contanti&quot; è l&apos;importo speso.
+              </small>
+            </label>
 
-        <label>
-          Quantità
-          <input type="number" name="quantita" step="any" required style={{ width: '100%' }} />
-          <small style={{ color: '#666' }}>Per "Costo in contanti" usa 1.</small>
-        </label>
+            <label>
+              Commissione (€)
+              <input type="number" name="commissione" step="any" defaultValue={0} style={stileCampo} />
+            </label>
 
-        <label>
-          Prezzo unitario (€)
-          <input type="number" name="prezzo_unitario" step="any" required style={{ width: '100%' }} />
-          <small style={{ color: '#666' }}>Per "Costo in contanti" è l'importo speso.</small>
-        </label>
+            <label>
+              Tassa trattenuta (€)
+              <input type="number" name="tassa_trattenuta" step="any" defaultValue={0} style={stileCampo} />
+            </label>
 
-        <label>
-          Commissione (€)
-          <input type="number" name="commissione" step="any" defaultValue={0} style={{ width: '100%' }} />
-        </label>
+            <button type="submit" style={stileBottonePrimario}>
+              Salva transazione
+            </button>
+          </form>
+        </Sezione>
+      </section>
 
-        <label>
-          Tassa trattenuta (€)
-          <input type="number" name="tassa_trattenuta" step="any" defaultValue={0} style={{ width: '100%' }} />
-        </label>
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Nuova operazione Liquidità</h2>
+        <Sezione>
+          {params.successo === '1' && <p style={{ color: 'var(--success)', marginBottom: 12 }}>Transazione salvata.</p>}
+          {params.errore === '1' && <p style={{ color: 'var(--danger)', marginBottom: 12 }}>Qualcosa è andato storto, riprova.</p>}
 
-        <button type="submit">Salva transazione</button>
-      </form>
+          {strumentiLiquidita.length === 0 ? (
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
+              Nessuno strumento di categoria Liquidità trovato. Creane uno da &quot;Gestione strumenti&quot; prima di
+              registrare movimenti.
+            </p>
+          ) : (
+            <form
+              action={aggiungiMovimentoLiquidita}
+              style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400, color: 'var(--text-primary)' }}
+            >
+              <label>
+                Strumento
+                <select name="strumento_id" required style={stileCampo}>
+                  <option value="">Seleziona...</option>
+                  {strumentiLiquidita.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nome}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-      <hr style={{ margin: '32px 0' }} />
+              <label>
+                Contenitore
+                <select name="contenitore_id" required style={stileCampo}>
+                  <option value="diretto">Diretto</option>
+                  {contenitori?.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nome}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-      <h2 style={{ fontSize: 18, marginBottom: 12 }}>Nuova operazione Liquidità</h2>
+              <label>
+                Tipo movimento
+                <select name="tipo_movimento" required style={stileCampo}>
+                  {TIPI_MOVIMENTO_LIQUIDITA.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-      {params.successo === '1' && <p style={{ color: 'green' }}>Transazione salvata.</p>}
-      {params.errore === '1' && <p style={{ color: 'red' }}>Qualcosa è andato storto, riprova.</p>}
+              <label>
+                Data
+                <input type="date" name="data" required style={stileCampo} />
+              </label>
 
-      {strumentiLiquidita.length === 0 ? (
-        <p style={{ color: '#666' }}>
-          Nessuno strumento di categoria Liquidità trovato. Creane uno da "Gestione strumenti" prima di registrare
-          movimenti.
-        </p>
-      ) : (
-        <form
-          action={aggiungiMovimentoLiquidita}
-          style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400, marginTop: 16 }}
-        >
-          <label>
-            Strumento
-            <select name="strumento_id" required style={{ width: '100%' }}>
-              <option value="">Seleziona...</option>
-              {strumentiLiquidita.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nome}
-                </option>
-              ))}
-            </select>
-          </label>
+              <label>
+                Importo lordo (€)
+                <input type="number" name="importo" step="any" required style={stileCampo} />
+              </label>
 
-          <label>
-            Contenitore
-            <select name="contenitore_id" required style={{ width: '100%' }}>
-              <option value="diretto">Diretto</option>
-              {contenitori?.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome}
-                </option>
-              ))}
-            </select>
-          </label>
+              <label>
+                Tassa trattenuta (€)
+                <input type="number" name="tassa_trattenuta" step="any" defaultValue={0} style={stileCampo} />
+                <small style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 4, display: 'block' }}>
+                  Rilevante solo per &quot;Interesse&quot;.
+                </small>
+              </label>
 
-          <label>
-            Tipo movimento
-            <select name="tipo_movimento" required style={{ width: '100%' }}>
-              {TIPI_MOVIMENTO_LIQUIDITA.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            Data
-            <input type="date" name="data" required style={{ width: '100%' }} />
-          </label>
-
-          <label>
-            Importo lordo (€)
-            <input type="number" name="importo" step="any" required style={{ width: '100%' }} />
-          </label>
-
-          <label>
-            Tassa trattenuta (€)
-            <input type="number" name="tassa_trattenuta" step="any" defaultValue={0} style={{ width: '100%' }} />
-            <small style={{ color: '#666' }}>Rilevante solo per "Interesse".</small>
-          </label>
-
-          <button type="submit">Salva operazione</button>
-        </form>
-      )}
+              <button type="submit" style={stileBottonePrimario}>
+                Salva operazione
+              </button>
+            </form>
+          )}
+        </Sezione>
+      </section>
     </div>
   )
 }

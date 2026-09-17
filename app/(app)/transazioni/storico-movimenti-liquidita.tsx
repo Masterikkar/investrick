@@ -2,8 +2,8 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { formatEuro } from '@/lib/format'
+import { RippleLink } from '@/components/ripple-link'
 import { aggiornaContenitoreMovimentoLiquidita, eliminaMovimentoLiquidita } from './actions'
 
 export type RigaStoricoMovimentoLiquidita = {
@@ -124,10 +124,12 @@ export function StoricoMovimentiLiquidita({
           onChange={(e) => setQuery(e.target.value)}
           style={{
             padding: '6px 10px',
-            border: '1px solid #ddd',
-            borderRadius: 6,
+            border: '1px solid var(--border-default)',
+            borderRadius: 0,
             width: 260,
             fontSize: 14,
+            background: 'var(--bg-surface)',
+            color: 'var(--text-primary)',
           }}
         />
 
@@ -135,10 +137,12 @@ export function StoricoMovimentiLiquidita({
           <summary
             style={{
               padding: '6px 10px',
-              border: '1px solid #ddd',
-              borderRadius: 6,
+              border: '1px solid var(--border-default)',
+              borderRadius: 0,
               fontSize: 14,
               display: 'inline-block',
+              background: 'var(--bg-surface)',
+              color: 'var(--text-primary)',
             }}
           >
             Filtra per anno
@@ -149,19 +153,20 @@ export function StoricoMovimentiLiquidita({
               position: 'absolute',
               top: 'calc(100% + 4px)',
               left: 0,
-              background: '#fff',
-              border: '1px solid #ddd',
-              borderRadius: 6,
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              borderRadius: 0,
               padding: 12,
               zIndex: 10,
               minWidth: 160,
+              color: 'var(--text-primary)',
             }}
           >
             <div style={{ display: 'flex', gap: 8, marginBottom: 8, fontSize: 13 }}>
-              <button type="button" onClick={() => setAnniSelezionati(new Set(anniDisponibili))}>
+              <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set(anniDisponibili))}>
                 Seleziona tutto
               </button>
-              <button type="button" onClick={() => setAnniSelezionati(new Set())}>
+              <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set())}>
                 Deseleziona tutto
               </button>
             </div>
@@ -171,7 +176,7 @@ export function StoricoMovimentiLiquidita({
                   type="checkbox"
                   checked={anniSelezionati.has(anno)}
                   onChange={() => toggleAnno(anno)}
-                  style={{ marginRight: 6 }}
+                  style={{ marginRight: 6, accentColor: 'var(--primary)' }}
                 />
                 {anno}
               </label>
@@ -181,37 +186,37 @@ export function StoricoMovimentiLiquidita({
       </div>
 
       {erroreId && (
-        <p style={{ color: 'red', marginTop: 8 }}>
+        <p style={{ color: 'var(--danger)', marginTop: 8 }}>
           Non è stato possibile completare l'operazione su quel movimento. Riprova.
         </p>
       )}
 
       {righeFiltrate.length === 0 ? (
-        <p style={{ marginTop: 12 }}>Nessun movimento trovato.</p>
+        <p style={{ marginTop: 12, color: 'var(--text-secondary)' }}>Nessun movimento trovato.</p>
       ) : (
         <>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)' }}>
             <thead>
-              <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-                <th style={{ padding: 8 }}>Data</th>
-                <th style={{ padding: 8 }}>Strumento</th>
-                <th style={{ padding: 8 }}>Tipo movimento</th>
-                <th style={{ padding: 8 }}>Contenitore</th>
-                <th style={{ padding: 8 }}>Importo</th>
-                <th style={{ padding: 8 }}>Tassa trattenuta</th>
-                <th style={{ padding: 8 }}>Azioni</th>
+              <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Data</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tipo movimento</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Importo</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa trattenuta</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Azioni</th>
               </tr>
             </thead>
             <tbody>
               {righeMostrate.map((m) => {
                 const inCorso = pendingId === m.id
                 return (
-                  <tr key={m.id} style={{ borderBottom: '1px solid #eee' }}>
+                  <tr key={m.id} className="tabella-riga">
                     <td style={{ padding: 8 }}>{new Date(m.data).toLocaleDateString('it-IT')}</td>
                     <td style={{ padding: 8 }}>
-                      <Link href={`/asset/${m.strumento_id}`} style={{ color: 'inherit' }}>
+                      <RippleLink href={`/asset/${m.strumento_id}`} className="link-interattivo">
                         {m.strumento_nome}
-                      </Link>
+                      </RippleLink>
                     </td>
                     <td style={{ padding: 8 }}>{m.tipo_movimento}</td>
                     <td style={{ padding: 8 }}>{nomeContenitore(m.contenitore_id)}</td>
@@ -231,6 +236,7 @@ export function StoricoMovimentiLiquidita({
                               fontSize: 16,
                               padding: '2px 4px',
                               opacity: inCorso ? 0.4 : 1,
+                              color: 'var(--text-secondary)',
                             }}
                           >
                             →
@@ -270,7 +276,7 @@ export function StoricoMovimentiLiquidita({
                             cursor: inCorso ? 'default' : 'pointer',
                             fontSize: 16,
                             padding: '2px 4px',
-                            color: '#c0392b',
+                            color: 'var(--danger)',
                             opacity: inCorso ? 0.4 : 1,
                           }}
                         >
@@ -285,18 +291,25 @@ export function StoricoMovimentiLiquidita({
           </table>
 
           <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', fontSize: 13 }}>
-            <span style={{ color: '#666' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>
               {righeMostrate.length} di {righeFiltrate.length}
             </span>
             {ciSonoAltre && (
               <>
                 <button
                   type="button"
+                  className="link-interattivo"
+                  style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili((v) => v + RIGHE_PER_PAGINA)}
                 >
                   Mostra altre {Math.min(RIGHE_PER_PAGINA, righeFiltrate.length - righeVisibili)}
                 </button>
-                <button type="button" onClick={() => setRigheVisibili(righeFiltrate.length)}>
+                <button
+                  type="button"
+                  className="link-interattivo"
+                  style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
+                  onClick={() => setRigheVisibili(righeFiltrate.length)}
+                >
                   Mostra tutte
                 </button>
               </>

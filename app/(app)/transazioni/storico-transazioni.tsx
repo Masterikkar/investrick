@@ -2,8 +2,8 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, formatNumero } from '@/lib/format'
+import { RippleLink } from '@/components/ripple-link'
 import { aggiornaContenitoreTransazione, eliminaTransazione } from './actions'
 
 export type RigaStoricoTransazione = {
@@ -143,10 +143,12 @@ export function StoricoTransazioni({
           onChange={(e) => setQuery(e.target.value)}
           style={{
             padding: '6px 10px',
-            border: '1px solid #ddd',
-            borderRadius: 6,
+            border: '1px solid var(--border-default)',
+            borderRadius: 0,
             width: 260,
             fontSize: 14,
+            background: 'var(--bg-surface)',
+            color: 'var(--text-primary)',
           }}
         />
 
@@ -154,10 +156,12 @@ export function StoricoTransazioni({
           <summary
             style={{
               padding: '6px 10px',
-              border: '1px solid #ddd',
-              borderRadius: 6,
+              border: '1px solid var(--border-default)',
+              borderRadius: 0,
               fontSize: 14,
               display: 'inline-block',
+              background: 'var(--bg-surface)',
+              color: 'var(--text-primary)',
             }}
           >
             Filtra per anno
@@ -168,19 +172,20 @@ export function StoricoTransazioni({
               position: 'absolute',
               top: 'calc(100% + 4px)',
               left: 0,
-              background: '#fff',
-              border: '1px solid #ddd',
-              borderRadius: 6,
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              borderRadius: 0,
               padding: 12,
               zIndex: 10,
               minWidth: 160,
+              color: 'var(--text-primary)',
             }}
           >
             <div style={{ display: 'flex', gap: 8, marginBottom: 8, fontSize: 13 }}>
-              <button type="button" onClick={() => setAnniSelezionati(new Set(anniDisponibili))}>
+              <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set(anniDisponibili))}>
                 Seleziona tutto
               </button>
-              <button type="button" onClick={() => setAnniSelezionati(new Set())}>
+              <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set())}>
                 Deseleziona tutto
               </button>
             </div>
@@ -190,7 +195,7 @@ export function StoricoTransazioni({
                   type="checkbox"
                   checked={anniSelezionati.has(anno)}
                   onChange={() => toggleAnno(anno)}
-                  style={{ marginRight: 6 }}
+                  style={{ marginRight: 6, accentColor: 'var(--primary)' }}
                 />
                 {anno}
               </label>
@@ -200,47 +205,47 @@ export function StoricoTransazioni({
       </div>
 
       {erroreId && (
-        <p style={{ color: 'red', marginTop: 8 }}>
+        <p style={{ color: 'var(--danger)', marginTop: 8 }}>
           Non è stato possibile completare l'operazione su quella transazione. Riprova.
         </p>
       )}
 
       {righeFiltrate.length === 0 ? (
-        <p style={{ marginTop: 12 }}>Nessuna transazione trovata.</p>
+        <p style={{ marginTop: 12, color: 'var(--text-secondary)' }}>Nessuna transazione trovata.</p>
       ) : (
         <>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)' }}>
             <thead>
-              <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-                <th style={{ padding: 8 }}>Data</th>
-                <th style={{ padding: 8 }}>Strumento</th>
-                <th style={{ padding: 8 }}>Operazione</th>
-                <th style={{ padding: 8 }}>Contenitore</th>
-                <th style={{ padding: 8 }}>Quantità</th>
-                <th style={{ padding: 8 }}>Prezzo unitario</th>
-                <th style={{ padding: 8 }}>Commissione</th>
-                <th style={{ padding: 8 }}>Tassa trattenuta</th>
-                <th style={{ padding: 8 }}>Azioni</th>
+              <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Data</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Operazione</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Quantità</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Prezzo unitario</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Commissione</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa trattenuta</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Azioni</th>
               </tr>
             </thead>
             <tbody>
               {righeMostrate.map((t) => {
                 const inCorso = pendingId === t.id
                 return (
-                  <tr key={t.id} style={{ borderBottom: '1px solid #eee' }}>
+                  <tr key={t.id} className="tabella-riga">
                     <td style={{ padding: 8 }}>{new Date(t.data).toLocaleDateString('it-IT')}</td>
                     <td style={{ padding: 8 }}>
                       {t.strumento_id ? (
-                        <Link href={`/asset/${t.strumento_id}`} style={{ color: 'inherit' }}>
+                        <RippleLink href={`/asset/${t.strumento_id}`} className="link-interattivo">
                           {t.strumento_nome}
-                        </Link>
+                        </RippleLink>
                       ) : (
                         t.strumento_nome
                       )}
                     </td>
                     <td style={{ padding: 8 }}>{ETICHETTE_OPERAZIONE[t.operazione] ?? t.operazione}</td>
                     <td style={{ padding: 8 }}>{nomeContenitore(t.contenitore_id)}</td>
-                    <td style={{ padding: 8 }}>{t.quantita.toFixed(6)}</td>
+                    <td style={{ padding: 8 }}>{formatNumero(t.quantita, 6)}</td>
                     <td style={{ padding: 8 }}>{formatEuro(t.prezzo_unitario)}</td>
                     <td style={{ padding: 8 }}>{formatEuro(t.commissione)}</td>
                     <td style={{ padding: 8 }}>{formatEuro(t.tassa_trattenuta)}</td>
@@ -258,6 +263,7 @@ export function StoricoTransazioni({
                               fontSize: 16,
                               padding: '2px 4px',
                               opacity: inCorso ? 0.4 : 1,
+                              color: 'var(--text-secondary)',
                             }}
                           >
                             →
@@ -297,7 +303,7 @@ export function StoricoTransazioni({
                             cursor: inCorso ? 'default' : 'pointer',
                             fontSize: 16,
                             padding: '2px 4px',
-                            color: '#c0392b',
+                            color: 'var(--danger)',
                             opacity: inCorso ? 0.4 : 1,
                           }}
                         >
@@ -312,18 +318,25 @@ export function StoricoTransazioni({
           </table>
 
           <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', fontSize: 13 }}>
-            <span style={{ color: '#666' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>
               {righeMostrate.length} di {righeFiltrate.length}
             </span>
             {ciSonoAltre && (
               <>
                 <button
                   type="button"
+                  className="link-interattivo"
+                  style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili((v) => v + RIGHE_PER_PAGINA)}
                 >
                   Mostra altre {Math.min(RIGHE_PER_PAGINA, righeFiltrate.length - righeVisibili)}
                 </button>
-                <button type="button" onClick={() => setRigheVisibili(righeFiltrate.length)}>
+                <button
+                  type="button"
+                  className="link-interattivo"
+                  style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
+                  onClick={() => setRigheVisibili(righeFiltrate.length)}
+                >
                   Mostra tutte
                 </button>
               </>
