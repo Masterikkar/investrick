@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, formatEuroSigned, formatPercent, formatNumero } from '@/lib/format'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
+import { CardMetrica } from '@/components/card-metrica'
+import { Sezione } from '@/components/sezione'
 
 type Strumento = {
   id: string
@@ -196,8 +198,9 @@ export default async function AssetPage({
 
   return (
     <div>
-      <h1>{strumento.nome}</h1>
-      <p style={{ color: '#666' }}>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Asset</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 4, fontWeight: 500 }}>{strumento.nome}</h1>
+      <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
         {strumento.categoria}
         {strumento.isin ? ` · ${strumento.isin}` : ''}
         {strumento.ticker ? ` · ${strumento.ticker}` : ''}
@@ -209,7 +212,7 @@ export default async function AssetPage({
           {posizioniAttuali.map((r) => (
             <span
               key={chiaveContenitore(r.contenitore_id)}
-              style={{ background: '#eee', borderRadius: 999, padding: '2px 10px', fontSize: 13 }}
+              style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', padding: '2px 10px', fontSize: 13 }}
             >
               {nomeContenitore(r.contenitore_id)}
             </span>
@@ -218,178 +221,182 @@ export default async function AssetPage({
       )}
 
       <section style={{ marginTop: 24 }}>
-        <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotale} />
+        <Sezione>
+          <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotale} />
+        </Sezione>
       </section>
 
-      <div style={{ display: 'flex', gap: 32, marginTop: 24, flexWrap: 'wrap' }}>
-        <div>
-          <span style={{ color: '#666' }}>Rendimento</span>
-          <div style={{ fontSize: 20, color: (rendimentoTotalePct ?? 0) >= 0 ? 'green' : '#b91c1c' }}>
-            {rendimentoTotalePct != null ? `${rendimentoTotalePct.toFixed(2)}%` : '—'}
-          </div>
-        </div>
-        <div>
-          <span style={{ color: '#666' }}>
-            NAV
-            {variazione &&
-              ` (${new Date(variazione.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })})`}
-          </span>
-          <div style={{ fontSize: 20 }}>
-            {variazione ? formatEuro(Number(variazione.prezzo)) : '—'}
-            {variazione?.variazione_pct != null && (
-              <span
-                style={{
-                  fontSize: 14,
-                  marginLeft: 6,
-                  color: Number(variazione.variazione_pct) >= 0 ? 'green' : '#b91c1c',
-                }}
-              >
-                {Number(variazione.variazione_pct) >= 0 ? '+' : ''}
-                {Number(variazione.variazione_pct).toFixed(2)}%
+      <section style={{ marginTop: 24 }}>
+        <Sezione>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <CardMetrica label="Rendimento">
+              <span style={{ color: (rendimentoTotalePct ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                {rendimentoTotalePct != null ? formatPercent(rendimentoTotalePct, 2, true) : '—'}
               </span>
-            )}
+            </CardMetrica>
+
+            <CardMetrica
+              label={`NAV${
+                variazione
+                  ? ` (${new Date(variazione.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })})`
+                  : ''
+              }`}
+            >
+              {variazione ? formatEuro(Number(variazione.prezzo)) : '—'}
+              {variazione?.variazione_pct != null && (
+                <span
+                  style={{
+                    fontSize: 14,
+                    marginLeft: 6,
+                    color: Number(variazione.variazione_pct) >= 0 ? 'var(--success)' : 'var(--danger)',
+                  }}
+                >
+                  {formatPercent(Number(variazione.variazione_pct), 2, true)}
+                </span>
+              )}
+            </CardMetrica>
+
+            <CardMetrica label="Prezzo medio unitario">
+              {prezzoMedioPonderato != null ? formatEuro(prezzoMedioPonderato) : '—'}
+            </CardMetrica>
+
+            <CardMetrica label="Capitale investito">{formatEuro(capitaleInvestitoTotale)}</CardMetrica>
           </div>
-        </div>
-        <div>
-          <span style={{ color: '#666' }}>Prezzo medio unitario</span>
-          <div style={{ fontSize: 20 }}>{prezzoMedioPonderato != null ? formatEuro(prezzoMedioPonderato) : '—'}</div>
-        </div>
-        <div>
-          <span style={{ color: '#666' }}>Capitale investito</span>
-          <div style={{ fontSize: 20 }}>{formatEuro(capitaleInvestitoTotale)}</div>
-        </div>
-      </div>
+        </Sezione>
+      </section>
 
       {posizioniAttuali.length > 0 && (
-        <>
-          <h2 style={{ marginTop: 32 }}>Posizioni per contenitore</h2>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
-            <thead>
-              <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-                <th style={{ padding: 8 }}>Provenienza</th>
-                <th style={{ padding: 8 }}>Peso</th>
-                <th style={{ padding: 8 }}>Quantità</th>
-                <th style={{ padding: 8 }}>Rendimento</th>
-                <th style={{ padding: 8 }}>Rendimento (€)</th>
-                <th style={{ padding: 8 }}>Valore</th>
-                <th style={{ padding: 8 }}>Capitale investito</th>
-                <th style={{ padding: 8 }}>Costo</th>
-                <th style={{ padding: 8 }}>NAV</th>
-                <th style={{ padding: 8 }}>Prezzo medio</th>
-              </tr>
-            </thead>
-            <tbody>
-              {posizioniAttuali.map((r) => {
-                const chiave = chiaveContenitore(r.contenitore_id)
-                const totaleContenitore = totaleContenitoreMap.get(chiave) ?? 0
-                const peso = r.valore != null && totaleContenitore > 0 ? (Number(r.valore) / totaleContenitore) * 100 : null
-                const rendimentoEuro = r.valore != null ? Number(r.valore) - Number(r.capitale_investito) : null
-                const costo = costoMap.get(chiave) ?? 0
-
-                return (
-                  <tr key={chiave} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: 8 }}>{nomeContenitore(r.contenitore_id)}</td>
-                    <td style={{ padding: 8 }}>{peso != null ? `${peso.toFixed(2)}%` : '—'}</td>
-                    <td style={{ padding: 8 }}>{Number(r.quantita_posseduta).toFixed(6)}</td>
-                    <td style={{ padding: 8 }}>{r.rendimento_pct != null ? `${Number(r.rendimento_pct).toFixed(2)}%` : '—'}</td>
-                    <td style={{ padding: 8, color: rendimentoEuro != null && rendimentoEuro >= 0 ? 'green' : '#b91c1c' }}>
-                      {rendimentoEuro != null ? formatEuro(rendimentoEuro) : '—'}
-                    </td>
-                    <td style={{ padding: 8 }}>{r.valore != null ? formatEuro(Number(r.valore)) : '—'}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(Number(r.capitale_investito))}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(costo)}</td>
-                    <td style={{ padding: 8 }}>{r.prezzo_attuale != null ? formatEuro(Number(r.prezzo_attuale)) : '—'}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(Number(r.prezzo_medio_unitario))}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </>
-      )}
-
-      {ricavi.length > 0 && (
-        <>
-          <h2 style={{ marginTop: 32 }}>Ricavi da vendite</h2>
-          <div style={{ display: 'flex', gap: 32, marginTop: 8, flexWrap: 'wrap' }}>
-            <div>
-              <span style={{ color: '#666' }}>Quantità venduta</span>
-              <div style={{ fontSize: 18 }}>{ricaviTotali.quantita.toFixed(6)}</div>
-            </div>
-            <div>
-              <span style={{ color: '#666' }}>Ricavo totale</span>
-              <div style={{ fontSize: 18 }}>{formatEuro(ricaviTotali.ricavo)}</div>
-            </div>
-            <div>
-              <span style={{ color: '#666' }}>Plusvalenza</span>
-              <div style={{ fontSize: 18, color: ricaviTotali.plusvalenza >= 0 ? 'green' : '#b91c1c' }}>
-                {formatEuro(ricaviTotali.plusvalenza)}
-              </div>
-            </div>
-            <div>
-              <span style={{ color: '#666' }}>Netto dopo tasse</span>
-              <div style={{ fontSize: 18 }}>{formatEuro(ricaviTotali.netto)}</div>
-            </div>
-          </div>
-
-          {ricavi.length > 1 && (
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
+        <section style={{ marginTop: 32 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Posizioni per contenitore</h2>
+          <Sezione>
+            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
               <thead>
-                <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-                  <th style={{ padding: 8 }}>Contenitore</th>
-                  <th style={{ padding: 8 }}>Quantità</th>
-                  <th style={{ padding: 8 }}>Ricavo</th>
-                  <th style={{ padding: 8 }}>Plusvalenza</th>
-                  <th style={{ padding: 8 }}>Netto</th>
+                <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Provenienza</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Peso</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Quantità</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Rendimento</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Rendimento (€)</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Valore</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Capitale investito</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Costo</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>NAV</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Prezzo medio</th>
                 </tr>
               </thead>
               <tbody>
-                {ricavi.map((r) => (
-                  <tr key={chiaveContenitore(r.contenitore_id)} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: 8 }}>{nomeContenitore(r.contenitore_id)}</td>
-                    <td style={{ padding: 8 }}>{Number(r.quantita_venduta).toFixed(6)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(Number(r.ricavo_totale))}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(Number(r.plusvalenza_totale))}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(Number(r.netto_dopo_tasse_stimato))}</td>
+                {posizioniAttuali.map((r) => {
+                  const chiave = chiaveContenitore(r.contenitore_id)
+                  const totaleContenitore = totaleContenitoreMap.get(chiave) ?? 0
+                  const peso = r.valore != null && totaleContenitore > 0 ? (Number(r.valore) / totaleContenitore) * 100 : null
+                  const rendimentoEuro = r.valore != null ? Number(r.valore) - Number(r.capitale_investito) : null
+                  const costo = costoMap.get(chiave) ?? 0
+
+                  return (
+                    <tr key={chiave} className="tabella-riga">
+                      <td style={{ padding: 8 }}>{nomeContenitore(r.contenitore_id)}</td>
+                      <td style={{ padding: 8 }}>{peso != null ? formatPercent(peso, 2) : '—'}</td>
+                      <td style={{ padding: 8 }}>{formatNumero(Number(r.quantita_posseduta), 6)}</td>
+                      <td style={{ padding: 8 }}>
+                        {r.rendimento_pct != null ? formatPercent(Number(r.rendimento_pct), 2, true) : '—'}
+                      </td>
+                      <td style={{ padding: 8, color: rendimentoEuro != null && rendimentoEuro >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                        {rendimentoEuro != null ? formatEuroSigned(rendimentoEuro) : '—'}
+                      </td>
+                      <td style={{ padding: 8 }}>{r.valore != null ? formatEuro(Number(r.valore)) : '—'}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(Number(r.capitale_investito))}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(costo)}</td>
+                      <td style={{ padding: 8 }}>{r.prezzo_attuale != null ? formatEuro(Number(r.prezzo_attuale)) : '—'}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(Number(r.prezzo_medio_unitario))}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </Sezione>
+        </section>
+      )}
+
+      {ricavi.length > 0 && (
+        <section style={{ marginTop: 32 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Ricavi da vendite</h2>
+          <Sezione>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <CardMetrica label="Quantità venduta">{formatNumero(ricaviTotali.quantita, 6)}</CardMetrica>
+              <CardMetrica label="Ricavo totale">{formatEuro(ricaviTotali.ricavo)}</CardMetrica>
+              <CardMetrica label="Plusvalenza">
+                <span style={{ color: ricaviTotali.plusvalenza >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                  {formatEuroSigned(ricaviTotali.plusvalenza)}
+                </span>
+              </CardMetrica>
+              <CardMetrica label="Netto dopo tasse">{formatEuro(ricaviTotali.netto)}</CardMetrica>
+            </div>
+
+            {ricavi.length > 1 && (
+              <div style={{ marginTop: 20 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Quantità</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Ricavo</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Plusvalenza</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Netto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ricavi.map((r) => (
+                      <tr key={chiaveContenitore(r.contenitore_id)} className="tabella-riga">
+                        <td style={{ padding: 8 }}>{nomeContenitore(r.contenitore_id)}</td>
+                        <td style={{ padding: 8 }}>{formatNumero(Number(r.quantita_venduta), 6)}</td>
+                        <td style={{ padding: 8 }}>{formatEuro(Number(r.ricavo_totale))}</td>
+                        <td style={{ padding: 8 }}>{formatEuro(Number(r.plusvalenza_totale))}</td>
+                        <td style={{ padding: 8 }}>{formatEuro(Number(r.netto_dopo_tasse_stimato))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Sezione>
+        </section>
+      )}
+
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Storico transazioni</h2>
+        <Sezione>
+          {transazioni.length === 0 ? (
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessuna transazione registrata per questo strumento.</p>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Data</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Operazione</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Quantità</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Prezzo unitario</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Commissione</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa trattenuta</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transazioni.map((t) => (
+                  <tr key={t.id} className="tabella-riga">
+                    <td style={{ padding: 8 }}>{new Date(t.data).toLocaleDateString('it-IT')}</td>
+                    <td style={{ padding: 8 }}>{ETICHETTE_OPERAZIONE[t.operazione] ?? t.operazione}</td>
+                    <td style={{ padding: 8 }}>{nomeContenitore(t.contenitore_id)}</td>
+                    <td style={{ padding: 8 }}>{formatNumero(Number(t.quantita), 6)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(Number(t.prezzo_unitario))}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(Number(t.commissione))}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(Number(t.tassa_trattenuta))}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
-        </>
-      )}
-
-      <h2 style={{ marginTop: 32 }}>Storico transazioni</h2>
-      {transazioni.length === 0 ? (
-        <p style={{ marginTop: 12 }}>Nessuna transazione registrata per questo strumento.</p>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
-          <thead>
-            <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-              <th style={{ padding: 8 }}>Data</th>
-              <th style={{ padding: 8 }}>Operazione</th>
-              <th style={{ padding: 8 }}>Contenitore</th>
-              <th style={{ padding: 8 }}>Quantità</th>
-              <th style={{ padding: 8 }}>Prezzo unitario</th>
-              <th style={{ padding: 8 }}>Commissione</th>
-              <th style={{ padding: 8 }}>Tassa trattenuta</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transazioni.map((t) => (
-              <tr key={t.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: 8 }}>{new Date(t.data).toLocaleDateString('it-IT')}</td>
-                <td style={{ padding: 8 }}>{ETICHETTE_OPERAZIONE[t.operazione] ?? t.operazione}</td>
-                <td style={{ padding: 8 }}>{nomeContenitore(t.contenitore_id)}</td>
-                <td style={{ padding: 8 }}>{Number(t.quantita).toFixed(6)}</td>
-                <td style={{ padding: 8 }}>{formatEuro(Number(t.prezzo_unitario))}</td>
-                <td style={{ padding: 8 }}>{formatEuro(Number(t.commissione))}</td>
-                <td style={{ padding: 8 }}>{formatEuro(Number(t.tassa_trattenuta))}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+        </Sezione>
+      </section>
     </div>
   )
 }
