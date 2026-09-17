@@ -155,6 +155,7 @@ export function GraficoStorico({
             <Tooltip
               formatter={(value) => [formatTooltip(Number(value)), etichettaTooltip]}
               labelFormatter={(label) => (label ? new Date(String(label)).toLocaleDateString('it-IT') : '')}
+              cursor={{ stroke: '#2B3350', strokeWidth: 1 }}
               contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
               labelStyle={{ color: '#E8EBF2' }}
               itemStyle={{ color: '#E8EBF2' }}

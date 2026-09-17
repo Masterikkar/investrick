@@ -49,6 +49,7 @@ export function GraficoRendimentiAnnuali({
             <YAxis tickFormatter={(v) => `${v}%`} fontSize={12} width={50} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <Tooltip
               formatter={(value) => [value != null ? formatPercent(Number(value), 2, true) : '—', 'Rendimento']}
+              cursor={{ fill: '#1A2036', fillOpacity: 0.5 }}
               contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
               labelStyle={{ color: '#E8EBF2' }}
               itemStyle={{ color: '#E8EBF2' }}

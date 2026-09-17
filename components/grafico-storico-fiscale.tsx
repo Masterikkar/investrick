@@ -9,10 +9,9 @@ export type PuntoStoricoFiscale = {
   nonRealizzato: number
 }
 
-const VERDE_SCURO = '#34C77B'
-const ROSSO_SCURO = '#E5484D'
-const VERDE_CHIARO = '#7DDBA8'
-const ROSSO_CHIARO = '#F09A9D'
+const VERDE = '#34C77B'
+const ROSSO = '#E5484D'
+const OPACITA_NON_REALIZZATO = 0.45
 const GRIGLIA = '#2B3350'
 const TESTO_ASSI = '#9198AD'
 
@@ -30,18 +29,23 @@ export function GraficoStoricoFiscale({ punti }: { punti: PuntoStoricoFiscale[] 
           <YAxis tickFormatter={(v) => formatEuro(Number(v))} width={80} tick={{ fill: TESTO_ASSI, fontSize: 12 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
           <Tooltip
             formatter={(value) => formatEuro(Number(value))}
+            cursor={{ fill: '#1A2036', fillOpacity: 0.5 }}
             contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
             labelStyle={{ color: '#E8EBF2' }}
             itemStyle={{ color: '#E8EBF2' }}
           />
           <Bar dataKey="realizzato" name="Realizzate nette" maxBarSize={36}>
             {punti.map((p, i) => (
-              <Cell key={`realizzato-${i}`} fill={p.realizzato >= 0 ? VERDE_SCURO : ROSSO_SCURO} />
+              <Cell key={`realizzato-${i}`} fill={p.realizzato >= 0 ? VERDE : ROSSO} />
             ))}
           </Bar>
           <Bar dataKey="nonRealizzato" name="Non realizzate" maxBarSize={36}>
             {punti.map((p, i) => (
-              <Cell key={`nonrealizzato-${i}`} fill={p.nonRealizzato >= 0 ? VERDE_CHIARO : ROSSO_CHIARO} />
+              <Cell
+                key={`nonrealizzato-${i}`}
+                fill={p.nonRealizzato >= 0 ? VERDE : ROSSO}
+                fillOpacity={OPACITA_NON_REALIZZATO}
+              />
             ))}
           </Bar>
         </BarChart>

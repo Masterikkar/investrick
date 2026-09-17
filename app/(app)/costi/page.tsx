@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, formatNumero } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
+import { Sezione } from '@/components/sezione'
 
 type CostoPerContenitore = { contenitore_id: string; costo_totale: number }
 type CostoPerStrumento = { strumento_id: string; contenitore_id: string | null; categoria: string; costo_totale: number }
@@ -18,7 +19,7 @@ type Strumento = { id: string; nome: string; categoria: string; tipo: string; pr
 type Contenitore = { id: string; nome: string }
 
 function costoPerEuro(costo: number, guadagno: number): string {
-  return guadagno > 0 ? (costo / guadagno).toFixed(2) : '—'
+  return guadagno > 0 ? formatNumero(costo / guadagno, 2) : '—'
 }
 
 const COLONNE_CONTENITORE: ColonnaTabella[] = [
@@ -158,18 +159,39 @@ export default async function CostiPage() {
 
   return (
     <div>
-      <h1>Costi</h1>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Analisi</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Costi</h1>
 
-      <div style={{ marginTop: 16 }}>
-        <span style={{ color: '#666' }}>Totale costi</span>
-        <div style={{ fontSize: 28 }}>{formatEuro(totaleCosti)}</div>
-      </div>
+      <section>
+        <Sezione>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Totale costi</div>
+          <div
+            style={{
+              fontFamily: 'var(--font-zilla-slab)',
+              fontWeight: 600,
+              fontSize: 32,
+              marginTop: 4,
+              color: 'var(--text-primary)',
+            }}
+          >
+            {formatEuro(totaleCosti)}
+          </div>
+        </Sezione>
+      </section>
 
-      <h2 style={{ marginTop: 32 }}>Per contenitore</h2>
-      <TabellaOrdinabile colonne={COLONNE_CONTENITORE} righe={righeContenitore} />
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Per contenitore</h2>
+        <Sezione>
+          <TabellaOrdinabile colonne={COLONNE_CONTENITORE} righe={righeContenitore} />
+        </Sezione>
+      </section>
 
-      <h2 style={{ marginTop: 32 }}>Tutti gli asset</h2>
-      <TabellaOrdinabile colonne={COLONNE_ASSET} righe={tuttiGliAsset} />
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Tutti gli asset</h2>
+        <Sezione>
+          <TabellaOrdinabile colonne={COLONNE_ASSET} righe={tuttiGliAsset} />
+        </Sezione>
+      </section>
     </div>
   )
 }

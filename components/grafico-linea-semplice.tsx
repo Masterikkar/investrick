@@ -29,6 +29,7 @@ export function GraficoLineaSemplice({ punti }: { punti: PuntoLineaSemplice[] })
         <Tooltip
           labelFormatter={(v) => new Date(v as string).toLocaleDateString('it-IT')}
           formatter={(value) => formatEuro(Number(value))}
+          cursor={{ stroke: '#2B3350', strokeWidth: 1 }}
           contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
           labelStyle={{ color: '#E8EBF2' }}
           itemStyle={{ color: '#E8EBF2' }}

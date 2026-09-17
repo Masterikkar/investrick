@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { GraficoRendimentiAnnuali, type RendimentoAnnuale } from '@/components/grafico-rendimenti-annuali'
+import { Sezione } from '@/components/sezione'
 
 type Snapshot = { data: string; valore: number; capitaleInvestito: number }
 
@@ -76,16 +77,16 @@ export default async function RendimentiPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: '#666' }}>Rendimenti</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16 }}>Rendimenti</h1>
-      <p style={{ color: '#666', fontSize: 14, marginBottom: 24, maxWidth: 640 }}>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Analisi</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Rendimenti</h1>
+      <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24, maxWidth: 640 }}>
         Rendimento per anno solare (01/01 → 31/12), calcolato come variazione della plus/minusvalenza non
         realizzata rispetto al capitale investito a fine anno. L'anno in corso mostra il rendimento maturato
         finora, fino all'ultimo aggiornamento disponibile.
       </p>
 
       {(contenitori ?? []).length === 0 ? (
-        <p style={{ color: '#666' }}>Nessun PAC, polizza o conto di liquidità registrato.</p>
+        <p style={{ color: 'var(--text-secondary)' }}>Nessun PAC, polizza o conto di liquidità registrato.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
           {(contenitori ?? []).map((c) => {
@@ -100,22 +101,23 @@ export default async function RendimentiPage() {
             const { cumulato, annuali } = calcolaSerieAnnuale(punti)
 
             return (
-              <section key={c.id} style={{ maxWidth: 640 }}>
+              <section key={c.id}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}>
-                  <h2 style={{ fontSize: 18, margin: 0 }}>{c.nome}</h2>
+                  <h2 style={{ fontSize: 18, fontWeight: 500, margin: 0 }}>{c.nome}</h2>
                   <span
                     style={{
                       fontSize: 12,
-                      color: '#666',
-                      background: '#eee',
-                      borderRadius: 999,
+                      color: 'var(--text-secondary)',
+                      background: 'var(--bg-surface)',
                       padding: '2px 8px',
                     }}
                   >
                     {ETICHETTA_TIPO[c.tipo] ?? c.tipo}
                   </span>
                 </div>
-                <GraficoRendimentiAnnuali rendimentoCumulato={cumulato} rendimentiAnnuali={annuali} />
+                <Sezione>
+                  <GraficoRendimentiAnnuali rendimentoCumulato={cumulato} rendimentiAnnuali={annuali} />
+                </Sezione>
               </section>
             )
           })}

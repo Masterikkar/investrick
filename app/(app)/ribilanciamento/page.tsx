@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, formatEuroSigned, formatNumero, formatPercent } from '@/lib/format'
+import { Sezione } from '@/components/sezione'
 import {
   calcolaRibilanciamentoConVersamento,
   distribuisciAcquisto,
@@ -305,180 +306,241 @@ export default async function RibilanciamentoPage({
 
   return (
     <div>
-      <h1>Ribilanciamento</h1>
-      <p style={{ color: '#666' }}>Soglia di alert: ±{soglia.toFixed(2)} punti percentuali</p>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Analisi</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Ribilanciamento</h1>
+      <p style={{ color: 'var(--text-secondary)' }}>Soglia di alert: ±{formatNumero(soglia, 2)} punti percentuali</p>
 
       {fuoriSoglia.length === 0 ? (
-        <p style={{ marginTop: 16 }}>Tutto in linea con i target. Nessuno scostamento fuori soglia.</p>
+        <p style={{ marginTop: 16, color: 'var(--text-secondary)' }}>Tutto in linea con i target. Nessuno scostamento fuori soglia.</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
-          <thead>
-            <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-              <th style={{ padding: 8 }}>Contenitore</th>
-              <th style={{ padding: 8 }}>Categoria</th>
-              <th style={{ padding: 8 }}>Target</th>
-              <th style={{ padding: 8 }}>Attuale</th>
-              <th style={{ padding: 8 }}>Scostamento</th>
-            </tr>
-          </thead>
-          <tbody>
-            {fuoriSoglia.map((s) => {
-              const sovrappeso = s.scostamento_pp > 0
-              return (
-                <tr key={s.target_id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: 8 }}>{s.contenitore_nome}</td>
-                  <td style={{ padding: 8 }}>{s.categoria}</td>
-                  <td style={{ padding: 8 }}>{s.target_percentuale.toFixed(2)}%</td>
-                  <td style={{ padding: 8 }}>{s.peso_attuale_pct.toFixed(2)}%</td>
-                  <td style={{ padding: 8, color: sovrappeso ? '#b45309' : '#2563eb', fontWeight: 600 }}>
-                    {sovrappeso ? '+' : ''}
-                    {s.scostamento_pp.toFixed(2)} pp ({sovrappeso ? 'sovrappeso' : 'sottopeso'})
-                  </td>
+        <div style={{ marginTop: 16 }}>
+          <Sezione>
+            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Categoria</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Target</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Attuale</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Scostamento</th>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {fuoriSoglia.map((s) => {
+                  const sovrappeso = s.scostamento_pp > 0
+                  return (
+                    <tr key={s.target_id} className="tabella-riga">
+                      <td style={{ padding: 8 }}>{s.contenitore_nome}</td>
+                      <td style={{ padding: 8 }}>{s.categoria}</td>
+                      <td style={{ padding: 8 }}>{formatPercent(s.target_percentuale, 2)}</td>
+                      <td style={{ padding: 8 }}>{formatPercent(s.peso_attuale_pct, 2)}</td>
+                      <td style={{ padding: 8, color: sovrappeso ? 'var(--warning)' : 'var(--primary-vivid)', fontWeight: 500 }}>
+                        {formatNumero(s.scostamento_pp, 2, true)} pp ({sovrappeso ? 'sovrappeso' : 'sottopeso'})
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </Sezione>
+        </div>
       )}
 
-      <h2 style={{ marginTop: 40 }}>Tool di calcolo</h2>
+      <h2 style={{ fontSize: 18, fontWeight: 500, marginTop: 40, marginBottom: 12 }}>Tool di calcolo</h2>
 
-      <form method="GET" style={{ display: 'flex', gap: 12, alignItems: 'flex-end', marginTop: 16, flexWrap: 'wrap' }}>
-        <label>
-          Contenitore
-          <select name="contenitore_id" defaultValue={contenitoreSelezionato} required style={{ display: 'block' }}>
-            <option value="">Seleziona...</option>
-            {contenitoriDisponibili.map(([id, nome]) => (
-              <option key={id} value={id}>{nome}</option>
-            ))}
-          </select>
-        </label>
+      <Sezione>
+        <form method="GET" style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <label>
+            Contenitore
+            <select
+              name="contenitore_id"
+              defaultValue={contenitoreSelezionato}
+              required
+              style={{
+                display: 'block',
+                marginTop: 4,
+                padding: '6px 10px',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-default)',
+              }}
+            >
+              <option value="">Seleziona...</option>
+              {contenitoriDisponibili.map(([id, nome]) => (
+                <option key={id} value={id}>{nome}</option>
+              ))}
+            </select>
+          </label>
 
-        <label>
-          Quanto sei disposto a versare (€)
-          <input type="number" name="versamento" step="any" min="0" defaultValue={params.versamento} style={{ display: 'block' }} />
-        </label>
+          <label>
+            Quanto sei disposto a versare (€)
+            <input
+              type="number"
+              name="versamento"
+              step="any"
+              min="0"
+              defaultValue={params.versamento}
+              style={{
+                display: 'block',
+                marginTop: 4,
+                padding: '6px 10px',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-default)',
+              }}
+            />
+          </label>
 
-        <label>
-          Commissione stimata per vendita (€)
-          <input type="number" name="commissione_vendita" step="any" min="0" defaultValue={params.commissione_vendita} style={{ display: 'block' }} />
-        </label>
+          <label>
+            Commissione stimata per vendita (€)
+            <input
+              type="number"
+              name="commissione_vendita"
+              step="any"
+              min="0"
+              defaultValue={params.commissione_vendita}
+              style={{
+                display: 'block',
+                marginTop: 4,
+                padding: '6px 10px',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-default)',
+              }}
+            />
+          </label>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <input type="checkbox" name="forza" value="1" defaultChecked={forzaVendita} />
-          Vendi comunque anche in perdita
-        </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <input type="checkbox" name="forza" value="1" defaultChecked={forzaVendita} style={{ accentColor: 'var(--primary)' }} />
+            Vendi comunque anche in perdita
+          </label>
 
-        <button type="submit">Calcola</button>
-      </form>
+          <button
+            type="submit"
+            style={{
+              background: 'var(--primary)',
+              color: '#fff',
+              border: 'none',
+              padding: '8px 16px',
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            Calcola
+          </button>
+        </form>
+      </Sezione>
 
       {contenitoreSelezionato && necessario !== null && (
         <div style={{ marginTop: 24 }}>
-          <p>
-            Per bilanciare comprando soltanto servirebbero circa <strong>{formatEuro(necessario)}</strong>.
-          </p>
-
-          {sufficiente ? (
-            <p style={{ color: 'green', fontWeight: 600 }}>
-              Il versamento di {formatEuro(versamento)} basta.
+          <Sezione>
+            <p style={{ margin: 0 }}>
+              Per bilanciare comprando soltanto servirebbero circa <strong>{formatEuro(necessario)}</strong>.
             </p>
-          ) : (
-            <>
-              <p style={{ color: '#b45309', fontWeight: 600 }}>
-                Il versamento di {formatEuro(versamento)} non basta. Proposta di vendita per coprire la differenza:
-              </p>
 
-              {venditeProposte.length === 0 ? (
-                <p>Nessun comparto sovrappesato da cui vendere in questo contenitore.</p>
-              ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
+            {sufficiente ? (
+              <p style={{ color: 'var(--success)', fontWeight: 500 }}>
+                Il versamento di {formatEuro(versamento)} basta.
+              </p>
+            ) : (
+              <>
+                <p style={{ color: 'var(--warning)', fontWeight: 500 }}>
+                  Il versamento di {formatEuro(versamento)} non basta. Proposta di vendita per coprire la differenza:
+                </p>
+
+                {venditeProposte.length === 0 ? (
+                  <p style={{ color: 'var(--text-secondary)' }}>Nessun comparto sovrappesato da cui vendere in questo contenitore.</p>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)' }}>
+                    <thead>
+                      <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Quantità</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Valore</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Plus/minus lorda</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Aliquota</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Netto</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {venditeProposte.map((v) => (
+                        <tr key={v.strumentoId} className="tabella-riga">
+                          <td style={{ padding: 8 }}>{v.nome}</td>
+                          <td style={{ padding: 8 }}>
+                            {formatNumero(v.quantitaVenduta, 6)}
+                            {!v.vincoloRispettato && (
+                              <div style={{ color: 'var(--warning)', fontSize: 12 }}>
+                                ridotta da {formatNumero(v.quantitaIdeale, 6)} per evitare minusvalenza netta
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ padding: 8 }}>{formatEuro(v.valoreVenduto)}</td>
+                          <td style={{ padding: 8, color: v.plusvalenzaLorda >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                            {formatEuroSigned(v.plusvalenzaLorda)}
+                          </td>
+                          <td style={{ padding: 8 }}>{v.imponibile ? formatPercent(v.aliquota * 100, 1) : 'esente (Polizza)'}</td>
+                          <td style={{ padding: 8 }}>{formatEuro(v.tassa)}</td>
+                          <td style={{ padding: 8, fontWeight: 500 }}>{formatEuro(v.proventoNetto)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                <p style={{ marginTop: 12 }}>
+                  Versamento + proventi netti disponibili da reinvestire: <strong>{formatEuro(poolTotale)}</strong>
+                </p>
+              </>
+            )}
+
+            {allocazioneAcquisto.length > 0 && (
+              <>
+                <h3 style={{ fontSize: 16, fontWeight: 500, marginTop: 24, marginBottom: 12 }}>Acquisti proposti</h3>
+                <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
                   <thead>
-                    <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-                      <th style={{ padding: 8 }}>Strumento</th>
-                      <th style={{ padding: 8 }}>Quantità</th>
-                      <th style={{ padding: 8 }}>Valore</th>
-                      <th style={{ padding: 8 }}>Plus/minus lorda</th>
-                      <th style={{ padding: 8 }}>Aliquota</th>
-                      <th style={{ padding: 8 }}>Tassa</th>
-                      <th style={{ padding: 8 }}>Netto</th>
+                    <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Categoria</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Da versare</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Peso finale</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Scostamento finale</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {venditeProposte.map((v) => (
-                      <tr key={v.strumentoId} style={{ borderBottom: '1px solid #eee' }}>
-                        <td style={{ padding: 8 }}>{v.nome}</td>
-                        <td style={{ padding: 8 }}>
-                          {v.quantitaVenduta.toFixed(6)}
-                          {!v.vincoloRispettato && (
-                            <div style={{ color: '#b45309', fontSize: 12 }}>
-                              ridotta da {v.quantitaIdeale.toFixed(6)} per evitare minusvalenza netta
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ padding: 8 }}>{formatEuro(v.valoreVenduto)}</td>
-                        <td style={{ padding: 8, color: v.plusvalenzaLorda >= 0 ? 'green' : '#b91c1c' }}>
-                          {formatEuro(v.plusvalenzaLorda)}
-                        </td>
-                        <td style={{ padding: 8 }}>{v.imponibile ? `${(v.aliquota * 100).toFixed(1)}%` : 'esente (Polizza)'}</td>
-                        <td style={{ padding: 8 }}>{formatEuro(v.tassa)}</td>
-                        <td style={{ padding: 8, fontWeight: 600 }}>{formatEuro(v.proventoNetto)}</td>
+                    {allocazioneAcquisto.map((a) => (
+                      <tr key={a.categoria} className="tabella-riga">
+                        <td style={{ padding: 8 }}>{a.categoria}</td>
+                        <td style={{ padding: 8 }}>{formatEuro(a.importo)}</td>
+                        <td style={{ padding: 8 }}>{formatPercent(a.pesoFinalePct, 2)}</td>
+                        <td style={{ padding: 8 }}>{formatNumero(a.scostamentoFinalePp, 2, true)} pp</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              )}
 
-              <p style={{ marginTop: 12 }}>
-                Versamento + proventi netti disponibili da reinvestire: <strong>{formatEuro(poolTotale)}</strong>
-              </p>
-            </>
-          )}
-
-          {allocazioneAcquisto.length > 0 && (
-            <>
-              <h3 style={{ marginTop: 24 }}>Acquisti proposti</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-                    <th style={{ padding: 8 }}>Categoria</th>
-                    <th style={{ padding: 8 }}>Da versare</th>
-                    <th style={{ padding: 8 }}>Peso finale</th>
-                    <th style={{ padding: 8 }}>Scostamento finale</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allocazioneAcquisto.map((a) => (
-                    <tr key={a.categoria} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={{ padding: 8 }}>{a.categoria}</td>
-                      <td style={{ padding: 8 }}>{formatEuro(a.importo)}</td>
-                      <td style={{ padding: 8 }}>{a.pesoFinalePct.toFixed(2)}%</td>
-                      <td style={{ padding: 8 }}>{a.scostamentoFinalePp.toFixed(2)} pp</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {allocazioneStrumenti.map((c) => (
-                <div key={c.categoria} style={{ marginTop: 16 }}>
-                  <strong>{c.categoria}</strong>{' '}
-                  <span style={{ fontSize: 12, color: '#666' }}>
-                    ({c.usaTarget ? 'secondo target per strumento' : 'secondo pesi attuali — nessun target per strumento impostato'})
-                  </span>
-                  {c.strumenti.length === 0 ? (
-                    <p style={{ color: '#b45309' }}>
-                      Nessuno strumento posseduto qui: scegli manualmente cosa comprare.
-                    </p>
-                  ) : (
-                    <ul>
-                      {c.strumenti.map((s) => (
-                        <li key={s.nome}>{s.nome} {s.ticker ? `(${s.ticker})` : ''}: {formatEuro(s.importo)}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ))}
-            </>
-          )}
+                {allocazioneStrumenti.map((c) => (
+                  <div key={c.categoria} style={{ marginTop: 16 }}>
+                    <strong>{c.categoria}</strong>{' '}
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                      ({c.usaTarget ? 'secondo target per strumento' : 'secondo pesi attuali — nessun target per strumento impostato'})
+                    </span>
+                    {c.strumenti.length === 0 ? (
+                      <p style={{ color: 'var(--warning)' }}>
+                        Nessuno strumento posseduto qui: scegli manualmente cosa comprare.
+                      </p>
+                    ) : (
+                      <ul>
+                        {c.strumenti.map((s) => (
+                          <li key={s.nome}>{s.nome} {s.ticker ? `(${s.ticker})` : ''}: {formatEuro(s.importo)}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </>
+            )}
+          </Sezione>
         </div>
       )}
     </div>
