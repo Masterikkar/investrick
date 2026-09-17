@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { GraficoRendimentiAnnuali, type RendimentoAnnuale } from '@/components/grafico-rendimenti-annuali'
+import { GraficoBarreMensili, type PuntoMensile } from '@/components/grafico-barre-mensili'
 import { Sezione } from '@/components/sezione'
 
 type Snapshot = { data: string; valore: number; capitaleInvestito: number }
@@ -41,18 +42,20 @@ function calcolaSerieAnnuale(punti: Snapshot[]): { cumulato: number | null; annu
 const ETICHETTA_TIPO: Record<string, string> = {
   PAC: 'PAC',
   Polizza: 'Polizza vita',
-  Liquidita: 'Liquidità',
 }
 
 export default async function RendimentiPage() {
   const supabase = await createClient()
 
-  const { data: contenitori } = await supabase
-    .from('contenitori')
-    .select('id, nome, tipo')
-    .in('tipo', ['PAC', 'Polizza', 'Liquidita'])
-    .order('tipo')
-    .order('nome')
+  const [{ data: contenitori }, { data: liquidita }] = await Promise.all([
+    supabase
+      .from('contenitori')
+      .select('id, nome, tipo')
+      .in('tipo', ['PAC', 'Polizza'])
+      .order('tipo')
+      .order('nome'),
+    supabase.from('contenitori').select('id').eq('tipo', 'Liquidita').maybeSingle(),
+  ])
 
   const ids = (contenitori ?? []).map((c) => c.id)
 
@@ -75,6 +78,27 @@ export default async function RendimentiPage() {
     })
   }
 
+  // --- Liquidità: interessi netti per anno (nessun "capitale investito" per un conto,
+  // quindi qui il rendimento è mostrato come importo assoluto, non come percentuale) ---
+  const { data: interessiRaw } = liquidita?.id
+    ? await supabase
+        .from('movimenti_liquidita')
+        .select('data, importo, tassa_trattenuta')
+        .eq('contenitore_id', liquidita.id)
+        .eq('tipo_movimento', 'Interesse')
+        .order('data', { ascending: true })
+    : { data: null }
+
+  const interessiPerAnno = new Map<number, number>()
+  for (const r of interessiRaw ?? []) {
+    const anno = Number(r.data.slice(0, 4))
+    const netto = Number(r.importo) - Number(r.tassa_trattenuta)
+    interessiPerAnno.set(anno, (interessiPerAnno.get(anno) ?? 0) + netto)
+  }
+  const puntiInteressiAnnuali: PuntoMensile[] = Array.from(interessiPerAnno.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([anno, valore]) => ({ mese: String(anno), valore }))
+
   return (
     <div>
       <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Analisi</div>
@@ -85,11 +109,11 @@ export default async function RendimentiPage() {
         finora, fino all'ultimo aggiornamento disponibile.
       </p>
 
-      {(contenitori ?? []).length === 0 ? (
-        <p style={{ color: 'var(--text-secondary)' }}>Nessun PAC, polizza o conto di liquidità registrato.</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
-          {(contenitori ?? []).map((c) => {
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+        {(contenitori ?? []).length === 0 ? (
+          <p style={{ color: 'var(--text-secondary)' }}>Nessun PAC o polizza registrato.</p>
+        ) : (
+          (contenitori ?? []).map((c) => {
             const mappaDate = perContenitore.get(c.id)
             const punti: Snapshot[] = mappaDate
               ? Array.from(mappaDate.entries()).map(([data, v]) => ({
@@ -120,9 +144,24 @@ export default async function RendimentiPage() {
                 </Sezione>
               </section>
             )
-          })}
-        </div>
-      )}
+          })
+        )}
+
+        <section>
+          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 4 }}>Liquidità — Interessi maturati</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 12 }}>
+            Interessi netti ricevuti sui conti di liquidità, per anno solare. Qui non si applica una percentuale
+            su capitale investito — è un importo assoluto, come per un normale conto che matura interessi.
+          </p>
+          <Sezione>
+            {puntiInteressiAnnuali.length === 0 ? (
+              <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessun interesse registrato ancora.</p>
+            ) : (
+              <GraficoBarreMensili punti={puntiInteressiAnnuali} />
+            )}
+          </Sezione>
+        </section>
+      </div>
     </div>
   )
 }
