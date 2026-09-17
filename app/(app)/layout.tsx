@@ -236,7 +236,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </details>
         </nav>
       </header>
-      <main style={{ padding: '32px 48px' }}>{children}</main>
+      <main style={{ padding: '32px 48px' }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto' }}>{children}</div>
+      </main>
     </div>
   )
 }
