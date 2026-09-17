@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoLineaSemplice, type PuntoLineaSemplice } from '@/components/grafico-linea-semplice'
 import { GraficoBarre, type PuntoBarra } from '@/components/grafico-barre'
+import { Sezione } from '@/components/sezione'
 
 const COLONNE: ColonnaTabella[] = [
   { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/liquidita/', linkKey: 'strumentoId' },
@@ -13,6 +14,12 @@ const COLONNE: ColonnaTabella[] = [
   { key: 'interesseNetto', label: 'Interesse netto', kind: 'euro' },
   { key: 'tassaTrattenuta', label: 'Tassa trattenuta', kind: 'euro' },
   { key: 'costo', label: 'Costo', kind: 'euro' },
+]
+
+const COLONNE_STORICO_INTERESSI: ColonnaTabella[] = [
+  { key: 'anno', label: 'Anno', kind: 'text' },
+  { key: 'netto', label: 'Netto ricevuto', kind: 'euro-signed' },
+  { key: 'tasse', label: 'Tasse pagate', kind: 'euro' },
 ]
 
 const NOMI_MESI = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic']
@@ -133,9 +140,9 @@ export default async function LiquiditaPage() {
     esistente.tasse += r.tassa
     perAnno.set(r.anno, esistente)
   }
-  const righeStoricoAnni = Array.from(perAnno.entries())
+  const righeStoricoAnni: RigaTabella[] = Array.from(perAnno.entries())
     .sort((a, b) => b[0] - a[0])
-    .map(([anno, v]) => ({ anno, netto: v.netto, tasse: v.tasse }))
+    .map(([anno, v]) => ({ key: String(anno), anno, netto: v.netto, tasse: v.tasse }))
 
   return (
     <div>
@@ -143,51 +150,49 @@ export default async function LiquiditaPage() {
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>
         {liquidita?.nome ?? 'Liquidità'}
       </h1>
-      <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 48, margin: 0, color: 'var(--text-primary)' }}>
-        {new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(valoreTotale)}
-      </p>
 
-      <h2 style={{ marginTop: 32, fontSize: 18, fontWeight: 500 }}>Interessi — {annoCorrente}</h2>
-      <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 36, margin: 0, color: interesseNettoYtd >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-        {formatEuro(interesseNettoYtd)}
-      </p>
-      <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4 }}>Netto, da inizio anno</p>
+      <section>
+        <Sezione>
+          <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 48, margin: 0, color: 'var(--text-primary)' }}>
+            {formatEuro(valoreTotale)}
+          </p>
+        </Sezione>
+      </section>
 
-      <div style={{ marginTop: 16, maxWidth: 1024 }}>
-        <GraficoLineaSemplice punti={puntiCumulati} />
-      </div>
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Interessi — {annoCorrente}</h2>
+        <Sezione>
+          <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 36, margin: 0, color: interesseNettoYtd >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+            {formatEuroSigned(interesseNettoYtd)}
+          </p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4, marginBottom: 16 }}>Netto, da inizio anno</p>
 
-      <div style={{ marginTop: 24, maxWidth: 1024 }}>
-        <GraficoBarre punti={puntiMensili} />
-      </div>
+          <div style={{ maxWidth: 1024 }}>
+            <GraficoLineaSemplice punti={puntiCumulati} />
+          </div>
 
-      <h2 style={{ marginTop: 32, fontSize: 18, fontWeight: 500 }}>Storico interessi</h2>
-      {righeStoricoAnni.length === 0 ? (
-        <p style={{ color: 'var(--text-secondary)' }}>Nessun interesse registrato finora.</p>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, maxWidth: 480, color: 'var(--text-primary)' }}>
-          <thead>
-            <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Anno</th>
-              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Netto ricevuto</th>
-              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tasse pagate</th>
-            </tr>
-          </thead>
-          <tbody>
-            {righeStoricoAnni.map((r) => (
-              <tr key={r.anno} className="tabella-riga">
-                <td style={{ padding: 8 }}>{r.anno}</td>
-                <td style={{ padding: 8, color: r.netto >= 0 ? 'var(--success)' : 'var(--danger)' }}>{formatEuro(r.netto)}</td>
-                <td style={{ padding: 8 }}>{formatEuro(r.tasse)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          <div style={{ marginTop: 24, maxWidth: 1024 }}>
+            <GraficoBarre punti={puntiMensili} />
+          </div>
+        </Sezione>
+      </section>
+
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Storico interessi</h2>
+        <Sezione>
+          {righeStoricoAnni.length === 0 ? (
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessun interesse registrato finora.</p>
+          ) : (
+            <TabellaOrdinabile colonne={COLONNE_STORICO_INTERESSI} righe={righeStoricoAnni} />
+          )}
+        </Sezione>
+      </section>
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Strumenti</h2>
-        <TabellaOrdinabile colonne={COLONNE} righe={righe} />
+        <Sezione>
+          <TabellaOrdinabile colonne={COLONNE} righe={righe} />
+        </Sezione>
       </section>
     </div>
   )
