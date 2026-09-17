@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { GraficoRendimentiAnnuali, type RendimentoAnnuale } from '@/components/grafico-rendimenti-annuali'
-import { GraficoBarreMensili, type PuntoMensile } from '@/components/grafico-barre-mensili'
+import { GraficoBarre, type PuntoBarra } from '@/components/grafico-barre'
 import { Sezione } from '@/components/sezione'
 
 type Snapshot = { data: string; valore: number; capitaleInvestito: number }
@@ -95,9 +95,9 @@ export default async function RendimentiPage() {
     const netto = Number(r.importo) - Number(r.tassa_trattenuta)
     interessiPerAnno.set(anno, (interessiPerAnno.get(anno) ?? 0) + netto)
   }
-  const puntiInteressiAnnuali: PuntoMensile[] = Array.from(interessiPerAnno.entries())
+  const puntiInteressiAnnuali: PuntoBarra[] = Array.from(interessiPerAnno.entries())
     .sort((a, b) => a[0] - b[0])
-    .map(([anno, valore]) => ({ mese: String(anno), valore }))
+    .map(([anno, valore]) => ({ etichetta: String(anno), valore }))
 
   return (
     <div>
@@ -157,7 +157,7 @@ export default async function RendimentiPage() {
             {puntiInteressiAnnuali.length === 0 ? (
               <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessun interesse registrato ancora.</p>
             ) : (
-              <GraficoBarreMensili punti={puntiInteressiAnnuali} />
+              <GraficoBarre punti={puntiInteressiAnnuali} />
             )}
           </Sezione>
         </section>

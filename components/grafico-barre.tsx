@@ -3,19 +3,19 @@
 import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { formatEuro } from '@/lib/format'
 
-export type PuntoMensile = { mese: string; valore: number }
+export type PuntoBarra = { etichetta: string; valore: number }
 
 const VERDE = '#34C77B'
 const ROSSO = '#E5484D'
 const GRIGLIA = '#2B3350'
 const TESTO_ASSI = '#9198AD'
 
-export function GraficoBarreMensili({ punti }: { punti: PuntoMensile[] }) {
+export function GraficoBarre({ punti }: { punti: PuntoBarra[] }) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={punti} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRIGLIA} />
-        <XAxis dataKey="mese" tick={{ fill: TESTO_ASSI, fontSize: 12 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+        <XAxis dataKey="etichetta" tick={{ fill: TESTO_ASSI, fontSize: 12 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
         <YAxis tickFormatter={(v) => formatEuro(Number(v))} width={80} tick={{ fill: TESTO_ASSI, fontSize: 12 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
         <Tooltip
           formatter={(value) => formatEuro(Number(value))}

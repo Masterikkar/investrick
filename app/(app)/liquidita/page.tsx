@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatEuro } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoLineaSemplice, type PuntoLineaSemplice } from '@/components/grafico-linea-semplice'
-import { GraficoBarreMensili, type PuntoMensile } from '@/components/grafico-barre-mensili'
+import { GraficoBarre, type PuntoBarra } from '@/components/grafico-barre'
 
 const COLONNE: ColonnaTabella[] = [
   { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/liquidita/', linkKey: 'strumentoId' },
@@ -124,7 +124,7 @@ export default async function LiquiditaPage() {
     const mese = Number(r.data.slice(5, 7)) - 1
     perMese[mese] += r.netto
   }
-  const puntiMensili: PuntoMensile[] = perMese.map((valore, i) => ({ mese: NOMI_MESI[i], valore }))
+  const puntiMensili: PuntoBarra[] = perMese.map((valore, i) => ({ etichetta: NOMI_MESI[i], valore }))
 
   const perAnno = new Map<number, { netto: number; tasse: number }>()
   for (const r of interessi) {
@@ -158,7 +158,7 @@ export default async function LiquiditaPage() {
       </div>
 
       <div style={{ marginTop: 24, maxWidth: 1024 }}>
-        <GraficoBarreMensili punti={puntiMensili} />
+        <GraficoBarre punti={puntiMensili} />
       </div>
 
       <h2 style={{ marginTop: 32, fontSize: 18, fontWeight: 500 }}>Storico interessi</h2>
