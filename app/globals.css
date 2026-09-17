@@ -58,6 +58,20 @@ body {
   background: var(--border-default);
 }
 
+.menu-row:visited,
+.link-interattivo:visited,
+.riga-interattiva:visited {
+  color: inherit;
+}
+
+.tabella-riga {
+  border-bottom: 1px solid var(--border-default);
+}
+
+.tabella-riga:last-child {
+  border-bottom: none;
+}
+
 @keyframes ripple-espandi {
   from {
     transform: scale(0);
@@ -71,11 +85,13 @@ body {
 
 /* Menu di navigazione a tendina */
 .menu-toggle {
+  position: relative;
   list-style: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
+  height: 100%;
   padding: 8px 12px;
   border-radius: 0;
   color: var(--text-primary);
@@ -86,14 +102,38 @@ body {
   display: none;
 }
 
+.menu-toggle::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 6px;
+  height: 1px;
+  background: var(--primary-vivid);
+  width: 0;
+  transition: width 0.18s ease;
+}
+
 .menu-toggle:hover {
-  background: var(--bg-surface);
+  color: var(--primary-vivid);
+}
+
+.menu-toggle:hover .menu-chevron {
+  color: var(--primary-vivid);
+}
+
+.menu-toggle:hover::after {
+  width: calc(100% - 24px);
+}
+
+.menu-toggle-bar::after {
+  content: none;
 }
 
 .menu-chevron {
   display: inline-flex;
   margin-left: auto;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, color 0.15s ease;
   color: var(--text-secondary);
 }
 
@@ -113,14 +153,30 @@ details[open] > .menu-toggle .menu-chevron {
 }
 
 .menu-row {
-  border-radius: 0;
+  position: relative;
   padding: 9px 10px;
   color: var(--text-primary);
   font-size: 14px;
 }
 
+.menu-row::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 3px;
+  height: 1px;
+  background: var(--primary-vivid);
+  width: 0;
+  transition: width 0.18s ease;
+}
+
 .menu-row:hover {
-  background: var(--border-default);
+  color: var(--primary-vivid);
+}
+
+.menu-row:hover::after {
+  width: calc(100% - 20px);
 }
 
 .menu-row-left {

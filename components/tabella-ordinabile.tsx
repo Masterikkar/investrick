@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { RippleLink } from '@/components/ripple-link'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, formatEuroSigned, formatPercent } from '@/lib/format'
 
 export type ColonnaTabella = {
   key: string
@@ -70,21 +70,15 @@ export function TabellaOrdinabile({
       case 'euro-signed': {
         const n = Number(valore) || 0
         return (
-          <span style={{ color: n >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-            {n >= 0 ? '+' : ''}
-            {formatEuro(n)}
-          </span>
+          <span style={{ color: n >= 0 ? 'var(--success)' : 'var(--danger)' }}>{formatEuroSigned(n)}</span>
         )
       }
       case 'percent':
-        return `${(Number(valore) || 0).toFixed(2)}%`
+        return formatPercent(Number(valore) || 0, 2)
       case 'percent-signed': {
         const n = Number(valore) || 0
         return (
-          <span style={{ color: n >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-            {n >= 0 ? '+' : ''}
-            {n.toFixed(2)}%
-          </span>
+          <span style={{ color: n >= 0 ? 'var(--success)' : 'var(--danger)' }}>{formatPercent(n, 2, true)}</span>
         )
       }
       case 'date':
@@ -119,7 +113,7 @@ export function TabellaOrdinabile({
           </tr>
         ) : (
           righeOrdinate.map((r) => (
-            <tr key={r.key} style={{ borderBottom: '1px solid var(--border-default)' }}>
+            <tr key={r.key} className="tabella-riga">
               {colonne.map((c) => (
                 <td key={c.key} style={{ padding: '8px 12px' }}>
                   {renderCella(c, r)}

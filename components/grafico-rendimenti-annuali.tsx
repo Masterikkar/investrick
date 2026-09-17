@@ -1,6 +1,7 @@
 'use client'
 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell } from 'recharts'
+import { formatPercent } from '@/lib/format'
 
 export type RendimentoAnnuale = { anno: number; rendimentoPct: number | null }
 
@@ -8,10 +9,6 @@ const VERDE = '#34C77B'
 const ROSSO = '#E5484D'
 const GRIGLIA = '#2B3350'
 const TESTO_ASSI = '#9198AD'
-
-function formatPercent(v: number) {
-  return `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`
-}
 
 export function GraficoRendimentiAnnuali({
   rendimentoCumulato,
@@ -38,7 +35,7 @@ export function GraficoRendimentiAnnuali({
             color: (rendimentoCumulato ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)',
           }}
         >
-          {rendimentoCumulato != null ? formatPercent(rendimentoCumulato) : '—'}
+          {rendimentoCumulato != null ? formatPercent(rendimentoCumulato, 2, true) : '—'}
         </div>
       </div>
 
@@ -51,7 +48,7 @@ export function GraficoRendimentiAnnuali({
             <XAxis dataKey="anno" fontSize={12} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <YAxis tickFormatter={(v) => `${v}%`} fontSize={12} width={50} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <Tooltip
-              formatter={(value) => [value != null ? formatPercent(Number(value)) : '—', 'Rendimento']}
+              formatter={(value) => [value != null ? formatPercent(Number(value), 2, true) : '—', 'Rendimento']}
               contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
               labelStyle={{ color: '#E8EBF2' }}
               itemStyle={{ color: '#E8EBF2' }}

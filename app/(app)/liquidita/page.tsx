@@ -175,7 +175,7 @@ export default async function LiquiditaPage() {
           </thead>
           <tbody>
             {righeStoricoAnni.map((r) => (
-              <tr key={r.anno} style={{ borderBottom: '1px solid var(--border-default)' }}>
+              <tr key={r.anno} className="tabella-riga">
                 <td style={{ padding: 8 }}>{r.anno}</td>
                 <td style={{ padding: 8, color: r.netto >= 0 ? 'var(--success)' : 'var(--danger)' }}>{formatEuro(r.netto)}</td>
                 <td style={{ padding: 8 }}>{formatEuro(r.tasse)}</td>

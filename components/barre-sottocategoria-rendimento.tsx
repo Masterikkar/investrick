@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { formatEuro } from '@/lib/format'
+import { formatEuroSigned, formatPercent } from '@/lib/format'
 
 export type ContributoStrumento = {
   strumentoId: string
@@ -56,10 +56,8 @@ export function BarreSottocategoriaRendimento({ items }: { items: ContributoStru
                     {it.nome} {it.ticker ? `(${it.ticker})` : ''}
                   </span>
                   <span style={{ color: colore, fontWeight: 500 }}>
-                    {positivo ? '+' : ''}
-                    {formatEuro(it.guadagno)}
-                    {it.contributoPctCategoria != null &&
-                      ` (${it.contributoPctCategoria >= 0 ? '+' : ''}${it.contributoPctCategoria.toFixed(1)}%)`}
+                    {formatEuroSigned(it.guadagno)}
+                    {it.contributoPctCategoria != null && ` (${formatPercent(it.contributoPctCategoria, 1, true)})`}
                   </span>
                 </div>
                 <div style={{ position: 'relative', height: 7, background: 'var(--border-default)', borderRadius: 0 }}>

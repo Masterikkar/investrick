@@ -24,7 +24,7 @@ import {
 
 const stilePannello: React.CSSProperties = {
   position: 'absolute',
-  top: 'calc(100% + 8px)',
+  top: 'calc(100% + 3px)',
   right: 0,
   zIndex: 10,
 }
@@ -46,24 +46,28 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <ChiudiTendineAutomaticamente />
       <header
         style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          background: 'var(--bg-base)',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '16px 48px',
+          alignItems: 'stretch',
+          padding: '0 48px',
           borderBottom: '1px solid var(--border-default)',
           gap: 24,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 0' }}>
           <Link href="/" style={{ textDecoration: 'none', color: 'var(--text-primary)' }}>
             <strong>Investrick</strong>
           </Link>
           <BarraRicerca strumenti={strumenti ?? []} contenitori={contenitori ?? []} />
         </div>
 
-        <nav style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <nav style={{ display: 'flex', gap: 4, alignItems: 'stretch' }}>
           <details style={{ position: 'relative' }}>
-            <summary className="menu-toggle">
+            <summary className="menu-toggle menu-toggle-bar">
               <IconaPortafoglio />
               Portafoglio
               <span className="menu-chevron">
@@ -126,7 +130,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </details>
 
           <details style={{ position: 'relative' }}>
-            <summary className="menu-toggle">
+            <summary className="menu-toggle menu-toggle-bar">
               <IconaAnalisi />
               Analisi
               <span className="menu-chevron">
@@ -186,7 +190,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </details>
 
           <details style={{ position: 'relative' }}>
-            <summary className="menu-toggle">
+            <summary className="menu-toggle menu-toggle-bar">
               <IconaAccount />
               Account
               <span className="menu-chevron">

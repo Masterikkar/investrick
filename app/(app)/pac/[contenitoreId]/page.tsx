@@ -1,10 +1,14 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
-import { BarreSottocategoria, type SottoTarget } from '@/components/barre-sottocategoria'
-import { BarreSottocategoriaRendimento, type ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
+import { RippleLink } from '@/components/ripple-link'
+import { CardMetrica } from '@/components/card-metrica'
+import { CardRendimento } from '@/components/card-rendimento'
+import type { SottoTarget } from '@/components/barre-sottocategoria'
+import type { ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
+import { AnalisiRendimento, type ContributoCategoria } from '@/components/analisi-rendimento'
+import { AnalisiComposizione, type ScostamentoCategoria } from '@/components/analisi-composizione'
 
 const COLONNE: ColonnaTabella[] = [
   { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
@@ -108,7 +112,7 @@ export default async function PacDettaglioPage({
 
   const soglia = impostazioni?.soglia_ribilanciamento_pp ?? 3
 
-  const composizione = (scostamenti ?? [])
+  const composizione: ScostamentoCategoria[] = (scostamenti ?? [])
     .slice()
     .sort(
       (a, b) =>
@@ -182,14 +186,14 @@ export default async function PacDettaglioPage({
     guadagnoPerCategoria[cat] = (guadagnoPerCategoria[cat] ?? 0) + (r.rendimentoAssoluto as number)
   }
   const maxAbsGuadagno = Math.max(0, ...Object.values(guadagnoPerCategoria).map((g) => Math.abs(g)))
-  const contributoPerCategoria = ORDINE_CATEGORIE_PAC.filter((cat) => guadagnoPerCategoria[cat] !== undefined).map(
-    (cat) => {
-      const guadagno = guadagnoPerCategoria[cat]
-      const contributoPct = plusMinusNonRealizzata !== 0 ? (guadagno / plusMinusNonRealizzata) * 100 : null
-      const larghezzaPct = maxAbsGuadagno > 0 ? (Math.abs(guadagno) / maxAbsGuadagno) * 50 : 0
-      return { categoria: cat, guadagno, contributoPct, larghezzaPct }
-    }
-  )
+  const contributoPerCategoria: ContributoCategoria[] = ORDINE_CATEGORIE_PAC.filter(
+    (cat) => guadagnoPerCategoria[cat] !== undefined
+  ).map((cat) => {
+    const guadagno = guadagnoPerCategoria[cat]
+    const contributoPct = plusMinusNonRealizzata !== 0 ? (guadagno / plusMinusNonRealizzata) * 100 : null
+    const larghezzaPct = maxAbsGuadagno > 0 ? (Math.abs(guadagno) / maxAbsGuadagno) * 50 : 0
+    return { categoria: cat, guadagno, contributoPct, larghezzaPct }
+  })
 
   const contributoStrumentoPerCategoria: Record<string, ContributoStrumento[]> = {}
   for (const r of righe) {
@@ -213,186 +217,63 @@ export default async function PacDettaglioPage({
 
   return (
     <div>
-      <Link href="/pac" style={{ fontSize: 13 }}>
+      <RippleLink href="/pac" className="link-interattivo" style={{ fontSize: 13 }}>
         ← Tutti i PAC
-      </Link>
+      </RippleLink>
 
-      <div style={{ fontSize: 13, color: '#666', marginTop: 12 }}>PAC</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16 }}>{pac.nome ?? '—'}</h1>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>PAC</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{pac.nome ?? '—'}</h1>
 
       <section>
         <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotalePac} />
       </section>
 
       <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Rendimento</div>
-          <div
-            style={{
-              fontSize: 22,
-              marginTop: 4,
-              color: (rendimentoPctTotale ?? 0) >= 0 ? '#0a7d2c' : '#c0392b',
-            }}
-          >
-            {rendimentoPctTotale != null
-              ? `${rendimentoPctTotale >= 0 ? '+' : ''}${rendimentoPctTotale.toFixed(2)}%`
-              : '—'}
-          </div>
-        </div>
+        <CardRendimento rendimentoPct={rendimentoPctTotale} label="Rendimento" />
 
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Plus/minusvalenza non realizzata</div>
-          <div
-            style={{
-              fontSize: 22,
-              marginTop: 4,
-              color: plusMinusNonRealizzata >= 0 ? '#0a7d2c' : '#c0392b',
-            }}
-          >
-            {plusMinusNonRealizzata >= 0 ? '+' : ''}
-            {formatEuro(plusMinusNonRealizzata)}
-          </div>
-          <Link href="/fiscalita" style={{ fontSize: 13 }}>
-            Vedi dettaglio fiscalità →
-          </Link>
-        </div>
+        <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
+          <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+            {formatEuroSigned(plusMinusNonRealizzata)}
+          </span>
+        </CardMetrica>
 
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Capitale investito netto</div>
-          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(capitaleInvestitoNettoTotale)}</div>
-          <Link href="/transazioni" style={{ fontSize: 13 }}>
-            Vedi transazioni →
-          </Link>
-        </div>
+        <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
+          {formatEuro(capitaleInvestitoNettoTotale)}
+        </CardMetrica>
 
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Costo totale</div>
-          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(costoTotalePac)}</div>
-          <Link href="/costi" style={{ fontSize: 13 }}>
-            Vedi dettaglio costi →
-          </Link>
-        </div>
+        <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
+          {formatEuro(costoTotalePac)}
+        </CardMetrica>
       </section>
 
       <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 12 }}>Analisi rendimento</h2>
-          {contributoPerCategoria.length === 0 || plusMinusNonRealizzata === 0 ? (
-            <p style={{ color: '#666' }}>Nessun guadagno o perdita maturata ancora.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {contributoPerCategoria.map((c) => {
-                const positivo = c.guadagno >= 0
-                const colore = positivo ? '#0a7d2c' : '#c0392b'
-                return (
-                  <div key={c.categoria}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        fontSize: 14,
-                        marginBottom: 4,
-                      }}
-                    >
-                      <span>{c.categoria}</span>
-                      <span style={{ color: colore, fontWeight: 600 }}>
-                        {positivo ? '+' : ''}
-                        {formatEuro(c.guadagno)}
-                        {c.contributoPct != null && ` (${c.contributoPct >= 0 ? '+' : ''}${c.contributoPct.toFixed(1)}%)`}
-                      </span>
-                    </div>
-                    <div style={{ position: 'relative', height: 10, background: '#eee', borderRadius: 4 }}>
-                      <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: '#999' }} />
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          height: '100%',
-                          background: colore,
-                          borderRadius: 4,
-                          ...(positivo
-                            ? { left: '50%', width: `${c.larghezzaPct}%` }
-                            : { right: '50%', width: `${c.larghezzaPct}%` }),
-                        }}
-                      />
-                    </div>
-                    <BarreSottocategoriaRendimento items={contributoStrumentoPerCategoria[c.categoria] ?? []} />
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Analisi rendimento</h2>
+          <AnalisiRendimento
+            contributoPerCategoria={contributoPerCategoria}
+            contributoStrumentoPerCategoria={contributoStrumentoPerCategoria}
+            plusMinusNonRealizzata={plusMinusNonRealizzata}
+          />
         </div>
 
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 18, margin: 0 }}>Analisi composizione</h2>
-            <Link href={`/target/${contenitoreId}`} style={{ fontSize: 13 }}>
+            <h2 style={{ fontSize: 18, margin: 0, fontWeight: 500 }}>Analisi composizione</h2>
+            <RippleLink href={`/target/${contenitoreId}`} className="link-interattivo" style={{ fontSize: 13 }}>
               Modifica target →
-            </Link>
+            </RippleLink>
           </div>
-          {!contenitoreInfo?.target_attivo ? (
-            <p style={{ color: '#666' }}>Target disattivato per questo contenitore.</p>
-          ) : composizione.length === 0 ? (
-            <p style={{ color: '#666' }}>Nessun target impostato.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {composizione.map((c) => {
-                const fuoriSoglia = Math.abs(c.scostamento_pp ?? 0) >= soglia
-                const colore = fuoriSoglia ? '#e6a400' : '#0a7d2c'
-                const pesoAttuale = Math.min(c.peso_attuale_pct ?? 0, 100)
-                const target = Math.min(c.target_percentuale ?? 0, 100)
-                return (
-                  <div key={c.categoria}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        fontSize: 14,
-                        marginBottom: 4,
-                      }}
-                    >
-                      <span>{c.categoria}</span>
-                      <span>
-                        {(c.peso_attuale_pct ?? 0).toFixed(1)}% attuale · {c.target_percentuale}% target (
-                        {(c.scostamento_pp ?? 0) > 0 ? '+' : ''}
-                        {c.scostamento_pp} pp)
-                      </span>
-                    </div>
-                    <div style={{ position: 'relative', height: 10, background: '#eee', borderRadius: 4 }}>
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          height: '100%',
-                          width: `${pesoAttuale}%`,
-                          background: colore,
-                          borderRadius: 4,
-                        }}
-                      />
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: -3,
-                          left: `${target}%`,
-                          width: 2,
-                          height: 16,
-                          background: '#333',
-                        }}
-                      />
-                    </div>
-                    <BarreSottocategoria items={sottoTargetPerCategoria[c.categoria ?? ''] ?? []} soglia={soglia} />
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          <AnalisiComposizione
+            composizione={composizione}
+            sottoTargetPerCategoria={sottoTargetPerCategoria}
+            soglia={soglia}
+            targetAttivo={contenitoreInfo?.target_attivo ?? false}
+          />
         </div>
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Strumenti</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Strumenti</h2>
         <TabellaOrdinabile colonne={COLONNE} righe={righe} />
       </section>
     </div>

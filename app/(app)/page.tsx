@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { GraficoTorta, type FettaTorta } from '@/components/grafico-torta'
-import { RippleLink } from '@/components/ripple-link'
+import { CardMetrica, stileCardMetrica } from '@/components/card-metrica'
+import { CardRendimento } from '@/components/card-rendimento'
 
 type Posizione = {
   strumento_id: string
@@ -30,14 +31,6 @@ type StoricoTotale = {
 type RealizzatoAnno = { anno: number; realizzato_netto_totale: number }
 
 const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
-
-const stileCard: React.CSSProperties = {
-  background: 'var(--bg-surface)',
-  border: '1px solid var(--border-default)',
-  borderRadius: 0,
-  padding: 16,
-  minWidth: 200,
-}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -85,7 +78,6 @@ export default async function DashboardPage() {
   const saldiLiquidita = saldiLiquiditaRaw ?? []
   const valoreTotalePortafoglio = totale?.valore_totale ?? 0
 
-  // --- Aggregati mercato (esclusa liquidità: rendimento, plus/minus, capitale netto) ---
   const valoreTotaleMercato = posizioni.reduce((s, p) => s + (p.valore ?? 0), 0)
   const valoreTotaleLiquidita = saldiLiquidita.reduce((s, x) => s + Number(x.saldo_corrente ?? 0), 0)
 
@@ -104,7 +96,6 @@ export default async function DashboardPage() {
 
   const realizzatoNettoAnno = realizzatoAnnoRaw?.realizzato_netto_totale ?? 0
 
-  // --- Storico per il grafico ---
   const storicoValoreMap = new Map<string, number>()
   const storicoCapitaleMap = new Map<string, number>()
   for (const r of storicoRaw ?? []) {
@@ -132,20 +123,17 @@ export default async function DashboardPage() {
       ? rendimentoPctTotale - rendimentoUltimoSnapshot
       : null
 
-  // --- Ribilanciamento ---
   const soglia = impostazioni?.soglia_ribilanciamento_pp ?? 3
 
   const alert = (scostamenti ?? [])
     .filter((s) => Math.abs(s.scostamento_pp ?? 0) >= soglia)
     .sort((a, b) => Math.abs(b.scostamento_pp ?? 0) - Math.abs(a.scostamento_pp ?? 0))
 
-  // --- Categorie ---
   const categorie = ORDINE_CATEGORIE.map((nome) => ({
     categoria: nome,
     valore_totale: categorieData?.find((c) => c.categoria === nome)?.valore_totale ?? 0,
   }))
 
-  // --- Composizione: per categoria + Liquidità ---
   const valorePerCategoria = new Map<string, number>()
   for (const r of nonRealizzatoRaw ?? []) {
     if (r.valore == null) continue
@@ -156,7 +144,6 @@ export default async function DashboardPage() {
     { nome: 'Liquidità', valore: valoreTotaleLiquidita },
   ]
 
-  // --- Composizione: PAC / Polizze / Diretto / Liquidità ---
   let valorePac = 0
   let valorePolizze = 0
   let valoreDiretto = 0
@@ -183,86 +170,36 @@ export default async function DashboardPage() {
       </section>
 
       <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <div style={stileCard}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Rendimento Live</div>
-          <div
-            style={{
-              fontSize: 22,
-              fontWeight: 500,
-              marginTop: 4,
-              color: (rendimentoPctTotale ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)',
-            }}
-          >
-            {rendimentoPctTotale != null
-              ? `${rendimentoPctTotale >= 0 ? '+' : ''}${rendimentoPctTotale.toFixed(2)}%`
-              : '—'}
-            {variazioneDaUltimoSnapshot != null && (
-              <span style={{ fontSize: 14, marginLeft: 6, color: 'var(--text-secondary)' }}>
-                (Oggi{' '}
-                <span style={{ color: variazioneDaUltimoSnapshot >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                  {variazioneDaUltimoSnapshot >= 0 ? '+' : ''}
-                  {variazioneDaUltimoSnapshot.toFixed(2)}%
-                </span>
-                )
-              </span>
-            )}
-          </div>
-          <RippleLink href="/rendimenti" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
-            Vedi dettaglio rendimenti →
-          </RippleLink>
-        </div>
+        <CardRendimento
+          rendimentoPct={rendimentoPctTotale}
+          variazioneOggi={variazioneDaUltimoSnapshot}
+          href="/rendimenti"
+          linkLabel="Vedi dettaglio rendimenti →"
+        />
 
-        <div style={stileCard}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Plus/minusvalenza non realizzata</div>
-          <div
-            style={{
-              fontSize: 22,
-              fontWeight: 500,
-              marginTop: 4,
-              color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)',
-            }}
-          >
-            {plusMinusNonRealizzata >= 0 ? '+' : ''}
-            {formatEuro(plusMinusNonRealizzata)}
-          </div>
-          <RippleLink href="/fiscalita" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
-            Vedi dettaglio fiscalità →
-          </RippleLink>
-        </div>
+        <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
+          <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+            {formatEuroSigned(plusMinusNonRealizzata)}
+          </span>
+        </CardMetrica>
 
-        <div style={stileCard}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Plus/minusvalenza realizzate nette — {annoCorrente}</div>
-          <div
-            style={{
-              fontSize: 22,
-              fontWeight: 500,
-              marginTop: 4,
-              color: realizzatoNettoAnno >= 0 ? 'var(--success)' : 'var(--danger)',
-            }}
-          >
-            {realizzatoNettoAnno >= 0 ? '+' : ''}
-            {formatEuro(realizzatoNettoAnno)}
-          </div>
-          <RippleLink href="/fiscalita" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
-            Vedi dettaglio fiscalità →
-          </RippleLink>
-        </div>
+        <CardMetrica
+          label={`Plus/minusvalenza realizzate nette — ${annoCorrente}`}
+          href="/fiscalita"
+          linkLabel="Vedi dettaglio fiscalità →"
+        >
+          <span style={{ color: realizzatoNettoAnno >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+            {formatEuroSigned(realizzatoNettoAnno)}
+          </span>
+        </CardMetrica>
 
-        <div style={stileCard}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Costo totale</div>
-          <div style={{ fontSize: 22, fontWeight: 500, marginTop: 4 }}>{formatEuro(costoTotale)}</div>
-          <RippleLink href="/costi" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
-            Vedi dettaglio costi →
-          </RippleLink>
-        </div>
+        <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
+          {formatEuro(costoTotale)}
+        </CardMetrica>
 
-        <div style={stileCard}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Capitale investito netto</div>
-          <div style={{ fontSize: 22, fontWeight: 500, marginTop: 4 }}>{formatEuro(capitaleInvestitoNetto)}</div>
-          <RippleLink href="/transazioni" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
-            Vedi transazioni →
-          </RippleLink>
-        </div>
+        <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
+          {formatEuro(capitaleInvestitoNetto)}
+        </CardMetrica>
       </section>
 
       <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
@@ -298,7 +235,7 @@ export default async function DashboardPage() {
         <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>I tuoi contenitori</h2>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           {contenitori?.map((c) => (
-            <div key={c.contenitore_id} style={{ ...stileCard, minWidth: 160 }}>
+            <div key={c.contenitore_id} style={{ ...stileCardMetrica, minWidth: 160 }}>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{c.tipo}</div>
               <div style={{ fontWeight: 500 }}>{c.nome}</div>
               <div style={{ marginTop: 8 }}>{formatEuro(c.valore_totale ?? 0)}</div>
@@ -311,7 +248,7 @@ export default async function DashboardPage() {
         <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Categorie</h2>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           {categorie.map((c) => (
-            <div key={c.categoria} style={{ ...stileCard, minWidth: 160 }}>
+            <div key={c.categoria} style={{ ...stileCardMetrica, minWidth: 160 }}>
               <div style={{ fontWeight: 500 }}>{c.categoria}</div>
               <div style={{ marginTop: 8 }}>{formatEuro(c.valore_totale)}</div>
             </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { formatPercent, formatNumero } from '@/lib/format'
 
 export type SottoTarget = {
   strumentoId: string
@@ -55,9 +56,8 @@ export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; s
                     {it.nome} {it.ticker ? `(${it.ticker})` : ''}
                   </span>
                   <span>
-                    {it.pesoAttualePct.toFixed(1)}% attuale · {it.targetPct}% target (
-                    {it.scostamentoPp > 0 ? '+' : ''}
-                    {it.scostamentoPp} pp)
+                    {formatPercent(it.pesoAttualePct, 1)} attuale · {formatPercent(it.targetPct, 1)} target (
+                    {formatNumero(it.scostamentoPp, 2, true)} pp)
                   </span>
                 </div>
                 <div style={{ position: 'relative', height: 7, background: 'var(--border-default)', borderRadius: 0 }}>

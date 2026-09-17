@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
-import { RippleLink } from '@/components/ripple-link'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
+import { CardMetrica } from '@/components/card-metrica'
+import { CardRendimento } from '@/components/card-rendimento'
 
 const CATEGORIA = 'Monetario'
 
@@ -18,14 +19,6 @@ const COLONNE: ColonnaTabella[] = [
   { key: 'costo', label: 'Costo', kind: 'euro' },
   { key: 'provenienza', label: 'Provenienza', kind: 'text' },
 ]
-
-const stileCard: React.CSSProperties = {
-  background: 'var(--bg-surface)',
-  border: '1px solid var(--border-default)',
-  borderRadius: 0,
-  padding: 16,
-  minWidth: 200,
-}
 
 export default async function MonetarioPage() {
   const supabase = await createClient()
@@ -152,70 +145,26 @@ export default async function MonetarioPage() {
       </section>
 
       <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <div style={stileCard}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Rendimento Live</div>
-          <div
-            style={{
-              fontSize: 22,
-              fontWeight: 500,
-              marginTop: 4,
-              color: (rendimentoPctTotale ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)',
-            }}
-          >
-            {rendimentoPctTotale != null
-              ? `${rendimentoPctTotale >= 0 ? '+' : ''}${rendimentoPctTotale.toFixed(2)}%`
-              : '—'}
-            {variazioneDaUltimoSnapshot != null && (
-              <span style={{ fontSize: 14, marginLeft: 6, color: 'var(--text-secondary)' }}>
-                (Oggi{' '}
-                <span
-                  style={{ color: variazioneDaUltimoSnapshot >= 0 ? 'var(--success)' : 'var(--danger)' }}
-                >
-                  {variazioneDaUltimoSnapshot >= 0 ? '+' : ''}
-                  {variazioneDaUltimoSnapshot.toFixed(2)}%
-                </span>
-                )
-              </span>
-            )}
-          </div>
-          <RippleLink href="/rendimenti" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
-            Vedi dettaglio rendimenti →
-          </RippleLink>
-        </div>
+        <CardRendimento
+          rendimentoPct={rendimentoPctTotale}
+          variazioneOggi={variazioneDaUltimoSnapshot}
+          href="/rendimenti"
+          linkLabel="Vedi dettaglio rendimenti →"
+        />
 
-        <div style={stileCard}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Plus/minusvalenza non realizzata</div>
-          <div
-            style={{
-              fontSize: 22,
-              fontWeight: 500,
-              marginTop: 4,
-              color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)',
-            }}
-          >
-            {plusMinusNonRealizzata >= 0 ? '+' : ''}
-            {formatEuro(plusMinusNonRealizzata)}
-          </div>
-          <RippleLink href="/fiscalita" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
-            Vedi dettaglio fiscalità →
-          </RippleLink>
-        </div>
+        <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
+          <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+            {formatEuroSigned(plusMinusNonRealizzata)}
+          </span>
+        </CardMetrica>
 
-        <div style={stileCard}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Capitale investito netto</div>
-          <div style={{ fontSize: 22, fontWeight: 500, marginTop: 4 }}>{formatEuro(capitaleInvestitoNettoTotale)}</div>
-          <RippleLink href="/transazioni" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
-            Vedi transazioni →
-          </RippleLink>
-        </div>
+        <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
+          {formatEuro(capitaleInvestitoNettoTotale)}
+        </CardMetrica>
 
-        <div style={stileCard}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Costo totale</div>
-          <div style={{ fontSize: 22, fontWeight: 500, marginTop: 4 }}>{formatEuro(costoTotaleCategoria)}</div>
-          <RippleLink href="/costi" className="link-interattivo" style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}>
-            Vedi dettaglio costi →
-          </RippleLink>
-        </div>
+        <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
+          {formatEuro(costoTotaleCategoria)}
+        </CardMetrica>
       </section>
 
       <section style={{ marginTop: 32 }}>

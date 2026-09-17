@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, formatPercent } from '@/lib/format'
 
 export type PuntoStorico = { data: string; valore: number }
 
@@ -49,14 +49,6 @@ const formatEuroCompatto = new Intl.NumberFormat('it-IT', {
   currency: 'EUR',
   notation: 'compact',
 })
-const formatEuroCompleto = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
-
-function formatPercentAsse(v: number) {
-  return `${v.toFixed(0)}%`
-}
-function formatPercentTooltip(v: number) {
-  return `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`
-}
 
 export function GraficoStorico({
   punti,
@@ -93,9 +85,9 @@ export function GraficoStorico({
     return null
   }, [formato, periodo, punti])
 
-  const formatAsse = formato === 'percent' ? formatPercentAsse : (v: number) => formatEuroCompatto.format(v)
+  const formatAsse = formato === 'percent' ? (v: number) => formatPercent(v, 0, false) : (v: number) => formatEuroCompatto.format(v)
   const formatTooltip =
-    formato === 'percent' ? (v: number) => formatPercentTooltip(v) : (v: number) => formatEuroCompleto.format(v)
+    formato === 'percent' ? (v: number) => formatPercent(v, 2, true) : (v: number) => formatEuro(v)
   const etichettaTooltip = formato === 'percent' ? 'Rendimento' : 'Valore'
 
   return (
@@ -113,8 +105,7 @@ export function GraficoStorico({
                 color: rendimentoBadge >= 0 ? 'var(--success)' : 'var(--danger)',
               }}
             >
-              {rendimentoBadge >= 0 ? '+' : ''}
-              {rendimentoBadge.toFixed(2)}%
+              {formatPercent(rendimentoBadge, 2, true)}
             </span>
           )}
         </div>

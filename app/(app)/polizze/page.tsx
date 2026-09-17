@@ -1,10 +1,14 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
-import { BarreSottocategoria, type SottoTarget } from '@/components/barre-sottocategoria'
-import { BarreSottocategoriaRendimento, type ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
+import { RippleLink } from '@/components/ripple-link'
+import { CardMetrica, stileCardMetrica } from '@/components/card-metrica'
+import { CardRendimento } from '@/components/card-rendimento'
+import type { SottoTarget } from '@/components/barre-sottocategoria'
+import type { ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
+import { AnalisiRendimento, type ContributoCategoria } from '@/components/analisi-rendimento'
+import { AnalisiComposizione, type ScostamentoCategoria } from '@/components/analisi-composizione'
 
 const COLONNE: ColonnaTabella[] = [
   { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
@@ -173,11 +177,6 @@ export default async function PolizzePage() {
     valorePerCategoria[cat] = (valorePerCategoria[cat] ?? 0) + (r.valore as number)
   }
 
-  // --- Aggregazione multi-contenitore per la Composizione ---
-  // Il target combinato per categoria è la media dei target dei singoli contenitori,
-  // pesata per il valore di ciascun contenitore (un contenitore più grande pesa di più
-  // sul target complessivo). Un contenitore senza una riga di target per una categoria
-  // conta come target 0% per quella categoria in quel contenitore.
   const valoreTotaleConTarget = idsConTargetAttivo.reduce((acc, id) => acc + (valoreContainerMap.get(id) ?? 0), 0)
 
   const valorePerCategoriaConTarget: Record<string, number> = {}
@@ -202,7 +201,7 @@ export default async function PolizzePage() {
     idsConTargetAttivo.some((id) => targetPerCategoriaEContenitore[cat]?.[id] !== undefined)
   )
 
-  const composizioneAggregata = categorieConTarget.map((cat) => {
+  const composizioneAggregata: ScostamentoCategoria[] = categorieConTarget.map((cat) => {
     const valoreCategoria = valorePerCategoriaConTarget[cat] ?? 0
     const pesoAttualePct = valoreTotaleConTarget > 0 ? (valoreCategoria / valoreTotaleConTarget) * 100 : 0
 
@@ -221,8 +220,6 @@ export default async function PolizzePage() {
     }
   })
 
-  // Sotto-target per strumento: media pesata sul valore che ciascun contenitore ha
-  // in quella specifica categoria (non sul valore totale del contenitore).
   const subTargetPerStrumento: Record<string, { contenitoreId: string; targetPct: number }[]> = {}
   for (const st of subTargetRaw ?? []) {
     if (!subTargetPerStrumento[st.strumento_id]) subTargetPerStrumento[st.strumento_id] = []
@@ -274,14 +271,14 @@ export default async function PolizzePage() {
     guadagnoPerCategoria[cat] = (guadagnoPerCategoria[cat] ?? 0) + (r.rendimentoAssoluto as number)
   }
   const maxAbsGuadagno = Math.max(0, ...Object.values(guadagnoPerCategoria).map((g) => Math.abs(g)))
-  const contributoPerCategoria = ORDINE_CATEGORIE.filter((cat) => guadagnoPerCategoria[cat] !== undefined).map(
-    (cat) => {
-      const guadagno = guadagnoPerCategoria[cat]
-      const contributoPct = plusMinusNonRealizzata !== 0 ? (guadagno / plusMinusNonRealizzata) * 100 : null
-      const larghezzaPct = maxAbsGuadagno > 0 ? (Math.abs(guadagno) / maxAbsGuadagno) * 50 : 0
-      return { categoria: cat, guadagno, contributoPct, larghezzaPct }
-    }
-  )
+  const contributoPerCategoria: ContributoCategoria[] = ORDINE_CATEGORIE.filter(
+    (cat) => guadagnoPerCategoria[cat] !== undefined
+  ).map((cat) => {
+    const guadagno = guadagnoPerCategoria[cat]
+    const contributoPct = plusMinusNonRealizzata !== 0 ? (guadagno / plusMinusNonRealizzata) * 100 : null
+    const larghezzaPct = maxAbsGuadagno > 0 ? (Math.abs(guadagno) / maxAbsGuadagno) * 50 : 0
+    return { categoria: cat, guadagno, contributoPct, larghezzaPct }
+  })
 
   const contributoStrumentoPerCategoria: Record<string, ContributoStrumento[]> = {}
   for (const r of righe) {
@@ -303,7 +300,6 @@ export default async function PolizzePage() {
     else contributoStrumentoPerCategoria[cat].sort((a, b) => b.guadagno - a.guadagno)
   }
 
-  // --- Card per singola polizza ---
   const righePolizze = (polizze ?? []).map((p) => {
     const valore = valoreContainerMap.get(p.id) ?? 0
     const costo = righe
@@ -325,243 +321,97 @@ export default async function PolizzePage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: '#666' }}>Polizze</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16 }}>Polizze</h1>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Polizze</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Polizze</h1>
 
       <section>
         <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotalePolizze} />
       </section>
 
       <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Rendimento Live</div>
-          <div
-            style={{
-              fontSize: 22,
-              marginTop: 4,
-              color: (rendimentoPctTotale ?? 0) >= 0 ? '#0a7d2c' : '#c0392b',
-            }}
-          >
-            {rendimentoPctTotale != null
-              ? `${rendimentoPctTotale >= 0 ? '+' : ''}${rendimentoPctTotale.toFixed(2)}%`
-              : '—'}
-            {variazioneDaUltimoSnapshot != null && (
-              <span style={{ fontSize: 14, marginLeft: 6, color: '#171717' }}>
-                (Oggi{' '}
-                <span
-                  style={{ color: variazioneDaUltimoSnapshot >= 0 ? '#0a7d2c' : '#c0392b' }}
-                >
-                  {variazioneDaUltimoSnapshot >= 0 ? '+' : ''}
-                  {variazioneDaUltimoSnapshot.toFixed(2)}%
-                </span>
-                )
-              </span>
-            )}
-          </div>
-          <Link href="/rendimenti" style={{ fontSize: 13 }}>
-            Vedi dettaglio rendimenti →
-          </Link>
-        </div>
+        <CardRendimento
+          rendimentoPct={rendimentoPctTotale}
+          variazioneOggi={variazioneDaUltimoSnapshot}
+          href="/rendimenti"
+          linkLabel="Vedi dettaglio rendimenti →"
+        />
 
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Plus/minusvalenza non realizzata</div>
-          <div
-            style={{
-              fontSize: 22,
-              marginTop: 4,
-              color: plusMinusNonRealizzata >= 0 ? '#0a7d2c' : '#c0392b',
-            }}
-          >
-            {plusMinusNonRealizzata >= 0 ? '+' : ''}
-            {formatEuro(plusMinusNonRealizzata)}
-          </div>
-          <Link href="/fiscalita" style={{ fontSize: 13 }}>
-            Vedi dettaglio fiscalità →
-          </Link>
-        </div>
+        <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
+          <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+            {formatEuroSigned(plusMinusNonRealizzata)}
+          </span>
+        </CardMetrica>
 
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Capitale investito netto</div>
-          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(capitaleInvestitoNettoTotale)}</div>
-          <Link href="/transazioni" style={{ fontSize: 13 }}>
-            Vedi transazioni →
-          </Link>
-        </div>
+        <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
+          {formatEuro(capitaleInvestitoNettoTotale)}
+        </CardMetrica>
 
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: '#666' }}>Costo totale</div>
-          <div style={{ fontSize: 22, marginTop: 4 }}>{formatEuro(costoTotalePolizze)}</div>
-          <Link href="/costi" style={{ fontSize: 13 }}>
-            Vedi dettaglio costi →
-          </Link>
-        </div>
+        <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
+          {formatEuro(costoTotalePolizze)}
+        </CardMetrica>
       </section>
 
       <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 12 }}>Analisi rendimento</h2>
-          {contributoPerCategoria.length === 0 || plusMinusNonRealizzata === 0 ? (
-            <p style={{ color: '#666' }}>Nessun guadagno o perdita maturata ancora.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {contributoPerCategoria.map((c) => {
-                const positivo = c.guadagno >= 0
-                const colore = positivo ? '#0a7d2c' : '#c0392b'
-                return (
-                  <div key={c.categoria}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        fontSize: 14,
-                        marginBottom: 4,
-                      }}
-                    >
-                      <span>{c.categoria}</span>
-                      <span style={{ color: colore, fontWeight: 600 }}>
-                        {positivo ? '+' : ''}
-                        {formatEuro(c.guadagno)}
-                        {c.contributoPct != null && ` (${c.contributoPct >= 0 ? '+' : ''}${c.contributoPct.toFixed(1)}%)`}
-                      </span>
-                    </div>
-                    <div style={{ position: 'relative', height: 10, background: '#eee', borderRadius: 4 }}>
-                      <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: '#999' }} />
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          height: '100%',
-                          background: colore,
-                          borderRadius: 4,
-                          ...(positivo
-                            ? { left: '50%', width: `${c.larghezzaPct}%` }
-                            : { right: '50%', width: `${c.larghezzaPct}%` }),
-                        }}
-                      />
-                    </div>
-                    <BarreSottocategoriaRendimento items={contributoStrumentoPerCategoria[c.categoria] ?? []} />
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Analisi rendimento</h2>
+          <AnalisiRendimento
+            contributoPerCategoria={contributoPerCategoria}
+            contributoStrumentoPerCategoria={contributoStrumentoPerCategoria}
+            plusMinusNonRealizzata={plusMinusNonRealizzata}
+          />
         </div>
 
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 18, margin: 0 }}>Analisi composizione</h2>
+            <h2 style={{ fontSize: 18, margin: 0, fontWeight: 500 }}>Analisi composizione</h2>
             {idsConTargetAttivo.length === 1 && (
-              <Link href={`/target/${idsConTargetAttivo[0]}`} style={{ fontSize: 13 }}>
+              <RippleLink href={`/target/${idsConTargetAttivo[0]}`} className="link-interattivo" style={{ fontSize: 13 }}>
                 Modifica target →
-              </Link>
+              </RippleLink>
             )}
           </div>
-          {idsConTargetAttivo.length === 0 ? (
-            <p style={{ color: '#666' }}>Nessuna polizza ha un target attivo.</p>
-          ) : composizioneAggregata.length === 0 ? (
-            <p style={{ color: '#666' }}>Nessun target impostato.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {composizioneAggregata.map((c) => {
-                const fuoriSoglia = Math.abs(c.scostamento_pp ?? 0) >= soglia
-                const colore = fuoriSoglia ? '#e6a400' : '#0a7d2c'
-                const pesoAttuale = Math.min(c.peso_attuale_pct ?? 0, 100)
-                const target = Math.min(c.target_percentuale ?? 0, 100)
-                return (
-                  <div key={c.categoria}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        fontSize: 14,
-                        marginBottom: 4,
-                      }}
-                    >
-                      <span>{c.categoria}</span>
-                      <span>
-                        {(c.peso_attuale_pct ?? 0).toFixed(1)}% attuale · {c.target_percentuale.toFixed(1)}% target (
-                        {(c.scostamento_pp ?? 0) > 0 ? '+' : ''}
-                        {c.scostamento_pp} pp)
-                      </span>
-                    </div>
-                    <div style={{ position: 'relative', height: 10, background: '#eee', borderRadius: 4 }}>
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          height: '100%',
-                          width: `${pesoAttuale}%`,
-                          background: colore,
-                          borderRadius: 4,
-                        }}
-                      />
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: -3,
-                          left: `${target}%`,
-                          width: 2,
-                          height: 16,
-                          background: '#333',
-                        }}
-                      />
-                    </div>
-                    <BarreSottocategoria items={sottoTargetPerCategoria[c.categoria ?? ''] ?? []} soglia={soglia} />
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          <AnalisiComposizione
+            composizione={composizioneAggregata}
+            sottoTargetPerCategoria={sottoTargetPerCategoria}
+            soglia={soglia}
+            targetAttivo={idsConTargetAttivo.length > 0}
+            messaggioTargetDisattivato="Nessuna polizza ha un target attivo."
+          />
         </div>
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Le tue polizze</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Le tue polizze</h2>
         {righePolizze.length === 0 ? (
-          <p style={{ color: '#666' }}>Nessuna polizza registrata.</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Nessuna polizza registrata.</p>
         ) : (
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             {righePolizze.map((r) => (
-              <Link
+              <RippleLink
                 key={r.id}
                 href={`/polizze/${r.id}`}
-                style={{
-                  border: '1px solid #ddd',
-                  borderRadius: 8,
-                  padding: 16,
-                  minWidth: 220,
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  display: 'block',
-                }}
+                className="riga-interattiva"
+                style={{ ...stileCardMetrica, minWidth: 220, display: 'block' }}
               >
-                <div style={{ fontWeight: 'bold' }}>{r.nome}</div>
-                <div style={{ fontSize: 13, color: '#666', marginTop: 4 }}>
+                <div style={{ fontWeight: 500 }}>{r.nome}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
                   {r.dataAttivazione
                     ? `Attiva dal ${new Date(r.dataAttivazione).toLocaleDateString('it-IT')}`
                     : 'Data di attivazione non impostata'}
                 </div>
                 <div style={{ marginTop: 12, fontSize: 20 }}>{formatEuro(r.valore)}</div>
-                <div style={{ marginTop: 8, fontSize: 13, color: '#666' }}>Costo: {formatEuro(r.costo)}</div>
-                <div
-                  style={{
-                    marginTop: 4,
-                    fontSize: 13,
-                    color: r.plusMinus >= 0 ? '#0a7d2c' : '#c0392b',
-                  }}
-                >
-                  Plus/minus: {r.plusMinus >= 0 ? '+' : ''}
-                  {formatEuro(r.plusMinus)}
+                <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-secondary)' }}>Costo: {formatEuro(r.costo)}</div>
+                <div style={{ marginTop: 4, fontSize: 13, color: r.plusMinus >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                  Plus/minus: {formatEuroSigned(r.plusMinus)}
                 </div>
-              </Link>
+              </RippleLink>
             ))}
           </div>
         )}
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Strumenti</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Strumenti</h2>
         <TabellaOrdinabile colonne={COLONNE} righe={righe} />
       </section>
     </div>
