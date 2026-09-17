@@ -86,10 +86,10 @@ export default async function TransazioniPage({
 
       <div style={{ display: 'flex', gap: 16, fontSize: 13, marginTop: 12, marginBottom: 16 }}>
         <RippleLink href="/transazioni/asset" className="link-interattivo">
-          Vedi storico Transazioni Asset →
+          Vedi storico Transazioni finanziarie →
         </RippleLink>
         <RippleLink href="/transazioni/liquidita" className="link-interattivo">
-          Vedi storico Transazioni Liquidità →
+          Vedi storico Transazioni di liquidità →
         </RippleLink>
       </div>
 
@@ -109,7 +109,7 @@ export default async function TransazioniPage({
         <Sezione>
           <div style={{ display: 'flex', gap: 128, flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 320px', maxWidth: 420 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 500, marginTop: 0, marginBottom: 12 }}>Transazione manuale</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 500, marginTop: 0, marginBottom: 12 }}>Transazione finanziaria</h3>
 
               {params.successo === '1' && <p style={{ color: 'var(--success)', marginBottom: 12 }}>Transazione salvata.</p>}
               {params.errore === '1' && <p style={{ color: 'var(--danger)', marginBottom: 12 }}>Qualcosa è andato storto, riprova.</p>}
@@ -209,7 +209,7 @@ export default async function TransazioniPage({
             </div>
 
             <div style={{ flex: '1 1 320px', maxWidth: 420 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 500, marginTop: 0, marginBottom: 12 }}>Operazione Liquidità</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 500, marginTop: 0, marginBottom: 12 }}>Transazione di liquidità</h3>
 
               {params.successo === '1' && <p style={{ color: 'var(--success)', marginBottom: 12 }}>Transazione salvata.</p>}
               {params.errore === '1' && <p style={{ color: 'var(--danger)', marginBottom: 12 }}>Qualcosa è andato storto, riprova.</p>}
@@ -278,7 +278,7 @@ export default async function TransazioniPage({
                   </label>
 
                   <button type="submit" style={stileBottonePrimario}>
-                    Salva operazione
+                    Salva transazione
                   </button>
                 </form>
               )}

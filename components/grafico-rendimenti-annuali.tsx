@@ -25,12 +25,12 @@ export function GraficoRendimentiAnnuali({
   return (
     <div>
       <div style={{ marginBottom: 16 }}>
-        <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Rendimento cumulato (da sempre)</span>
+        <span style={{ fontSize: 'var(--fs-card-label)', color: 'var(--text-secondary)' }}>Rendimento cumulato (da sempre)</span>
         <div
           style={{
             fontFamily: 'var(--font-zilla-slab)',
             fontWeight: 600,
-            fontSize: 32,
+            fontSize: 'var(--fs-hero-secondario)',
             marginTop: 2,
             color: (rendimentoCumulato ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)',
           }}
@@ -45,8 +45,8 @@ export function GraficoRendimentiAnnuali({
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={dati}>
             <CartesianGrid strokeDasharray="3 3" stroke={GRIGLIA} />
-            <XAxis dataKey="anno" fontSize={12} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
-            <YAxis tickFormatter={(v) => `${v}%`} fontSize={12} width={50} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+            <XAxis dataKey="anno" fontSize={11} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+            <YAxis tickFormatter={(v) => `${v}%`} fontSize={11} width={50} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <Tooltip
               formatter={(value) => [value != null ? formatPercent(Number(value), 2, true) : '—', 'Rendimento']}
               cursor={{ fill: '#1A2036', fillOpacity: 0.5 }}

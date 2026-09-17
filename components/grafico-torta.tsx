@@ -36,7 +36,7 @@ export function GraficoTorta({ fette }: { fette: FettaTorta[] }) {
           labelStyle={{ color: '#E8EBF2' }}
           itemStyle={{ color: '#E8EBF2' }}
         />
-        <Legend wrapperStyle={{ color: '#9198AD', fontSize: 13 }} />
+        <Legend wrapperStyle={{ color: '#9198AD', fontSize: 12 }} />
       </PieChart>
     </ResponsiveContainer>
   )

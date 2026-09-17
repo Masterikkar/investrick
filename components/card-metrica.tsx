@@ -23,13 +23,13 @@ export function CardMetrica({
 }) {
   return (
     <div style={minWidth ? { ...stileCardMetrica, minWidth } : stileCardMetrica}>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 500, marginTop: 4 }}>{children}</div>
+      <div style={{ fontSize: 'var(--fs-card-label)', color: 'var(--text-secondary)' }}>{label}</div>
+      <div style={{ fontSize: 'var(--fs-card-value)', fontWeight: 500, marginTop: 4 }}>{children}</div>
       {href && linkLabel && (
         <RippleLink
           href={href}
           className="link-interattivo"
-          style={{ fontSize: 13, display: 'inline-block', marginTop: 6 }}
+          style={{ fontSize: 'var(--fs-card-link)', display: 'inline-block', marginTop: 6 }}
         >
           {linkLabel}
         </RippleLink>

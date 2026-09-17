@@ -85,7 +85,7 @@ export function BarraRicerca({
           border: '1px solid var(--border-default)',
           borderRadius: 0,
           width: 220,
-          fontSize: 14,
+          fontSize: 'var(--fs-search)',
           background: 'var(--bg-surface)',
           color: 'var(--text-primary)',
         }}
@@ -108,7 +108,7 @@ export function BarraRicerca({
           }}
         >
           {risultati.length === 0 ? (
-            <div style={{ padding: 12, color: 'var(--text-secondary)', fontSize: 14 }}>Nessun risultato.</div>
+            <div style={{ padding: 12, color: 'var(--text-secondary)', fontSize: 'var(--fs-search)' }}>Nessun risultato.</div>
           ) : (
             risultati.map((r) => (
               <RippleLink
@@ -125,8 +125,8 @@ export function BarraRicerca({
                   borderBottom: '1px solid var(--border-default)',
                 }}
               >
-                <div style={{ fontSize: 14 }}>{r.label}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{r.sottotitolo}</div>
+                <div style={{ fontSize: 'var(--fs-search)' }}>{r.label}</div>
+                <div style={{ fontSize: 'var(--fs-search-sub)', color: 'var(--text-secondary)' }}>{r.sottotitolo}</div>
               </RippleLink>
             ))
           )}

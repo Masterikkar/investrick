@@ -94,13 +94,13 @@ export function GraficoStorico({
     <div>
       {valoreAttuale !== undefined && (
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 16 }}>
-          <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 48, margin: 0, color: 'var(--text-primary)' }}>
+          <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 'var(--fs-hero)', margin: 0, color: 'var(--text-primary)' }}>
             {formatEuro(valoreAttuale)}
           </p>
           {rendimentoBadge !== null && (
             <span
               style={{
-                fontSize: 16,
+                fontSize: 'var(--fs-hero-badge)',
                 fontWeight: 500,
                 color: rendimentoBadge >= 0 ? 'var(--success)' : 'var(--danger)',
               }}
@@ -123,7 +123,7 @@ export function GraficoStorico({
               background: periodo === p.key ? 'var(--primary)' : 'var(--bg-surface)',
               color: periodo === p.key ? '#FFFFFF' : 'var(--text-secondary)',
               cursor: 'pointer',
-              fontSize: 13,
+              fontSize: 'var(--fs-period)',
             }}
           >
             {p.label}
@@ -132,7 +132,7 @@ export function GraficoStorico({
       </div>
 
       {notaDatiParziali && (
-        <p style={{ fontSize: 12, color: 'var(--warning)', margin: '4px 0 8px' }}>{notaDatiParziali}</p>
+        <p style={{ fontSize: 'var(--fs-form-hint)', color: 'var(--warning)', margin: '4px 0 8px' }}>{notaDatiParziali}</p>
       )}
 
       {punti.length === 0 ? (
@@ -146,12 +146,12 @@ export function GraficoStorico({
             <XAxis
               dataKey="data"
               tickFormatter={(d) => new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
-              fontSize={12}
+              fontSize={11}
               tick={{ fill: TESTO_ASSI }}
               axisLine={{ stroke: GRIGLIA }}
               tickLine={{ stroke: GRIGLIA }}
             />
-            <YAxis tickFormatter={(v) => formatAsse(Number(v))} fontSize={12} width={70} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+            <YAxis tickFormatter={(v) => formatAsse(Number(v))} fontSize={11} width={70} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <Tooltip
               formatter={(value) => [formatTooltip(Number(value)), etichettaTooltip]}
               labelFormatter={(label) => (label ? new Date(String(label)).toLocaleDateString('it-IT') : '')}

@@ -91,7 +91,7 @@ export function StoricoMovimentiLiquidita({
   function handleElimina(riga: RigaStoricoMovimentoLiquidita) {
     const descrizione = `${riga.tipo_movimento} del ${new Date(riga.data).toLocaleDateString('it-IT')} — ${riga.strumento_nome}`
 
-    if (!window.confirm(`Eliminare questo movimento?\n\n${descrizione}\n\nL'operazione non è reversibile.`)) {
+    if (!window.confirm(`Eliminare questa transazione?\n\n${descrizione}\n\nL'operazione non è reversibile.`)) {
       return
     }
 
@@ -187,12 +187,12 @@ export function StoricoMovimentiLiquidita({
 
       {erroreId && (
         <p style={{ color: 'var(--danger)', marginTop: 8 }}>
-          Non è stato possibile completare l'operazione su quel movimento. Riprova.
+          Non è stato possibile completare l'operazione su quella transazione. Riprova.
         </p>
       )}
 
       {righeFiltrate.length === 0 ? (
-        <p style={{ marginTop: 12, color: 'var(--text-secondary)' }}>Nessun movimento trovato.</p>
+        <p style={{ marginTop: 12, color: 'var(--text-secondary)' }}>Nessuna transazione trovata.</p>
       ) : (
         <>
           <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)' }}>
@@ -269,7 +269,7 @@ export function StoricoMovimentiLiquidita({
                           type="button"
                           onClick={() => handleElimina(m)}
                           disabled={inCorso}
-                          title="Elimina movimento"
+                          title="Elimina transazione"
                           style={{
                             border: 'none',
                             background: 'none',

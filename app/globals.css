@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  /* Colori */
   --bg-base: #0A0D16;
   --bg-surface: #1A2036;
   --bg-section: #101421;
@@ -16,6 +17,51 @@
   --danger: #E5484D;
   --danger-light: #F09A9D;
   --warning: #E8A23B;
+
+  /* Tipografia — unico punto da cui pagine e componenti pescano i
+     font-size, invece di ripeterli sparsi nei singoli file. */
+
+  /* Titoli */
+  --fs-eyebrow: 12px;   /* etichetta piccola sopra il titolo, es. "Categoria" */
+  --fs-h1: 18px;        /* titolo di pagina */
+  --fs-h2: 16px;        /* titolo di sezione */
+  --fs-h3: 14px;        /* sotto-titolo, es. "Transazione manuale" */
+
+  /* Numeri "hero" (Zilla Slab) */
+  --fs-hero: 36px;             /* valore totale principale */
+  --fs-hero-secondario: 24px;  /* rendimento cumulato, stato attuale, YTD */
+  --fs-hero-badge: 14px;       /* variazione accanto a un numero hero */
+
+  /* Grafici: i tick degli assi Recharts restano un numero letterale (11px)
+     nei singoli componenti grafico — quella prop passa come attributo SVG,
+     non come style HTML, e lì le CSS custom properties non sono affidabili
+     su tutti i browser. Tooltip, pulsanti periodo e didascalie invece sì. */
+  --fs-period: 12px;
+
+  /* Card metriche (CardMetrica) */
+  --fs-card-label: 11px;
+  --fs-card-value: 17px;
+  --fs-card-link: 12px;   /* link "Vedi dettaglio →" e testo secondario simile */
+
+  /* Navigazione */
+  --fs-menu: 13px;
+  --fs-search: 13px;
+  --fs-search-sub: 11px;
+
+  /* Bottoni */
+  --fs-button: 13px;
+  --fs-button-outline: 12px;
+
+  /* Tabelle e form */
+  --fs-table: 13px;
+  --fs-form-label: 13px;
+  --fs-form-hint: 11px;
+
+  /* Badge/pill (es. provenienza, tipo contenitore) */
+  --fs-badge: 11px;
+
+  /* Testo generico di paragrafo */
+  --fs-body: 13px;
 }
 
 @theme inline {
@@ -99,7 +145,7 @@ body {
   padding: 8px 12px;
   border-radius: 0;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: var(--fs-menu);
 }
 
 .menu-toggle::-webkit-details-marker {
@@ -160,7 +206,7 @@ details[open] > .menu-toggle .menu-chevron {
   position: relative;
   padding: 9px 10px;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: var(--fs-menu);
 }
 
 .menu-row::after {

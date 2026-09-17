@@ -15,8 +15,8 @@ export function GraficoBarre({ punti }: { punti: PuntoBarra[] }) {
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={punti} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRIGLIA} />
-        <XAxis dataKey="etichetta" tick={{ fill: TESTO_ASSI, fontSize: 12 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
-        <YAxis tickFormatter={(v) => formatEuro(Number(v))} width={80} tick={{ fill: TESTO_ASSI, fontSize: 12 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+        <XAxis dataKey="etichetta" tick={{ fill: TESTO_ASSI, fontSize: 11 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+        <YAxis tickFormatter={(v) => formatEuro(Number(v))} width={80} tick={{ fill: TESTO_ASSI, fontSize: 11 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
         <Tooltip
           formatter={(value) => formatEuro(Number(value))}
           cursor={{ fill: '#1A2036', fillOpacity: 0.5 }}

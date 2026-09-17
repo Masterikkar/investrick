@@ -39,7 +39,7 @@ export function AnalisiComposizione({
         const target = Math.min(c.target_percentuale ?? 0, 100)
         return (
           <div key={c.categoria}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, marginBottom: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-table)', marginBottom: 4 }}>
               <span>{c.categoria}</span>
               <span>
                 {formatPercent(c.peso_attuale_pct ?? 0, 1)} attuale · {formatPercent(c.target_percentuale ?? 0, 1)} target (

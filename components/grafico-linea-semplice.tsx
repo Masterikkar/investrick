@@ -11,7 +11,7 @@ const LINEA = '#7C8CFF'
 
 export function GraficoLineaSemplice({ punti }: { punti: PuntoLineaSemplice[] }) {
   if (punti.length === 0) {
-    return <p style={{ color: 'var(--text-secondary)', marginTop: 12 }}>Non ci sono ancora dati per quest'anno.</p>
+    return <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', marginTop: 12 }}>Non ci sono ancora dati per quest'anno.</p>
   }
 
   return (
@@ -21,11 +21,11 @@ export function GraficoLineaSemplice({ punti }: { punti: PuntoLineaSemplice[] })
         <XAxis
           dataKey="data"
           tickFormatter={(v) => new Date(v).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
-          tick={{ fill: TESTO_ASSI, fontSize: 12 }}
+          tick={{ fill: TESTO_ASSI, fontSize: 11 }}
           axisLine={{ stroke: GRIGLIA }}
           tickLine={{ stroke: GRIGLIA }}
         />
-        <YAxis tickFormatter={(v) => formatEuro(Number(v))} width={80} tick={{ fill: TESTO_ASSI, fontSize: 12 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+        <YAxis tickFormatter={(v) => formatEuro(Number(v))} width={80} tick={{ fill: TESTO_ASSI, fontSize: 11 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
         <Tooltip
           labelFormatter={(v) => new Date(v as string).toLocaleDateString('it-IT')}
           formatter={(value) => formatEuro(Number(value))}

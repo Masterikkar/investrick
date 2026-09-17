@@ -22,7 +22,7 @@ export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; s
         type="button"
         onClick={() => setAperto((v) => !v)}
         style={{
-          fontSize: 12,
+          fontSize: 'var(--fs-card-link)',
           background: 'none',
           border: '1px solid var(--border-default)',
           borderRadius: 0,
@@ -47,7 +47,7 @@ export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; s
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    fontSize: 12,
+                    fontSize: 'var(--fs-card-link)',
                     marginBottom: 3,
                     color: 'var(--text-secondary)',
                   }}

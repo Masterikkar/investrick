@@ -23,7 +23,7 @@ export function BarreSottocategoriaRendimento({ items }: { items: ContributoStru
         type="button"
         onClick={() => setAperto((v) => !v)}
         style={{
-          fontSize: 12,
+          fontSize: 'var(--fs-card-link)',
           background: 'none',
           border: '1px solid var(--border-default)',
           borderRadius: 0,
@@ -47,7 +47,7 @@ export function BarreSottocategoriaRendimento({ items }: { items: ContributoStru
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    fontSize: 12,
+                    fontSize: 'var(--fs-card-link)',
                     marginBottom: 3,
                     color: 'var(--text-secondary)',
                   }}

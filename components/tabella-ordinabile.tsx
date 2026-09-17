@@ -89,7 +89,7 @@ export function TabellaOrdinabile({
   }
 
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
+    <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
       <thead>
         <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
           {colonne.map((c) => (

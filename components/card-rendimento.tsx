@@ -20,7 +20,7 @@ export function CardRendimento({
         {rendimentoPct != null ? formatPercent(rendimentoPct, 2, true) : '—'}
       </span>
       {variazioneOggi != null && (
-        <span style={{ fontSize: 14, marginLeft: 6, color: 'var(--text-secondary)' }}>
+        <span style={{ fontSize: 'var(--fs-card-link)', marginLeft: 6, color: 'var(--text-secondary)' }}>
           (Oggi{' '}
           <span style={{ color: variazioneOggi >= 0 ? 'var(--success)' : 'var(--danger)' }}>
             {formatPercent(variazioneOggi, 2, true)}

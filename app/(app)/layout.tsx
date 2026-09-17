@@ -180,10 +180,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 </summary>
                 <div className="menu-submenu-items">
                   <RippleLink href="/transazioni/liquidita" className="menu-row link-interattivo">
-                    Liquidità
+                    Transazioni di liquidità
                   </RippleLink>
                   <RippleLink href="/transazioni/asset" className="menu-row link-interattivo">
-                    Transazioni
+                    Transazioni finanziarie
                   </RippleLink>
                 </div>
               </details>
