@@ -5,6 +5,7 @@ import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { RippleLink } from '@/components/ripple-link'
 import { CardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
+import { Sezione } from '@/components/sezione'
 import type { SottoTarget } from '@/components/barre-sottocategoria'
 import type { ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
 import { AnalisiRendimento, type ContributoCategoria } from '@/components/analisi-rendimento'
@@ -225,35 +226,43 @@ export default async function PacDettaglioPage({
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{pac.nome ?? '—'}</h1>
 
       <section>
-        <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotalePac} />
+        <Sezione>
+          <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotalePac} />
+        </Sezione>
       </section>
 
-      <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <CardRendimento rendimentoPct={rendimentoPctTotale} label="Rendimento" />
+      <section style={{ marginTop: 24 }}>
+        <Sezione>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <CardRendimento rendimentoPct={rendimentoPctTotale} label="Rendimento" />
 
-        <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
-          <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-            {formatEuroSigned(plusMinusNonRealizzata)}
-          </span>
-        </CardMetrica>
+            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
+              <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                {formatEuroSigned(plusMinusNonRealizzata)}
+              </span>
+            </CardMetrica>
 
-        <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
-          {formatEuro(capitaleInvestitoNettoTotale)}
-        </CardMetrica>
+            <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
+              {formatEuro(capitaleInvestitoNettoTotale)}
+            </CardMetrica>
 
-        <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
-          {formatEuro(costoTotalePac)}
-        </CardMetrica>
+            <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
+              {formatEuro(costoTotalePac)}
+            </CardMetrica>
+          </div>
+        </Sezione>
       </section>
 
       <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
           <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Analisi rendimento</h2>
-          <AnalisiRendimento
-            contributoPerCategoria={contributoPerCategoria}
-            contributoStrumentoPerCategoria={contributoStrumentoPerCategoria}
-            plusMinusNonRealizzata={plusMinusNonRealizzata}
-          />
+          <Sezione>
+            <AnalisiRendimento
+              contributoPerCategoria={contributoPerCategoria}
+              contributoStrumentoPerCategoria={contributoStrumentoPerCategoria}
+              plusMinusNonRealizzata={plusMinusNonRealizzata}
+            />
+          </Sezione>
         </div>
 
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
@@ -263,18 +272,22 @@ export default async function PacDettaglioPage({
               Modifica target →
             </RippleLink>
           </div>
-          <AnalisiComposizione
-            composizione={composizione}
-            sottoTargetPerCategoria={sottoTargetPerCategoria}
-            soglia={soglia}
-            targetAttivo={contenitoreInfo?.target_attivo ?? false}
-          />
+          <Sezione>
+            <AnalisiComposizione
+              composizione={composizione}
+              sottoTargetPerCategoria={sottoTargetPerCategoria}
+              soglia={soglia}
+              targetAttivo={contenitoreInfo?.target_attivo ?? false}
+            />
+          </Sezione>
         </div>
       </section>
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Strumenti</h2>
-        <TabellaOrdinabile colonne={COLONNE} righe={righe} />
+        <Sezione>
+          <TabellaOrdinabile colonne={COLONNE} righe={righe} />
+        </Sezione>
       </section>
     </div>
   )

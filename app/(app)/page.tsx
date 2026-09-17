@@ -4,6 +4,7 @@ import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { GraficoTorta, type FettaTorta } from '@/components/grafico-torta'
 import { CardMetrica, stileCardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
+import { Sezione } from '@/components/sezione'
 
 type Posizione = {
   strumento_id: string
@@ -166,94 +167,110 @@ export default async function DashboardPage() {
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Il tuo portafoglio</h1>
 
       <section>
-        <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotalePortafoglio} />
+        <Sezione>
+          <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotalePortafoglio} />
+        </Sezione>
       </section>
 
-      <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <CardRendimento
-          rendimentoPct={rendimentoPctTotale}
-          variazioneOggi={variazioneDaUltimoSnapshot}
-          href="/rendimenti"
-          linkLabel="Vedi dettaglio rendimenti →"
-        />
+      <section style={{ marginTop: 24 }}>
+        <Sezione>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <CardRendimento
+              rendimentoPct={rendimentoPctTotale}
+              variazioneOggi={variazioneDaUltimoSnapshot}
+              href="/rendimenti"
+              linkLabel="Vedi dettaglio rendimenti →"
+            />
 
-        <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
-          <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-            {formatEuroSigned(plusMinusNonRealizzata)}
-          </span>
-        </CardMetrica>
+            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
+              <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                {formatEuroSigned(plusMinusNonRealizzata)}
+              </span>
+            </CardMetrica>
 
-        <CardMetrica
-          label={`Plus/minusvalenza realizzate nette — ${annoCorrente}`}
-          href="/fiscalita"
-          linkLabel="Vedi dettaglio fiscalità →"
-        >
-          <span style={{ color: realizzatoNettoAnno >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-            {formatEuroSigned(realizzatoNettoAnno)}
-          </span>
-        </CardMetrica>
+            <CardMetrica
+              label={`Plus/minusvalenza realizzate nette — ${annoCorrente}`}
+              href="/fiscalita"
+              linkLabel="Vedi dettaglio fiscalità →"
+            >
+              <span style={{ color: realizzatoNettoAnno >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                {formatEuroSigned(realizzatoNettoAnno)}
+              </span>
+            </CardMetrica>
 
-        <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
-          {formatEuro(costoTotale)}
-        </CardMetrica>
+            <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
+              {formatEuro(costoTotale)}
+            </CardMetrica>
 
-        <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
-          {formatEuro(capitaleInvestitoNetto)}
-        </CardMetrica>
+            <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
+              {formatEuro(capitaleInvestitoNetto)}
+            </CardMetrica>
+          </div>
+        </Sezione>
       </section>
 
       <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
           <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Composizione per categoria</h2>
-          <GraficoTorta fette={fetteCategorie} />
+          <Sezione>
+            <GraficoTorta fette={fetteCategorie} />
+          </Sezione>
         </div>
         <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
           <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Composizione per contenitore</h2>
-          <GraficoTorta fette={fetteContenitori} />
+          <Sezione>
+            <GraficoTorta fette={fetteContenitori} />
+          </Sezione>
         </div>
       </section>
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Ribilanciamento</h2>
-        {alert.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)' }}>Tutto in linea con i target.</p>
-        ) : (
-          <ul style={{ paddingLeft: 20 }}>
-            {alert.map((a) => (
-              <li key={`${a.contenitore_id}-${a.categoria}`}>
-                <strong>{a.contenitore_nome}</strong> — {a.categoria}: {a.peso_attuale_pct}% attuale
-                vs {a.target_percentuale}% target (
-                {a.scostamento_pp && a.scostamento_pp > 0 ? '+' : ''}
-                {a.scostamento_pp} pp)
-              </li>
-            ))}
-          </ul>
-        )}
+        <Sezione>
+          {alert.length === 0 ? (
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Tutto in linea con i target.</p>
+          ) : (
+            <ul style={{ paddingLeft: 20, margin: 0 }}>
+              {alert.map((a) => (
+                <li key={`${a.contenitore_id}-${a.categoria}`}>
+                  <strong>{a.contenitore_nome}</strong> — {a.categoria}: {a.peso_attuale_pct}% attuale
+                  vs {a.target_percentuale}% target (
+                  {a.scostamento_pp && a.scostamento_pp > 0 ? '+' : ''}
+                  {a.scostamento_pp} pp)
+                </li>
+              ))}
+            </ul>
+          )}
+        </Sezione>
       </section>
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>I tuoi contenitori</h2>
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          {contenitori?.map((c) => (
-            <div key={c.contenitore_id} style={{ ...stileCardMetrica, minWidth: 160 }}>
-              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{c.tipo}</div>
-              <div style={{ fontWeight: 500 }}>{c.nome}</div>
-              <div style={{ marginTop: 8 }}>{formatEuro(c.valore_totale ?? 0)}</div>
-            </div>
-          ))}
-        </div>
+        <Sezione>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            {contenitori?.map((c) => (
+              <div key={c.contenitore_id} style={{ ...stileCardMetrica, minWidth: 160 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{c.tipo}</div>
+                <div style={{ fontWeight: 500 }}>{c.nome}</div>
+                <div style={{ marginTop: 8 }}>{formatEuro(c.valore_totale ?? 0)}</div>
+              </div>
+            ))}
+          </div>
+        </Sezione>
       </section>
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Categorie</h2>
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          {categorie.map((c) => (
-            <div key={c.categoria} style={{ ...stileCardMetrica, minWidth: 160 }}>
-              <div style={{ fontWeight: 500 }}>{c.categoria}</div>
-              <div style={{ marginTop: 8 }}>{formatEuro(c.valore_totale)}</div>
-            </div>
-          ))}
-        </div>
+        <Sezione>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            {categorie.map((c) => (
+              <div key={c.categoria} style={{ ...stileCardMetrica, minWidth: 160 }}>
+                <div style={{ fontWeight: 500 }}>{c.categoria}</div>
+                <div style={{ marginTop: 8 }}>{formatEuro(c.valore_totale)}</div>
+              </div>
+            ))}
+          </div>
+        </Sezione>
       </section>
     </div>
   )

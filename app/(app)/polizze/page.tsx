@@ -5,6 +5,7 @@ import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { RippleLink } from '@/components/ripple-link'
 import { CardMetrica, stileCardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
+import { Sezione } from '@/components/sezione'
 import type { SottoTarget } from '@/components/barre-sottocategoria'
 import type { ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
 import { AnalisiRendimento, type ContributoCategoria } from '@/components/analisi-rendimento'
@@ -325,40 +326,48 @@ export default async function PolizzePage() {
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Polizze</h1>
 
       <section>
-        <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotalePolizze} />
+        <Sezione>
+          <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotalePolizze} />
+        </Sezione>
       </section>
 
-      <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <CardRendimento
-          rendimentoPct={rendimentoPctTotale}
-          variazioneOggi={variazioneDaUltimoSnapshot}
-          href="/rendimenti"
-          linkLabel="Vedi dettaglio rendimenti →"
-        />
+      <section style={{ marginTop: 24 }}>
+        <Sezione>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <CardRendimento
+              rendimentoPct={rendimentoPctTotale}
+              variazioneOggi={variazioneDaUltimoSnapshot}
+              href="/rendimenti"
+              linkLabel="Vedi dettaglio rendimenti →"
+            />
 
-        <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
-          <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-            {formatEuroSigned(plusMinusNonRealizzata)}
-          </span>
-        </CardMetrica>
+            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
+              <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                {formatEuroSigned(plusMinusNonRealizzata)}
+              </span>
+            </CardMetrica>
 
-        <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
-          {formatEuro(capitaleInvestitoNettoTotale)}
-        </CardMetrica>
+            <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
+              {formatEuro(capitaleInvestitoNettoTotale)}
+            </CardMetrica>
 
-        <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
-          {formatEuro(costoTotalePolizze)}
-        </CardMetrica>
+            <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
+              {formatEuro(costoTotalePolizze)}
+            </CardMetrica>
+          </div>
+        </Sezione>
       </section>
 
       <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
           <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Analisi rendimento</h2>
-          <AnalisiRendimento
-            contributoPerCategoria={contributoPerCategoria}
-            contributoStrumentoPerCategoria={contributoStrumentoPerCategoria}
-            plusMinusNonRealizzata={plusMinusNonRealizzata}
-          />
+          <Sezione>
+            <AnalisiRendimento
+              contributoPerCategoria={contributoPerCategoria}
+              contributoStrumentoPerCategoria={contributoStrumentoPerCategoria}
+              plusMinusNonRealizzata={plusMinusNonRealizzata}
+            />
+          </Sezione>
         </div>
 
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
@@ -370,49 +379,55 @@ export default async function PolizzePage() {
               </RippleLink>
             )}
           </div>
-          <AnalisiComposizione
-            composizione={composizioneAggregata}
-            sottoTargetPerCategoria={sottoTargetPerCategoria}
-            soglia={soglia}
-            targetAttivo={idsConTargetAttivo.length > 0}
-            messaggioTargetDisattivato="Nessuna polizza ha un target attivo."
-          />
+          <Sezione>
+            <AnalisiComposizione
+              composizione={composizioneAggregata}
+              sottoTargetPerCategoria={sottoTargetPerCategoria}
+              soglia={soglia}
+              targetAttivo={idsConTargetAttivo.length > 0}
+              messaggioTargetDisattivato="Nessuna polizza ha un target attivo."
+            />
+          </Sezione>
         </div>
       </section>
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Le tue polizze</h2>
-        {righePolizze.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)' }}>Nessuna polizza registrata.</p>
-        ) : (
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            {righePolizze.map((r) => (
-              <RippleLink
-                key={r.id}
-                href={`/polizze/${r.id}`}
-                className="riga-interattiva"
-                style={{ ...stileCardMetrica, minWidth: 220, display: 'block' }}
-              >
-                <div style={{ fontWeight: 500 }}>{r.nome}</div>
-                <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
-                  {r.dataAttivazione
-                    ? `Attiva dal ${new Date(r.dataAttivazione).toLocaleDateString('it-IT')}`
-                    : 'Data di attivazione non impostata'}
-                </div>
-                <div style={{ marginTop: 12, fontSize: 20 }}>{formatEuro(r.valore)}</div>
-                <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-secondary)' }}>Costo: {formatEuro(r.costo)}</div>
-                <div style={{ marginTop: 4, fontSize: 13, color: r.plusMinus >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                  Plus/minus: {formatEuroSigned(r.plusMinus)}
-                </div>
-              </RippleLink>
-            ))}
-          </div>
-        )}
+        <Sezione>
+          {righePolizze.length === 0 ? (
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessuna polizza registrata.</p>
+          ) : (
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              {righePolizze.map((r) => (
+                <RippleLink
+                  key={r.id}
+                  href={`/polizze/${r.id}`}
+                  className="riga-interattiva"
+                  style={{ ...stileCardMetrica, minWidth: 220, display: 'block' }}
+                >
+                  <div style={{ fontWeight: 500 }}>{r.nome}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
+                    {r.dataAttivazione
+                      ? `Attiva dal ${new Date(r.dataAttivazione).toLocaleDateString('it-IT')}`
+                      : 'Data di attivazione non impostata'}
+                  </div>
+                  <div style={{ marginTop: 12, fontSize: 20 }}>{formatEuro(r.valore)}</div>
+                  <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-secondary)' }}>Costo: {formatEuro(r.costo)}</div>
+                  <div style={{ marginTop: 4, fontSize: 13, color: r.plusMinus >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                    Plus/minus: {formatEuroSigned(r.plusMinus)}
+                  </div>
+                </RippleLink>
+              ))}
+            </div>
+          )}
+        </Sezione>
       </section>
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Strumenti</h2>
-        <TabellaOrdinabile colonne={COLONNE} righe={righe} />
+        <Sezione>
+          <TabellaOrdinabile colonne={COLONNE} righe={righe} />
+        </Sezione>
       </section>
     </div>
   )

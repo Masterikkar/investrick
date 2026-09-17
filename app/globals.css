@@ -3,7 +3,9 @@
 :root {
   --bg-base: #0A0D16;
   --bg-surface: #1A2036;
+  --bg-section: #101421;
   --border-default: #2B3350;
+  --border-section: #181D2F;
   --text-primary: #E8EBF2;
   --text-secondary: #9198AD;
   --text-muted: #6C7286;
@@ -19,7 +21,9 @@
 @theme inline {
   --color-background: var(--bg-base);
   --color-surface: var(--bg-surface);
+  --color-section: var(--bg-section);
   --color-border: var(--border-default);
+  --color-section-border: var(--border-section);
   --color-foreground: var(--text-primary);
   --color-secondary: var(--text-secondary);
   --color-muted: var(--text-muted);

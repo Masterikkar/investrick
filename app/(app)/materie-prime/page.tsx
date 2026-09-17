@@ -4,6 +4,7 @@ import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/comp
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { CardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
+import { Sezione } from '@/components/sezione'
 
 const CATEGORIA = 'Materie prime'
 
@@ -141,35 +142,43 @@ export default async function MateriePrimePage() {
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{CATEGORIA}</h1>
 
       <section>
-        <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotaleCategoria} />
+        <Sezione>
+          <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotaleCategoria} />
+        </Sezione>
       </section>
 
-      <section style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <CardRendimento
-          rendimentoPct={rendimentoPctTotale}
-          variazioneOggi={variazioneDaUltimoSnapshot}
-          href="/rendimenti"
-          linkLabel="Vedi dettaglio rendimenti →"
-        />
+      <section style={{ marginTop: 24 }}>
+        <Sezione>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <CardRendimento
+              rendimentoPct={rendimentoPctTotale}
+              variazioneOggi={variazioneDaUltimoSnapshot}
+              href="/rendimenti"
+              linkLabel="Vedi dettaglio rendimenti →"
+            />
 
-        <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
-          <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-            {formatEuroSigned(plusMinusNonRealizzata)}
-          </span>
-        </CardMetrica>
+            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
+              <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                {formatEuroSigned(plusMinusNonRealizzata)}
+              </span>
+            </CardMetrica>
 
-        <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
-          {formatEuro(capitaleInvestitoNettoTotale)}
-        </CardMetrica>
+            <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
+              {formatEuro(capitaleInvestitoNettoTotale)}
+            </CardMetrica>
 
-        <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
-          {formatEuro(costoTotaleCategoria)}
-        </CardMetrica>
+            <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
+              {formatEuro(costoTotaleCategoria)}
+            </CardMetrica>
+          </div>
+        </Sezione>
       </section>
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Asset</h2>
-        <TabellaOrdinabile colonne={COLONNE} righe={righe} />
+        <Sezione>
+          <TabellaOrdinabile colonne={COLONNE} righe={righe} />
+        </Sezione>
       </section>
     </div>
   )
