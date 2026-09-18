@@ -51,6 +51,26 @@ type SubTargetRaw = {
   target_percentuale_categoria: number
 }
 
+const stileCampo: React.CSSProperties = {
+  display: 'block',
+  width: '100%',
+  marginTop: 4,
+  padding: '6px 10px',
+  background: 'var(--bg-surface)',
+  color: 'var(--text-primary)',
+  border: '1px solid var(--border-default)',
+}
+
+const stileBottonePrimario: React.CSSProperties = {
+  background: 'var(--primary)',
+  color: '#fff',
+  border: 'none',
+  padding: '8px 16px',
+  fontSize: 'var(--fs-button)',
+  fontWeight: 500,
+  cursor: 'pointer',
+}
+
 export default async function RibilanciamentoPage({
   searchParams,
 }: {
@@ -306,16 +326,20 @@ export default async function RibilanciamentoPage({
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Analisi</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Ribilanciamento</h1>
-      <p style={{ color: 'var(--text-secondary)' }}>Soglia di alert: ±{formatNumero(soglia, 2)} punti percentuali</p>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>Analisi</div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Ribilanciamento</h1>
+      <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
+        Soglia di alert: ±{formatNumero(soglia, 2)} punti percentuali
+      </p>
 
       {fuoriSoglia.length === 0 ? (
-        <p style={{ marginTop: 16, color: 'var(--text-secondary)' }}>Tutto in linea con i target. Nessuno scostamento fuori soglia.</p>
+        <p style={{ fontSize: 'var(--fs-body)', marginTop: 16, color: 'var(--text-secondary)' }}>
+          Tutto in linea con i target. Nessuno scostamento fuori soglia.
+        </p>
       ) : (
         <div style={{ marginTop: 16 }}>
           <Sezione>
-            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
@@ -346,87 +370,52 @@ export default async function RibilanciamentoPage({
         </div>
       )}
 
-      <h2 style={{ fontSize: 18, fontWeight: 500, marginTop: 40, marginBottom: 12 }}>Tool di calcolo</h2>
+      <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginTop: 40, marginBottom: 12 }}>Simulazione</h2>
 
       <Sezione>
-        <form method="GET" style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <label>
-            Contenitore
-            <select
-              name="contenitore_id"
-              defaultValue={contenitoreSelezionato}
-              required
-              style={{
-                display: 'block',
-                marginTop: 4,
-                padding: '6px 10px',
-                background: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border-default)',
-              }}
-            >
-              <option value="">Seleziona...</option>
-              {contenitoriDisponibili.map(([id, nome]) => (
-                <option key={id} value={id}>{nome}</option>
-              ))}
-            </select>
-          </label>
+        <form method="GET" style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <label style={{ fontSize: 'var(--fs-form-label)' }}>
+              Contenitore
+              <select name="contenitore_id" defaultValue={contenitoreSelezionato} required style={stileCampo}>
+                <option value="">Seleziona...</option>
+                {contenitoriDisponibili.map(([id, nome]) => (
+                  <option key={id} value={id}>{nome}</option>
+                ))}
+              </select>
+            </label>
 
-          <label>
-            Quanto sei disposto a versare (€)
-            <input
-              type="number"
-              name="versamento"
-              step="any"
-              min="0"
-              defaultValue={params.versamento}
-              style={{
-                display: 'block',
-                marginTop: 4,
-                padding: '6px 10px',
-                background: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border-default)',
-              }}
-            />
-          </label>
+            <label style={{ fontSize: 'var(--fs-form-label)' }}>
+              Quanto sei disposto a versare (€)
+              <input
+                type="number"
+                name="versamento"
+                step="any"
+                min="0"
+                defaultValue={params.versamento}
+                style={stileCampo}
+              />
+            </label>
 
-          <label>
-            Commissione stimata per vendita (€)
-            <input
-              type="number"
-              name="commissione_vendita"
-              step="any"
-              min="0"
-              defaultValue={params.commissione_vendita}
-              style={{
-                display: 'block',
-                marginTop: 4,
-                padding: '6px 10px',
-                background: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border-default)',
-              }}
-            />
-          </label>
+            <label style={{ fontSize: 'var(--fs-form-label)' }}>
+              Commissione stimata per vendita (€)
+              <input
+                type="number"
+                name="commissione_vendita"
+                step="any"
+                min="0"
+                defaultValue={params.commissione_vendita}
+                style={stileCampo}
+              />
+            </label>
+          </div>
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-form-label)' }}>
             <input type="checkbox" name="forza" value="1" defaultChecked={forzaVendita} style={{ accentColor: 'var(--primary)' }} />
             Vendi comunque anche in perdita
           </label>
 
-          <button
-            type="submit"
-            style={{
-              background: 'var(--primary)',
-              color: '#fff',
-              border: 'none',
-              padding: '8px 16px',
-              fontSize: 14,
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-          >
+          <button type="submit" style={stileBottonePrimario}>
             Calcola
           </button>
         </form>
@@ -435,24 +424,26 @@ export default async function RibilanciamentoPage({
       {contenitoreSelezionato && necessario !== null && (
         <div style={{ marginTop: 24 }}>
           <Sezione>
-            <p style={{ margin: 0 }}>
+            <p style={{ fontSize: 'var(--fs-body)', margin: 0 }}>
               Per bilanciare comprando soltanto servirebbero circa <strong>{formatEuro(necessario)}</strong>.
             </p>
 
             {sufficiente ? (
-              <p style={{ color: 'var(--success)', fontWeight: 500 }}>
+              <p style={{ fontSize: 'var(--fs-body)', color: 'var(--success)', fontWeight: 500 }}>
                 Il versamento di {formatEuro(versamento)} basta.
               </p>
             ) : (
               <>
-                <p style={{ color: 'var(--warning)', fontWeight: 500 }}>
+                <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)', fontWeight: 500 }}>
                   Il versamento di {formatEuro(versamento)} non basta. Proposta di vendita per coprire la differenza:
                 </p>
 
                 {venditeProposte.length === 0 ? (
-                  <p style={{ color: 'var(--text-secondary)' }}>Nessun comparto sovrappesato da cui vendere in questo contenitore.</p>
+                  <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
+                    Nessun comparto sovrappesato da cui vendere in questo contenitore.
+                  </p>
                 ) : (
-                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
                     <thead>
                       <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
                         <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
@@ -471,7 +462,7 @@ export default async function RibilanciamentoPage({
                           <td style={{ padding: 8 }}>
                             {formatNumero(v.quantitaVenduta, 6)}
                             {!v.vincoloRispettato && (
-                              <div style={{ color: 'var(--warning)', fontSize: 12 }}>
+                              <div style={{ color: 'var(--warning)', fontSize: 'var(--fs-card-link)' }}>
                                 ridotta da {formatNumero(v.quantitaIdeale, 6)} per evitare minusvalenza netta
                               </div>
                             )}
@@ -489,7 +480,7 @@ export default async function RibilanciamentoPage({
                   </table>
                 )}
 
-                <p style={{ marginTop: 12 }}>
+                <p style={{ fontSize: 'var(--fs-body)', marginTop: 12 }}>
                   Versamento + proventi netti disponibili da reinvestire: <strong>{formatEuro(poolTotale)}</strong>
                 </p>
               </>
@@ -497,8 +488,8 @@ export default async function RibilanciamentoPage({
 
             {allocazioneAcquisto.length > 0 && (
               <>
-                <h3 style={{ fontSize: 16, fontWeight: 500, marginTop: 24, marginBottom: 12 }}>Acquisti proposti</h3>
-                <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
+                <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 24, marginBottom: 12 }}>Acquisti proposti</h3>
+                <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
                   <thead>
                     <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
                       <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Categoria</th>
@@ -520,9 +511,9 @@ export default async function RibilanciamentoPage({
                 </table>
 
                 {allocazioneStrumenti.map((c) => (
-                  <div key={c.categoria} style={{ marginTop: 16 }}>
+                  <div key={c.categoria} style={{ marginTop: 16, fontSize: 'var(--fs-body)' }}>
                     <strong>{c.categoria}</strong>{' '}
-                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                    <span style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)' }}>
                       ({c.usaTarget ? 'secondo target per strumento' : 'secondo pesi attuali — nessun target per strumento impostato'})
                     </span>
                     {c.strumenti.length === 0 ? (
