@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
-import { GraficoTorta, type FettaTorta } from '@/components/grafico-torta'
+import { GraficoAnello, type FettaAnello } from '@/components/grafico-anello'
 import { CardMetrica, stileCardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
 import { Sezione } from '@/components/sezione'
@@ -142,7 +142,7 @@ export default async function DashboardPage() {
     if (r.valore == null) continue
     valorePerCategoria.set(r.categoria, (valorePerCategoria.get(r.categoria) ?? 0) + Number(r.valore))
   }
-  const fetteCategorie: FettaTorta[] = [
+  const fetteCategorie: FettaAnello[] = [
     ...ORDINE_CATEGORIE.map((cat) => ({ nome: cat, valore: valorePerCategoria.get(cat) ?? 0 })),
     { nome: 'Liquidità', valore: valoreTotaleLiquidita },
   ]
@@ -156,7 +156,7 @@ export default async function DashboardPage() {
     else if (r.contenitore_tipo === 'Polizza') valorePolizze += Number(r.valore)
     else if (r.contenitore_tipo == null) valoreDiretto += Number(r.valore)
   }
-  const fetteContenitori: FettaTorta[] = [
+  const fetteContenitori: FettaAnello[] = [
     { nome: 'PAC', valore: valorePac },
     { nome: 'Polizze', valore: valorePolizze },
     { nome: 'Diretto', valore: valoreDiretto },
@@ -216,7 +216,7 @@ export default async function DashboardPage() {
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
             <Sezione>
-              <GraficoTorta fette={fetteCategorie} />
+              <GraficoAnello fette={fetteCategorie} />
             </Sezione>
           </div>
           <div style={{ flex: '2 1 380px' }}>
@@ -239,7 +239,7 @@ export default async function DashboardPage() {
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
             <Sezione>
-              <GraficoTorta fette={fetteContenitori} />
+              <GraficoAnello fette={fetteContenitori} />
             </Sezione>
           </div>
           <div style={{ flex: '2 1 380px' }}>
