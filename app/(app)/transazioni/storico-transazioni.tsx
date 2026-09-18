@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatEuro, formatNumero } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
+import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { aggiornaContenitoreTransazione, eliminaTransazione } from './actions'
 
 export type RigaStoricoTransazione = {
@@ -21,17 +22,6 @@ export type RigaStoricoTransazione = {
 }
 
 type Contenitore = { id: string; nome: string }
-
-const ETICHETTE_OPERAZIONE: Record<string, string> = {
-  Acquisto: 'Acquisto',
-  Vendita: 'Vendita',
-  Dividendo: 'Dividendo',
-  Ricompensa: 'Ricompensa',
-  Costo_quote: 'Costo (in quote)',
-  Costo_contanti: 'Costo (in contanti)',
-  Scambio_cessione: 'Scambio (cessione)',
-  Scambio_acquisizione: 'Scambio (acquisizione)',
-}
 
 const RIGHE_PER_PAGINA = 100
 
@@ -106,7 +96,7 @@ export function StoricoTransazioni({
   }
 
   function handleElimina(riga: RigaStoricoTransazione) {
-    const descrizione = `${ETICHETTE_OPERAZIONE[riga.operazione] ?? riga.operazione} del ${new Date(
+    const descrizione = `${ETICHETTA_OPERAZIONE[riga.operazione] ?? riga.operazione} del ${new Date(
       riga.data
     ).toLocaleDateString('it-IT')}${riga.strumento_nome !== '—' ? ` — ${riga.strumento_nome}` : ''}`
 
@@ -243,7 +233,7 @@ export function StoricoTransazioni({
                         t.strumento_nome
                       )}
                     </td>
-                    <td style={{ padding: 8 }}>{ETICHETTE_OPERAZIONE[t.operazione] ?? t.operazione}</td>
+                    <td style={{ padding: 8 }}>{ETICHETTA_OPERAZIONE[t.operazione] ?? t.operazione}</td>
                     <td style={{ padding: 8 }}>{nomeContenitore(t.contenitore_id)}</td>
                     <td style={{ padding: 8 }}>{formatNumero(t.quantita, 6)}</td>
                     <td style={{ padding: 8 }}>{formatEuro(t.prezzo_unitario)}</td>

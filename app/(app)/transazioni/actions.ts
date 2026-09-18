@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 
 const CATEGORIE_VALIDE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
@@ -212,7 +213,7 @@ export async function eliminaMovimentoLiquidita(id: string): Promise<{ successo:
   return { successo: true }
 }
 
-// --- Import Excel massivo ---
+// --- Import Excel massivo: transazioni finanziarie ---
 
 export async function creaAssetPerImport(dati: {
   categoria: string
@@ -350,4 +351,151 @@ export async function importaTransazioniBulk(
   revalidatePath('/transazioni')
 
   return { inserite, errori }
+}
+
+// --- Import Excel massivo: transazioni di liquidità ---
+// Nessuna creazione al volo di conti: uno strumento non trovato è un errore di riga,
+// da correggere creando prima il conto in Gestione strumenti.
+
+export type RigaImportLiquidita = {
+  rigaOriginale: number
+  data: string
+  strumentoId: string
+  tipoMovimento: string
+  importo: number
+  tassaTrattenuta: number
+  contenitoreId: string | null
+}
+
+export async function importaMovimentiLiquiditaBulk(
+  righe: RigaImportLiquidita[]
+): Promise<{ inserite: number; errori: { riga: number; messaggio: string }[]; avvisoRicostruzione?: string }> {
+  const supabase = await createClient()
+
+  if (righe.length === 0) {
+    return { inserite: 0, errori: [] }
+  }
+
+  let inserite = 0
+  const errori: { riga: number; messaggio: string }[] = []
+
+  for (const r of righe) {
+    const { error } = await supabase.from('movimenti_liquidita').insert({
+      strumento_id: r.strumentoId,
+      contenitore_id: r.contenitoreId,
+      tipo_movimento: r.tipoMovimento,
+      data: r.data,
+      importo: r.importo,
+      tassa_trattenuta: r.tassaTrattenuta,
+    })
+
+    if (error) {
+      errori.push({ riga: r.rigaOriginale, messaggio: error.message })
+    } else {
+      inserite++
+    }
+  }
+
+  if (inserite > 0) {
+    const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+    if (erroreRicostruzione) {
+      revalidatePath('/')
+      revalidatePath('/transazioni')
+      return {
+        inserite,
+        errori,
+        avvisoRicostruzione: `La ricostruzione dello storico è fallita (${erroreRicostruzione.message}). Rilanciala manualmente dallo SQL Editor.`,
+      }
+    }
+  }
+
+  revalidatePath('/')
+  revalidatePath('/transazioni')
+
+  return { inserite, errori }
+}
+
+// --- Esportazione storico ---
+// Restituiscono le righe già pronte per json_to_sheet: stesse intestazioni
+// colonna dei template di import, così un file esportato è normalmente
+// ri-importabile senza modifiche (eccetto le righe "Costo (in contanti)",
+// mai state supportate dall'import Excel).
+
+export type RigaEsportazioneTransazione = {
+  Data: Date
+  ISIN: string
+  Ticker: string
+  Strumento: string
+  Operazione: string
+  Quantità: number
+  'Prezzo unitario': number
+  Commissione: number
+  'Tassa trattenuta': number
+  Contenitore: string
+}
+
+export async function esportaTransazioniFinanziarie(): Promise<RigaEsportazioneTransazione[]> {
+  const supabase = await createClient()
+
+  const [{ data: transazioni }, { data: strumenti }, { data: contenitori }] = await Promise.all([
+    supabase
+      .from('transazioni')
+      .select('data, operazione, contenitore_id, quantita, prezzo_unitario, commissione, tassa_trattenuta, strumento_id')
+      .order('data', { ascending: false }),
+    supabase.from('strumenti').select('id, nome, ticker, isin'),
+    supabase.from('contenitori').select('id, nome'),
+  ])
+
+  const strumentoMap = new Map((strumenti ?? []).map((s) => [s.id, s]))
+  const contenitoreMap = new Map((contenitori ?? []).map((c) => [c.id, c.nome]))
+
+  return (transazioni ?? []).map((t) => {
+    const strumento = t.strumento_id ? strumentoMap.get(t.strumento_id) : undefined
+    return {
+      Data: new Date(t.data),
+      ISIN: strumento?.isin ?? '',
+      Ticker: strumento?.ticker ?? '',
+      Strumento: strumento?.nome ?? '',
+      Operazione: ETICHETTA_OPERAZIONE[t.operazione] ?? t.operazione,
+      Quantità: Number(t.quantita),
+      'Prezzo unitario': Number(t.prezzo_unitario),
+      Commissione: Number(t.commissione),
+      'Tassa trattenuta': Number(t.tassa_trattenuta),
+      Contenitore: t.contenitore_id ? contenitoreMap.get(t.contenitore_id) ?? '' : 'Diretto',
+    }
+  })
+}
+
+export type RigaEsportazioneLiquidita = {
+  Data: Date
+  Strumento: string
+  'Tipo movimento': string
+  Importo: number
+  'Tassa trattenuta': number
+  Contenitore: string
+}
+
+export async function esportaTransazioniLiquidita(): Promise<RigaEsportazioneLiquidita[]> {
+  const supabase = await createClient()
+
+  const [{ data: movimenti }, { data: strumenti }, { data: contenitori }] = await Promise.all([
+    supabase
+      .from('movimenti_liquidita')
+      .select('data, tipo_movimento, contenitore_id, importo, tassa_trattenuta, strumento_id')
+      .order('data', { ascending: false }),
+    supabase.from('strumenti').select('id, nome'),
+    supabase.from('contenitori').select('id, nome'),
+  ])
+
+  const strumentoMap = new Map((strumenti ?? []).map((s) => [s.id, s.nome]))
+  const contenitoreMap = new Map((contenitori ?? []).map((c) => [c.id, c.nome]))
+
+  return (movimenti ?? []).map((m) => ({
+    Data: new Date(m.data),
+    Strumento: strumentoMap.get(m.strumento_id) ?? '',
+    'Tipo movimento': m.tipo_movimento,
+    Importo: Number(m.importo),
+    'Tassa trattenuta': Number(m.tassa_trattenuta),
+    Contenitore: m.contenitore_id ? contenitoreMap.get(m.contenitore_id) ?? '' : 'Diretto',
+  }))
 }

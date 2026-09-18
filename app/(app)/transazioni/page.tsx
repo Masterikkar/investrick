@@ -3,6 +3,8 @@ import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
 import { aggiungiTransazione, aggiungiMovimentoLiquidita } from './actions'
 import { ImportaExcel } from './importa-excel'
+import { ImportaExcelLiquidita } from './importa-excel-liquidita'
+import { EsportaTransazioniFinanziarie, EsportaTransazioniLiquidita } from './esporta-transazioni'
 
 const OPERAZIONI = [
   { value: 'Acquisto', label: 'Acquisto' },
@@ -94,12 +96,22 @@ export default async function TransazioniPage({
       </div>
 
       <section>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Importa da Excel</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Importa transazioni finanziarie da Excel</h2>
         <Sezione>
           <ImportaExcel
             strumenti={(strumenti ?? []).map((s) => ({ id: s.id, isin: s.isin, ticker: s.ticker, nome: s.nome }))}
             contenitori={contenitori ?? []}
             tipiPerCategoria={tipiPerCategoria}
+          />
+        </Sezione>
+      </section>
+
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Importa transazioni di liquidità da Excel</h2>
+        <Sezione>
+          <ImportaExcelLiquidita
+            strumenti={strumentiLiquidita.map((s) => ({ id: s.id, nome: s.nome }))}
+            contenitori={contenitori ?? []}
           />
         </Sezione>
       </section>
@@ -282,6 +294,22 @@ export default async function TransazioniPage({
                   </button>
                 </form>
               )}
+            </div>
+          </div>
+        </Sezione>
+      </section>
+
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Esporta transazioni</h2>
+        <Sezione>
+          <div style={{ display: 'flex', gap: 128, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 320px', maxWidth: 420 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 500, marginTop: 0, marginBottom: 12 }}>Transazioni finanziarie</h3>
+              <EsportaTransazioniFinanziarie />
+            </div>
+            <div style={{ flex: '1 1 320px', maxWidth: 420 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 500, marginTop: 0, marginBottom: 12 }}>Transazioni di liquidità</h3>
+              <EsportaTransazioniLiquidita />
             </div>
           </div>
         </Sezione>

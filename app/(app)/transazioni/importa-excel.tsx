@@ -3,19 +3,10 @@
 import { useState, useMemo } from 'react'
 import * as XLSX from 'xlsx'
 import { creaAssetPerImport, importaTransazioniBulk, type RigaImport } from './actions'
+import { OPERAZIONE_DA_ETICHETTA } from '@/lib/operazioni'
 
 type StrumentoBase = { id: string; isin: string | null; ticker: string | null; nome: string }
 type ContenitoreBase = { id: string; nome: string }
-
-const ETICHETTE_OPERAZIONE: Record<string, string> = {
-  'Acquisto': 'Acquisto',
-  'Vendita': 'Vendita',
-  'Dividendo': 'Dividendo',
-  'Ricompensa': 'Ricompensa',
-  'Costo (in quote)': 'Costo_quote',
-  'Scambio (cessione)': 'Scambio_cessione',
-  'Scambio (acquisizione)': 'Scambio_acquisizione',
-}
 
 function testoCella(v: unknown): string {
   return String(v ?? '').trim()
@@ -84,7 +75,7 @@ function elabora(righeExcel: Record<string, unknown>[], mappaContenitori: Map<st
       : null
 
     const data = parseDataCella(riga['Data'])
-    const operazioneDb = ETICHETTE_OPERAZIONE[operazioneRaw]
+    const operazioneDb = OPERAZIONE_DA_ETICHETTA[operazioneRaw]
     const quantita = parseNumeroCella(riga['Quantità'], false)
     const prezzoUnitario = parseNumeroCella(riga['Prezzo unitario'], false)
     const commissione = parseNumeroCella(riga['Commissione'], true)
