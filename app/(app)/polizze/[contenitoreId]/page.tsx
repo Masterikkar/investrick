@@ -241,7 +241,7 @@ export default async function PolizzaDettaglioPage({
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <CardRendimento rendimentoPct={rendimentoPctTotale} label="Rendimento" />
 
-            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="→ Dettaglio fiscalità">
+            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="→ Fiscalità">
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(plusMinusNonRealizzata)}
               </span>
@@ -251,7 +251,7 @@ export default async function PolizzaDettaglioPage({
               {formatEuro(capitaleInvestitoNettoTotale)}
             </CardMetrica>
 
-            <CardMetrica label="Costo totale" href="/costi" linkLabel="→ Dettaglio costi">
+            <CardMetrica label="Costo totale" href="/costi" linkLabel="→ Costi">
               {formatEuro(costoTotalePolizza)}
             </CardMetrica>
           </div>

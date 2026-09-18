@@ -108,8 +108,10 @@ export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
 }
 
 // Elenco a righe, colori identici (stessa funzione, stesso ordine) a quelli
-// dell'anello: pallino colorato + nome a sinistra, euro + percentuale a
-// destra. Pensato per stare affiancato all'anello nella stessa sezione.
+// dell'anello. Due livelli per riga: il bordo appartiene a un contenitore a
+// piena larghezza (arriva fino al bordo del box), mentre il contenuto vero
+// e proprio (pallino, nome, euro, percentuale) sta in un blocco interno con
+// larghezza massima propria — così resta compatto anche se il box è largo.
 export function ElencoAllocazione({ fette }: { fette: FettaAnello[] }) {
   const { fetteValide, totale, colori } = ordinaEColora(fette)
 
@@ -123,23 +125,29 @@ export function ElencoAllocazione({ fette }: { fette: FettaAnello[] }) {
         <div
           key={f.nome}
           style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '10px 0',
             borderBottom: i < fetteValide.length - 1 ? '1px solid var(--border-default)' : 'none',
           }}
         >
-          <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>
-            <span style={{ width: 9, height: 9, background: colori[i], display: 'inline-block', flexShrink: 0 }} />
-            {f.nome}
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <span style={{ fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>{formatEuro(f.valore)}</span>
-            <span style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', minWidth: 44, textAlign: 'right' }}>
-              {formatPercent((f.valore / totale) * 100, 2)}
+          <div
+            style={{
+              maxWidth: 440,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '10px 0',
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>
+              <span style={{ width: 9, height: 9, background: colori[i], display: 'inline-block', flexShrink: 0 }} />
+              {f.nome}
             </span>
-          </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span style={{ fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>{formatEuro(f.valore)}</span>
+              <span style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', minWidth: 44, textAlign: 'right' }}>
+                {formatPercent((f.valore / totale) * 100, 2)}
+              </span>
+            </span>
+          </div>
         </div>
       ))}
     </div>

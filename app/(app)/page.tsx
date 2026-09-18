@@ -180,10 +180,10 @@ export default async function DashboardPage() {
               rendimentoPct={rendimentoPctTotale}
               variazioneOggi={variazioneDaUltimoSnapshot}
               href="/rendimenti"
-              linkLabel="→ Dettaglio rendimenti"
+              linkLabel="→ Rendimenti"
             />
 
-            <CardMetrica label="Plus/minus non realizzata" href="/fiscalita" linkLabel="→ Dettaglio fiscalità">
+            <CardMetrica label="Plus/minus non realizzata" href="/fiscalita" linkLabel="→ Fiscalità">
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(plusMinusNonRealizzata)}
               </span>
@@ -192,14 +192,14 @@ export default async function DashboardPage() {
             <CardMetrica
               label={`Plus/minus ${annoCorrente} realizzata netta`}
               href="/fiscalita"
-              linkLabel="→ Dettaglio fiscalità"
+              linkLabel="→ Fiscalità"
             >
               <span style={{ color: realizzatoNettoAnno >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(realizzatoNettoAnno)}
               </span>
             </CardMetrica>
 
-            <CardMetrica label="Costo totale" href="/costi" linkLabel="→ Dettaglio costi">
+            <CardMetrica label="Costo totale" href="/costi" linkLabel="→ Costi">
               {formatEuro(costoTotale)}
             </CardMetrica>
 
