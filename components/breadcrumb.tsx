@@ -11,10 +11,16 @@ export function Breadcrumb() {
       className="link-dettaglio"
       style={{
         fontSize: 'var(--fs-card-link)',
+        fontFamily: 'inherit',
+        lineHeight: 'inherit',
+        display: 'inline-block',
         background: 'none',
         border: 'none',
+        margin: 0,
         padding: 0,
         cursor: 'pointer',
+        appearance: 'none',
+        WebkitAppearance: 'none',
       }}
     >
       ← Indietro
