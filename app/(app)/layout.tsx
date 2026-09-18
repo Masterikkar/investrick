@@ -20,7 +20,7 @@ import {
   IconaStorico,
   IconaGestione,
   IconaEsci,
-} from '@/components/icone-menu'
+} from '@/components/icone'
 
 // top: 100% = bordo inferiore reale dell'header. +1px bordo header, +5px distacco richiesto.
 const stilePannello: React.CSSProperties = {
@@ -180,10 +180,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 </summary>
                 <div className="menu-submenu-items">
                   <RippleLink href="/transazioni/liquidita" className="menu-row link-interattivo">
-                    Transazioni di liquidità
+                    Liquidità
                   </RippleLink>
                   <RippleLink href="/transazioni/asset" className="menu-row link-interattivo">
-                    Transazioni finanziarie
+                    Transazioni
                   </RippleLink>
                 </div>
               </details>

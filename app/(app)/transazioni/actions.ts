@@ -25,16 +25,16 @@ export async function aggiungiTransazione(formData: FormData) {
 
   if (operazione === 'Costo_contanti') {
     if (strumentoId) {
-      redirect('/transazioni?errore=1')
+      redirect('/transazioni?errore_finanziaria=1')
     }
     if (!CATEGORIE_VALIDE.includes(categoriaManuale)) {
-      redirect('/transazioni?errore=1')
+      redirect('/transazioni?errore_finanziaria=1')
     }
     categoria = categoriaManuale
     strumentoIdFinale = null
   } else {
     if (!strumentoId) {
-      redirect('/transazioni?errore=1')
+      redirect('/transazioni?errore_finanziaria=1')
     }
 
     const { data: strumento, error: erroreStrumento } = await supabase
@@ -44,7 +44,7 @@ export async function aggiungiTransazione(formData: FormData) {
       .single()
 
     if (erroreStrumento || !strumento) {
-      redirect('/transazioni?errore=1')
+      redirect('/transazioni?errore_finanziaria=1')
     }
 
     categoria = strumento.categoria
@@ -65,18 +65,18 @@ export async function aggiungiTransazione(formData: FormData) {
   })
 
   if (error) {
-    redirect('/transazioni?errore=1')
+    redirect('/transazioni?errore_finanziaria=1')
   }
 
   const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
 
   if (erroreRicostruzione) {
-    redirect('/transazioni?errore=1')
+    redirect('/transazioni?errore_finanziaria=1')
   }
 
   revalidatePath('/')
   revalidatePath('/transazioni')
-  redirect('/transazioni?successo=1')
+  redirect('/transazioni?successo_finanziaria=1')
 }
 
 export async function aggiungiMovimentoLiquidita(formData: FormData) {
@@ -90,7 +90,7 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
   const tassaTrattenuta = Number(formData.get('tassa_trattenuta') || 0)
 
   if (!strumentoId) {
-    redirect('/transazioni?errore=1')
+    redirect('/transazioni?errore_liquidita=1')
   }
 
   const { error } = await supabase.from('movimenti_liquidita').insert({
@@ -103,18 +103,18 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
   })
 
   if (error) {
-    redirect('/transazioni?errore=1')
+    redirect('/transazioni?errore_liquidita=1')
   }
 
   const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
 
   if (erroreRicostruzione) {
-    redirect('/transazioni?errore=1')
+    redirect('/transazioni?errore_liquidita=1')
   }
 
   revalidatePath('/')
   revalidatePath('/transazioni')
-  redirect('/transazioni?successo=1')
+  redirect('/transazioni?successo_liquidita=1')
 }
 
 // --- Storico transazioni: riallocazione contenitore ed eliminazione ---

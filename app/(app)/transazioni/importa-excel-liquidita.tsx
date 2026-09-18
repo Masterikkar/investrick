@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import * as XLSX from 'xlsx'
 import { importaMovimentiLiquiditaBulk, type RigaImportLiquidita } from './actions'
+import { IconaDownload } from '@/components/icone'
 
 type StrumentoLiquidita = { id: string; nome: string }
 type ContenitoreBase = { id: string; nome: string }
@@ -187,6 +188,7 @@ export function ImportaExcelLiquidita({
           if (file) gestisciFile(file)
         }}
         style={{
+          maxWidth: 640,
           border: '2px dashed var(--border-default)',
           background: 'var(--bg-surface)',
           padding: 24,
@@ -209,7 +211,13 @@ export function ImportaExcelLiquidita({
       {erroreFile && <p style={{ color: 'var(--danger)', marginTop: 8 }}>{erroreFile}</p>}
 
       <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 'var(--fs-body)', flexWrap: 'wrap', alignItems: 'center' }}>
-        <a href="/template-transazioni-liquidita.xlsx" download className="link-interattivo">
+        <a
+          href="/template-transazioni-liquidita.xlsx"
+          download
+          className="link-interattivo"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+        >
+          <IconaDownload />
           Scarica template vuoto
         </a>
         <span style={{ color: 'var(--text-secondary)' }}>
