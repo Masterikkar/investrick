@@ -127,7 +127,7 @@ export function StoricoMovimentiLiquidita({
             border: '1px solid var(--border-default)',
             borderRadius: 0,
             width: 260,
-            fontSize: 14,
+            fontSize: 'var(--fs-table)',
             background: 'var(--bg-surface)',
             color: 'var(--text-primary)',
           }}
@@ -139,7 +139,7 @@ export function StoricoMovimentiLiquidita({
               padding: '6px 10px',
               border: '1px solid var(--border-default)',
               borderRadius: 0,
-              fontSize: 14,
+              fontSize: 'var(--fs-table)',
               display: 'inline-block',
               background: 'var(--bg-surface)',
               color: 'var(--text-primary)',
@@ -162,7 +162,7 @@ export function StoricoMovimentiLiquidita({
               color: 'var(--text-primary)',
             }}
           >
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8, fontSize: 13 }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 8, fontSize: 'var(--fs-table)' }}>
               <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set(anniDisponibili))}>
                 Seleziona tutto
               </button>
@@ -171,7 +171,7 @@ export function StoricoMovimentiLiquidita({
               </button>
             </div>
             {anniDisponibili.map((anno) => (
-              <label key={anno} style={{ display: 'block', fontSize: 14, marginTop: 4 }}>
+              <label key={anno} style={{ display: 'block', fontSize: 'var(--fs-table)', marginTop: 4 }}>
                 <input
                   type="checkbox"
                   checked={anniSelezionati.has(anno)}
@@ -186,16 +186,16 @@ export function StoricoMovimentiLiquidita({
       </div>
 
       {erroreId && (
-        <p style={{ color: 'var(--danger)', marginTop: 8 }}>
+        <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginTop: 8 }}>
           Non è stato possibile completare l'operazione su quella transazione. Riprova.
         </p>
       )}
 
       {righeFiltrate.length === 0 ? (
-        <p style={{ marginTop: 12, color: 'var(--text-secondary)' }}>Nessuna transazione trovata.</p>
+        <p style={{ fontSize: 'var(--fs-body)', marginTop: 12, color: 'var(--text-secondary)' }}>Nessuna transazione trovata.</p>
       ) : (
         <>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
             <thead>
               <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Data</th>
@@ -290,7 +290,7 @@ export function StoricoMovimentiLiquidita({
             </tbody>
           </table>
 
-          <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', fontSize: 13 }}>
+          <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', fontSize: 'var(--fs-table)' }}>
             <span style={{ color: 'var(--text-secondary)' }}>
               {righeMostrate.length} di {righeFiltrate.length}
             </span>
