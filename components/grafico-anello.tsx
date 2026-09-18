@@ -21,28 +21,39 @@ function generaSfumaturaIndaco(n: number): string[] {
   })
 }
 
+// Unica funzione di ordinamento/colorazione, richiamata sia dall'anello sia
+// dall'elenco: garantisce che le due visualizzazioni usino esattamente gli
+// stessi colori nello stesso ordine, non due sfumature solo simili.
+function ordinaEColora(fette: FettaAnello[]) {
+  const fetteValide = fette.filter((f) => f.valore > 0).sort((a, b) => b.valore - a.valore)
+  const totale = fetteValide.reduce((s, f) => s + f.valore, 0)
+  const colori = generaSfumaturaIndaco(fetteValide.length)
+  return { fetteValide, totale, colori }
+}
+
+const ALTEZZA_GRAFICO = 280
+
 export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
   const [selezionato, setSelezionato] = useState<number | null>(null)
-
-  // Ordinate dalla più grande alla più piccola: il colore comunica il peso
-  // ("più scuro = più grande"), quindi l'ordine visivo deve rispecchiarlo —
-  // non l'ordine canonico eventualmente passato dal chiamante.
-  const fetteValide = fette.filter((f) => f.valore > 0).sort((a, b) => b.valore - a.valore)
+  const { fetteValide, totale, colori } = ordinaEColora(fette)
 
   if (fetteValide.length === 0) {
     return <p style={{ color: 'var(--text-secondary)' }}>Nessun dato da mostrare.</p>
   }
-
-  const totale = fetteValide.reduce((s, f) => s + f.valore, 0)
-  const colori = generaSfumaturaIndaco(fetteValide.length)
 
   const centroNome = selezionato !== null ? fetteValide[selezionato].nome : 'Totale'
   const centroValore = selezionato !== null ? fetteValide[selezionato].valore : totale
   const centroPct = selezionato !== null ? (fetteValide[selezionato].valore / totale) * 100 : null
 
   return (
-    <div style={{ position: 'relative' }} onClick={() => setSelezionato(null)}>
-      <ResponsiveContainer width="100%" height={280}>
+    <div
+      // Contenitore del solo grafico, altezza fissa: l'overlay del testo si
+      // centra rispetto a QUESTO div, non rispetto a un'eventuale legenda
+      // sotto — altrimenti la legenda sposterebbe il centro visivo in basso.
+      style={{ position: 'relative', height: ALTEZZA_GRAFICO }}
+      onClick={() => setSelezionato(null)}
+    >
+      <ResponsiveContainer width="100%" height={ALTEZZA_GRAFICO}>
         <PieChart>
           <Pie
             data={fetteValide}
@@ -50,8 +61,8 @@ export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
             nameKey="nome"
             cx="50%"
             cy="50%"
-            innerRadius={66}
-            outerRadius={96}
+            innerRadius="58%"
+            outerRadius="85%"
             startAngle={90}
             endAngle={-270}
             stroke="none"
@@ -92,18 +103,45 @@ export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
           </div>
         )}
       </div>
+    </div>
+  )
+}
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginTop: 12 }}>
-        {fetteValide.map((f, i) => (
-          <span
-            key={f.nome}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 'var(--fs-badge)', color: 'var(--text-secondary)' }}
-          >
-            <span style={{ width: 9, height: 9, background: colori[i], display: 'inline-block' }} />
+// Elenco a righe, colori identici (stessa funzione, stesso ordine) a quelli
+// dell'anello: pallino colorato + nome a sinistra, euro + percentuale a
+// destra. Pensato per stare affiancato all'anello nella stessa sezione.
+export function ElencoAllocazione({ fette }: { fette: FettaAnello[] }) {
+  const { fetteValide, totale, colori } = ordinaEColora(fette)
+
+  if (fetteValide.length === 0) {
+    return null
+  }
+
+  return (
+    <div>
+      {fetteValide.map((f, i) => (
+        <div
+          key={f.nome}
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '10px 0',
+            borderBottom: i < fetteValide.length - 1 ? '1px solid var(--border-default)' : 'none',
+          }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>
+            <span style={{ width: 9, height: 9, background: colori[i], display: 'inline-block', flexShrink: 0 }} />
             {f.nome}
           </span>
-        ))}
-      </div>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span style={{ fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>{formatEuro(f.valore)}</span>
+            <span style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', minWidth: 44, textAlign: 'right' }}>
+              {formatPercent((f.valore / totale) * 100, 2)}
+            </span>
+          </span>
+        </div>
+      ))}
     </div>
   )
 }

@@ -1,12 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
-import { GraficoAnello, type FettaAnello } from '@/components/grafico-anello'
-import { CardMetrica, stileCardMetrica } from '@/components/card-metrica'
+import { GraficoAnello, ElencoAllocazione, type FettaAnello } from '@/components/grafico-anello'
+import { CardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
 import { Sezione } from '@/components/sezione'
 import { ValoriChiusura } from '@/components/valori-chiusura'
-import { GrigliaMetriche } from '@/components/griglia-metriche'
 
 type Posizione = {
   strumento_id: string
@@ -221,14 +220,7 @@ export default async function DashboardPage() {
           </div>
           <div style={{ flex: '2 1 380px' }}>
             <Sezione>
-              <GrigliaMetriche>
-                {categorie.map((c) => (
-                  <div key={c.categoria} style={{ ...stileCardMetrica, minWidth: 0 }}>
-                    <div style={{ fontWeight: 500 }}>{c.categoria}</div>
-                    <div style={{ marginTop: 8 }}>{formatEuro(c.valore_totale)}</div>
-                  </div>
-                ))}
-              </GrigliaMetriche>
+              <ElencoAllocazione fette={fetteCategorie} />
             </Sezione>
           </div>
         </div>
@@ -244,15 +236,7 @@ export default async function DashboardPage() {
           </div>
           <div style={{ flex: '2 1 380px' }}>
             <Sezione>
-              <GrigliaMetriche>
-                {contenitori?.map((c) => (
-                  <div key={c.contenitore_id} style={{ ...stileCardMetrica, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{c.tipo}</div>
-                    <div style={{ fontWeight: 500 }}>{c.nome}</div>
-                    <div style={{ marginTop: 8 }}>{formatEuro(c.valore_totale ?? 0)}</div>
-                  </div>
-                ))}
-              </GrigliaMetriche>
+              <ElencoAllocazione fette={fetteContenitori} />
             </Sezione>
           </div>
         </div>

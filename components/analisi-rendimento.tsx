@@ -28,7 +28,7 @@ export function AnalisiRendimento({
         const colore = positivo ? 'var(--success)' : 'var(--danger)'
         return (
           <div key={c.categoria}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, marginBottom: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-table)', marginBottom: 4 }}>
               <span>{c.categoria}</span>
               <span style={{ color: colore, fontWeight: 500 }}>
                 {formatEuroSigned(c.guadagno)}
