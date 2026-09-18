@@ -5,6 +5,7 @@ import { GraficoTorta, type FettaTorta } from '@/components/grafico-torta'
 import { CardMetrica, stileCardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
 import { Sezione } from '@/components/sezione'
+import { ValoriChiusura } from '@/components/valori-chiusura'
 
 type Posizione = {
   strumento_id: string
@@ -179,10 +180,10 @@ export default async function DashboardPage() {
               rendimentoPct={rendimentoPctTotale}
               variazioneOggi={variazioneDaUltimoSnapshot}
               href="/rendimenti"
-              linkLabel="Vedi dettaglio rendimenti →"
+              linkLabel="→ Dettaglio rendimenti"
             />
 
-            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
+            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="→ Dettaglio fiscalità">
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(plusMinusNonRealizzata)}
               </span>
@@ -191,18 +192,18 @@ export default async function DashboardPage() {
             <CardMetrica
               label={`Plus/minusvalenza realizzate nette — ${annoCorrente}`}
               href="/fiscalita"
-              linkLabel="Vedi dettaglio fiscalità →"
+              linkLabel="→ Dettaglio fiscalità"
             >
               <span style={{ color: realizzatoNettoAnno >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(realizzatoNettoAnno)}
               </span>
             </CardMetrica>
 
-            <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
+            <CardMetrica label="Costo totale" href="/costi" linkLabel="→ Dettaglio costi">
               {formatEuro(costoTotale)}
             </CardMetrica>
 
-            <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
+            <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="→ Transazioni">
               {formatEuro(capitaleInvestitoNetto)}
             </CardMetrica>
           </div>
@@ -223,6 +224,8 @@ export default async function DashboardPage() {
           </Sezione>
         </div>
       </section>
+
+      <ValoriChiusura />
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Ribilanciamento</h2>
