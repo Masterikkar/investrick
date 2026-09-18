@@ -38,12 +38,12 @@ export default async function TransazioniAssetPage() {
 
   return (
     <div>
-      <RippleLink href="/transazioni" className="link-interattivo" style={{ fontSize: 13 }}>
-        ← Nuova transazione
+      <RippleLink href="/transazioni" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
+        → Nuova transazione
       </RippleLink>
 
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>Analisi</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Transazioni Asset</h1>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)', marginTop: 12 }}>Analisi</div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Transazioni finanziarie</h1>
 
       <Sezione>
         <StoricoTransazioni transazioni={storicoTransazioni} contenitori={contenitori ?? []} />

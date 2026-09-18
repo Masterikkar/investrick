@@ -236,17 +236,17 @@ export default async function PacDettaglioPage({
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <CardRendimento rendimentoPct={rendimentoPctTotale} label="Rendimento" />
 
-            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
+            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="→ Dettaglio fiscalità">
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(plusMinusNonRealizzata)}
               </span>
             </CardMetrica>
 
-            <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
+            <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="→ Transazioni">
               {formatEuro(capitaleInvestitoNettoTotale)}
             </CardMetrica>
 
-            <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
+            <CardMetrica label="Costo totale" href="/costi" linkLabel="→ Dettaglio costi">
               {formatEuro(costoTotalePac)}
             </CardMetrica>
           </div>
@@ -268,8 +268,8 @@ export default async function PacDettaglioPage({
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <h2 style={{ fontSize: 18, margin: 0, fontWeight: 500 }}>Analisi composizione</h2>
-            <RippleLink href={`/target/${contenitoreId}`} className="link-interattivo" style={{ fontSize: 13 }}>
-              Modifica target →
+            <RippleLink href={`/target/${contenitoreId}`} className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
+              → Modifica target
             </RippleLink>
           </div>
           <Sezione>

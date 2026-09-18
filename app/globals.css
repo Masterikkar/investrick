@@ -41,7 +41,7 @@
   /* Card metriche (CardMetrica) */
   --fs-card-label: 11px;
   --fs-card-value: 17px;
-  --fs-card-link: 12px;   /* link "Vedi dettaglio →" e testo secondario simile */
+  --fs-card-link: 12px;   /* link "→ Dettaglio..." e testo secondario simile */
 
   /* Navigazione */
   --fs-menu: 13px;
@@ -97,6 +97,23 @@ body {
 
 .link-interattivo:hover {
   color: var(--primary-vivid);
+}
+
+/* Link "→ Dettaglio..." / "→ Storico...": deve leggersi come link anche a
+   riposo, non solo in hover — colore acceso sempre attivo, indaco vivido
+   riservato al solo hover (stato transitorio = l'"accento raro" originale). */
+.link-dettaglio {
+  color: var(--primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.link-dettaglio:hover {
+  color: var(--primary-vivid);
+}
+
+.link-dettaglio:visited {
+  color: var(--primary);
 }
 
 .riga-interattiva {

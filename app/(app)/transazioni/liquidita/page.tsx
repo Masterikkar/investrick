@@ -33,12 +33,12 @@ export default async function TransazioniLiquiditaPage() {
 
   return (
     <div>
-      <RippleLink href="/transazioni" className="link-interattivo" style={{ fontSize: 13 }}>
-        ← Nuova operazione
+      <RippleLink href="/transazioni" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
+        → Nuova transazione
       </RippleLink>
 
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>Analisi</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Transazioni Liquidità</h1>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)', marginTop: 12 }}>Analisi</div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Transazioni di liquidità</h1>
 
       <Sezione>
         <StoricoMovimentiLiquidita movimenti={storicoMovimentiLiquidita} contenitori={contenitori ?? []} />

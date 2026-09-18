@@ -28,7 +28,7 @@ export function CardMetrica({
       {href && linkLabel && (
         <RippleLink
           href={href}
-          className="link-interattivo"
+          className="link-dettaglio"
           style={{ fontSize: 'var(--fs-card-link)', display: 'inline-block', marginTop: 6 }}
         >
           {linkLabel}

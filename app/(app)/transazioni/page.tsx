@@ -56,12 +56,12 @@ export default async function TransazioniPage({
       <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>Account</div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 4, fontWeight: 500 }}>Transazioni</h1>
 
-      <div style={{ display: 'flex', gap: 16, fontSize: 'var(--fs-body)', marginTop: 12, marginBottom: 24 }}>
-        <RippleLink href="/transazioni/asset" className="link-interattivo">
-          Vedi storico Transazioni finanziarie →
+      <div style={{ display: 'flex', gap: 20, fontSize: 'var(--fs-body)', marginTop: 12, marginBottom: 24 }}>
+        <RippleLink href="/transazioni/asset" className="link-dettaglio">
+          → Storico transazioni finanziarie
         </RippleLink>
-        <RippleLink href="/transazioni/liquidita" className="link-interattivo">
-          Vedi storico Transazioni di liquidità →
+        <RippleLink href="/transazioni/liquidita" className="link-dettaglio">
+          → Storico transazioni di liquidità
         </RippleLink>
       </div>
 
