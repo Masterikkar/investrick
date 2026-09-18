@@ -158,7 +158,7 @@ export default async function LiquiditaStrumentoPage({
 
   return (
     <div>
-      <RippleLink href="/liquidita" className="link-interattivo" style={{ fontSize: 13 }}>
+      <RippleLink href="/liquidita" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
         ← Liquidità
       </RippleLink>
 
@@ -184,7 +184,7 @@ export default async function LiquiditaStrumentoPage({
             <CardMetrica label="Interesse lordo">{formatEuro(interessiLordi)}</CardMetrica>
             <CardMetrica label="Interesse netto">{formatEuro(interessiNetti)}</CardMetrica>
             <CardMetrica label="Tassa trattenuta">{formatEuro(tasseTrattenute)}</CardMetrica>
-            <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
+            <CardMetrica label="Costo totale" href="/costi" linkLabel="→ Dettaglio costi">
               {formatEuro(costoTotale)}
             </CardMetrica>
           </div>

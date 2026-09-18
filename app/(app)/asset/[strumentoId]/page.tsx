@@ -3,6 +3,7 @@ import { formatEuro, formatEuroSigned, formatPercent, formatNumero } from '@/lib
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { CardMetrica } from '@/components/card-metrica'
 import { Sezione } from '@/components/sezione'
+import { Breadcrumb } from '@/components/breadcrumb'
 
 type Strumento = {
   id: string
@@ -198,6 +199,8 @@ export default async function AssetPage({
 
   return (
     <div>
+      <Breadcrumb />
+
       <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Asset</div>
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 4, fontWeight: 500 }}>{strumento.nome}</h1>
       <p style={{ color: 'var(--text-secondary)', margin: 0 }}>

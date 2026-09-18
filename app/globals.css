@@ -95,25 +95,33 @@ body {
   cursor: pointer;
 }
 
+/* Ordine LVHA (Link-Visited-Hover-Active): :visited DEVE stare prima di
+   :hover nel file. Specificità identica tra le due => vince chi è scritto
+   dopo; con l'ordine sbagliato, un link visitato E sotto il mouse mostrava
+   il colore da visitato invece di quello da hover, hover "morto" in
+   silenzio su ogni link già cliccato in precedenza. */
+.menu-row:visited,
+.link-interattivo:visited,
+.riga-interattiva:visited {
+  color: var(--text-primary);
+}
+
 .link-interattivo:hover {
   color: var(--primary-vivid);
 }
 
-/* Link "→ Dettaglio..." / "→ Storico...": deve leggersi come link anche a
-   riposo, non solo in hover — colore acceso sempre attivo, indaco vivido
-   riservato al solo hover (stato transitorio = l'"accento raro" originale). */
 .link-dettaglio {
   color: var(--primary);
   text-decoration: none;
   cursor: pointer;
 }
 
-.link-dettaglio:hover {
-  color: var(--primary-vivid);
-}
-
 .link-dettaglio:visited {
   color: var(--primary);
+}
+
+.link-dettaglio:hover {
+  color: var(--primary-vivid);
 }
 
 .riga-interattiva {
@@ -123,12 +131,6 @@ body {
 
 .riga-interattiva:hover {
   background: var(--border-default);
-}
-
-.menu-row:visited,
-.link-interattivo:visited,
-.riga-interattiva:visited {
-  color: inherit;
 }
 
 .tabella-riga {

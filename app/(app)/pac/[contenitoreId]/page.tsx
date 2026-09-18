@@ -218,7 +218,7 @@ export default async function PacDettaglioPage({
 
   return (
     <div>
-      <RippleLink href="/pac" className="link-interattivo" style={{ fontSize: 13 }}>
+      <RippleLink href="/pac" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
         ← Tutti i PAC
       </RippleLink>
 
