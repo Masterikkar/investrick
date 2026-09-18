@@ -46,50 +46,68 @@ function BloccoMovimenti({
       {righe.length === 0 ? (
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', margin: 0 }}>{messaggioVuoto}</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${NUM_COLONNE}, minmax(0, 1fr))`, gap: 20 }}>
-          {colonne.map((colonna, ci) => (
-            <div key={ci}>
-              {colonna.map((r, ri) => (
-                <div
-                  key={r.strumentoId}
-                  style={{
-                    height: ALTEZZA_RIGA,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    borderBottom: ri < colonna.length - 1 ? '1px solid var(--border-default)' : 'none',
-                  }}
-                >
-                  <RippleLink
-                    href={`/asset/${r.strumentoId}`}
-                    className="link-interattivo"
-                    style={{
-                      fontSize: 'var(--fs-table)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      minWidth: 0,
-                    }}
-                  >
-                    {r.nome}
-                  </RippleLink>
-                  <span
-                    style={{
-                      fontSize: 'var(--fs-table)',
-                      fontWeight: 500,
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                      color: r.variazionePct >= 0 ? 'var(--success)' : 'var(--danger)',
-                    }}
-                  >
-                    {formatPercent(r.variazionePct, 2, true)}
-                  </span>
+        <>
+          <style>{`
+            .blocco-movimenti-container { container-type: inline-size; }
+            .blocco-movimenti-grid {
+              display: grid;
+              grid-template-columns: repeat(4, minmax(0, 1fr));
+              gap: 20px;
+            }
+            @container (max-width: 900px) {
+              .blocco-movimenti-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            }
+            @container (max-width: 420px) {
+              .blocco-movimenti-grid { grid-template-columns: 1fr; }
+            }
+          `}</style>
+          <div className="blocco-movimenti-container">
+            <div className="blocco-movimenti-grid">
+              {colonne.map((colonna, ci) => (
+                <div key={ci}>
+                  {colonna.map((r, ri) => (
+                    <div
+                      key={r.strumentoId}
+                      style={{
+                        height: ALTEZZA_RIGA,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        borderBottom: ri < colonna.length - 1 ? '1px solid var(--border-default)' : 'none',
+                      }}
+                    >
+                      <RippleLink
+                        href={`/asset/${r.strumentoId}`}
+                        className="link-interattivo"
+                        style={{
+                          fontSize: 'var(--fs-table)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          minWidth: 0,
+                        }}
+                      >
+                        {r.nome}
+                      </RippleLink>
+                      <span
+                        style={{
+                          fontSize: 'var(--fs-table)',
+                          fontWeight: 500,
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                          color: r.variazionePct >= 0 ? 'var(--success)' : 'var(--danger)',
+                        }}
+                      >
+                        {formatPercent(r.variazionePct, 2, true)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
-          ))}
-        </div>
+          </div>
+        </>
       )}
     </Sezione>
   )

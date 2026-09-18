@@ -6,6 +6,7 @@ import { CardMetrica, stileCardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
 import { Sezione } from '@/components/sezione'
 import { ValoriChiusura } from '@/components/valori-chiusura'
+import { GrigliaMetriche } from '@/components/griglia-metriche'
 
 type Posizione = {
   strumento_id: string
@@ -183,14 +184,14 @@ export default async function DashboardPage() {
               linkLabel="→ Dettaglio rendimenti"
             />
 
-            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="→ Dettaglio fiscalità">
+            <CardMetrica label="Plus/minus non realizzata" href="/fiscalita" linkLabel="→ Dettaglio fiscalità">
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(plusMinusNonRealizzata)}
               </span>
             </CardMetrica>
 
             <CardMetrica
-              label={`Plus/minusvalenza realizzate nette — ${annoCorrente}`}
+              label={`Plus/minus ${annoCorrente} realizzata netta`}
               href="/fiscalita"
               linkLabel="→ Dettaglio fiscalità"
             >
@@ -210,18 +211,50 @@ export default async function DashboardPage() {
         </Sezione>
       </section>
 
-      <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Composizione per categoria</h2>
-          <Sezione>
-            <GraficoTorta fette={fetteCategorie} />
-          </Sezione>
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Allocazione asset</h2>
+        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
+            <Sezione>
+              <GraficoTorta fette={fetteCategorie} />
+            </Sezione>
+          </div>
+          <div style={{ flex: '2 1 380px' }}>
+            <Sezione>
+              <GrigliaMetriche>
+                {categorie.map((c) => (
+                  <div key={c.categoria} style={{ ...stileCardMetrica, minWidth: 0 }}>
+                    <div style={{ fontWeight: 500 }}>{c.categoria}</div>
+                    <div style={{ marginTop: 8 }}>{formatEuro(c.valore_totale)}</div>
+                  </div>
+                ))}
+              </GrigliaMetriche>
+            </Sezione>
+          </div>
         </div>
-        <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Composizione per contenitore</h2>
-          <Sezione>
-            <GraficoTorta fette={fetteContenitori} />
-          </Sezione>
+      </section>
+
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Allocazione contenitori</h2>
+        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
+            <Sezione>
+              <GraficoTorta fette={fetteContenitori} />
+            </Sezione>
+          </div>
+          <div style={{ flex: '2 1 380px' }}>
+            <Sezione>
+              <GrigliaMetriche>
+                {contenitori?.map((c) => (
+                  <div key={c.contenitore_id} style={{ ...stileCardMetrica, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{c.tipo}</div>
+                    <div style={{ fontWeight: 500 }}>{c.nome}</div>
+                    <div style={{ marginTop: 8 }}>{formatEuro(c.valore_totale ?? 0)}</div>
+                  </div>
+                ))}
+              </GrigliaMetriche>
+            </Sezione>
+          </div>
         </div>
       </section>
 
@@ -244,35 +277,6 @@ export default async function DashboardPage() {
               ))}
             </ul>
           )}
-        </Sezione>
-      </section>
-
-      <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>I tuoi contenitori</h2>
-        <Sezione>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            {contenitori?.map((c) => (
-              <div key={c.contenitore_id} style={{ ...stileCardMetrica, minWidth: 160 }}>
-                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{c.tipo}</div>
-                <div style={{ fontWeight: 500 }}>{c.nome}</div>
-                <div style={{ marginTop: 8 }}>{formatEuro(c.valore_totale ?? 0)}</div>
-              </div>
-            ))}
-          </div>
-        </Sezione>
-      </section>
-
-      <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Categorie</h2>
-        <Sezione>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            {categorie.map((c) => (
-              <div key={c.categoria} style={{ ...stileCardMetrica, minWidth: 160 }}>
-                <div style={{ fontWeight: 500 }}>{c.categoria}</div>
-                <div style={{ marginTop: 8 }}>{formatEuro(c.valore_totale)}</div>
-              </div>
-            ))}
-          </div>
         </Sezione>
       </section>
     </div>
