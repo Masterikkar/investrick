@@ -190,11 +190,11 @@ export default async function FiscalitaPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Analisi</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Fiscalità</h1>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>Analisi</div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Fiscalità</h1>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Anno corrente — {annoCorrente}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Anno corrente — {annoCorrente}</h2>
         <Sezione>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <CardMetrica label="Plus/minusvalenze realizzate nette" minWidth={220}>
@@ -211,7 +211,7 @@ export default async function FiscalitaPage() {
 
       <section style={{ marginTop: 16 }}>
         <Sezione>
-          <table style={{ width: '100%', borderCollapse: 'collapse', maxWidth: 480, color: 'var(--text-primary)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', maxWidth: 480, color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
             <tbody>
               <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
                 <td style={{ ...RIGA_DETTAGLIO_STYLE, color: 'var(--text-secondary)' }}>Imponibile vendite</td>
@@ -274,13 +274,15 @@ export default async function FiscalitaPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 4 }}>Non realizzate — movimento {annoCorrente}</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: 12 }}>Variazione della plus/minusvalenza non realizzata da inizio anno a oggi.</p>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 4 }}>Non realizzate — movimento {annoCorrente}</h2>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>
+          Variazione della plus/minusvalenza non realizzata da inizio anno a oggi.
+        </p>
         <Sezione>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             {BUCKET_NON_REALIZZATO.map((chiave) => (
               <CardMetrica key={chiave} label={chiave} minWidth={160}>
-                <span style={{ fontSize: 18, color: bucketMovimento[chiave] >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                <span style={{ color: bucketMovimento[chiave] >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                   {formatEuroSigned(bucketMovimento[chiave])}
                 </span>
               </CardMetrica>
@@ -290,20 +292,20 @@ export default async function FiscalitaPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Storico</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Storico</h2>
         <Sezione>
           <GraficoStoricoFiscale punti={puntiStorico} />
         </Sezione>
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Non realizzate (stato attuale)</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Non realizzate (stato attuale)</h2>
         <Sezione>
           <div
             style={{
               fontFamily: 'var(--font-zilla-slab)',
               fontWeight: 600,
-              fontSize: 32,
+              fontSize: 'var(--fs-hero-secondario)',
               marginBottom: 16,
               color: totaleNonRealizzato >= 0 ? 'var(--success)' : 'var(--danger)',
             }}
@@ -315,13 +317,17 @@ export default async function FiscalitaPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 4 }}>Verifica trattenute</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: 12 }}>Aliquota attesa vs trattenuta effettiva, per ogni vendita imponibile.</p>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 4 }}>Verifica trattenute</h2>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>
+          Aliquota attesa vs trattenuta effettiva, per ogni vendita imponibile.
+        </p>
         <Sezione>
           {verifica.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessuna vendita imponibile registrata finora.</p>
+            <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', margin: 0 }}>
+              Nessuna vendita imponibile registrata finora.
+            </p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Data</th>
