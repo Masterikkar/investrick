@@ -248,9 +248,11 @@ export default async function DashboardPage() {
         <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Ribilanciamento</h2>
         <Sezione>
           {alert.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Tutto in linea con i target.</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-table)', margin: 0 }}>
+              Tutto in linea con i target.
+            </p>
           ) : (
-            <ul style={{ paddingLeft: 20, margin: 0 }}>
+            <ul style={{ paddingLeft: 20, margin: 0, fontSize: 'var(--fs-table)' }}>
               {alert.map((a) => (
                 <li key={`${a.contenitore_id}-${a.categoria}`}>
                   <strong>{a.contenitore_nome}</strong> — {a.categoria}: {a.peso_attuale_pct}% attuale
