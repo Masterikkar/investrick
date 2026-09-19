@@ -252,16 +252,16 @@ export default async function DashboardPage() {
               Tutto in linea con i target.
             </p>
           ) : (
-            <ul style={{ paddingLeft: 20, margin: 0, fontSize: 'var(--fs-table)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {alert.map((a) => (
-                <li key={`${a.contenitore_id}-${a.categoria}`}>
+                <div key={`${a.contenitore_id}-${a.categoria}`} style={{ fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>
                   <strong>{a.contenitore_nome}</strong> — {a.categoria}: {a.peso_attuale_pct}% attuale
                   vs {a.target_percentuale}% target (
                   {a.scostamento_pp && a.scostamento_pp > 0 ? '+' : ''}
                   {a.scostamento_pp} pp)
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </Sezione>
       </section>
