@@ -267,3 +267,14 @@ details[open] > .menu-toggle .menu-chevron {
   margin-top: 2px;
   padding-left: 6px;
 }
+
+/* Focus su input di testo: sostituisce l'anello blu/bianco nativo del
+   browser con bordo + alone nella palette dell'app. Esclude checkbox/radio
+   (hanno già il loro trattamento via accentColor) e non tocca <select> —
+   solo caselle di testo vere e proprie. */
+input:not([type="checkbox"]):not([type="radio"]):focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary-vivid);
+  box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.25);
+}

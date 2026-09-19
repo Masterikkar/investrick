@@ -136,7 +136,6 @@ export default async function AssetPage({
   const costoMap = new Map<string, number>()
   for (const c of costoStrumentoRaw ?? []) costoMap.set(chiaveContenitore(c.contenitore_id), Number(c.costo_totale))
 
-  // --- Storico rendimento % per il grafico ---
   const storicoValoreMap = new Map<string, number>()
   const storicoCapitaleMap = new Map<string, number>()
   for (const r of storicoRaw ?? []) {
@@ -156,7 +155,6 @@ export default async function AssetPage({
     .filter((p): p is PuntoStorico => p !== null)
     .sort((a, b) => a.data.localeCompare(b.data))
 
-  // --- Totale valore per contenitore (denominatore del Peso) ---
   const idsContenitoriReali = [...new Set(posizioniAttuali.map((r) => r.contenitore_id).filter((id): id is string => id !== null))]
   const haDiretto = posizioniAttuali.some((r) => r.contenitore_id === null)
 
@@ -182,7 +180,6 @@ export default async function AssetPage({
     totaleContenitoreMap.set('diretto', totaleMercatoDiretto + totaleLiquiditaDiretta)
   }
 
-  // --- Aggregati su tutti i contenitori, solo posizioni ancora aperte ---
   const quantitaTotale = posizioniAttuali.reduce((s, r) => s + Number(r.quantita_posseduta), 0)
   const capitaleInvestitoTotale = posizioniAttuali.reduce((s, r) => s + Number(r.capitale_investito), 0)
   const valoreTotale = posizioniAttuali.reduce((s, r) => s + (r.valore != null ? Number(r.valore) : 0), 0)
@@ -201,7 +198,7 @@ export default async function AssetPage({
     <div>
       <Breadcrumb />
 
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Asset</div>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>Asset</div>
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 4, fontWeight: 500 }}>{strumento.nome}</h1>
       <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
         {strumento.categoria}
@@ -272,7 +269,7 @@ export default async function AssetPage({
         <section style={{ marginTop: 32 }}>
           <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Posizioni per contenitore</h2>
           <Sezione>
-            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Provenienza</th>
@@ -337,7 +334,7 @@ export default async function AssetPage({
 
             {ricavi.length > 1 && (
               <div style={{ marginTop: 20 }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
                   <thead>
                     <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
                       <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
@@ -371,7 +368,7 @@ export default async function AssetPage({
           {transazioni.length === 0 ? (
             <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessuna transazione registrata per questo strumento.</p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Data</th>

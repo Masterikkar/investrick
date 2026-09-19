@@ -6,19 +6,55 @@ import { redirect } from 'next/navigation'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 
 const CATEGORIE_VALIDE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
+const OPERAZIONI_VALIDE = Object.keys(ETICHETTA_OPERAZIONE)
+const TIPI_MOVIMENTO_VALIDI = ['Versamento', 'Prelievo', 'Interesse', 'Costo']
 
 export async function aggiungiTransazione(formData: FormData) {
   const supabase = await createClient()
 
-  const strumentoId = formData.get('strumento_id') as string
-  const categoriaManuale = formData.get('categoria_manuale') as string
-  const contenitoreId = formData.get('contenitore_id') as string
-  const operazione = formData.get('operazione') as string
-  const data = formData.get('data') as string
-  const quantita = Number(formData.get('quantita'))
-  const prezzoUnitario = Number(formData.get('prezzo_unitario'))
-  const commissione = Number(formData.get('commissione') || 0)
-  const tassaTrattenuta = Number(formData.get('tassa_trattenuta') || 0)
+  const strumentoId = (formData.get('strumento_id') as string) || ''
+  const categoriaManuale = (formData.get('categoria_manuale') as string) || ''
+  const contenitoreId = (formData.get('contenitore_id') as string) || ''
+  const operazione = (formData.get('operazione') as string) || ''
+  const dataRaw = (formData.get('data') as string) || ''
+  const quantitaRaw = formData.get('quantita')
+  const prezzoUnitarioRaw = formData.get('prezzo_unitario')
+  const commissioneRaw = formData.get('commissione')
+  const tassaTrattenutaRaw = formData.get('tassa_trattenuta')
+
+  if (!operazione || !OPERAZIONI_VALIDE.includes(operazione)) {
+    redirect('/transazioni?errore_finanziaria=1')
+  }
+  if (!contenitoreId) {
+    redirect('/transazioni?errore_finanziaria=1')
+  }
+  if (!dataRaw || isNaN(Date.parse(dataRaw))) {
+    redirect('/transazioni?errore_finanziaria=1')
+  }
+  if (quantitaRaw === null || quantitaRaw === '' || !Number.isFinite(Number(quantitaRaw))) {
+    redirect('/transazioni?errore_finanziaria=1')
+  }
+  if (prezzoUnitarioRaw === null || prezzoUnitarioRaw === '' || !Number.isFinite(Number(prezzoUnitarioRaw))) {
+    redirect('/transazioni?errore_finanziaria=1')
+  }
+  if (commissioneRaw !== null && commissioneRaw !== '' && !Number.isFinite(Number(commissioneRaw))) {
+    redirect('/transazioni?errore_finanziaria=1')
+  }
+  if (tassaTrattenutaRaw !== null && tassaTrattenutaRaw !== '' && !Number.isFinite(Number(tassaTrattenutaRaw))) {
+    redirect('/transazioni?errore_finanziaria=1')
+  }
+
+  const quantita = Number(quantitaRaw)
+  const prezzoUnitario = Number(prezzoUnitarioRaw)
+  const commissione = Number(commissioneRaw || 0)
+  const tassaTrattenuta = Number(tassaTrattenutaRaw || 0)
+
+  // Nessun valore negativo consentito, in nessun campo numerico di questo
+  // form: il segno (es. acquisto vs vendita) è già espresso dal campo
+  // "operazione", mai da un numero negativo.
+  if (quantita < 0 || prezzoUnitario < 0 || commissione < 0 || tassaTrattenuta < 0) {
+    redirect('/transazioni?errore_finanziaria=1')
+  }
 
   let categoria: string
   let strumentoIdFinale: string | null
@@ -51,12 +87,26 @@ export async function aggiungiTransazione(formData: FormData) {
     strumentoIdFinale = strumentoId
   }
 
+  let contenitoreIdFinale: string | null = null
+  if (contenitoreId !== 'diretto') {
+    const { data: contenitore, error: erroreContenitore } = await supabase
+      .from('contenitori')
+      .select('id')
+      .eq('id', contenitoreId)
+      .single()
+
+    if (erroreContenitore || !contenitore) {
+      redirect('/transazioni?errore_finanziaria=1')
+    }
+    contenitoreIdFinale = contenitoreId
+  }
+
   const { error } = await supabase.from('transazioni').insert({
     strumento_id: strumentoIdFinale,
-    contenitore_id: contenitoreId === 'diretto' ? null : contenitoreId,
+    contenitore_id: contenitoreIdFinale,
     categoria,
     operazione,
-    data,
+    data: dataRaw,
     valuta: 'EUR',
     quantita,
     prezzo_unitario: prezzoUnitario,
@@ -82,22 +132,68 @@ export async function aggiungiTransazione(formData: FormData) {
 export async function aggiungiMovimentoLiquidita(formData: FormData) {
   const supabase = await createClient()
 
-  const strumentoId = formData.get('strumento_id') as string
-  const contenitoreId = formData.get('contenitore_id') as string
-  const tipoMovimento = formData.get('tipo_movimento') as string
-  const data = formData.get('data') as string
-  const importo = Number(formData.get('importo'))
-  const tassaTrattenuta = Number(formData.get('tassa_trattenuta') || 0)
+  const strumentoId = (formData.get('strumento_id') as string) || ''
+  const contenitoreId = (formData.get('contenitore_id') as string) || ''
+  const tipoMovimento = (formData.get('tipo_movimento') as string) || ''
+  const dataRaw = (formData.get('data') as string) || ''
+  const importoRaw = formData.get('importo')
+  const tassaTrattenutaRaw = formData.get('tassa_trattenuta')
 
   if (!strumentoId) {
     redirect('/transazioni?errore_liquidita=1')
   }
+  if (!tipoMovimento || !TIPI_MOVIMENTO_VALIDI.includes(tipoMovimento)) {
+    redirect('/transazioni?errore_liquidita=1')
+  }
+  if (!contenitoreId) {
+    redirect('/transazioni?errore_liquidita=1')
+  }
+  if (!dataRaw || isNaN(Date.parse(dataRaw))) {
+    redirect('/transazioni?errore_liquidita=1')
+  }
+  if (importoRaw === null || importoRaw === '' || !Number.isFinite(Number(importoRaw))) {
+    redirect('/transazioni?errore_liquidita=1')
+  }
+  if (tassaTrattenutaRaw !== null && tassaTrattenutaRaw !== '' && !Number.isFinite(Number(tassaTrattenutaRaw))) {
+    redirect('/transazioni?errore_liquidita=1')
+  }
+
+  const importo = Number(importoRaw)
+  const tassaTrattenuta = Number(tassaTrattenutaRaw || 0)
+
+  if (importo < 0 || tassaTrattenuta < 0) {
+    redirect('/transazioni?errore_liquidita=1')
+  }
+
+  const { data: strumento, error: erroreStrumento } = await supabase
+    .from('strumenti')
+    .select('id')
+    .eq('id', strumentoId)
+    .single()
+
+  if (erroreStrumento || !strumento) {
+    redirect('/transazioni?errore_liquidita=1')
+  }
+
+  let contenitoreIdFinale: string | null = null
+  if (contenitoreId !== 'diretto') {
+    const { data: contenitore, error: erroreContenitore } = await supabase
+      .from('contenitori')
+      .select('id')
+      .eq('id', contenitoreId)
+      .single()
+
+    if (erroreContenitore || !contenitore) {
+      redirect('/transazioni?errore_liquidita=1')
+    }
+    contenitoreIdFinale = contenitoreId
+  }
 
   const { error } = await supabase.from('movimenti_liquidita').insert({
     strumento_id: strumentoId,
-    contenitore_id: contenitoreId === 'diretto' ? null : contenitoreId,
+    contenitore_id: contenitoreIdFinale,
     tipo_movimento: tipoMovimento,
-    data,
+    data: dataRaw,
     importo,
     tassa_trattenuta: tassaTrattenuta,
   })
