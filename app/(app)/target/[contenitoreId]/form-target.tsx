@@ -3,9 +3,29 @@
 import { useState, useMemo } from 'react'
 import { salvaTarget } from './actions'
 
-const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Crypto', 'Multiasset'] as const
+const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Crypto', 'Multiasset'] as const
 
 type StrumentoConPeso = { id: string; nome: string; ticker: string | null; percentualeIniziale: number }
+
+const stileCampoNumero: React.CSSProperties = {
+  display: 'block',
+  width: '100%',
+  marginTop: 4,
+  padding: '6px 10px',
+  background: 'var(--bg-surface)',
+  color: 'var(--text-primary)',
+  border: '1px solid var(--border-default)',
+  fontSize: 'var(--fs-form-label)',
+}
+
+const stileBottoneEspandi: React.CSSProperties = {
+  fontSize: 'var(--fs-button-outline)',
+  color: 'var(--text-secondary)',
+  background: 'var(--bg-surface)',
+  border: '1px solid var(--border-default)',
+  padding: '6px 12px',
+  cursor: 'pointer',
+}
 
 export function FormTarget({
   contenitoreId,
@@ -57,22 +77,23 @@ export function FormTarget({
   return (
     <form
       action={salvaTarget}
-      style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480, color: 'var(--text-primary)' }}
     >
       <input type="hidden" name="contenitore_id" value={contenitoreId} />
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-form-label)' }}>
         <input
           type="checkbox"
           name="target_attivo"
           checked={targetAttivo}
           onChange={(e) => setTargetAttivo(e.target.checked)}
+          style={{ accentColor: 'var(--primary)' }}
         />
         Target attivo per questo contenitore
       </label>
 
       {!targetAttivo && (
-        <p style={{ color: '#666', fontSize: 13, margin: 0 }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)', margin: 0 }}>
           Con il target disattivato, questo contenitore non comparirà negli alert di ribilanciamento
           né nella barra di composizione, indipendentemente dai valori sotto.
         </p>
@@ -88,7 +109,7 @@ export function FormTarget({
 
           return (
             <div key={cat}>
-              <label>
+              <label style={{ fontSize: 'var(--fs-form-label)' }}>
                 {cat}
                 <input
                   type="number"
@@ -98,7 +119,7 @@ export function FormTarget({
                   step="any"
                   value={percentuali[cat] ?? 0}
                   onChange={(e) => handleChange(cat, e.target.value)}
-                  style={{ width: '100%' }}
+                  style={stileCampoNumero}
                 />
               </label>
 
@@ -107,14 +128,7 @@ export function FormTarget({
                   <button
                     type="button"
                     onClick={() => setCategorieAperte((prev) => ({ ...prev, [cat]: !aperta }))}
-                    style={{
-                      fontSize: 13,
-                      background: 'none',
-                      border: '1px solid #ddd',
-                      borderRadius: 4,
-                      padding: '4px 10px',
-                      cursor: 'pointer',
-                    }}
+                    style={stileBottoneEspandi}
                   >
                     {aperta ? '▾' : '▸'} Target per singolo strumento in {cat}
                   </button>
@@ -122,7 +136,7 @@ export function FormTarget({
                   {aperta && (
                     <div style={{ marginTop: 8, paddingLeft: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {strumentiCategoria.map((s) => (
-                        <label key={s.id}>
+                        <label key={s.id} style={{ fontSize: 'var(--fs-form-label)' }}>
                           {s.nome} {s.ticker ? `(${s.ticker})` : ''}
                           <input
                             type="number"
@@ -132,11 +146,16 @@ export function FormTarget({
                             step="any"
                             value={percentualiStrumento[s.id] ?? 0}
                             onChange={(e) => handleChangeStrumento(s.id, e.target.value)}
-                            style={{ width: '100%' }}
+                            style={stileCampoNumero}
                           />
                         </label>
                       ))}
-                      <div style={{ fontSize: 13, color: sommaStrumentiOk ? '#666' : '#c0392b' }}>
+                      <div
+                        style={{
+                          fontSize: 'var(--fs-form-hint)',
+                          color: sommaStrumentiOk ? 'var(--text-secondary)' : 'var(--danger)',
+                        }}
+                      >
                         Somma: {sommaStrumenti.toFixed(2)}%
                         {!sommaStrumentiOk && ' — deve fare 0 (non impostato) o 100'}
                       </div>
@@ -149,11 +168,30 @@ export function FormTarget({
         })}
       </div>
 
-      <div style={{ fontSize: 14, color: targetAttivo ? (sommaOk ? '#0a7d2c' : '#c0392b') : '#666' }}>
+      <div
+        style={{
+          fontSize: 'var(--fs-body)',
+          color: targetAttivo ? (sommaOk ? 'var(--success)' : 'var(--danger)') : 'var(--text-secondary)',
+        }}
+      >
         Somma categorie: {somma.toFixed(2)}%{targetAttivo && !sommaOk ? ' — deve fare 100%' : ''}
       </div>
 
-      <button type="submit" disabled={!puoSalvare}>
+      <button
+        type="submit"
+        disabled={!puoSalvare}
+        style={{
+          background: 'var(--primary)',
+          color: '#fff',
+          border: 'none',
+          padding: '8px 16px',
+          fontSize: 'var(--fs-button)',
+          fontWeight: 500,
+          cursor: puoSalvare ? 'pointer' : 'not-allowed',
+          opacity: puoSalvare ? 1 : 0.4,
+          alignSelf: 'flex-start',
+        }}
+      >
         Salva target
       </button>
     </form>

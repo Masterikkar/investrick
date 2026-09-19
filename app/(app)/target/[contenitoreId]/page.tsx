@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { FormTarget } from './form-target'
+import { Sezione } from '@/components/sezione'
+import { Breadcrumb } from '@/components/breadcrumb'
 
-const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Crypto', 'Multiasset'] as const
+const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Crypto', 'Multiasset'] as const
 
 type StrumentoConPeso = { id: string; nome: string; ticker: string | null; percentualeIniziale: number }
 
@@ -80,31 +82,41 @@ export default async function TargetPage({
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: '#666' }}>{contenitore.tipo}</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 24 }}>Target — {contenitore.nome}</h1>
+      <Breadcrumb />
+
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)', marginTop: 12 }}>
+        {contenitore.tipo}
+      </div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>
+        Target — {contenitore.nome}
+      </h1>
 
       {errore === 'somma' && (
-        <p style={{ color: 'red', marginBottom: 16 }}>
+        <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginBottom: 16 }}>
           Con il target attivo, le percentuali delle categorie devono sommare a 100. Controlla i valori e riprova.
         </p>
       )}
       {errore === 'somma_strumento' && (
-        <p style={{ color: 'red', marginBottom: 16 }}>
+        <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginBottom: 16 }}>
           {erroreCategoria
             ? `In "${decodeURIComponent(erroreCategoria)}" le percentuali per singolo strumento non sommano a 100. Compilale tutte fino a 100, oppure lasciale tutte a 0.`
             : 'Le percentuali per singolo strumento in una categoria non sommano a 100.'}
         </p>
       )}
       {errore === '1' && (
-        <p style={{ color: 'red', marginBottom: 16 }}>Qualcosa è andato storto, riprova.</p>
+        <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginBottom: 16 }}>
+          Qualcosa è andato storto, riprova.
+        </p>
       )}
 
-      <FormTarget
-        contenitoreId={contenitore.id}
-        targetAttivoIniziale={contenitore.target_attivo ?? false}
-        percentualiIniziali={percentualiIniziali}
-        strumentiPerCategoria={strumentiPerCategoria}
-      />
+      <Sezione>
+        <FormTarget
+          contenitoreId={contenitore.id}
+          targetAttivoIniziale={contenitore.target_attivo ?? false}
+          percentualiIniziali={percentualiIniziali}
+          strumentiPerCategoria={strumentiPerCategoria}
+        />
+      </Sezione>
     </div>
   )
 }
