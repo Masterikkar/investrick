@@ -5,16 +5,50 @@ import { redirect } from 'next/navigation'
 
 const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Crypto', 'Multiasset'] as const
 
+// Converte un valore percentuale ricevuto dal form: vuoto = 0 (nessun target
+// per quella categoria/strumento), qualunque altra cosa deve essere un
+// numero finito tra 0 e 100. Ritorna null se non valido — un valore non
+// numerico (es. campo manomesso con testo) produrrebbe altrimenti NaN, e
+// NaN supera silenziosamente il controllo "somma diversa da 100" più sotto
+// (ogni confronto con NaN restituisce false), aggirando la convalida.
+function parsePercentuale(raw: string | null): number | null {
+  if (raw === null || raw === '') return 0
+  const valore = Number(raw)
+  if (!Number.isFinite(valore) || valore < 0 || valore > 100) return null
+  return valore
+}
+
 export async function salvaTarget(formData: FormData) {
   const supabase = await createClient()
 
-  const contenitoreId = formData.get('contenitore_id') as string
+  const contenitoreId = (formData.get('contenitore_id') as string) || ''
   const targetAttivo = formData.get('target_attivo') === 'on'
+
+  if (!contenitoreId) {
+    redirect('/pac')
+  }
+
+  // Verifica che il contenitore esista davvero (invece di affidarsi
+  // implicitamente a un vincolo di chiave esterna nel database), e ne
+  // recupera già il "tipo" per il reindirizzamento finale — evita una
+  // seconda query identica in fondo alla funzione.
+  const { data: contenitoreEsistente, error: erroreVerificaContenitore } = await supabase
+    .from('contenitori')
+    .select('id, tipo')
+    .eq('id', contenitoreId)
+    .single()
+
+  if (erroreVerificaContenitore || !contenitoreEsistente) {
+    redirect('/pac')
+  }
 
   const percentuali: Record<string, number> = {}
   for (const cat of CATEGORIE) {
-    const raw = formData.get(`percentuale_${cat}`) as string
-    percentuali[cat] = raw ? Number(raw) : 0
+    const valore = parsePercentuale(formData.get(`percentuale_${cat}`) as string | null)
+    if (valore === null) {
+      redirect(`/target/${contenitoreId}?errore=1`)
+    }
+    percentuali[cat] = valore
   }
 
   const somma = CATEGORIE.reduce((acc, cat) => acc + percentuali[cat], 0)
@@ -50,10 +84,14 @@ export async function salvaTarget(formData: FormData) {
     const idsCategoria = strumentiPerCategoria[cat]
     if (idsCategoria.length <= 1) continue
 
-    const valori = idsCategoria.map((id) => {
-      const raw = formData.get(`sub_${id}`) as string | null
-      return { id, valore: raw ? Number(raw) : 0 }
-    })
+    const valori: { id: string; valore: number }[] = []
+    for (const id of idsCategoria) {
+      const valore = parsePercentuale(formData.get(`sub_${id}`) as string | null)
+      if (valore === null) {
+        redirect(`/target/${contenitoreId}?errore=1`)
+      }
+      valori.push({ id, valore })
+    }
     const sommaCategoria = valori.reduce((acc, v) => acc + v.valore, 0)
 
     if (sommaCategoria === 0) {
@@ -120,7 +158,6 @@ export async function salvaTarget(formData: FormData) {
     }
   }
 
-  const { data: contenitore } = await supabase.from('contenitori').select('tipo').eq('id', contenitoreId).maybeSingle()
-  const destinazione = contenitore?.tipo === 'Polizza' ? '/polizze' : '/pac'
+  const destinazione = contenitoreEsistente.tipo === 'Polizza' ? '/polizze' : '/pac'
   redirect(destinazione)
 }
