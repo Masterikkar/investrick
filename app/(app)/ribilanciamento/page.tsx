@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned, formatNumero, formatPercent } from '@/lib/format'
 import { Sezione } from '@/components/sezione'
+import { SogliaRibilanciamento } from '@/components/soglia-ribilanciamento'
 import {
   calcolaRibilanciamentoConVersamento,
   distribuisciAcquisto,
@@ -250,9 +251,6 @@ export default async function RibilanciamentoPage({
         allocazioneAcquisto = distribuisciAcquisto(compartiPostVendita, totaleAttualePostVendita, poolTotale)
       }
 
-      // Drill-down a livello di strumento: usa i sotto-target per strumento se disponibili e
-      // completi per tutti gli strumenti posseduti in quella categoria (somma 100), altrimenti
-      // torna ai pesi attuali — stesso comportamento sia nello scenario A sia dopo una vendita.
       for (const a of allocazioneAcquisto.filter((r) => r.importo > 0)) {
         const { data: posizioni } = await supabase
           .from('v_valore_posizioni_attuale')
@@ -290,7 +288,7 @@ export default async function RibilanciamentoPage({
 
           if (subTargetValidi) {
             const compartiStrumento: CompartoTarget[] = righe.map((r) => ({
-              categoria: r.strumento_id, // riuso il campo come chiave strumento
+              categoria: r.strumento_id,
               valoreAttuale: Number(r.valore_attuale),
               targetPct: (subTargetMap.get(r.strumento_id) ?? 0) / 100,
             }))
@@ -328,9 +326,7 @@ export default async function RibilanciamentoPage({
     <div>
       <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>Analisi</div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Ribilanciamento</h1>
-      <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
-        Soglia di alert: ±{formatNumero(soglia, 2)} punti percentuali
-      </p>
+      <SogliaRibilanciamento sogliaIniziale={soglia} />
 
       {fuoriSoglia.length === 0 ? (
         <p style={{ fontSize: 'var(--fs-body)', marginTop: 16, color: 'var(--text-secondary)' }}>
