@@ -2,26 +2,10 @@ import { createClient } from '@/lib/supabase/server'
 import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
 import { FormNuovoAsset } from './form-nuovo-asset'
-import { creaContenitore } from './actions-contenitore'
+import { FormNuovoContenitore } from './form-nuovo-contenitore'
 import { ListaContenitori } from './lista-contenitori'
 
 type TipoStrumento = { categoria: string; tipo: string }
-
-const TIPI_CONTENITORE = [
-  { value: 'PAC', label: 'PAC' },
-  { value: 'Polizza', label: 'Polizza vita' },
-  { value: 'Liquidita', label: 'Liquidità' },
-]
-
-const stileCampo: React.CSSProperties = {
-  display: 'block',
-  width: '100%',
-  marginTop: 4,
-  padding: '6px 10px',
-  background: 'var(--bg-surface)',
-  color: 'var(--text-primary)',
-  border: '1px solid var(--border-default)',
-}
 
 export default async function GestioneStrumentiPage({
   searchParams,
@@ -57,12 +41,14 @@ export default async function GestioneStrumentiPage({
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Account</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Gestione strumenti</h1>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>Account</div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Gestione strumenti</h1>
 
       <section>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Nuovo asset</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Asset</h2>
         <Sezione>
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 12 }}>Crea nuovo asset</h3>
+
           {params.errore === 'duplicato' && params.duplicato_id && (
             <div
               style={{
@@ -71,6 +57,7 @@ export default async function GestioneStrumentiPage({
                 padding: 12,
                 marginBottom: 16,
                 color: 'var(--text-primary)',
+                fontSize: 'var(--fs-body)',
                 maxWidth: 420,
               }}
             >
@@ -83,7 +70,7 @@ export default async function GestioneStrumentiPage({
             </div>
           )}
           {params.errore === '1' && (
-            <p style={{ color: 'var(--danger)', marginBottom: 16 }}>
+            <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginBottom: 16 }}>
               Qualcosa è andato storto, controlla i campi e riprova.
             </p>
           )}
@@ -93,76 +80,26 @@ export default async function GestioneStrumentiPage({
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Contenitori</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Contenitori</h2>
         <Sezione>
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 12 }}>Modifica contenitori</h3>
+
           <ListaContenitori contenitori={contenitori ?? []} />
 
-          <h3 style={{ fontSize: 15, fontWeight: 500, marginTop: 24, marginBottom: 12 }}>Aggiungi un nuovo contenitore</h3>
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 24, marginBottom: 12 }}>
+            Crea nuovo contenitore
+          </h3>
 
           {params.successo_contenitore === '1' && (
-            <p style={{ color: 'var(--success)', marginBottom: 12 }}>Contenitore creato.</p>
+            <p style={{ color: 'var(--success)', fontSize: 'var(--fs-body)', marginBottom: 12 }}>Contenitore creato.</p>
           )}
           {params.errore_contenitore === '1' && (
-            <p style={{ color: 'var(--danger)', marginBottom: 12 }}>
+            <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginBottom: 12 }}>
               Qualcosa è andato storto, controlla i campi e riprova.
             </p>
           )}
 
-          <form
-            action={creaContenitore}
-            style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400, color: 'var(--text-primary)' }}
-          >
-            <label>
-              Nome
-              <input type="text" name="nome" required style={stileCampo} />
-            </label>
-
-            <label>
-              Tipo
-              <select name="tipo" required style={stileCampo}>
-                <option value="">Seleziona...</option>
-                {TIPI_CONTENITORE.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              Data di attivazione
-              <input type="date" name="data_attivazione" style={stileCampo} />
-              <small style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 4, display: 'block' }}>
-                Facoltativa, utile soprattutto per le polizze.
-              </small>
-            </label>
-
-            <label>
-              Note
-              <textarea name="note" rows={3} style={stileCampo} />
-            </label>
-
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="checkbox" name="target_attivo" defaultChecked style={{ accentColor: 'var(--primary)' }} />
-              Target attivo
-            </label>
-
-            <button
-              type="submit"
-              style={{
-                background: 'var(--primary)',
-                color: '#fff',
-                border: 'none',
-                padding: '8px 16px',
-                fontSize: 14,
-                fontWeight: 500,
-                cursor: 'pointer',
-                alignSelf: 'flex-start',
-              }}
-            >
-              Crea contenitore
-            </button>
-          </form>
+          <FormNuovoContenitore />
         </Sezione>
       </section>
     </div>

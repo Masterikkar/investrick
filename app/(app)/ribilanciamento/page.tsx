@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned, formatNumero, formatPercent } from '@/lib/format'
 import { Sezione } from '@/components/sezione'
 import { SogliaRibilanciamento } from '@/components/soglia-ribilanciamento'
+import { FormSimulazione } from './form-simulazione'
 import {
   calcolaRibilanciamentoConVersamento,
   distribuisciAcquisto,
@@ -50,26 +51,6 @@ type LottoRaw = {
 type SubTargetRaw = {
   strumento_id: string
   target_percentuale_categoria: number
-}
-
-const stileCampo: React.CSSProperties = {
-  display: 'block',
-  width: '100%',
-  marginTop: 4,
-  padding: '6px 10px',
-  background: 'var(--bg-surface)',
-  color: 'var(--text-primary)',
-  border: '1px solid var(--border-default)',
-}
-
-const stileBottonePrimario: React.CSSProperties = {
-  background: 'var(--primary)',
-  color: '#fff',
-  border: 'none',
-  padding: '8px 16px',
-  fontSize: 'var(--fs-button)',
-  fontWeight: 500,
-  cursor: 'pointer',
 }
 
 export default async function RibilanciamentoPage({
@@ -369,52 +350,13 @@ export default async function RibilanciamentoPage({
       <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginTop: 40, marginBottom: 12 }}>Simulazione</h2>
 
       <Sezione>
-        <form method="GET" style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'flex-start' }}>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <label style={{ fontSize: 'var(--fs-form-label)' }}>
-              Contenitore
-              <select name="contenitore_id" defaultValue={contenitoreSelezionato} required style={stileCampo}>
-                <option value="">Seleziona...</option>
-                {contenitoriDisponibili.map(([id, nome]) => (
-                  <option key={id} value={id}>{nome}</option>
-                ))}
-              </select>
-            </label>
-
-            <label style={{ fontSize: 'var(--fs-form-label)' }}>
-              Quanto sei disposto a versare (€)
-              <input
-                type="number"
-                name="versamento"
-                step="any"
-                min="0"
-                defaultValue={params.versamento}
-                style={stileCampo}
-              />
-            </label>
-
-            <label style={{ fontSize: 'var(--fs-form-label)' }}>
-              Commissione stimata per vendita (€)
-              <input
-                type="number"
-                name="commissione_vendita"
-                step="any"
-                min="0"
-                defaultValue={params.commissione_vendita}
-                style={stileCampo}
-              />
-            </label>
-          </div>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-form-label)' }}>
-            <input type="checkbox" name="forza" value="1" defaultChecked={forzaVendita} style={{ accentColor: 'var(--primary)' }} />
-            Vendi comunque anche in perdita
-          </label>
-
-          <button type="submit" style={stileBottonePrimario}>
-            Calcola
-          </button>
-        </form>
+        <FormSimulazione
+          contenitoriDisponibili={contenitoriDisponibili}
+          contenitoreSelezionato={contenitoreSelezionato}
+          versamentoIniziale={params.versamento}
+          commissioneIniziale={params.commissione_vendita}
+          forzaIniziale={forzaVendita}
+        />
       </Sezione>
 
       {contenitoreSelezionato && necessario !== null && (

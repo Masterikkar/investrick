@@ -17,7 +17,7 @@ const stileBottoneOutline: React.CSSProperties = {
   background: 'var(--bg-surface)',
   color: 'var(--text-primary)',
   padding: '6px 12px',
-  fontSize: 13,
+  fontSize: 'var(--fs-table)',
   cursor: 'pointer',
 }
 
@@ -93,10 +93,11 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
                 border: '1px solid var(--border-default)',
                 background: 'var(--bg-surface)',
                 color: 'var(--text-primary)',
+                fontSize: 'var(--fs-table)',
                 flex: 1,
               }}
             />
-            <span style={{ fontSize: 12, color: 'var(--text-secondary)', minWidth: 80 }}>
+            <span style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', minWidth: 80 }}>
               {ETICHETTA_TIPO[c.tipo] ?? c.tipo}
             </span>
             <button
@@ -119,7 +120,9 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
         ))}
       </div>
 
-      {erroreId && messaggioErrore && <p style={{ color: 'var(--danger)', marginTop: 12 }}>{messaggioErrore}</p>}
+      {erroreId && messaggioErrore && (
+        <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginTop: 12 }}>{messaggioErrore}</p>
+      )}
     </div>
   )
 }
