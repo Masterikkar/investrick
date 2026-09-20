@@ -14,6 +14,17 @@ export function GraficoLineaSemplice({ punti }: { punti: PuntoLineaSemplice[] })
     return <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', marginTop: 12 }}>Non ci sono ancora dati per quest'anno.</p>
   }
 
+  // Se tutti i valori della serie sono identici (es. una linea piatta a 0),
+  // il range automatico dell'asse Y può collassare in un intervallo
+  // degenere (min = max) — Recharts in quel caso può non disegnare nulla,
+  // silenziosamente. Forziamo un range esplicito solo in questo caso;
+  // altrimenti lasciamo il calcolo automatico invariato.
+  const valori = punti.map((p) => p.valore)
+  const minValore = Math.min(...valori)
+  const maxValore = Math.max(...valori)
+  const dominioY: [number, number] | undefined =
+    minValore === maxValore ? [minValore - 1, maxValore + 1] : undefined
+
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={punti} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
@@ -25,7 +36,14 @@ export function GraficoLineaSemplice({ punti }: { punti: PuntoLineaSemplice[] })
           axisLine={{ stroke: GRIGLIA }}
           tickLine={{ stroke: GRIGLIA }}
         />
-        <YAxis tickFormatter={(v) => formatEuro(Number(v))} width={80} tick={{ fill: TESTO_ASSI, fontSize: 11 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+        <YAxis
+          domain={dominioY}
+          tickFormatter={(v) => formatEuro(Number(v))}
+          width={80}
+          tick={{ fill: TESTO_ASSI, fontSize: 11 }}
+          axisLine={{ stroke: GRIGLIA }}
+          tickLine={{ stroke: GRIGLIA }}
+        />
         <Tooltip
           labelFormatter={(v) => new Date(v as string).toLocaleDateString('it-IT')}
           formatter={(value) => formatEuro(Number(value))}
