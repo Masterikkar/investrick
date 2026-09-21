@@ -31,6 +31,10 @@ const TIPI_MOVIMENTO_LIQUIDITA = [
   { value: 'Costo', label: 'Costo' },
 ]
 
+const stileEtichetta: React.CSSProperties = {
+  fontSize: 'var(--fs-form-label)',
+}
+
 const stileCampo: React.CSSProperties = {
   display: 'block',
   width: '100%',
@@ -39,6 +43,7 @@ const stileCampo: React.CSSProperties = {
   background: 'var(--bg-surface)',
   color: 'var(--text-primary)',
   border: '1px solid var(--border-default)',
+  fontSize: 'var(--fs-form-label)',
 }
 
 const stileBottonePrimario: React.CSSProperties = {
@@ -132,7 +137,7 @@ export function NuovaTransazioneFinanziaria({
           onSubmit={handleSubmit}
           style={{ display: 'flex', flexDirection: 'column', gap: 12, color: 'var(--text-primary)' }}
         >
-          <label>
+          <label style={stileEtichetta}>
             Strumento
             <div style={{ marginTop: 4 }}>
               <MenuSelect
@@ -151,7 +156,7 @@ export function NuovaTransazioneFinanziaria({
             </small>
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Categoria
             <div style={{ marginTop: 4 }}>
               <MenuSelect
@@ -170,7 +175,7 @@ export function NuovaTransazioneFinanziaria({
             </small>
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Contenitore
             <div style={{ marginTop: 4 }}>
               <MenuSelect
@@ -186,7 +191,7 @@ export function NuovaTransazioneFinanziaria({
             {erroriCampo.contenitore_id && <p style={stileErroreCampo}>{erroriCampo.contenitore_id}</p>}
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Operazione
             <div style={{ marginTop: 4 }}>
               <MenuSelect
@@ -202,12 +207,12 @@ export function NuovaTransazioneFinanziaria({
             {erroriCampo.operazione && <p style={stileErroreCampo}>{erroriCampo.operazione}</p>}
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Data
             <input type="date" name="data" required style={stileCampo} />
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Quantità
             <input type="number" name="quantita" step="any" min={0} required style={stileCampo} />
             <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)', marginTop: 4, display: 'block' }}>
@@ -215,7 +220,7 @@ export function NuovaTransazioneFinanziaria({
             </small>
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Prezzo unitario (€)
             <input type="number" name="prezzo_unitario" step="any" min={0} required style={stileCampo} />
             <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)', marginTop: 4, display: 'block' }}>
@@ -223,12 +228,12 @@ export function NuovaTransazioneFinanziaria({
             </small>
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Commissione (€)
             <input type="number" name="commissione" step="any" min={0} defaultValue={0} style={stileCampo} />
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Tassa trattenuta (€)
             <input type="number" name="tassa_trattenuta" step="any" min={0} defaultValue={0} style={stileCampo} />
           </label>
@@ -313,7 +318,7 @@ export function NuovaTransazioneLiquidita({
           onSubmit={handleSubmit}
           style={{ display: 'flex', flexDirection: 'column', gap: 12, color: 'var(--text-primary)' }}
         >
-          <label>
+          <label style={stileEtichetta}>
             Strumento
             <div style={{ marginTop: 4 }}>
               <MenuSelect
@@ -329,7 +334,7 @@ export function NuovaTransazioneLiquidita({
             {erroriCampo.strumento_id && <p style={stileErroreCampo}>{erroriCampo.strumento_id}</p>}
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Contenitore
             <div style={{ marginTop: 4 }}>
               <MenuSelect
@@ -345,7 +350,7 @@ export function NuovaTransazioneLiquidita({
             {erroriCampo.contenitore_id && <p style={stileErroreCampo}>{erroriCampo.contenitore_id}</p>}
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Tipo movimento
             <div style={{ marginTop: 4 }}>
               <MenuSelect
@@ -361,17 +366,17 @@ export function NuovaTransazioneLiquidita({
             {erroriCampo.tipo_movimento && <p style={stileErroreCampo}>{erroriCampo.tipo_movimento}</p>}
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Data
             <input type="date" name="data" required style={stileCampo} />
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Importo lordo (€)
             <input type="number" name="importo" step="any" min={0} required style={stileCampo} />
           </label>
 
-          <label>
+          <label style={stileEtichetta}>
             Tassa trattenuta (€)
             <input type="number" name="tassa_trattenuta" step="any" min={0} defaultValue={0} style={stileCampo} />
             <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)', marginTop: 4, display: 'block' }}>

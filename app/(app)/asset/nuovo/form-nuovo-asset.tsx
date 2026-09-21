@@ -115,19 +115,23 @@ export function FormNuovoAsset({ tipiPerCategoria }: { tipiPerCategoria: TipiPer
           </label>
         </div>
 
-        <div style={{ width: LARGHEZZA_STANDARD }}>
-          <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            Ticker
-            <input type="text" name="ticker" style={stileCampo} />
-          </label>
-        </div>
+        {!isLiquidita && (
+          <>
+            <div style={{ width: LARGHEZZA_STANDARD }}>
+              <label style={{ fontSize: 'var(--fs-form-label)' }}>
+                Ticker
+                <input type="text" name="ticker" style={stileCampo} />
+              </label>
+            </div>
 
-        <div style={{ width: LARGHEZZA_STANDARD }}>
-          <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            ISIN
-            <input type="text" name="isin" style={stileCampo} />
-          </label>
-        </div>
+            <div style={{ width: LARGHEZZA_STANDARD }}>
+              <label style={{ fontSize: 'var(--fs-form-label)' }}>
+                ISIN
+                <input type="text" name="isin" style={stileCampo} />
+              </label>
+            </div>
+          </>
+        )}
 
         <div style={{ width: LARGHEZZA_STANDARD }}>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>

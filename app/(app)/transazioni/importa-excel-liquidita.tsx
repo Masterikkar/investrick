@@ -194,6 +194,7 @@ export function ImportaExcelLiquidita({
           padding: 24,
           textAlign: 'center',
           color: 'var(--text-secondary)',
+          fontSize: 'var(--fs-body)',
         }}
       >
         <p style={{ margin: 0 }}>Trascina qui il file Excel (.xlsx) dei movimenti di liquidità, oppure</p>
