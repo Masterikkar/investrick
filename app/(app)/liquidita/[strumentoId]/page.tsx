@@ -162,14 +162,14 @@ export default async function LiquiditaStrumentoPage({
         ← Liquidità
       </RippleLink>
 
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)', marginTop: 12 }}>
         {[strumento.tipo, strumento.provider].filter(Boolean).join(' · ')}
       </div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{strumento.nome}</h1>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{strumento.nome}</h1>
 
       <section>
         <Sezione>
-          <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 48, margin: 0, color: 'var(--text-primary)' }}>
+          <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 'var(--fs-hero)', margin: 0, color: 'var(--text-primary)' }}>
             {formatEuro(saldoAttuale)}
           </p>
           <div style={{ marginTop: 16, maxWidth: 1024 }}>
@@ -192,20 +192,22 @@ export default async function LiquiditaStrumentoPage({
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Interessi — {annoCorrente}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Interessi — {annoCorrente}</h2>
         <Sezione>
           <p
             style={{
               fontFamily: 'var(--font-zilla-slab)',
               fontWeight: 600,
-              fontSize: 36,
+              fontSize: 'var(--fs-hero-secondario)',
               margin: 0,
               color: interesseNettoYtd >= 0 ? 'var(--success)' : 'var(--danger)',
             }}
           >
             {formatEuroSigned(interesseNettoYtd)}
           </p>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4, marginBottom: 16 }}>Netto, da inizio anno</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', marginTop: 4, marginBottom: 16 }}>
+            Netto, da inizio anno
+          </p>
 
           <div style={{ maxWidth: 1024 }}>
             <GraficoLineaSemplice punti={puntiCumulati} />
@@ -218,10 +220,12 @@ export default async function LiquiditaStrumentoPage({
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Storico interessi</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Storico interessi</h2>
         <Sezione>
           {righeStoricoAnni.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessun interesse registrato finora.</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', margin: 0 }}>
+              Nessun interesse registrato finora.
+            </p>
           ) : (
             <TabellaOrdinabile colonne={COLONNE_STORICO_INTERESSI} righe={righeStoricoAnni} />
           )}
@@ -229,7 +233,7 @@ export default async function LiquiditaStrumentoPage({
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Storico movimenti</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Storico movimenti</h2>
         <Sezione>
           <StoricoMovimentiLiquidita movimenti={storicoMovimenti} contenitori={contenitori ?? []} />
         </Sezione>

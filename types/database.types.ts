@@ -321,8 +321,11 @@ export type Database = {
       strumenti: {
         Row: {
           categoria: string
+          cedola_percentuale: number | null
           codice_prezzo: string | null
           created_at: string
+          data_scadenza: string | null
+          frequenza_cedola: string | null
           id: string
           isin: string | null
           nome: string
@@ -339,8 +342,11 @@ export type Database = {
         }
         Insert: {
           categoria: string
+          cedola_percentuale?: number | null
           codice_prezzo?: string | null
           created_at?: string
+          data_scadenza?: string | null
+          frequenza_cedola?: string | null
           id?: string
           isin?: string | null
           nome: string
@@ -357,8 +363,11 @@ export type Database = {
         }
         Update: {
           categoria?: string
+          cedola_percentuale?: number | null
           codice_prezzo?: string | null
           created_at?: string
+          data_scadenza?: string | null
+          frequenza_cedola?: string | null
           id?: string
           isin?: string | null
           nome?: string
@@ -1472,8 +1481,10 @@ export type Database = {
       ricostruisci_storico_valorizzazioni: {
         Args: never
         Returns: {
+          righe_fantasma_rimosse: number
           righe_liquidita: number
           righe_mercato: number
+          righe_orfane_rimosse: number
         }[]
       }
     }

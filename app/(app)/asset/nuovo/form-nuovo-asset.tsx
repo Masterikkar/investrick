@@ -11,6 +11,15 @@ const ETICHETTA_CATEGORIA: Record<string, string> = {
   Liquidita: 'Liquidità',
 }
 
+const OPZIONI_FREQUENZA_CEDOLA = [
+  { value: '', label: 'Seleziona...' },
+  { value: 'Annuale', label: 'Annuale' },
+  { value: 'Semestrale', label: 'Semestrale' },
+  { value: 'Trimestrale', label: 'Trimestrale' },
+  { value: 'Mensile', label: 'Mensile' },
+  { value: 'Zero coupon', label: 'Zero coupon' },
+]
+
 const stileCampo: React.CSSProperties = {
   display: 'block',
   width: '100%',
@@ -31,6 +40,7 @@ export function FormNuovoAsset({ tipiPerCategoria }: { tipiPerCategoria: TipiPer
   const categorie = Object.keys(tipiPerCategoria)
   const [categoria, setCategoria] = useState('')
   const [tipo, setTipo] = useState('')
+  const [frequenzaCedola, setFrequenzaCedola] = useState('')
   const [erroriCampo, setErroriCampo] = useState<Record<string, string>>({})
 
   const tipiDisponibili = categoria ? tipiPerCategoria[categoria] ?? [] : []
@@ -165,12 +175,44 @@ export function FormNuovoAsset({ tipiPerCategoria }: { tipiPerCategoria: TipiPer
             <input type="checkbox" name="titolo_di_stato" style={{ accentColor: 'var(--primary)' }} />
             Titolo di Stato
           </label>
-          <div style={{ width: LARGHEZZA_STANDARD }}>
-            <label style={{ fontSize: 'var(--fs-form-label)' }}>
-              % titoli di Stato (whitelist)
-              <input type="number" name="percentuale_titoli_stato" min="0" max="100" step="any" style={stileCampo} />
-            </label>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: GAP_CAMPI }}>
+            <div style={{ width: LARGHEZZA_STANDARD }}>
+              <label style={{ fontSize: 'var(--fs-form-label)' }}>
+                % titoli di Stato (whitelist)
+                <input type="number" name="percentuale_titoli_stato" min="0" max="100" step="any" style={stileCampo} />
+              </label>
+            </div>
+
+            <div style={{ width: LARGHEZZA_STANDARD }}>
+              <label style={{ fontSize: 'var(--fs-form-label)' }}>
+                Scadenza
+                <input type="date" name="data_scadenza" style={stileCampo} />
+              </label>
+            </div>
+
+            <div style={{ width: LARGHEZZA_STANDARD }}>
+              <label style={{ fontSize: 'var(--fs-form-label)' }}>
+                Cedola %
+                <input type="number" name="cedola_percentuale" min="0" step="any" style={stileCampo} />
+              </label>
+            </div>
+
+            <div style={{ width: LARGHEZZA_STANDARD }}>
+              <label style={{ fontSize: 'var(--fs-form-label)' }}>
+                Frequenza cedola
+                <div style={{ marginTop: 4 }}>
+                  <MenuSelect
+                    name="frequenza_cedola"
+                    value={frequenzaCedola}
+                    onChange={setFrequenzaCedola}
+                    options={OPZIONI_FREQUENZA_CEDOLA}
+                  />
+                </div>
+              </label>
+            </div>
           </div>
+
           <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)' }}>
             Lascia vuoto se non conosci ancora la percentuale ufficiale pubblicata dall&apos;emittente.
           </small>

@@ -141,10 +141,11 @@ export function GraficoStorico({
         <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>Non abbastanza dati per questo periodo.</p>
       ) : (
         <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={datiFiltrati}>
+          <LineChart data={datiFiltrati} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={GRIGLIA} />
             <XAxis
               dataKey="data"
+              interval="preserveStartEnd"
               tickFormatter={(d) => new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
               fontSize={11}
               tick={{ fill: TESTO_ASSI }}
