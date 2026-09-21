@@ -202,14 +202,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <details>
                 <summary className="menu-toggle" style={{ padding: '9px 10px' }}>
                   <span className="menu-row-left">
-                    <IconaGestione /> Gestione
+                    <IconaGestione /> Gestione database
                   </span>
                   <span className="menu-chevron">
                     <IconaChevron />
                   </span>
                 </summary>
                 <div className="menu-submenu-items">
-                  <RippleLink href="/asset/nuovo" className="menu-row link-interattivo">
+                  <RippleLink href="/gestione/strumenti" className="menu-row link-interattivo">
                     Strumenti
                   </RippleLink>
                   <RippleLink href="/transazioni" className="menu-row link-interattivo">

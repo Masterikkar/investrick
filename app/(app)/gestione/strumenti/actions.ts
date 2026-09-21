@@ -25,7 +25,7 @@ export async function creaAsset(formData: FormData) {
   const frequenzaCedola = ((formData.get('frequenza_cedola') as string) || '').trim() || null
 
   if (!categoria || !tipo || !nome) {
-    redirect('/asset/nuovo?errore=1')
+    redirect('/gestione/strumenti?errore=1')
   }
 
   if (isin) {
@@ -37,7 +37,7 @@ export async function creaAsset(formData: FormData) {
 
     if (esistente) {
       redirect(
-        `/asset/nuovo?errore=duplicato&duplicato_id=${esistente.id}&duplicato_nome=${encodeURIComponent(esistente.nome)}`
+        `/gestione/strumenti?errore=duplicato&duplicato_id=${esistente.id}&duplicato_nome=${encodeURIComponent(esistente.nome)}`
       )
     }
   }
@@ -63,7 +63,7 @@ export async function creaAsset(formData: FormData) {
     .single()
 
   if (error || !nuovo) {
-    redirect('/asset/nuovo?errore=1')
+    redirect('/gestione/strumenti?errore=1')
   }
 
   redirect(`/asset/${nuovo.id}`)

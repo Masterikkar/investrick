@@ -16,7 +16,7 @@ export async function creaContenitore(formData: FormData) {
   const targetAttivo = formData.get('target_attivo') === 'on'
 
   if (!nome || !TIPI_VALIDI.includes(tipo)) {
-    redirect('/asset/nuovo?errore_contenitore=1')
+    redirect('/gestione/strumenti?errore_contenitore=1')
   }
 
   const { error } = await supabase.from('contenitori').insert({
@@ -28,11 +28,11 @@ export async function creaContenitore(formData: FormData) {
   })
 
   if (error) {
-    redirect('/asset/nuovo?errore_contenitore=1')
+    redirect('/gestione/strumenti?errore_contenitore=1')
   }
 
   revalidatePath('/', 'layout')
-  redirect('/asset/nuovo?successo_contenitore=1')
+  redirect('/gestione/strumenti?successo_contenitore=1')
 }
 
 export async function rinominaContenitore(
