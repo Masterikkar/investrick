@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from 'react'
 import { formatEuro, formatPercent } from '@/lib/format'
+import { RippleLink } from '@/components/ripple-link'
 
 export type RigaVerificaTrattenuta = {
   vendita_id: string
   data_vendita: string
   strumento_id: string
   strumento_nome: string
+  valore: number
   plusvalenza_totale_vendita: number
   aliquota_attesa_pct: number
   tassa_attesa: number
@@ -136,7 +138,8 @@ export function VerificaTrattenuteTabella({ righe }: { righe: RigaVerificaTratte
               <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Data</th>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Plusvalenza</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Valore</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Plus/minus</th>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Aliquota attesa</th>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa attesa</th>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa trattenuta</th>
@@ -149,7 +152,12 @@ export function VerificaTrattenuteTabella({ righe }: { righe: RigaVerificaTratte
                 return (
                   <tr key={v.vendita_id} className="tabella-riga">
                     <td style={{ padding: 8 }}>{new Date(v.data_vendita).toLocaleDateString('it-IT')}</td>
-                    <td style={{ padding: 8 }}>{v.strumento_nome}</td>
+                    <td style={{ padding: 8 }}>
+                      <RippleLink href={`/asset/${v.strumento_id}`} className="link-interattivo">
+                        {v.strumento_nome}
+                      </RippleLink>
+                    </td>
+                    <td style={{ padding: 8 }}>{formatEuro(Number(v.valore))}</td>
                     <td style={{ padding: 8 }}>{formatEuro(Number(v.plusvalenza_totale_vendita))}</td>
                     <td style={{ padding: 8 }}>{formatPercent(Number(v.aliquota_attesa_pct), 2)}</td>
                     <td style={{ padding: 8 }}>{formatEuro(Number(v.tassa_attesa))}</td>

@@ -2,11 +2,11 @@ import { createClient } from '@/lib/supabase/server'
 import { formatEuroSigned } from '@/lib/format'
 import { GraficoStoricoFiscale, type PuntoStoricoFiscale } from '@/components/grafico-storico-fiscale'
 import { CardMetrica } from '@/components/card-metrica'
-import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { type VoceBarra } from '@/components/barre-divergenti'
 import { Sezione } from '@/components/sezione'
 import { SezioneAnnoCorrente } from './sezione-anno-corrente'
-import { VerificaTrattenuteTabella, type RigaVerificaTrattenuta } from './verifica-trattenute'
+import { type RigaVerificaTrattenuta } from './verifica-trattenute'
+import { StoricoPlusMinus, type RigaNonRealizzata } from './storico-plus-minus'
 
 type RiepilogoPosizione = {
   strumento_id: string
@@ -18,15 +18,12 @@ type RiepilogoPosizione = {
 }
 type RealizzatoAnno = {
   anno: number
-  imponibile_vendite: number
-  tasse_vendite: number
   netto_vendite: number
-  imponibile_dividendi: number
-  tasse_dividendi: number
-  netto_dividendi: number
-  netto_switch_polizze: number
-  realizzato_netto_totale: number
-  tasse_totali: number
+  tasse_vendite: number
+}
+type RealizzatoAnnoStorico = {
+  anno: number
+  netto_vendite: number
 }
 type VerificaTrattenuta = {
   vendita_id: string
@@ -59,19 +56,17 @@ type MovimentoInteresse = {
   importo: number
   tassa_trattenuta: number
 }
-type Strumento = { id: string; nome: string }
-type Contenitore = { id: string; nome: string }
+type TransazioneVendita = {
+  id: string
+  quantita: number
+  prezzo_unitario: number
+}
+type Strumento = { id: string; nome: string; categoria: string }
+type Contenitore = { id: string; nome: string; tipo: string }
 
 const BUCKET_NON_REALIZZATO = ['Totali', 'PAC', 'Polizze', 'Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto'] as const
 const CATEGORIE_MOVIMENTO = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto'] as const
 const CONTENITORI_MOVIMENTO = ['PAC', 'Polizze'] as const
-
-const COLONNE_NON_REALIZZATE: ColonnaTabella[] = [
-  { key: 'nome', label: 'Strumento', kind: 'text' },
-  { key: 'contenitore', label: 'Contenitore', kind: 'text' },
-  { key: 'plusMinus', label: 'Plus/minus', kind: 'euro-signed' },
-  { key: 'rendimento', label: 'Rendimento', kind: 'percent' },
-]
 
 const chiaveRiga = (strumentoId: string, contenitoreId: string | null) => `${strumentoId}|${contenitoreId ?? ''}`
 
@@ -104,35 +99,39 @@ export default async function FiscalitaPage() {
     { data: realizzatoTuttiAnniRaw },
     { data: storicoTotaleRaw },
     { data: interessiRaw },
+    { data: venditeGrezzeRaw },
   ] = await Promise.all([
     supabase.from('v_riepilogo_posizione').select('strumento_id, contenitore_id, quantita_posseduta, capitale_investito, valore, rendimento_pct').returns<RiepilogoPosizione[]>(),
-    supabase.from('v_realizzato_per_anno').select('*').eq('anno', annoCorrente).maybeSingle().returns<RealizzatoAnno>(),
+    supabase.from('v_realizzato_per_anno').select('anno, netto_vendite, tasse_vendite').eq('anno', annoCorrente).maybeSingle().returns<RealizzatoAnno>(),
     supabase.from('v_verifica_trattenute').select('*').order('data_vendita', { ascending: false }).returns<VerificaTrattenuta[]>(),
-    supabase.from('strumenti').select('id, nome').returns<Strumento[]>(),
-    supabase.from('contenitori').select('id, nome').returns<Contenitore[]>(),
+    supabase.from('strumenti').select('id, nome, categoria').returns<Strumento[]>(),
+    supabase.from('contenitori').select('id, nome, tipo').returns<Contenitore[]>(),
     supabase.from('v_non_realizzato_dettaglio').select('strumento_id, contenitore_id, categoria, contenitore_tipo, valore, capitale_investito').returns<NonRealizzatoDettaglio[]>(),
     supabase.from('v_non_realizzato_inizio_anno').select('strumento_id, contenitore_id, categoria, contenitore_tipo, valore, capitale_investito').returns<NonRealizzatoDettaglio[]>(),
-    supabase.from('v_realizzato_per_anno').select('anno, realizzato_netto_totale').order('anno', { ascending: true }).returns<{ anno: number; realizzato_netto_totale: number }[]>(),
+    supabase.from('v_realizzato_per_anno').select('anno, netto_vendite').order('anno', { ascending: true }).returns<RealizzatoAnnoStorico[]>(),
     supabase.from('v_storico_valorizzazioni_totale').select('data, valore_totale, capitale_investito_totale').order('data', { ascending: true }).returns<StoricoTotale[]>(),
     supabase.from('movimenti_liquidita').select('strumento_id, data, importo, tassa_trattenuta').eq('tipo_movimento', 'Interesse').returns<MovimentoInteresse[]>(),
+    // v_verifica_trattenute.vendita_id coincide con l'id della transazione
+    // di vendita in "transazioni" — recuperiamo qui quantità e prezzo per
+    // calcolare il "Valore" (ricavo lordo) di ogni vendita, dato assente
+    // dalla vista.
+    supabase.from('transazioni').select('id, quantita, prezzo_unitario').in('operazione', ['Vendita', 'Scambio_cessione']).returns<TransazioneVendita[]>(),
   ])
 
   const riepilogo = (riepilogoRaw ?? []).filter((r) => r.quantita_posseduta > 0)
   const verifica = verificaRaw ?? []
   const strumentoMap = new Map((strumentiRaw ?? []).map((s) => [s.id, s.nome]))
+  const strumentoCategoriaMap = new Map((strumentiRaw ?? []).map((s) => [s.id, s.categoria]))
   const contenitoreMap = new Map((contenitoriRaw ?? []).map((c) => [c.id, c.nome]))
+  const contenitoreTipoMap = new Map((contenitoriRaw ?? []).map((c) => [c.id, c.tipo]))
+  const valoreVenditaMap = new Map(
+    (venditeGrezzeRaw ?? []).map((t) => [t.id, Number(t.quantita) * Number(t.prezzo_unitario)])
+  )
 
   const r: RealizzatoAnno = realizzatoRaw ?? {
     anno: annoCorrente,
-    imponibile_vendite: 0,
-    tasse_vendite: 0,
     netto_vendite: 0,
-    imponibile_dividendi: 0,
-    tasse_dividendi: 0,
-    netto_dividendi: 0,
-    netto_switch_polizze: 0,
-    realizzato_netto_totale: 0,
-    tasse_totali: 0,
+    tasse_vendite: 0,
   }
 
   const totaleNonRealizzato = riepilogo.reduce(
@@ -162,6 +161,19 @@ export default async function FiscalitaPage() {
   const vociCategoria: VoceBarra[] = CATEGORIE_MOVIMENTO.map((cat) => ({ etichetta: cat, valore: bucketMovimento[cat] }))
   const vociContenitore: VoceBarra[] = CONTENITORI_MOVIMENTO.map((cont) => ({ etichetta: cont, valore: bucketMovimento[cont] }))
 
+  const venditeAnnoCorrente = verifica.filter((v) => Number(v.data_vendita.slice(0, 4)) === annoCorrente)
+
+  const righeRealizzatoMovimento = venditeAnnoCorrente.map((v) => ({
+    categoria: strumentoCategoriaMap.get(v.strumento_id) ?? '',
+    contenitore_tipo: v.contenitore_id ? contenitoreTipoMap.get(v.contenitore_id) ?? null : null,
+    netto: Number(v.plusvalenza_totale_vendita) - Number(v.tassa_trattenuta_effettiva),
+  }))
+
+  const bucketRealizzato = aggregaNonRealizzato(righeRealizzatoMovimento)
+
+  const vociCategoriaRealizzate: VoceBarra[] = CATEGORIE_MOVIMENTO.map((cat) => ({ etichetta: cat, valore: bucketRealizzato[cat] }))
+  const vociContenitoreRealizzate: VoceBarra[] = CONTENITORI_MOVIMENTO.map((cont) => ({ etichetta: cont, valore: bucketRealizzato[cont] }))
+
   const interessiAnnoCorrente = (interessiRaw ?? []).filter((m) => Number(m.data.slice(0, 4)) === annoCorrente)
 
   const interessiPerStrumento = new Map<string, { lordo: number; tassa: number }>()
@@ -183,7 +195,7 @@ export default async function FiscalitaPage() {
   const totaleInteressiNetti = righeInteressi.reduce((sum, riga) => sum + riga.netto, 0)
 
   const realizzatoTotaleDaSempre = (realizzatoTuttiAnniRaw ?? []).reduce(
-    (sum, rr) => sum + Number(rr.realizzato_netto_totale),
+    (sum, rr) => sum + Number(rr.netto_vendite),
     0
   )
 
@@ -212,32 +224,34 @@ export default async function FiscalitaPage() {
       const snapshot = ultimoPerAnno.get(anno)
       return {
         anno,
-        realizzato: realizzatoAnno ? Number(realizzatoAnno.realizzato_netto_totale) : 0,
+        realizzato: realizzatoAnno ? Number(realizzatoAnno.netto_vendite) : 0,
         nonRealizzato: snapshot ? snapshot.valore - snapshot.capitale : 0,
       }
     })
-
-  const righeNonRealizzate: RigaTabella[] = riepilogo
-    .filter((x) => x.valore != null)
-    .map((x) => ({
-      key: chiaveRiga(x.strumento_id, x.contenitore_id),
-      nome: strumentoMap.get(x.strumento_id) ?? '—',
-      contenitore: x.contenitore_id ? contenitoreMap.get(x.contenitore_id) ?? '—' : 'Diretto',
-      plusMinus: Number(x.valore) - Number(x.capitale_investito),
-      rendimento: x.rendimento_pct ?? 0,
-    }))
 
   const righeVerifica: RigaVerificaTrattenuta[] = verifica.map((v) => ({
     vendita_id: v.vendita_id,
     data_vendita: v.data_vendita,
     strumento_id: v.strumento_id,
     strumento_nome: strumentoMap.get(v.strumento_id) ?? '—',
+    valore: valoreVenditaMap.get(v.vendita_id) ?? 0,
     plusvalenza_totale_vendita: Number(v.plusvalenza_totale_vendita),
     aliquota_attesa_pct: Number(v.aliquota_attesa_pct),
     tassa_attesa: Number(v.tassa_attesa),
     tassa_trattenuta_effettiva: Number(v.tassa_trattenuta_effettiva),
     differenza: Number(v.differenza),
   }))
+
+  const righeStoricoNonRealizzate: RigaNonRealizzata[] = riepilogo
+    .filter((x) => x.valore != null)
+    .map((x) => ({
+      key: chiaveRiga(x.strumento_id, x.contenitore_id),
+      strumento_id: x.strumento_id,
+      strumento_nome: strumentoMap.get(x.strumento_id) ?? '—',
+      contenitore_nome: x.contenitore_id ? contenitoreMap.get(x.contenitore_id) ?? '—' : 'Diretto',
+      plus_minus: Number(x.valore) - Number(x.capitale_investito),
+      rendimento_pct: x.rendimento_pct ?? 0,
+    }))
 
   return (
     <div>
@@ -249,6 +263,8 @@ export default async function FiscalitaPage() {
         <SezioneAnnoCorrente
           annoCorrente={annoCorrente}
           realizzato={r}
+          vociCategoriaRealizzate={vociCategoriaRealizzate}
+          vociContenitoreRealizzate={vociContenitoreRealizzate}
           totaleMovimentoNonRealizzato={bucketMovimento.Totali}
           vociCategoria={vociCategoria}
           vociContenitore={vociContenitore}
@@ -277,43 +293,12 @@ export default async function FiscalitaPage() {
             </CardMetrica>
           </div>
 
+          <p style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginTop: 24, marginBottom: 4 }}>Andamento</p>
+          <GraficoStoricoFiscale punti={puntiStorico} />
+
           <div style={{ marginTop: 24 }}>
-            <GraficoStoricoFiscale punti={puntiStorico} />
+            <StoricoPlusMinus righeRealizzate={righeVerifica} righeNonRealizzate={righeStoricoNonRealizzate} />
           </div>
-        </Sezione>
-      </section>
-
-      <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Non realizzate (da sempre)</h2>
-        <Sezione>
-          <div
-            style={{
-              fontFamily: 'var(--font-zilla-slab)',
-              fontWeight: 600,
-              fontSize: 'var(--fs-hero-secondario)',
-              marginBottom: 16,
-              color: totaleNonRealizzato >= 0 ? 'var(--success)' : 'var(--danger)',
-            }}
-          >
-            {formatEuroSigned(totaleNonRealizzato)}
-          </div>
-          <TabellaOrdinabile colonne={COLONNE_NON_REALIZZATE} righe={righeNonRealizzate} />
-        </Sezione>
-      </section>
-
-      <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 4 }}>Verifica trattenute</h2>
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>
-          Aliquota attesa vs trattenuta effettiva, per ogni vendita imponibile.
-        </p>
-        <Sezione>
-          {righeVerifica.length === 0 ? (
-            <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', margin: 0 }}>
-              Nessuna vendita imponibile registrata finora.
-            </p>
-          ) : (
-            <VerificaTrattenuteTabella righe={righeVerifica} />
-          )}
         </Sezione>
       </section>
     </div>
