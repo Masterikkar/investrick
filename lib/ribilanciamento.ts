@@ -103,12 +103,9 @@ export type EsitoVenditaStrumento = {
   vincoloRispettato: boolean
 }
 
-export function aliquotaPerStrumento(s: { titoloDiStato: boolean; percentualeTitoliStato: number | null }): number {
-  if (s.percentualeTitoliStato != null) {
-    const pct = s.percentualeTitoliStato / 100
-    return 0.125 * pct + 0.26 * (1 - pct)
-  }
-  return s.titoloDiStato ? 0.125 : 0.26
+/** Aliquota diretta dello strumento (aliquota_tassazione, in punti percentuali) convertita in frazione. */
+export function aliquotaPerStrumento(s: { aliquotaTassazione: number }): number {
+  return s.aliquotaTassazione / 100
 }
 
 /**

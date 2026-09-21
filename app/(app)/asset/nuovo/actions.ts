@@ -15,12 +15,14 @@ export async function creaAsset(formData: FormData) {
   const valuta = ((formData.get('valuta') as string) || 'EUR').trim()
   const note = ((formData.get('note') as string) || '').trim() || null
   const codicePrezzo = ((formData.get('codice_prezzo') as string) || '').trim() || null
-  const titoloDiStato = formData.get('titolo_di_stato') === 'on'
-  const percentualeTitoliStatoRaw = formData.get('percentuale_titoli_stato') as string
-  const percentualeTitoliStato = percentualeTitoliStatoRaw ? Number(percentualeTitoliStatoRaw) : null
   const provider = ((formData.get('provider') as string) || '').trim() || null
   const tassoPercentualeRaw = formData.get('tasso_percentuale') as string
   const tassoPercentuale = tassoPercentualeRaw ? Number(tassoPercentualeRaw) : null
+  const dataScadenzaRaw = ((formData.get('data_scadenza') as string) || '').trim()
+  const dataScadenza = dataScadenzaRaw || null
+  const cedolaPercentualeRaw = formData.get('cedola_percentuale') as string
+  const cedolaPercentuale = cedolaPercentualeRaw ? Number(cedolaPercentualeRaw) : null
+  const frequenzaCedola = ((formData.get('frequenza_cedola') as string) || '').trim() || null
 
   if (!categoria || !tipo || !nome) {
     redirect('/asset/nuovo?errore=1')
@@ -51,10 +53,11 @@ export async function creaAsset(formData: FormData) {
       valuta,
       note,
       codice_prezzo: codicePrezzo,
-      titolo_di_stato: titoloDiStato,
-      percentuale_titoli_stato: percentualeTitoliStato,
       provider,
       tasso_percentuale: tassoPercentuale,
+      data_scadenza: dataScadenza,
+      cedola_percentuale: cedolaPercentuale,
+      frequenza_cedola: frequenzaCedola,
     })
     .select('id')
     .single()

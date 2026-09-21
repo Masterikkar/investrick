@@ -46,6 +46,7 @@ export function FormNuovoAsset({ tipiPerCategoria }: { tipiPerCategoria: TipiPer
   const tipiDisponibili = categoria ? tipiPerCategoria[categoria] ?? [] : []
   const isLiquidita = categoria === 'Liquidita'
   const isObbligazioni = categoria === 'Obbligazioni'
+  const isMultiasset = categoria === 'Multiasset'
 
   const opzioniCategoria = [
     { value: '', label: 'Seleziona...' },
@@ -115,23 +116,19 @@ export function FormNuovoAsset({ tipiPerCategoria }: { tipiPerCategoria: TipiPer
           </label>
         </div>
 
-        {!isLiquidita && (
-          <>
-            <div style={{ width: LARGHEZZA_STANDARD }}>
-              <label style={{ fontSize: 'var(--fs-form-label)' }}>
-                Ticker
-                <input type="text" name="ticker" style={stileCampo} />
-              </label>
-            </div>
+        <div style={{ width: LARGHEZZA_STANDARD }}>
+          <label style={{ fontSize: 'var(--fs-form-label)' }}>
+            Ticker
+            <input type="text" name="ticker" style={stileCampo} />
+          </label>
+        </div>
 
-            <div style={{ width: LARGHEZZA_STANDARD }}>
-              <label style={{ fontSize: 'var(--fs-form-label)' }}>
-                ISIN
-                <input type="text" name="isin" style={stileCampo} />
-              </label>
-            </div>
-          </>
-        )}
+        <div style={{ width: LARGHEZZA_STANDARD }}>
+          <label style={{ fontSize: 'var(--fs-form-label)' }}>
+            ISIN
+            <input type="text" name="isin" style={stileCampo} />
+          </label>
+        </div>
 
         <div style={{ width: LARGHEZZA_STANDARD }}>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>
@@ -174,53 +171,50 @@ export function FormNuovoAsset({ tipiPerCategoria }: { tipiPerCategoria: TipiPer
       )}
 
       {isObbligazioni && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-form-label)' }}>
-            <input type="checkbox" name="titolo_di_stato" style={{ accentColor: 'var(--primary)' }} />
-            Titolo di Stato
-          </label>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: GAP_CAMPI }}>
-            <div style={{ width: LARGHEZZA_STANDARD }}>
-              <label style={{ fontSize: 'var(--fs-form-label)' }}>
-                % titoli di Stato (whitelist)
-                <input type="number" name="percentuale_titoli_stato" min="0" max="100" step="any" style={stileCampo} />
-              </label>
-            </div>
-
-            <div style={{ width: LARGHEZZA_STANDARD }}>
-              <label style={{ fontSize: 'var(--fs-form-label)' }}>
-                Scadenza
-                <input type="date" name="data_scadenza" style={stileCampo} />
-              </label>
-            </div>
-
-            <div style={{ width: LARGHEZZA_STANDARD }}>
-              <label style={{ fontSize: 'var(--fs-form-label)' }}>
-                Cedola %
-                <input type="number" name="cedola_percentuale" min="0" step="any" style={stileCampo} />
-              </label>
-            </div>
-
-            <div style={{ width: LARGHEZZA_STANDARD }}>
-              <label style={{ fontSize: 'var(--fs-form-label)' }}>
-                Frequenza cedola
-                <div style={{ marginTop: 4 }}>
-                  <MenuSelect
-                    name="frequenza_cedola"
-                    value={frequenzaCedola}
-                    onChange={setFrequenzaCedola}
-                    options={OPZIONI_FREQUENZA_CEDOLA}
-                  />
-                </div>
-              </label>
-            </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: GAP_CAMPI }}>
+          <div style={{ width: LARGHEZZA_STANDARD }}>
+            <label style={{ fontSize: 'var(--fs-form-label)' }}>
+              Scadenza
+              <input type="date" name="data_scadenza" style={stileCampo} />
+            </label>
           </div>
 
-          <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)' }}>
-            Lascia vuoto se non conosci ancora la percentuale ufficiale pubblicata dall&apos;emittente.
-          </small>
+          <div style={{ width: LARGHEZZA_STANDARD }}>
+            <label style={{ fontSize: 'var(--fs-form-label)' }}>
+              Cedola %
+              <input type="number" name="cedola_percentuale" min="0" step="any" style={stileCampo} />
+            </label>
+          </div>
+
+          <div style={{ width: LARGHEZZA_STANDARD }}>
+            <label style={{ fontSize: 'var(--fs-form-label)' }}>
+              Frequenza cedola
+              <div style={{ marginTop: 4 }}>
+                <MenuSelect
+                  name="frequenza_cedola"
+                  value={frequenzaCedola}
+                  onChange={setFrequenzaCedola}
+                  options={OPZIONI_FREQUENZA_CEDOLA}
+                />
+              </div>
+            </label>
+          </div>
         </div>
+      )}
+
+      {isMultiasset && (
+        <p
+          style={{
+            color: 'var(--warning)',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--warning)',
+            padding: '8px 10px',
+            margin: 0,
+            fontSize: 'var(--fs-form-hint)',
+          }}
+        >
+          Questo asset riceverà l&apos;aliquota di default (26%). Se vuoi puoi modificarla in Gestione fiscalità dopo la creazione.
+        </p>
       )}
 
       <div style={{ width: '100%', maxWidth: LARGHEZZA_RIGA_QUATTRO_CAMPI }}>

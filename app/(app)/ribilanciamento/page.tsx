@@ -37,8 +37,7 @@ type StrumentoInfo = {
   id: string
   nome: string
   ticker: string | null
-  titolo_di_stato: boolean
-  percentuale_titoli_stato: number | null
+  aliquota_tassazione: number
 }
 
 type LottoRaw = {
@@ -155,7 +154,7 @@ export default async function RibilanciamentoPage({
 
           const { data: strumentiInfo } = await supabase
             .from('strumenti')
-            .select('id, nome, ticker, titolo_di_stato, percentuale_titoli_stato')
+            .select('id, nome, ticker, aliquota_tassazione')
             .in('id', strumentoIds)
             .returns<StrumentoInfo[]>()
 
@@ -193,10 +192,7 @@ export default async function RibilanciamentoPage({
                   commissioneResidua: Number(l.commissione_residua),
                 }))
 
-              const aliquota = aliquotaPerStrumento({
-                titoloDiStato: info.titolo_di_stato,
-                percentualeTitoliStato: info.percentuale_titoli_stato,
-              })
+              const aliquota = aliquotaPerStrumento({ aliquotaTassazione: info.aliquota_tassazione })
 
               const esito = simulaVenditaStrumento(
                 p.strumento_id,

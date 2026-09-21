@@ -153,12 +153,8 @@ function RisolviStrumento({
   const [ticker, setTicker] = useState(identificatore.tipo === 'ticker' ? identificatore.valore : '')
   const [valuta, setValuta] = useState('EUR')
   const [codicePrezzo, setCodicePrezzo] = useState('')
-  const [titoloDiStato, setTitoloDiStato] = useState(false)
-  const [percentualeTitoliStato, setPercentualeTitoliStato] = useState('')
   const [salvataggio, setSalvataggio] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
-
-  const isObbligazioni = categoria === 'Obbligazioni'
 
   async function handleSalva() {
     if (!nome.trim()) {
@@ -175,8 +171,6 @@ function RisolviStrumento({
       isin: identificatore.tipo === 'isin' ? identificatore.valore : '',
       valuta,
       codicePrezzo,
-      titoloDiStato,
-      percentualeTitoliStato: percentualeTitoliStato ? Number(percentualeTitoliStato) : null,
     })
     setSalvataggio(false)
     if ('errore' in risultato) {
@@ -211,14 +205,6 @@ function RisolviStrumento({
           </select>
         </label>
         <label>
-          Tipo
-          <select value={tipo} onChange={(e) => setTipo(e.target.value)} style={stileCampo}>
-            {(tipiPerCategoria[categoria] ?? []).map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </label>
-        <label>
           Nome
           <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} style={stileCampo} />
         </label>
@@ -234,26 +220,6 @@ function RisolviStrumento({
           Codice prezzo (EODHD)
           <input type="text" value={codicePrezzo} onChange={(e) => setCodicePrezzo(e.target.value)} style={stileCampo} />
         </label>
-        {isObbligazioni && (
-          <>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="checkbox" checked={titoloDiStato} onChange={(e) => setTitoloDiStato(e.target.checked)} style={{ accentColor: 'var(--primary)' }} />
-              Titolo di Stato
-            </label>
-            <label>
-              % titoli di Stato (whitelist)
-              <input
-                type="number"
-                min="0"
-                max="100"
-                step="any"
-                value={percentualeTitoliStato}
-                onChange={(e) => setPercentualeTitoliStato(e.target.value)}
-                style={stileCampo}
-              />
-            </label>
-          </>
-        )}
         <button
           type="button"
           onClick={handleSalva}
