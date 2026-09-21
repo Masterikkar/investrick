@@ -1,9 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro, formatEuroSigned, formatPercent } from '@/lib/format'
+import { formatEuroSigned } from '@/lib/format'
 import { GraficoStoricoFiscale, type PuntoStoricoFiscale } from '@/components/grafico-storico-fiscale'
 import { CardMetrica } from '@/components/card-metrica'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
+import { type VoceBarra } from '@/components/barre-divergenti'
 import { Sezione } from '@/components/sezione'
+import { SezioneAnnoCorrente } from './sezione-anno-corrente'
+import { VerificaTrattenuteTabella, type RigaVerificaTrattenuta } from './verifica-trattenute'
 
 type RiepilogoPosizione = {
   strumento_id: string
@@ -50,12 +53,18 @@ type StoricoTotale = {
   valore_totale: number | null
   capitale_investito_totale: number | null
 }
+type MovimentoInteresse = {
+  strumento_id: string
+  data: string
+  importo: number
+  tassa_trattenuta: number
+}
 type Strumento = { id: string; nome: string }
 type Contenitore = { id: string; nome: string }
 
-const RIGA_DETTAGLIO_STYLE: React.CSSProperties = { padding: 8 }
-
 const BUCKET_NON_REALIZZATO = ['Totali', 'PAC', 'Polizze', 'Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto'] as const
+const CATEGORIE_MOVIMENTO = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto'] as const
+const CONTENITORI_MOVIMENTO = ['PAC', 'Polizze'] as const
 
 const COLONNE_NON_REALIZZATE: ColonnaTabella[] = [
   { key: 'nome', label: 'Strumento', kind: 'text' },
@@ -94,6 +103,7 @@ export default async function FiscalitaPage() {
     { data: inizioAnnoRaw },
     { data: realizzatoTuttiAnniRaw },
     { data: storicoTotaleRaw },
+    { data: interessiRaw },
   ] = await Promise.all([
     supabase.from('v_riepilogo_posizione').select('strumento_id, contenitore_id, quantita_posseduta, capitale_investito, valore, rendimento_pct').returns<RiepilogoPosizione[]>(),
     supabase.from('v_realizzato_per_anno').select('*').eq('anno', annoCorrente).maybeSingle().returns<RealizzatoAnno>(),
@@ -104,6 +114,7 @@ export default async function FiscalitaPage() {
     supabase.from('v_non_realizzato_inizio_anno').select('strumento_id, contenitore_id, categoria, contenitore_tipo, valore, capitale_investito').returns<NonRealizzatoDettaglio[]>(),
     supabase.from('v_realizzato_per_anno').select('anno, realizzato_netto_totale').order('anno', { ascending: true }).returns<{ anno: number; realizzato_netto_totale: number }[]>(),
     supabase.from('v_storico_valorizzazioni_totale').select('data, valore_totale, capitale_investito_totale').order('data', { ascending: true }).returns<StoricoTotale[]>(),
+    supabase.from('movimenti_liquidita').select('strumento_id, data, importo, tassa_trattenuta').eq('tipo_movimento', 'Interesse').returns<MovimentoInteresse[]>(),
   ])
 
   const riepilogo = (riepilogoRaw ?? []).filter((r) => r.quantita_posseduta > 0)
@@ -148,6 +159,34 @@ export default async function FiscalitaPage() {
 
   const bucketMovimento = aggregaNonRealizzato(righeMovimento)
 
+  const vociCategoria: VoceBarra[] = CATEGORIE_MOVIMENTO.map((cat) => ({ etichetta: cat, valore: bucketMovimento[cat] }))
+  const vociContenitore: VoceBarra[] = CONTENITORI_MOVIMENTO.map((cont) => ({ etichetta: cont, valore: bucketMovimento[cont] }))
+
+  const interessiAnnoCorrente = (interessiRaw ?? []).filter((m) => Number(m.data.slice(0, 4)) === annoCorrente)
+
+  const interessiPerStrumento = new Map<string, { lordo: number; tassa: number }>()
+  for (const m of interessiAnnoCorrente) {
+    const esistente = interessiPerStrumento.get(m.strumento_id) ?? { lordo: 0, tassa: 0 }
+    esistente.lordo += Number(m.importo)
+    esistente.tassa += Number(m.tassa_trattenuta)
+    interessiPerStrumento.set(m.strumento_id, esistente)
+  }
+
+  const righeInteressi = Array.from(interessiPerStrumento.entries()).map(([strumentoId, v]) => ({
+    strumentoId,
+    nome: strumentoMap.get(strumentoId) ?? '—',
+    lordo: v.lordo,
+    tassa: v.tassa,
+    netto: v.lordo - v.tassa,
+  }))
+
+  const totaleInteressiNetti = righeInteressi.reduce((sum, riga) => sum + riga.netto, 0)
+
+  const realizzatoTotaleDaSempre = (realizzatoTuttiAnniRaw ?? []).reduce(
+    (sum, rr) => sum + Number(rr.realizzato_netto_totale),
+    0
+  )
+
   const ultimoPerAnno = new Map<number, { data: string; valore: number; capitale: number }>()
   for (const s of storicoTotaleRaw ?? []) {
     if (!s.data) continue
@@ -188,6 +227,18 @@ export default async function FiscalitaPage() {
       rendimento: x.rendimento_pct ?? 0,
     }))
 
+  const righeVerifica: RigaVerificaTrattenuta[] = verifica.map((v) => ({
+    vendita_id: v.vendita_id,
+    data_vendita: v.data_vendita,
+    strumento_id: v.strumento_id,
+    strumento_nome: strumentoMap.get(v.strumento_id) ?? '—',
+    plusvalenza_totale_vendita: Number(v.plusvalenza_totale_vendita),
+    aliquota_attesa_pct: Number(v.aliquota_attesa_pct),
+    tassa_attesa: Number(v.tassa_attesa),
+    tassa_trattenuta_effettiva: Number(v.tassa_trattenuta_effettiva),
+    differenza: Number(v.differenza),
+  }))
+
   return (
     <div>
       <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>Analisi</div>
@@ -195,111 +246,45 @@ export default async function FiscalitaPage() {
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Anno corrente — {annoCorrente}</h2>
-        <Sezione>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <CardMetrica label="Plus/minusvalenze realizzate nette" minWidth={220}>
-              <span style={{ color: Number(r.realizzato_netto_totale) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                {formatEuroSigned(Number(r.realizzato_netto_totale))}
-              </span>
-            </CardMetrica>
-            <CardMetrica label="Tasse trattenute" minWidth={220}>
-              {formatEuro(Number(r.tasse_totali))}
-            </CardMetrica>
-          </div>
-        </Sezione>
-      </section>
-
-      <section style={{ marginTop: 16 }}>
-        <Sezione>
-          <table style={{ width: '100%', borderCollapse: 'collapse', maxWidth: 480, color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
-            <tbody>
-              <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
-                <td style={{ ...RIGA_DETTAGLIO_STYLE, color: 'var(--text-secondary)' }}>Imponibile vendite</td>
-                <td style={{ ...RIGA_DETTAGLIO_STYLE, textAlign: 'right' }}>{formatEuro(Number(r.imponibile_vendite))}</td>
-              </tr>
-              <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
-                <td style={{ ...RIGA_DETTAGLIO_STYLE, color: 'var(--text-secondary)' }}>Tasse vendite</td>
-                <td style={{ ...RIGA_DETTAGLIO_STYLE, textAlign: 'right' }}>{formatEuro(Number(r.tasse_vendite))}</td>
-              </tr>
-              <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
-                <td style={{ ...RIGA_DETTAGLIO_STYLE, fontWeight: 500 }}>Netto vendite</td>
-                <td
-                  style={{
-                    ...RIGA_DETTAGLIO_STYLE,
-                    textAlign: 'right',
-                    fontWeight: 500,
-                    color: Number(r.netto_vendite) >= 0 ? 'var(--success)' : 'var(--danger)',
-                  }}
-                >
-                  {formatEuroSigned(Number(r.netto_vendite))}
-                </td>
-              </tr>
-              <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
-                <td style={{ ...RIGA_DETTAGLIO_STYLE, color: 'var(--text-secondary)' }}>Imponibile dividendi</td>
-                <td style={{ ...RIGA_DETTAGLIO_STYLE, textAlign: 'right' }}>{formatEuro(Number(r.imponibile_dividendi))}</td>
-              </tr>
-              <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
-                <td style={{ ...RIGA_DETTAGLIO_STYLE, color: 'var(--text-secondary)' }}>Tasse dividendi</td>
-                <td style={{ ...RIGA_DETTAGLIO_STYLE, textAlign: 'right' }}>{formatEuro(Number(r.tasse_dividendi))}</td>
-              </tr>
-              <tr style={{ borderBottom: '1px solid var(--border-default)' }}>
-                <td style={{ ...RIGA_DETTAGLIO_STYLE, fontWeight: 500 }}>Netto dividendi</td>
-                <td
-                  style={{
-                    ...RIGA_DETTAGLIO_STYLE,
-                    textAlign: 'right',
-                    fontWeight: 500,
-                    color: Number(r.netto_dividendi) >= 0 ? 'var(--success)' : 'var(--danger)',
-                  }}
-                >
-                  {formatEuroSigned(Number(r.netto_dividendi))}
-                </td>
-              </tr>
-              <tr>
-                <td style={{ ...RIGA_DETTAGLIO_STYLE, fontWeight: 500 }}>Netto switch (Polizze)</td>
-                <td
-                  style={{
-                    ...RIGA_DETTAGLIO_STYLE,
-                    textAlign: 'right',
-                    fontWeight: 500,
-                    color: Number(r.netto_switch_polizze) >= 0 ? 'var(--success)' : 'var(--danger)',
-                  }}
-                >
-                  {formatEuroSigned(Number(r.netto_switch_polizze))}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </Sezione>
-      </section>
-
-      <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 4 }}>Non realizzate — movimento {annoCorrente}</h2>
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>
-          Variazione della plus/minusvalenza non realizzata da inizio anno a oggi.
-        </p>
-        <Sezione>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            {BUCKET_NON_REALIZZATO.map((chiave) => (
-              <CardMetrica key={chiave} label={chiave} minWidth={160}>
-                <span style={{ color: bucketMovimento[chiave] >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                  {formatEuroSigned(bucketMovimento[chiave])}
-                </span>
-              </CardMetrica>
-            ))}
-          </div>
-        </Sezione>
+        <SezioneAnnoCorrente
+          annoCorrente={annoCorrente}
+          realizzato={r}
+          totaleMovimentoNonRealizzato={bucketMovimento.Totali}
+          vociCategoria={vociCategoria}
+          vociContenitore={vociContenitore}
+          totaleInteressiNetti={totaleInteressiNetti}
+          righeInteressi={righeInteressi}
+        />
       </section>
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Storico</h2>
         <Sezione>
-          <GraficoStoricoFiscale punti={puntiStorico} />
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 4 }}>Plus/minusvalenze</h3>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 16 }}>
+            Storico delle plus/minusvalenze realizzate e non realizzate.
+          </p>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <CardMetrica label="Totale realizzate nette" minWidth={220}>
+              <span style={{ color: realizzatoTotaleDaSempre >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                {formatEuroSigned(realizzatoTotaleDaSempre)}
+              </span>
+            </CardMetrica>
+            <CardMetrica label="Totale non realizzate" minWidth={220}>
+              <span style={{ color: totaleNonRealizzato >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                {formatEuroSigned(totaleNonRealizzato)}
+              </span>
+            </CardMetrica>
+          </div>
+
+          <div style={{ marginTop: 24 }}>
+            <GraficoStoricoFiscale punti={puntiStorico} />
+          </div>
         </Sezione>
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Non realizzate (stato attuale)</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Non realizzate (da sempre)</h2>
         <Sezione>
           <div
             style={{
@@ -322,48 +307,12 @@ export default async function FiscalitaPage() {
           Aliquota attesa vs trattenuta effettiva, per ogni vendita imponibile.
         </p>
         <Sezione>
-          {verifica.length === 0 ? (
+          {righeVerifica.length === 0 ? (
             <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', margin: 0 }}>
               Nessuna vendita imponibile registrata finora.
             </p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
-              <thead>
-                <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Data</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Plusvalenza</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Aliquota attesa</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa attesa</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa trattenuta</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Differenza</th>
-                </tr>
-              </thead>
-              <tbody>
-                {verifica.map((v) => {
-                  const scostamentoRilevante = Math.abs(Number(v.differenza)) > 0.01
-                  return (
-                    <tr key={v.vendita_id} className="tabella-riga">
-                      <td style={{ padding: 8 }}>{new Date(v.data_vendita).toLocaleDateString('it-IT')}</td>
-                      <td style={{ padding: 8 }}>{strumentoMap.get(v.strumento_id) ?? '—'}</td>
-                      <td style={{ padding: 8 }}>{formatEuro(Number(v.plusvalenza_totale_vendita))}</td>
-                      <td style={{ padding: 8 }}>{formatPercent(Number(v.aliquota_attesa_pct), 2)}</td>
-                      <td style={{ padding: 8 }}>{formatEuro(Number(v.tassa_attesa))}</td>
-                      <td style={{ padding: 8 }}>{formatEuro(Number(v.tassa_trattenuta_effettiva))}</td>
-                      <td
-                        style={{
-                          padding: 8,
-                          color: scostamentoRilevante ? 'var(--warning)' : undefined,
-                          fontWeight: scostamentoRilevante ? 500 : undefined,
-                        }}
-                      >
-                        {formatEuro(Number(v.differenza))}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+            <VerificaTrattenuteTabella righe={righeVerifica} />
           )}
         </Sezione>
       </section>
