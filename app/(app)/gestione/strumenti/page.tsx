@@ -6,6 +6,8 @@ import { FormNuovoContenitore } from './form-nuovo-contenitore'
 import { ListaContenitori } from './lista-contenitori'
 
 type TipoStrumento = { categoria: string; tipo: string }
+type ImpostazioneCategoria = { categoria: string; aliquota_default: number }
+type Contenitore = { id: string; nome: string; tipo: string }
 
 export default async function GestioneStrumentiPage({
   searchParams,
@@ -21,12 +23,19 @@ export default async function GestioneStrumentiPage({
   const params = await searchParams
   const supabase = await createClient()
 
-  const { data: tipiRaw } = await supabase
-    .from('tipi_strumento')
-    .select('categoria, tipo')
-    .order('categoria')
-    .order('tipo')
-    .returns<TipoStrumento[]>()
+  const [{ data: tipiRaw }, { data: impostazioniRaw }, { data: contenitori }] = await Promise.all([
+    supabase
+      .from('tipi_strumento')
+      .select('categoria, tipo')
+      .order('categoria')
+      .order('tipo')
+      .returns<TipoStrumento[]>(),
+    supabase
+      .from('impostazioni_aliquote_categoria')
+      .select('categoria, aliquota_default')
+      .returns<ImpostazioneCategoria[]>(),
+    supabase.from('contenitori').select('id, nome, tipo').order('nome').returns<Contenitore[]>(),
+  ])
 
   const tipiPerCategoria: Record<string, string[]> = {}
   for (const t of tipiRaw ?? []) {
@@ -34,10 +43,10 @@ export default async function GestioneStrumentiPage({
     tipiPerCategoria[t.categoria].push(t.tipo)
   }
 
-  const { data: contenitori } = await supabase
-    .from('contenitori')
-    .select('id, nome, tipo')
-    .order('nome')
+  const aliquoteDefaultPerCategoria: Record<string, number> = {}
+  for (const i of impostazioniRaw ?? []) {
+    aliquoteDefaultPerCategoria[i.categoria] = Number(i.aliquota_default)
+  }
 
   return (
     <div>
@@ -75,7 +84,7 @@ export default async function GestioneStrumentiPage({
             </p>
           )}
 
-          <FormNuovoAsset tipiPerCategoria={tipiPerCategoria} />
+          <FormNuovoAsset tipiPerCategoria={tipiPerCategoria} aliquoteDefaultPerCategoria={aliquoteDefaultPerCategoria} />
         </Sezione>
       </section>
 

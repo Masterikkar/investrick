@@ -36,7 +36,13 @@ const stileErroreCampo: React.CSSProperties = {
   margin: '4px 0 0',
 }
 
-export function FormNuovoAsset({ tipiPerCategoria }: { tipiPerCategoria: TipiPerCategoria }) {
+export function FormNuovoAsset({
+  tipiPerCategoria,
+  aliquoteDefaultPerCategoria,
+}: {
+  tipiPerCategoria: TipiPerCategoria
+  aliquoteDefaultPerCategoria: Record<string, number>
+}) {
   const categorie = Object.keys(tipiPerCategoria)
   const [categoria, setCategoria] = useState('')
   const [tipo, setTipo] = useState('')
@@ -205,15 +211,19 @@ export function FormNuovoAsset({ tipiPerCategoria }: { tipiPerCategoria: TipiPer
       {isMultiasset && (
         <p
           style={{
+            width: '100%',
+            maxWidth: LARGHEZZA_RIGA_QUATTRO_CAMPI,
             color: 'var(--warning)',
             background: 'var(--bg-surface)',
             border: '1px solid var(--warning)',
             padding: '8px 10px',
             margin: 0,
             fontSize: 'var(--fs-form-hint)',
+            boxSizing: 'border-box',
           }}
         >
-          Questo asset riceverà l&apos;aliquota di default (26%). Se vuoi puoi modificarla in Gestione fiscalità dopo la creazione.
+          Questo asset riceverà l&apos;aliquota di default ({aliquoteDefaultPerCategoria.Multiasset ?? 26}%). Se vuoi puoi
+          modificarla in Gestione fiscalità dopo la creazione.
         </p>
       )}
 
