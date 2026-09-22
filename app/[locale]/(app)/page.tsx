@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
@@ -34,7 +35,21 @@ type RealizzatoAnno = { anno: number; realizzato_netto_totale: number }
 
 const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
+// Mappa il valore italiano di categoria (quello usato per interrogare il
+// database) alla chiave camelCase del namespace i18n "Categorie" — serve solo
+// per tradurre a schermo il nome categoria dinamico dell'alert ribilanciamento.
+const CHIAVE_TRADUZIONE_CATEGORIA: Record<string, string> = {
+  Azioni: 'azioni',
+  Obbligazioni: 'obbligazioni',
+  'Materie prime': 'materiePrime',
+  Monetario: 'monetario',
+  Multiasset: 'multiasset',
+  Crypto: 'crypto',
+}
+
 export default async function DashboardPage() {
+  const t = await getTranslations('Dashboard')
+  const tCategorie = await getTranslations('Categorie')
   const supabase = await createClient()
   const annoCorrente = new Date().getFullYear()
 
@@ -164,8 +179,8 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Dashboard</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Il tuo portafoglio</h1>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('etichettaDashboard')}</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{t('titolo')}</h1>
 
       <section>
         <Sezione>
@@ -179,31 +194,33 @@ export default async function DashboardPage() {
             <CardRendimento
               rendimentoPct={rendimentoPctTotale}
               variazioneOggi={variazioneDaUltimoSnapshot}
+              label={t('titoloRendimentoLive')}
+              etichettaOggi={t('etichettaOggi')}
               href="/rendimenti"
-              linkLabel="→ Rendimenti"
+              linkLabel={t('linkRendimenti')}
             />
 
-            <CardMetrica label="Plus/minus non realizzata" href="/fiscalita" linkLabel="→ Fiscalità">
+            <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/fiscalita" linkLabel={t('linkFiscalita')}>
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(plusMinusNonRealizzata)}
               </span>
             </CardMetrica>
 
             <CardMetrica
-              label={`Plus/minus ${annoCorrente} realizzata netta`}
+              label={t('labelPlusMinusRealizzata', { anno: annoCorrente })}
               href="/fiscalita"
-              linkLabel="→ Fiscalità"
+              linkLabel={t('linkFiscalita')}
             >
               <span style={{ color: realizzatoNettoAnno >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(realizzatoNettoAnno)}
               </span>
             </CardMetrica>
 
-            <CardMetrica label="Costo totale" href="/costi" linkLabel="→ Costi">
+            <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>
               {formatEuro(costoTotale)}
             </CardMetrica>
 
-            <CardMetrica label="Capitale investito netto" href="/gestione/transazioni" linkLabel="→ Transazioni">
+            <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
               {formatEuro(capitaleInvestitoNetto)}
             </CardMetrica>
           </div>
@@ -211,7 +228,7 @@ export default async function DashboardPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Allocazione asset</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloAllocazioneAsset')}</h2>
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
             <Sezione>
@@ -227,7 +244,7 @@ export default async function DashboardPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Allocazione contenitori</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloAllocazioneContenitori')}</h2>
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
             <Sezione>
@@ -245,20 +262,24 @@ export default async function DashboardPage() {
       <ValoriChiusura />
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Ribilanciamento</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloRibilanciamento')}</h2>
         <Sezione>
           {alert.length === 0 ? (
             <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-table)', margin: 0 }}>
-              Tutto in linea con i target.
+              {t('alertNessunoScostamento')}
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {alert.map((a) => (
                 <div key={`${a.contenitore_id}-${a.categoria}`} style={{ fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>
-                  <strong>{a.contenitore_nome}</strong> — {a.categoria}: {a.peso_attuale_pct}% attuale
-                  vs {a.target_percentuale}% target (
-                  {a.scostamento_pp && a.scostamento_pp > 0 ? '+' : ''}
-                  {a.scostamento_pp} pp)
+                  <strong>{a.contenitore_nome}</strong> —{' '}
+                  {t('alertScostamento', {
+                    categoria: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[a.categoria ?? ''] ?? a.categoria ?? ''),
+                    pesoAttuale: a.peso_attuale_pct ?? 0,
+                    target: a.target_percentuale ?? 0,
+                    segnoScostamento: a.scostamento_pp && a.scostamento_pp > 0 ? '+' : '',
+                    scostamento: a.scostamento_pp ?? 0,
+                  })}
                 </div>
               ))}
             </div>

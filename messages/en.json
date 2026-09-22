@@ -56,5 +56,29 @@
     "strumenti": "Instruments",
     "transazioni": "Transactions",
     "esci": "Log out"
+  },
+  "Contenitori": {
+    "pac": "Investment Plans",
+    "polizze": "Insurance Policies",
+    "liquidita": "Cash"
+  },
+  "Dashboard": {
+    "etichettaDashboard": "Dashboard",
+    "titolo": "Your portfolio",
+    "titoloRendimentoLive": "Live Return",
+    "etichettaOggi": "Today",
+    "linkRendimenti": "→ Returns",
+    "labelPlusMinusNonRealizzata": "Unrealized gain/loss",
+    "linkFiscalita": "→ Tax",
+    "labelPlusMinusRealizzata": "Net realized gain/loss {anno}",
+    "labelCostoTotale": "Total cost",
+    "linkCosti": "→ Costs",
+    "labelCapitaleInvestitoNetto": "Net capital invested",
+    "linkTransazioni": "→ Transactions",
+    "titoloAllocazioneAsset": "Asset allocation",
+    "titoloAllocazioneContenitori": "Container allocation",
+    "titoloRibilanciamento": "Rebalancing",
+    "alertNessunoScostamento": "Everything in line with targets.",
+    "alertScostamento": "{categoria}: {pesoAttuale}% current vs {target}% target ({segnoScostamento}{scostamento} pp)"
   }
 }

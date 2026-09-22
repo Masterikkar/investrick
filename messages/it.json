@@ -56,5 +56,29 @@
     "strumenti": "Strumenti",
     "transazioni": "Transazioni",
     "esci": "Esci"
+  },
+  "Contenitori": {
+    "pac": "PAC",
+    "polizze": "Polizze",
+    "liquidita": "Liquidità"
+  },
+  "Dashboard": {
+    "etichettaDashboard": "Dashboard",
+    "titolo": "Il tuo portafoglio",
+    "titoloRendimentoLive": "Rendimento Live",
+    "etichettaOggi": "Oggi",
+    "linkRendimenti": "→ Rendimenti",
+    "labelPlusMinusNonRealizzata": "Plus/minus non realizzata",
+    "linkFiscalita": "→ Fiscalità",
+    "labelPlusMinusRealizzata": "Plus/minus {anno} realizzata netta",
+    "labelCostoTotale": "Costo totale",
+    "linkCosti": "→ Costi",
+    "labelCapitaleInvestitoNetto": "Capitale investito netto",
+    "linkTransazioni": "→ Transazioni",
+    "titoloAllocazioneAsset": "Allocazione asset",
+    "titoloAllocazioneContenitori": "Allocazione contenitori",
+    "titoloRibilanciamento": "Ribilanciamento",
+    "alertNessunoScostamento": "Tutto in linea con i target.",
+    "alertScostamento": "{categoria}: {pesoAttuale}% attuale vs {target}% target ({segnoScostamento}{scostamento} pp)"
   }
 }
