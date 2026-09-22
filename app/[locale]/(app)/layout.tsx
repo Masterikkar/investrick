@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/[locale]/login/actions'
 import { ChiudiTendineAutomaticamente } from '@/components/chiudi-tendine-automaticamente'
@@ -31,6 +32,8 @@ const stilePannello: React.CSSProperties = {
 }
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations('Menu')
+  const tCategorie = await getTranslations('Categorie')
   const supabase = await createClient()
 
   const [{ data: strumenti }, { data: contenitori }] = await Promise.all([
@@ -70,7 +73,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <details style={{ position: 'relative' }}>
             <summary className="menu-toggle menu-toggle-bar">
               <IconaPortafoglio />
-              Portafoglio
+              {t('portafoglio')}
               <span className="menu-chevron">
                 <IconaChevron />
               </span>
@@ -79,7 +82,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <details>
                 <summary className="menu-toggle" style={{ padding: '9px 10px' }}>
                   <span className="menu-row-left">
-                    <IconaAsset /> Asset
+                    <IconaAsset /> {t('asset')}
                   </span>
                   <span className="menu-chevron">
                     <IconaChevron />
@@ -87,22 +90,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 </summary>
                 <div className="menu-submenu-items">
                   <RippleLink href="/azioni" className="menu-row link-interattivo">
-                    Azioni
+                    {tCategorie('azioni')}
                   </RippleLink>
                   <RippleLink href="/obbligazioni" className="menu-row link-interattivo">
-                    Obbligazioni
+                    {tCategorie('obbligazioni')}
                   </RippleLink>
                   <RippleLink href="/materie-prime" className="menu-row link-interattivo">
-                    Materie prime
+                    {tCategorie('materiePrime')}
                   </RippleLink>
                   <RippleLink href="/monetario" className="menu-row link-interattivo">
-                    Monetario
+                    {tCategorie('monetario')}
                   </RippleLink>
                   <RippleLink href="/multiasset" className="menu-row link-interattivo">
-                    Multiasset
+                    {tCategorie('multiasset')}
                   </RippleLink>
                   <RippleLink href="/crypto" className="menu-row link-interattivo">
-                    Crypto
+                    {tCategorie('crypto')}
                   </RippleLink>
                 </div>
               </details>
@@ -111,21 +114,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 className="menu-row link-interattivo"
                 style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
               >
-                <IconaLiquidita /> Liquidità
+                <IconaLiquidita /> {t('liquidita')}
               </RippleLink>
               <RippleLink
                 href="/pac"
                 className="menu-row link-interattivo"
                 style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
               >
-                <IconaPac /> Piani di Accumulo
+                <IconaPac /> {t('pianiDiAccumulo')}
               </RippleLink>
               <RippleLink
                 href="/polizze"
                 className="menu-row link-interattivo"
                 style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
               >
-                <IconaPolizze /> Polizze
+                <IconaPolizze /> {t('polizze')}
               </RippleLink>
             </div>
           </details>
@@ -133,7 +136,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <details style={{ position: 'relative' }}>
             <summary className="menu-toggle menu-toggle-bar">
               <IconaAnalisi />
-              Analisi
+              {t('analisi')}
               <span className="menu-chevron">
                 <IconaChevron />
               </span>
@@ -144,21 +147,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 className="menu-row link-interattivo"
                 style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
               >
-                <IconaCosti /> Costi
+                <IconaCosti /> {t('costi')}
               </RippleLink>
               <RippleLink
                 href="/fiscalita"
                 className="menu-row link-interattivo"
                 style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
               >
-                <IconaFiscalita /> Fiscalità
+                <IconaFiscalita /> {t('fiscalita')}
               </RippleLink>
               <RippleLink
                 href="/rendimenti"
                 className="menu-row link-interattivo"
                 style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
               >
-                <IconaRendimenti /> Rendimenti
+                <IconaRendimenti /> {t('rendimenti')}
               </RippleLink>
               <hr className="menu-divider" />
               <RippleLink
@@ -166,13 +169,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 className="menu-row link-interattivo"
                 style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
               >
-                <IconaRibilanciamento /> Ribilanciamento
+                <IconaRibilanciamento /> {t('ribilanciamento')}
               </RippleLink>
               <hr className="menu-divider" />
               <details>
                 <summary className="menu-toggle" style={{ padding: '9px 10px' }}>
                   <span className="menu-row-left">
-                    <IconaStorico /> Storico
+                    <IconaStorico /> {t('storico')}
                   </span>
                   <span className="menu-chevron">
                     <IconaChevron />
@@ -180,10 +183,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 </summary>
                 <div className="menu-submenu-items">
                   <RippleLink href="/storico/liquidita" className="menu-row link-interattivo">
-                    Transazioni liquidità
+                    {t('transazioniLiquidita')}
                   </RippleLink>
                   <RippleLink href="/storico/asset" className="menu-row link-interattivo">
-                    Transazioni finanziarie
+                    {t('transazioniFinanziarie')}
                   </RippleLink>
                 </div>
               </details>
@@ -193,7 +196,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <details style={{ position: 'relative' }}>
             <summary className="menu-toggle menu-toggle-bar">
               <IconaAccount />
-              Account
+              {t('account')}
               <span className="menu-chevron">
                 <IconaChevron />
               </span>
@@ -202,7 +205,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <details>
                 <summary className="menu-toggle" style={{ padding: '9px 10px' }}>
                   <span className="menu-row-left">
-                    <IconaGestione /> Gestione database
+                    <IconaGestione /> {t('gestioneDatabase')}
                   </span>
                   <span className="menu-chevron">
                     <IconaChevron />
@@ -210,13 +213,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 </summary>
                 <div className="menu-submenu-items">
                   <RippleLink href="/gestione/fiscalita" className="menu-row link-interattivo">
-                    Fiscalità
+                    {t('fiscalita')}
                   </RippleLink>
                   <RippleLink href="/gestione/strumenti" className="menu-row link-interattivo">
-                    Strumenti
+                    {t('strumenti')}
                   </RippleLink>
                   <RippleLink href="/gestione/transazioni" className="menu-row link-interattivo">
-                    Transazioni
+                    {t('transazioni')}
                   </RippleLink>
                 </div>
               </details>
@@ -237,7 +240,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     fontFamily: 'inherit',
                   }}
                 >
-                  <IconaEsci /> Esci
+                  <IconaEsci /> {t('esci')}
                 </button>
               </form>
             </div>

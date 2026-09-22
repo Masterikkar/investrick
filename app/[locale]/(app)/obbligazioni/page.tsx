@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
@@ -8,20 +9,23 @@ import { Sezione } from '@/components/sezione'
 
 const CATEGORIA = 'Obbligazioni'
 
-const COLONNE: ColonnaTabella[] = [
-  { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
-  { key: 'tipo', label: 'Tipo', kind: 'text' },
-  { key: 'rendimentoPct', label: 'Rendimento', kind: 'percent-signed' },
-  { key: 'rendimentoAssoluto', label: 'Rendimento (€)', kind: 'euro-signed' },
-  { key: 'valore', label: 'Valore', kind: 'euro' },
-  { key: 'peso', label: 'Peso', kind: 'percent' },
-  { key: 'nav', label: 'NAV', kind: 'euro' },
-  { key: 'prezzoMedioUnitario', label: 'Prezzo medio', kind: 'euro' },
-  { key: 'costo', label: 'Costo', kind: 'euro' },
-  { key: 'provenienza', label: 'Provenienza', kind: 'text' },
-]
-
 export default async function ObbligazioniPage() {
+  const t = await getTranslations('PaginaCategoria')
+  const tCategorie = await getTranslations('Categorie')
+
+  const COLONNE: ColonnaTabella[] = [
+    { key: 'nome', label: t('colonnaStrumento'), kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
+    { key: 'tipo', label: t('colonnaTipo'), kind: 'text' },
+    { key: 'rendimentoPct', label: t('colonnaRendimento'), kind: 'percent-signed' },
+    { key: 'rendimentoAssoluto', label: t('colonnaRendimentoEuro'), kind: 'euro-signed' },
+    { key: 'valore', label: t('colonnaValore'), kind: 'euro' },
+    { key: 'peso', label: t('colonnaPeso'), kind: 'percent' },
+    { key: 'nav', label: t('colonnaNav'), kind: 'euro' },
+    { key: 'prezzoMedioUnitario', label: t('colonnaPrezzoMedio'), kind: 'euro' },
+    { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
+    { key: 'provenienza', label: t('colonnaProvenienza'), kind: 'text' },
+  ]
+
   const supabase = await createClient()
 
   const { data: categoriaValore } = await supabase
@@ -115,7 +119,7 @@ export default async function ObbligazioniPage() {
         nav: p.prezzo_attuale ?? 0,
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
         costo: costo?.costo_totale ?? 0,
-        provenienza: contenitore?.nome ?? 'Diretto',
+        provenienza: contenitore?.nome ?? t('provenienzaDiretto'),
       }
     })
     .sort((a, b) => (b.valore as number) - (a.valore as number))
@@ -138,8 +142,8 @@ export default async function ObbligazioniPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Categoria</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{CATEGORIA}</h1>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('etichettaCategoria')}</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{tCategorie('obbligazioni')}</h1>
 
       <section>
         <Sezione>
@@ -154,20 +158,20 @@ export default async function ObbligazioniPage() {
               rendimentoPct={rendimentoPctTotale}
               variazioneOggi={variazioneDaUltimoSnapshot}
               href="/rendimenti"
-              linkLabel="Vedi dettaglio rendimenti →"
+              linkLabel={t('linkRendimenti')}
             />
 
-            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="Vedi dettaglio fiscalità →">
+            <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/fiscalita" linkLabel={t('linkFiscalita')}>
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(plusMinusNonRealizzata)}
               </span>
             </CardMetrica>
 
-            <CardMetrica label="Capitale investito netto" href="/gestione/transazioni" linkLabel="Vedi transazioni →">
+            <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
               {formatEuro(capitaleInvestitoNettoTotale)}
             </CardMetrica>
 
-            <CardMetrica label="Costo totale" href="/costi" linkLabel="Vedi dettaglio costi →">
+            <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>
               {formatEuro(costoTotaleCategoria)}
             </CardMetrica>
           </div>
@@ -175,7 +179,7 @@ export default async function ObbligazioniPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Asset</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloAsset')}</h2>
         <Sezione>
           <TabellaOrdinabile colonne={COLONNE} righe={righe} />
         </Sezione>
