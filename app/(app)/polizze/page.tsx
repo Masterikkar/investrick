@@ -347,7 +347,7 @@ export default async function PolizzePage() {
               </span>
             </CardMetrica>
 
-            <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="→ Transazioni">
+            <CardMetrica label="Capitale investito netto" href="/gestione/transazioni" linkLabel="→ Transazioni">
               {formatEuro(capitaleInvestitoNettoTotale)}
             </CardMetrica>
 

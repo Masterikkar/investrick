@@ -175,6 +175,12 @@ export function StoricoPlusMinus({
             </div>
           </details>
         )}
+
+        <div style={{ marginLeft: 'auto', fontSize: 'var(--fs-card-link)' }}>
+          <RippleLink href="/gestione/fiscalita" className="link-interattivo">
+            Esporta questi dati →
+          </RippleLink>
+        </div>
       </div>
 
       {righeFiltrateCorrenti.length === 0 ? (

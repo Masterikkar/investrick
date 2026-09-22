@@ -2,6 +2,13 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import type { Database } from '@/types/database.types'
+
+// aliquota_tassazione è NOT NULL senza default di colonna (rimosso apposta
+// nel Passo 2): la riempie sempre il trigger applica_aliquota_default_strumento,
+// mai l'app. Il generatore di tipi non vede i trigger, quindi lo marca come
+// obbligatorio — il payload lo omette di proposito.
+type InsertStrumento = Omit<Database['public']['Tables']['strumenti']['Insert'], 'aliquota_tassazione'>
 
 export async function creaAsset(formData: FormData) {
   const supabase = await createClient()
@@ -42,23 +49,25 @@ export async function creaAsset(formData: FormData) {
     }
   }
 
+  const payload: InsertStrumento = {
+    categoria,
+    tipo,
+    nome,
+    ticker,
+    isin,
+    valuta,
+    note,
+    codice_prezzo: codicePrezzo,
+    provider,
+    tasso_percentuale: tassoPercentuale,
+    data_scadenza: dataScadenza,
+    cedola_percentuale: cedolaPercentuale,
+    frequenza_cedola: frequenzaCedola,
+  }
+
   const { data: nuovo, error } = await supabase
     .from('strumenti')
-    .insert({
-      categoria,
-      tipo,
-      nome,
-      ticker,
-      isin,
-      valuta,
-      note,
-      codice_prezzo: codicePrezzo,
-      provider,
-      tasso_percentuale: tassoPercentuale,
-      data_scadenza: dataScadenza,
-      cedola_percentuale: cedolaPercentuale,
-      frequenza_cedola: frequenzaCedola,
-    })
+    .insert(payload as Database['public']['Tables']['strumenti']['Insert'])
     .select('id')
     .single()
 

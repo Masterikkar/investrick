@@ -6,7 +6,7 @@ import { RippleLink } from '@/components/ripple-link'
 import { CardMetrica } from '@/components/card-metrica'
 import { Sezione } from '@/components/sezione'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
-import { StoricoMovimentiLiquidita, type RigaStoricoMovimentoLiquidita } from '../../transazioni/storico-movimenti-liquidita'
+import { StoricoMovimentiLiquidita, type RigaStoricoMovimentoLiquidita } from '../../storico/storico-movimenti-liquidita'
 
 const NOMI_MESI = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic']
 

@@ -163,7 +163,7 @@ export default async function CryptoPage() {
               </span>
             </CardMetrica>
 
-            <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="Vedi transazioni →">
+            <CardMetrica label="Capitale investito netto" href="/gestione/transazioni" linkLabel="Vedi transazioni →">
               {formatEuro(capitaleInvestitoNettoTotale)}
             </CardMetrica>
 

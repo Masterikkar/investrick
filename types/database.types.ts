@@ -127,6 +127,24 @@ export type Database = {
         }
         Relationships: []
       }
+      impostazioni_aliquote_categoria: {
+        Row: {
+          aliquota_default: number
+          categoria: string
+          user_id: string
+        }
+        Insert: {
+          aliquota_default: number
+          categoria: string
+          user_id?: string
+        }
+        Update: {
+          aliquota_default?: number
+          categoria?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       impostazioni_utente: {
         Row: {
           created_at: string
@@ -320,6 +338,7 @@ export type Database = {
       }
       strumenti: {
         Row: {
+          aliquota_tassazione: number
           categoria: string
           cedola_percentuale: number | null
           codice_prezzo: string | null
@@ -330,17 +349,16 @@ export type Database = {
           isin: string | null
           nome: string
           note: string | null
-          percentuale_titoli_stato: number | null
           provider: string | null
           tasso_percentuale: number | null
           ticker: string | null
           tipo: string
-          titolo_di_stato: boolean
           updated_at: string
           user_id: string
           valuta: string
         }
         Insert: {
+          aliquota_tassazione: number
           categoria: string
           cedola_percentuale?: number | null
           codice_prezzo?: string | null
@@ -351,17 +369,16 @@ export type Database = {
           isin?: string | null
           nome: string
           note?: string | null
-          percentuale_titoli_stato?: number | null
           provider?: string | null
           tasso_percentuale?: number | null
           ticker?: string | null
           tipo: string
-          titolo_di_stato?: boolean
           updated_at?: string
           user_id?: string
           valuta?: string
         }
         Update: {
+          aliquota_tassazione?: number
           categoria?: string
           cedola_percentuale?: number | null
           codice_prezzo?: string | null
@@ -372,12 +389,10 @@ export type Database = {
           isin?: string | null
           nome?: string
           note?: string | null
-          percentuale_titoli_stato?: number | null
           provider?: string | null
           tasso_percentuale?: number | null
           ticker?: string | null
           tipo?: string
-          titolo_di_stato?: boolean
           updated_at?: string
           user_id?: string
           valuta?: string
@@ -647,7 +662,6 @@ export type Database = {
           prezzo_vendita: number | null
           quantita_abbinata: number | null
           strumento_id: string | null
-          titolo_di_stato: boolean | null
           vendita_id: string | null
         }
         Relationships: [
@@ -1415,7 +1429,6 @@ export type Database = {
           strumento_id: string | null
           tassa_attesa: number | null
           tassa_trattenuta_effettiva: number | null
-          titolo_di_stato: boolean | null
           vendita_id: string | null
         }
         Relationships: [
@@ -1435,6 +1448,42 @@ export type Database = {
           },
           {
             foreignKeyName: "transazioni_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_verifica_trattenute_interessi: {
+        Row: {
+          aliquota_attesa_pct: number | null
+          contenitore_id: string | null
+          data_movimento: string | null
+          differenza: number | null
+          interesse_lordo: number | null
+          movimento_id: string | null
+          strumento_id: string | null
+          tassa_attesa: number | null
+          tassa_trattenuta_effettiva: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "contenitori"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_valore_per_contenitore"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "movimenti_liquidita_strumento_id_fkey"
             columns: ["strumento_id"]
             isOneToOne: false
             referencedRelation: "strumenti"

@@ -203,7 +203,7 @@ export default async function DashboardPage() {
               {formatEuro(costoTotale)}
             </CardMetrica>
 
-            <CardMetrica label="Capitale investito netto" href="/transazioni" linkLabel="→ Transazioni">
+            <CardMetrica label="Capitale investito netto" href="/gestione/transazioni" linkLabel="→ Transazioni">
               {formatEuro(capitaleInvestitoNetto)}
             </CardMetrica>
           </div>

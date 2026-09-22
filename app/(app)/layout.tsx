@@ -179,11 +179,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                   </span>
                 </summary>
                 <div className="menu-submenu-items">
-                  <RippleLink href="/transazioni/liquidita" className="menu-row link-interattivo">
-                    Liquidità
+                  <RippleLink href="/storico/liquidita" className="menu-row link-interattivo">
+                    Transazioni liquidità
                   </RippleLink>
-                  <RippleLink href="/transazioni/asset" className="menu-row link-interattivo">
-                    Transazioni
+                  <RippleLink href="/storico/asset" className="menu-row link-interattivo">
+                    Transazioni finanziarie
                   </RippleLink>
                 </div>
               </details>
@@ -209,10 +209,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                   </span>
                 </summary>
                 <div className="menu-submenu-items">
+                  <RippleLink href="/gestione/fiscalita" className="menu-row link-interattivo">
+                    Fiscalità
+                  </RippleLink>
                   <RippleLink href="/gestione/strumenti" className="menu-row link-interattivo">
                     Strumenti
                   </RippleLink>
-                  <RippleLink href="/transazioni" className="menu-row link-interattivo">
+                  <RippleLink href="/gestione/transazioni" className="menu-row link-interattivo">
                     Transazioni
                   </RippleLink>
                 </div>

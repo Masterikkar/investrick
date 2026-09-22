@@ -4,6 +4,11 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
+import type { Database } from '@/types/database.types'
+
+// Stessa ragione di app/(app)/gestione/strumenti/actions.ts: aliquota_tassazione
+// la riempie il trigger, mai l'app.
+type InsertStrumento = Omit<Database['public']['Tables']['strumenti']['Insert'], 'aliquota_tassazione'>
 
 const CATEGORIE_VALIDE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
@@ -25,16 +30,16 @@ export async function aggiungiTransazione(formData: FormData) {
 
   if (operazione === 'Costo_contanti') {
     if (strumentoId) {
-      redirect('/transazioni?errore_finanziaria=1')
+      redirect('/gestione/transazioni?errore_finanziaria=1')
     }
     if (!CATEGORIE_VALIDE.includes(categoriaManuale)) {
-      redirect('/transazioni?errore_finanziaria=1')
+      redirect('/gestione/transazioni?errore_finanziaria=1')
     }
     categoria = categoriaManuale
     strumentoIdFinale = null
   } else {
     if (!strumentoId) {
-      redirect('/transazioni?errore_finanziaria=1')
+      redirect('/gestione/transazioni?errore_finanziaria=1')
     }
 
     const { data: strumento, error: erroreStrumento } = await supabase
@@ -44,7 +49,7 @@ export async function aggiungiTransazione(formData: FormData) {
       .single()
 
     if (erroreStrumento || !strumento) {
-      redirect('/transazioni?errore_finanziaria=1')
+      redirect('/gestione/transazioni?errore_finanziaria=1')
     }
 
     categoria = strumento.categoria
@@ -65,18 +70,18 @@ export async function aggiungiTransazione(formData: FormData) {
   })
 
   if (error) {
-    redirect('/transazioni?errore_finanziaria=1')
+    redirect('/gestione/transazioni?errore_finanziaria=1')
   }
 
   const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
 
   if (erroreRicostruzione) {
-    redirect('/transazioni?errore_finanziaria=1')
+    redirect('/gestione/transazioni?errore_finanziaria=1')
   }
 
   revalidatePath('/')
-  revalidatePath('/transazioni')
-  redirect('/transazioni?successo_finanziaria=1')
+  revalidatePath('/gestione/transazioni')
+  redirect('/gestione/transazioni?successo_finanziaria=1')
 }
 
 export async function aggiungiMovimentoLiquidita(formData: FormData) {
@@ -90,7 +95,7 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
   const tassaTrattenuta = Number(formData.get('tassa_trattenuta') || 0)
 
   if (!strumentoId) {
-    redirect('/transazioni?errore_liquidita=1')
+    redirect('/gestione/transazioni?errore_liquidita=1')
   }
 
   const { error } = await supabase.from('movimenti_liquidita').insert({
@@ -103,18 +108,18 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
   })
 
   if (error) {
-    redirect('/transazioni?errore_liquidita=1')
+    redirect('/gestione/transazioni?errore_liquidita=1')
   }
 
   const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
 
   if (erroreRicostruzione) {
-    redirect('/transazioni?errore_liquidita=1')
+    redirect('/gestione/transazioni?errore_liquidita=1')
   }
 
   revalidatePath('/')
-  revalidatePath('/transazioni')
-  redirect('/transazioni?successo_liquidita=1')
+  revalidatePath('/gestione/transazioni')
+  redirect('/gestione/transazioni?successo_liquidita=1')
 }
 
 // --- Storico transazioni: riallocazione contenitore ed eliminazione ---
@@ -241,17 +246,19 @@ export async function creaAssetPerImport(dati: {
     }
   }
 
+  const payload: InsertStrumento = {
+    categoria: dati.categoria,
+    tipo: dati.tipo,
+    nome: dati.nome.trim(),
+    ticker: dati.ticker.trim() || null,
+    isin,
+    valuta: dati.valuta.trim() || 'EUR',
+    codice_prezzo: dati.codicePrezzo.trim() || null,
+  }
+
   const { data: nuovo, error } = await supabase
     .from('strumenti')
-    .insert({
-      categoria: dati.categoria,
-      tipo: dati.tipo,
-      nome: dati.nome.trim(),
-      ticker: dati.ticker.trim() || null,
-      isin,
-      valuta: dati.valuta.trim() || 'EUR',
-      codice_prezzo: dati.codicePrezzo.trim() || null,
-    })
+    .insert(payload as Database['public']['Tables']['strumenti']['Insert'])
     .select('id')
     .single()
 
@@ -259,7 +266,7 @@ export async function creaAssetPerImport(dati: {
     return { errore: error?.message ?? 'Errore sconosciuto durante la creazione' }
   }
 
-  revalidatePath('/transazioni')
+  revalidatePath('/gestione/transazioni')
   return { id: nuovo.id }
 }
 
@@ -334,7 +341,7 @@ export async function importaTransazioniBulk(
     const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
     if (erroreRicostruzione) {
       revalidatePath('/')
-      revalidatePath('/transazioni')
+      revalidatePath('/gestione/transazioni')
       return {
         inserite,
         errori,
@@ -344,7 +351,7 @@ export async function importaTransazioniBulk(
   }
 
   revalidatePath('/')
-  revalidatePath('/transazioni')
+  revalidatePath('/gestione/transazioni')
 
   return { inserite, errori }
 }
@@ -396,7 +403,7 @@ export async function importaMovimentiLiquiditaBulk(
     const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
     if (erroreRicostruzione) {
       revalidatePath('/')
-      revalidatePath('/transazioni')
+      revalidatePath('/gestione/transazioni')
       return {
         inserite,
         errori,
@@ -406,7 +413,7 @@ export async function importaMovimentiLiquiditaBulk(
   }
 
   revalidatePath('/')
-  revalidatePath('/transazioni')
+  revalidatePath('/gestione/transazioni')
 
   return { inserite, errori }
 }
