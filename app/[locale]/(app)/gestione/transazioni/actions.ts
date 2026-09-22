@@ -2,7 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+import { redirect } from '@/i18n/navigation'
+import { getLocale } from 'next-intl/server'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import type { Database } from '@/types/database.types'
 
@@ -14,6 +15,7 @@ const CATEGORIE_VALIDE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario'
 
 export async function aggiungiTransazione(formData: FormData) {
   const supabase = await createClient()
+  const locale = await getLocale()
 
   const strumentoId = formData.get('strumento_id') as string
   const categoriaManuale = formData.get('categoria_manuale') as string
@@ -30,16 +32,16 @@ export async function aggiungiTransazione(formData: FormData) {
 
   if (operazione === 'Costo_contanti') {
     if (strumentoId) {
-      redirect('/gestione/transazioni?errore_finanziaria=1')
+      redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
     }
     if (!CATEGORIE_VALIDE.includes(categoriaManuale)) {
-      redirect('/gestione/transazioni?errore_finanziaria=1')
+      redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
     }
     categoria = categoriaManuale
     strumentoIdFinale = null
   } else {
     if (!strumentoId) {
-      redirect('/gestione/transazioni?errore_finanziaria=1')
+      redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
     }
 
     const { data: strumento, error: erroreStrumento } = await supabase
@@ -49,7 +51,8 @@ export async function aggiungiTransazione(formData: FormData) {
       .single()
 
     if (erroreStrumento || !strumento) {
-      redirect('/gestione/transazioni?errore_finanziaria=1')
+      redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
+      return
     }
 
     categoria = strumento.categoria
@@ -70,22 +73,23 @@ export async function aggiungiTransazione(formData: FormData) {
   })
 
   if (error) {
-    redirect('/gestione/transazioni?errore_finanziaria=1')
+    redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
   }
 
   const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
 
   if (erroreRicostruzione) {
-    redirect('/gestione/transazioni?errore_finanziaria=1')
+    redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
   }
 
-  revalidatePath('/')
-  revalidatePath('/gestione/transazioni')
-  redirect('/gestione/transazioni?successo_finanziaria=1')
+  revalidatePath(`/${locale}`)
+  revalidatePath(`/${locale}/gestione/transazioni`)
+  redirect({ href: '/gestione/transazioni?successo_finanziaria=1', locale })
 }
 
 export async function aggiungiMovimentoLiquidita(formData: FormData) {
   const supabase = await createClient()
+  const locale = await getLocale()
 
   const strumentoId = formData.get('strumento_id') as string
   const contenitoreId = formData.get('contenitore_id') as string
@@ -95,7 +99,7 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
   const tassaTrattenuta = Number(formData.get('tassa_trattenuta') || 0)
 
   if (!strumentoId) {
-    redirect('/gestione/transazioni?errore_liquidita=1')
+    redirect({ href: '/gestione/transazioni?errore_liquidita=1', locale })
   }
 
   const { error } = await supabase.from('movimenti_liquidita').insert({
@@ -108,18 +112,18 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
   })
 
   if (error) {
-    redirect('/gestione/transazioni?errore_liquidita=1')
+    redirect({ href: '/gestione/transazioni?errore_liquidita=1', locale })
   }
 
   const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
 
   if (erroreRicostruzione) {
-    redirect('/gestione/transazioni?errore_liquidita=1')
+    redirect({ href: '/gestione/transazioni?errore_liquidita=1', locale })
   }
 
-  revalidatePath('/')
-  revalidatePath('/gestione/transazioni')
-  redirect('/gestione/transazioni?successo_liquidita=1')
+  revalidatePath(`/${locale}`)
+  revalidatePath(`/${locale}/gestione/transazioni`)
+  redirect({ href: '/gestione/transazioni?successo_liquidita=1', locale })
 }
 
 // --- Storico transazioni: riallocazione contenitore ed eliminazione ---
@@ -230,6 +234,7 @@ export async function creaAssetPerImport(dati: {
   codicePrezzo: string
 }): Promise<{ id: string } | { errore: string }> {
   const supabase = await createClient()
+  const locale = await getLocale()
 
   const isinPulito = dati.isin.trim().toUpperCase()
   const isin = isinPulito || null
@@ -266,7 +271,7 @@ export async function creaAssetPerImport(dati: {
     return { errore: error?.message ?? 'Errore sconosciuto durante la creazione' }
   }
 
-  revalidatePath('/gestione/transazioni')
+  revalidatePath(`/${locale}/gestione/transazioni`)
   return { id: nuovo.id }
 }
 
@@ -286,6 +291,7 @@ export async function importaTransazioniBulk(
   righe: RigaImport[]
 ): Promise<{ inserite: number; errori: { riga: number; messaggio: string }[]; avvisoRicostruzione?: string }> {
   const supabase = await createClient()
+  const locale = await getLocale()
 
   if (righe.length === 0) {
     return { inserite: 0, errori: [] }
@@ -340,8 +346,8 @@ export async function importaTransazioniBulk(
   if (inserite > 0) {
     const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
     if (erroreRicostruzione) {
-      revalidatePath('/')
-      revalidatePath('/gestione/transazioni')
+      revalidatePath(`/${locale}`)
+      revalidatePath(`/${locale}/gestione/transazioni`)
       return {
         inserite,
         errori,
@@ -350,8 +356,8 @@ export async function importaTransazioniBulk(
     }
   }
 
-  revalidatePath('/')
-  revalidatePath('/gestione/transazioni')
+  revalidatePath(`/${locale}`)
+  revalidatePath(`/${locale}/gestione/transazioni`)
 
   return { inserite, errori }
 }
@@ -374,6 +380,7 @@ export async function importaMovimentiLiquiditaBulk(
   righe: RigaImportLiquidita[]
 ): Promise<{ inserite: number; errori: { riga: number; messaggio: string }[]; avvisoRicostruzione?: string }> {
   const supabase = await createClient()
+  const locale = await getLocale()
 
   if (righe.length === 0) {
     return { inserite: 0, errori: [] }
@@ -402,8 +409,8 @@ export async function importaMovimentiLiquiditaBulk(
   if (inserite > 0) {
     const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
     if (erroreRicostruzione) {
-      revalidatePath('/')
-      revalidatePath('/gestione/transazioni')
+      revalidatePath(`/${locale}`)
+      revalidatePath(`/${locale}/gestione/transazioni`)
       return {
         inserite,
         errori,
@@ -412,8 +419,8 @@ export async function importaMovimentiLiquiditaBulk(
     }
   }
 
-  revalidatePath('/')
-  revalidatePath('/gestione/transazioni')
+  revalidatePath(`/${locale}`)
+  revalidatePath(`/${locale}/gestione/transazioni`)
 
   return { inserite, errori }
 }

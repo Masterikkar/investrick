@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatNumero } from '@/lib/format'
-import { aggiornaSogliaRibilanciamento } from '@/app/(app)/ribilanciamento/actions'
+import { aggiornaSogliaRibilanciamento } from '@/app/[locale]/(app)/ribilanciamento/actions'
 
 export function SogliaRibilanciamento({ sogliaIniziale }: { sogliaIniziale: number }) {
   const router = useRouter()

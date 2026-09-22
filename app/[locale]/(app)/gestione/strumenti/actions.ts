@@ -1,7 +1,8 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { redirect } from '@/i18n/navigation'
+import { getLocale } from 'next-intl/server'
 import type { Database } from '@/types/database.types'
 
 // aliquota_tassazione è NOT NULL senza default di colonna (rimosso apposta
@@ -12,6 +13,7 @@ type InsertStrumento = Omit<Database['public']['Tables']['strumenti']['Insert'],
 
 export async function creaAsset(formData: FormData) {
   const supabase = await createClient()
+  const locale = await getLocale()
 
   const categoria = formData.get('categoria') as string
   const tipo = formData.get('tipo') as string
@@ -32,7 +34,7 @@ export async function creaAsset(formData: FormData) {
   const frequenzaCedola = ((formData.get('frequenza_cedola') as string) || '').trim() || null
 
   if (!categoria || !tipo || !nome) {
-    redirect('/gestione/strumenti?errore=1')
+    redirect({ href: '/gestione/strumenti?errore=1', locale })
   }
 
   if (isin) {
@@ -43,9 +45,10 @@ export async function creaAsset(formData: FormData) {
       .maybeSingle()
 
     if (esistente) {
-      redirect(
-        `/gestione/strumenti?errore=duplicato&duplicato_id=${esistente.id}&duplicato_nome=${encodeURIComponent(esistente.nome)}`
-      )
+      redirect({
+        href: `/gestione/strumenti?errore=duplicato&duplicato_id=${esistente.id}&duplicato_nome=${encodeURIComponent(esistente.nome)}`,
+        locale,
+      })
     }
   }
 
@@ -72,8 +75,9 @@ export async function creaAsset(formData: FormData) {
     .single()
 
   if (error || !nuovo) {
-    redirect('/gestione/strumenti?errore=1')
+    redirect({ href: '/gestione/strumenti?errore=1', locale })
+    return
   }
 
-  redirect(`/asset/${nuovo.id}`)
+  redirect({ href: `/asset/${nuovo.id}`, locale })
 }

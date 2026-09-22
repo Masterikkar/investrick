@@ -2,12 +2,14 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+import { redirect } from '@/i18n/navigation'
+import { getLocale } from 'next-intl/server'
 
 const TIPI_VALIDI = ['PAC', 'Polizza', 'Liquidita']
 
 export async function creaContenitore(formData: FormData) {
   const supabase = await createClient()
+  const locale = await getLocale()
 
   const nome = (formData.get('nome') as string)?.trim()
   const tipo = formData.get('tipo') as string
@@ -16,7 +18,7 @@ export async function creaContenitore(formData: FormData) {
   const targetAttivo = formData.get('target_attivo') === 'on'
 
   if (!nome || !TIPI_VALIDI.includes(tipo)) {
-    redirect('/gestione/strumenti?errore_contenitore=1')
+    redirect({ href: '/gestione/strumenti?errore_contenitore=1', locale })
   }
 
   const { error } = await supabase.from('contenitori').insert({
@@ -28,11 +30,11 @@ export async function creaContenitore(formData: FormData) {
   })
 
   if (error) {
-    redirect('/gestione/strumenti?errore_contenitore=1')
+    redirect({ href: '/gestione/strumenti?errore_contenitore=1', locale })
   }
 
   revalidatePath('/', 'layout')
-  redirect('/gestione/strumenti?successo_contenitore=1')
+  redirect({ href: '/gestione/strumenti?successo_contenitore=1', locale })
 }
 
 export async function rinominaContenitore(

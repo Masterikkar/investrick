@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { getLocale } from 'next-intl/server'
 
 export async function aggiornaAliquotaDefaultCategoria(
   categoria: string,
@@ -12,6 +13,7 @@ export async function aggiornaAliquotaDefaultCategoria(
   }
 
   const supabase = await createClient()
+  const locale = await getLocale()
 
   const { error } = await supabase
     .from('impostazioni_aliquote_categoria')
@@ -22,7 +24,7 @@ export async function aggiornaAliquotaDefaultCategoria(
     return { errore: error.message }
   }
 
-  revalidatePath('/gestione/fiscalita')
+  revalidatePath(`/${locale}/gestione/fiscalita`)
   return { successo: true }
 }
 
@@ -30,6 +32,7 @@ export async function reimpostaAliquotaCategoria(
   categoria: string
 ): Promise<{ successo: true; aggiornati: number } | { errore: string }> {
   const supabase = await createClient()
+  const locale = await getLocale()
 
   const { data: impostazione, error: erroreLettura } = await supabase
     .from('impostazioni_aliquote_categoria')
@@ -51,7 +54,7 @@ export async function reimpostaAliquotaCategoria(
     return { errore: error.message }
   }
 
-  revalidatePath('/gestione/fiscalita')
+  revalidatePath(`/${locale}/gestione/fiscalita`)
   return { successo: true, aggiornati: aggiornati?.length ?? 0 }
 }
 
@@ -64,6 +67,7 @@ export async function aggiornaAliquotaStrumento(
   }
 
   const supabase = await createClient()
+  const locale = await getLocale()
 
   const { error } = await supabase
     .from('strumenti')
@@ -74,6 +78,6 @@ export async function aggiornaAliquotaStrumento(
     return { errore: error.message }
   }
 
-  revalidatePath('/gestione/fiscalita')
+  revalidatePath(`/${locale}/gestione/fiscalita`)
   return { successo: true }
 }

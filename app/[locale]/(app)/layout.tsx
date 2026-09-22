@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { logout } from '@/app/login/actions'
+import { logout } from '@/app/[locale]/login/actions'
 import { ChiudiTendineAutomaticamente } from '@/components/chiudi-tendine-automaticamente'
 import { BarraRicerca } from '@/components/barra-ricerca'
 import { RippleLink } from '@/components/ripple-link'

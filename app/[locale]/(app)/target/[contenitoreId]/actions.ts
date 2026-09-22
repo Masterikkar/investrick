@@ -1,7 +1,8 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { redirect } from '@/i18n/navigation'
+import { getLocale } from 'next-intl/server'
 
 const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Crypto', 'Multiasset'] as const
 
@@ -20,12 +21,13 @@ function parsePercentuale(raw: string | null): number | null {
 
 export async function salvaTarget(formData: FormData) {
   const supabase = await createClient()
+  const locale = await getLocale()
 
   const contenitoreId = (formData.get('contenitore_id') as string) || ''
   const targetAttivo = formData.get('target_attivo') === 'on'
 
   if (!contenitoreId) {
-    redirect('/pac')
+    redirect({ href: '/pac', locale })
   }
 
   // Verifica che il contenitore esista davvero (invece di affidarsi
@@ -39,14 +41,16 @@ export async function salvaTarget(formData: FormData) {
     .single()
 
   if (erroreVerificaContenitore || !contenitoreEsistente) {
-    redirect('/pac')
+    redirect({ href: '/pac', locale })
+    return
   }
 
   const percentuali: Record<string, number> = {}
   for (const cat of CATEGORIE) {
     const valore = parsePercentuale(formData.get(`percentuale_${cat}`) as string | null)
     if (valore === null) {
-      redirect(`/target/${contenitoreId}?errore=1`)
+      redirect({ href: `/target/${contenitoreId}?errore=1`, locale })
+      return
     }
     percentuali[cat] = valore
   }
@@ -54,7 +58,7 @@ export async function salvaTarget(formData: FormData) {
   const somma = CATEGORIE.reduce((acc, cat) => acc + percentuali[cat], 0)
 
   if (targetAttivo && Math.abs(somma - 100) > 0.01) {
-    redirect(`/target/${contenitoreId}?errore=somma`)
+    redirect({ href: `/target/${contenitoreId}?errore=somma`, locale })
   }
 
   const { data: posizioni } = await supabase
@@ -88,7 +92,8 @@ export async function salvaTarget(formData: FormData) {
     for (const id of idsCategoria) {
       const valore = parsePercentuale(formData.get(`sub_${id}`) as string | null)
       if (valore === null) {
-        redirect(`/target/${contenitoreId}?errore=1`)
+        redirect({ href: `/target/${contenitoreId}?errore=1`, locale })
+        return
       }
       valori.push({ id, valore })
     }
@@ -100,7 +105,10 @@ export async function salvaTarget(formData: FormData) {
     }
 
     if (Math.abs(sommaCategoria - 100) > 0.01) {
-      redirect(`/target/${contenitoreId}?errore=somma_strumento&erroreCategoria=${encodeURIComponent(cat)}`)
+      redirect({
+        href: `/target/${contenitoreId}?errore=somma_strumento&erroreCategoria=${encodeURIComponent(cat)}`,
+        locale,
+      })
     }
 
     for (const v of valori) {
@@ -114,7 +122,7 @@ export async function salvaTarget(formData: FormData) {
     .eq('id', contenitoreId)
 
   if (erroreContenitore) {
-    redirect(`/target/${contenitoreId}?errore=1`)
+    redirect({ href: `/target/${contenitoreId}?errore=1`, locale })
   }
 
   for (const cat of CATEGORIE) {
@@ -129,7 +137,7 @@ export async function salvaTarget(formData: FormData) {
       { onConflict: 'contenitore_id,categoria' }
     )
     if (error) {
-      redirect(`/target/${contenitoreId}?errore=1`)
+      redirect({ href: `/target/${contenitoreId}?errore=1`, locale })
     }
   }
 
@@ -140,7 +148,7 @@ export async function salvaTarget(formData: FormData) {
       .eq('contenitore_id', contenitoreId)
       .in('strumento_id', eliminaSottotarget)
     if (error) {
-      redirect(`/target/${contenitoreId}?errore=1`)
+      redirect({ href: `/target/${contenitoreId}?errore=1`, locale })
     }
   }
 
@@ -154,10 +162,10 @@ export async function salvaTarget(formData: FormData) {
       { onConflict: 'contenitore_id,strumento_id' }
     )
     if (error) {
-      redirect(`/target/${contenitoreId}?errore=1`)
+      redirect({ href: `/target/${contenitoreId}?errore=1`, locale })
     }
   }
 
   const destinazione = contenitoreEsistente.tipo === 'Polizza' ? '/polizze' : '/pac'
-  redirect(destinazione)
+  redirect({ href: destinazione, locale })
 }
