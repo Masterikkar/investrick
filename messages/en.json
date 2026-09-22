@@ -1,1 +1,10 @@
-{ "Test": { "messaggio": "i18n active — current locale: en" } }
+{
+  "Test": { "messaggio": "i18n active — current locale: en" },
+  "Login": {
+    "titolo": "Sign in to Investrick",
+    "erroreCredenziali": "Incorrect email or password.",
+    "labelEmail": "Email",
+    "labelPassword": "Password",
+    "bottoneAccedi": "Sign in"
+  }
+}
