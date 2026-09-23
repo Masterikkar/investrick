@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { formatEuro, formatEuroSigned, formatPercent } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
 import type { RigaVerificaTrattenuta } from './verifica-trattenute'
@@ -25,6 +26,7 @@ export function StoricoPlusMinus({
   righeRealizzate: RigaVerificaTrattenuta[]
   righeNonRealizzate: RigaNonRealizzata[]
 }) {
+  const t = useTranslations('PaginaFiscalita')
   const [modalita, setModalita] = useState<Modalita>('realizzate')
   const [query, setQuery] = useState('')
   const [righeVisibili, setRigheVisibili] = useState(RIGHE_PER_PAGINA)
@@ -92,7 +94,7 @@ export function StoricoPlusMinus({
               cursor: 'pointer',
             }}
           >
-            Realizzate
+            {t('toggleRealizzate')}
           </button>
           <button
             type="button"
@@ -106,13 +108,13 @@ export function StoricoPlusMinus({
               cursor: 'pointer',
             }}
           >
-            Non realizzate
+            {t('serieNonRealizzate')}
           </button>
         </div>
 
         <input
           type="text"
-          placeholder="Filtra per strumento..."
+          placeholder={t('placeholderFiltraStrumento')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           style={{
@@ -137,7 +139,7 @@ export function StoricoPlusMinus({
                 color: 'var(--text-primary)',
               }}
             >
-              Filtra per anno
+              {t('filtroPerAnno')}
               {anniSelezionati.size < anniDisponibili.length ? ` (${anniSelezionati.size})` : ''}
             </summary>
             <div
@@ -155,10 +157,10 @@ export function StoricoPlusMinus({
             >
               <div style={{ display: 'flex', gap: 8, marginBottom: 8, fontSize: 'var(--fs-table)' }}>
                 <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set(anniDisponibili))}>
-                  Seleziona tutto
+                  {t('selezionaTutto')}
                 </button>
                 <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set())}>
-                  Deseleziona tutto
+                  {t('deselezionaTutto')}
                 </button>
               </div>
               {anniDisponibili.map((anno) => (
@@ -178,28 +180,28 @@ export function StoricoPlusMinus({
 
         <div style={{ marginLeft: 'auto', fontSize: 'var(--fs-card-link)' }}>
           <RippleLink href="/gestione/fiscalita" className="link-interattivo">
-            Esporta questi dati →
+            {t('linkEsportaDati')}
           </RippleLink>
         </div>
       </div>
 
       {righeFiltrateCorrenti.length === 0 ? (
         <p style={{ fontSize: 'var(--fs-body)', marginTop: 12, color: 'var(--text-secondary)' }}>
-          {modalita === 'realizzate' ? 'Nessuna vendita trovata.' : 'Nessuna posizione trovata.'}
+          {modalita === 'realizzate' ? t('alertNessunaVenditaTrovata') : t('alertNessunaPosizioneTrovata')}
         </p>
       ) : modalita === 'realizzate' ? (
         <>
           <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
             <thead>
               <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Data</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Valore</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Plus/minus</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Aliquota attesa</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa attesa</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa trattenuta</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Differenza</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaData')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaStrumento')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaValore')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPlusMinus')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaAliquotaAttesa')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTassaAttesa')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTassaTrattenuta')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaDifferenza')}</th>
               </tr>
             </thead>
             <tbody>
@@ -235,7 +237,7 @@ export function StoricoPlusMinus({
 
           <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', fontSize: 'var(--fs-table)' }}>
             <span style={{ color: 'var(--text-secondary)' }}>
-              {righeMostrate.length} di {righeFiltrateCorrenti.length}
+              {t('conteggioRighe', { mostrate: righeMostrate.length, totali: righeFiltrateCorrenti.length })}
             </span>
             {ciSonoAltre && (
               <>
@@ -245,7 +247,7 @@ export function StoricoPlusMinus({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili((v) => v + RIGHE_PER_PAGINA)}
                 >
-                  Mostra altre {Math.min(RIGHE_PER_PAGINA, righeFiltrateCorrenti.length - righeVisibili)}
+                  {t('paginazioneMostraAltre', { n: Math.min(RIGHE_PER_PAGINA, righeFiltrateCorrenti.length - righeVisibili) })}
                 </button>
                 <button
                   type="button"
@@ -253,7 +255,7 @@ export function StoricoPlusMinus({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili(righeFiltrateCorrenti.length)}
                 >
-                  Mostra tutte
+                  {t('paginazioneMostraTutte')}
                 </button>
               </>
             )}
@@ -264,10 +266,10 @@ export function StoricoPlusMinus({
           <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
             <thead>
               <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Plus/minus</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Rendimento</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaStrumento')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaContenitore')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPlusMinus')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaRendimento')}</th>
               </tr>
             </thead>
             <tbody>
@@ -292,7 +294,7 @@ export function StoricoPlusMinus({
 
           <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', fontSize: 'var(--fs-table)' }}>
             <span style={{ color: 'var(--text-secondary)' }}>
-              {righeMostrate.length} di {righeFiltrateCorrenti.length}
+              {t('conteggioRighe', { mostrate: righeMostrate.length, totali: righeFiltrateCorrenti.length })}
             </span>
             {ciSonoAltre && (
               <>
@@ -302,7 +304,7 @@ export function StoricoPlusMinus({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili((v) => v + RIGHE_PER_PAGINA)}
                 >
-                  Mostra altre {Math.min(RIGHE_PER_PAGINA, righeFiltrateCorrenti.length - righeVisibili)}
+                  {t('paginazioneMostraAltre', { n: Math.min(RIGHE_PER_PAGINA, righeFiltrateCorrenti.length - righeVisibili) })}
                 </button>
                 <button
                   type="button"
@@ -310,7 +312,7 @@ export function StoricoPlusMinus({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili(righeFiltrateCorrenti.length)}
                 >
-                  Mostra tutte
+                  {t('paginazioneMostraTutte')}
                 </button>
               </>
             )}

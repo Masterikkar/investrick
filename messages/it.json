@@ -221,6 +221,25 @@
     "alertNessunInteresseAnno": "Nessun interesse maturato quest'anno.",
     "alertStoricoInsufficiente": "Non abbastanza storico per un grafico.",
     "serieNonRealizzate": "Non realizzate",
-    "legendaGrafico": "Scuro = realizzato · Chiaro = non realizzato · Verde = plusvalenza · Rosso = minusvalenza"
+    "legendaGrafico": "Scuro = realizzato · Chiaro = non realizzato · Verde = plusvalenza · Rosso = minusvalenza",
+    "toggleRealizzate": "Realizzate",
+    "placeholderFiltraStrumento": "Filtra per strumento...",
+    "filtroPerAnno": "Filtra per anno",
+    "selezionaTutto": "Seleziona tutto",
+    "deselezionaTutto": "Deseleziona tutto",
+    "linkEsportaDati": "Esporta questi dati →",
+    "alertNessunaVenditaTrovata": "Nessuna vendita trovata.",
+    "alertNessunaPosizioneTrovata": "Nessuna posizione trovata.",
+    "colonnaData": "Data",
+    "colonnaValore": "Valore",
+    "colonnaPlusMinus": "Plus/minus",
+    "colonnaAliquotaAttesa": "Aliquota attesa",
+    "colonnaTassaAttesa": "Tassa attesa",
+    "colonnaDifferenza": "Differenza",
+    "colonnaContenitore": "Contenitore",
+    "colonnaRendimento": "Rendimento",
+    "conteggioRighe": "{mostrate} di {totali}",
+    "paginazioneMostraAltre": "Mostra altre {n}",
+    "paginazioneMostraTutte": "Mostra tutte"
   }
 }

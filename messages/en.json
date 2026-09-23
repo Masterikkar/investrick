@@ -221,6 +221,25 @@
     "alertNessunInteresseAnno": "No interest accrued this year.",
     "alertStoricoInsufficiente": "Not enough history for a chart.",
     "serieNonRealizzate": "Unrealized",
-    "legendaGrafico": "Dark = realized · Light = unrealized · Green = gain · Red = loss"
+    "legendaGrafico": "Dark = realized · Light = unrealized · Green = gain · Red = loss",
+    "toggleRealizzate": "Realized",
+    "placeholderFiltraStrumento": "Filter by instrument...",
+    "filtroPerAnno": "Filter by year",
+    "selezionaTutto": "Select all",
+    "deselezionaTutto": "Deselect all",
+    "linkEsportaDati": "Export this data →",
+    "alertNessunaVenditaTrovata": "No sales found.",
+    "alertNessunaPosizioneTrovata": "No positions found.",
+    "colonnaData": "Date",
+    "colonnaValore": "Value",
+    "colonnaPlusMinus": "Gain/loss",
+    "colonnaAliquotaAttesa": "Expected tax rate",
+    "colonnaTassaAttesa": "Expected tax",
+    "colonnaDifferenza": "Difference",
+    "colonnaContenitore": "Container",
+    "colonnaRendimento": "Return",
+    "conteggioRighe": "{mostrate} of {totali}",
+    "paginazioneMostraAltre": "Show {n} more",
+    "paginazioneMostraTutte": "Show all"
   }
 }
