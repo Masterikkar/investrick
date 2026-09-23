@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { importaMovimentiLiquiditaBulk, type RigaImportLiquidita } from './actions'
 import { IconaDownload } from '@/components/icone'
@@ -58,10 +59,13 @@ type RigaParsata = {
   contenitoreId: string | null
 }
 
+type Traduttore = (key: string, values?: Record<string, string | number>) => string
+
 function elabora(
   righeExcel: Record<string, unknown>[],
   mappaStrumenti: Map<string, string>,
-  mappaContenitori: Map<string, string>
+  mappaContenitori: Map<string, string>,
+  t: Traduttore
 ): RigaParsata[] {
   return righeExcel.map((riga, idx) => {
     const numeroRiga = idx + 2
@@ -71,7 +75,7 @@ function elabora(
 
     const strumentoId = strumentoRaw ? mappaStrumenti.get(strumentoRaw.toLowerCase()) ?? null : null
     const data = parseDataCella(riga['Data'])
-    const tipoMovimento = TIPI_MOVIMENTO_VALIDI.find((t) => t.toLowerCase() === tipoMovimentoRaw.toLowerCase()) ?? null
+    const tipoMovimento = TIPI_MOVIMENTO_VALIDI.find((tm) => tm.toLowerCase() === tipoMovimentoRaw.toLowerCase()) ?? null
     const importo = parseNumeroCella(riga['Importo'], false)
     const tassaTrattenuta = parseNumeroCella(riga['Tassa trattenuta'], true)
 
@@ -86,13 +90,13 @@ function elabora(
     }
 
     let errore: string | null = null
-    if (!strumentoRaw) errore = 'Strumento mancante'
-    else if (!strumentoId) errore = `conto non trovato: "${strumentoRaw}" — crealo prima da Gestione strumenti`
-    else if (!data) errore = `data non valida: "${testoCella(riga['Data'])}"`
-    else if (!tipoMovimento) errore = `tipo movimento non riconosciuto: "${tipoMovimentoRaw}"`
-    else if (importo === null) errore = `importo non valido: "${testoCella(riga['Importo'])}"`
-    else if (tassaTrattenuta === null) errore = `tassa trattenuta non valida: "${testoCella(riga['Tassa trattenuta'])}"`
-    else if (contenitoreNonTrovato) errore = `contenitore non trovato: "${contenitoreNonTrovato}"`
+    if (!strumentoRaw) errore = t('erroreStrumentoMancante')
+    else if (!strumentoId) errore = t('erroreContoNonTrovato', { valore: strumentoRaw })
+    else if (!data) errore = t('erroreDataNonValida', { valore: testoCella(riga['Data']) })
+    else if (!tipoMovimento) errore = t('erroreTipoMovimentoNonRiconosciuto', { valore: tipoMovimentoRaw })
+    else if (importo === null) errore = t('erroreImportoNonValido', { valore: testoCella(riga['Importo']) })
+    else if (tassaTrattenuta === null) errore = t('erroreTassaNonValida', { valore: testoCella(riga['Tassa trattenuta']) })
+    else if (contenitoreNonTrovato) errore = t('erroreContenitoreNonTrovato', { valore: contenitoreNonTrovato })
 
     return {
       numeroRiga,
@@ -124,6 +128,7 @@ export function ImportaExcelLiquidita({
   strumenti: StrumentoLiquidita[]
   contenitori: ContenitoreBase[]
 }) {
+  const t = useTranslations('PaginaGestioneTransazioni')
   const [righe, setRighe] = useState<RigaParsata[] | null>(null)
   const [risultato, setRisultato] = useState<{
     inserite: number
@@ -143,15 +148,15 @@ export function ImportaExcelLiquidita({
     reader.onload = (e) => {
       try {
         const dati = e.target?.result
-        if (!dati) throw new Error('File vuoto')
+        if (!dati) throw new Error(t('erroreFileVuoto'))
         const workbook = XLSX.read(dati, { type: 'array', cellDates: true })
         const primoFoglio = workbook.SheetNames[0]
-        if (!primoFoglio) throw new Error('Nessun foglio trovato nel file')
+        if (!primoFoglio) throw new Error(t('erroreNessunFoglio'))
         const foglio = workbook.Sheets[primoFoglio]
         const righeGrezze = XLSX.utils.sheet_to_json<Record<string, unknown>>(foglio, { defval: '' })
-        setRighe(elabora(righeGrezze, mappaStrumenti, mappaContenitori))
+        setRighe(elabora(righeGrezze, mappaStrumenti, mappaContenitori, t))
       } catch (err) {
-        setErroreFile(err instanceof Error ? err.message : 'Impossibile leggere il file')
+        setErroreFile(err instanceof Error ? err.message : t('erroreLetturaFile'))
       }
     }
     reader.readAsArrayBuffer(file)
@@ -197,7 +202,7 @@ export function ImportaExcelLiquidita({
           fontSize: 'var(--fs-body)',
         }}
       >
-        <p style={{ margin: 0 }}>Trascina qui il file Excel (.xlsx) dei movimenti di liquidità, oppure</p>
+        <p style={{ margin: 0 }}>{t('dropzoneIstruzioniLiquidita')}</p>
         <input
           type="file"
           accept=".xlsx,.xls"
@@ -219,25 +224,21 @@ export function ImportaExcelLiquidita({
           style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
         >
           <IconaDownload />
-          Scarica template vuoto
+          {t('linkScaricaTemplate')}
         </a>
-        <span style={{ color: 'var(--text-secondary)' }}>
-          Il conto deve già esistere in &quot;Gestione strumenti&quot; — questo file non ne crea di nuovi.
-        </span>
+        <span style={{ color: 'var(--text-secondary)' }}>{t('avvisoContoDeveEsistere')}</span>
       </div>
 
       {risultato && (
         <div style={{ marginTop: 16 }}>
           <p style={{ color: risultato.errori.length === 0 ? 'var(--success)' : 'var(--warning)' }}>
-            {risultato.inserite} transazioni importate.
-            {risultato.errori.length > 0 && ` ${risultato.errori.length} righe non importate:`}
+            {t('risultatoTransazioniImportate', { inserite: risultato.inserite })}
+            {risultato.errori.length > 0 && t('risultatoRigheNonImportate', { n: risultato.errori.length })}
           </p>
           {risultato.errori.length > 0 && (
             <ul style={{ fontSize: 'var(--fs-body)', color: 'var(--danger)' }}>
               {risultato.errori.map((e, i) => (
-                <li key={i}>
-                  Riga {e.riga}: {e.messaggio}
-                </li>
+                <li key={i}>{t('rigaErrore', { n: e.riga, messaggio: e.messaggio })}</li>
               ))}
             </ul>
           )}
@@ -250,16 +251,14 @@ export function ImportaExcelLiquidita({
       {righe && (
         <div style={{ marginTop: 16 }}>
           <p style={{ fontSize: 'var(--fs-body)' }}>
-            {righeValide.length} righe valide su {righe.length} lette dal file.
-            {righeConErrore.length > 0 && ` ${righeConErrore.length} scartate per errori.`}
+            {t('righeValideSuTotale', { valide: righeValide.length, totali: righe.length })}
+            {righeConErrore.length > 0 && t('righeScartateErrori', { n: righeConErrore.length })}
           </p>
 
           {righeConErrore.length > 0 && (
             <ul style={{ fontSize: 'var(--fs-body)', color: 'var(--danger)', maxHeight: 160, overflowY: 'auto' }}>
               {righeConErrore.map((r) => (
-                <li key={r.numeroRiga}>
-                  Riga {r.numeroRiga}: {r.errore}
-                </li>
+                <li key={r.numeroRiga}>{t('rigaErrore', { n: r.numeroRiga, messaggio: r.errore ?? '' })}</li>
               ))}
             </ul>
           )}
@@ -271,7 +270,7 @@ export function ImportaExcelLiquidita({
               disabled={importando || righeValide.length === 0}
               style={{ ...stileBottonePrimario, opacity: importando || righeValide.length === 0 ? 0.6 : 1 }}
             >
-              {importando ? 'Importazione...' : `Importa ${righeValide.length} transazioni`}
+              {importando ? t('statoImportazione') : t('bottoneImportaTransazioni', { n: righeValide.length })}
             </button>
           </div>
         </div>

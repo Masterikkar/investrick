@@ -453,6 +453,13 @@
     "erroreSconosciutoCreazione": "Unknown error during creation",
     "erroreVerificaStrumenti": "Could not verify the instruments",
     "erroreCategoriaSconosciuta": "Could not determine the instrument's category",
-    "avvisoRicostruzioneFallita": "History reconstruction failed ({errore}). Re-run it manually from the SQL Editor."
+    "avvisoRicostruzioneFallita": "History reconstruction failed ({errore}). Re-run it manually from the SQL Editor.",
+    "dropzoneIstruzioniLiquidita": "Drag your cash movements Excel file (.xlsx) here, or",
+    "avvisoContoDeveEsistere": "The account must already exist in \"Instrument management\" — this file does not create new ones.",
+    "erroreStrumentoMancante": "Missing instrument",
+    "erroreContoNonTrovato": "account not found: \"{valore}\" — create it first from Instrument management",
+    "erroreTipoMovimentoNonRiconosciuto": "unrecognized movement type: \"{valore}\"",
+    "erroreImportoNonValido": "invalid amount: \"{valore}\"",
+    "righeScartateErrori": " {n} discarded due to errors."
   }
 }

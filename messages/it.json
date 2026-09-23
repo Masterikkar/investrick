@@ -453,6 +453,13 @@
     "erroreSconosciutoCreazione": "Errore sconosciuto durante la creazione",
     "erroreVerificaStrumenti": "impossibile verificare gli strumenti",
     "erroreCategoriaSconosciuta": "impossibile determinare la categoria dello strumento",
-    "avvisoRicostruzioneFallita": "La ricostruzione dello storico è fallita ({errore}). Rilanciala manualmente dallo SQL Editor."
+    "avvisoRicostruzioneFallita": "La ricostruzione dello storico è fallita ({errore}). Rilanciala manualmente dallo SQL Editor.",
+    "dropzoneIstruzioniLiquidita": "Trascina qui il file Excel (.xlsx) dei movimenti di liquidità, oppure",
+    "avvisoContoDeveEsistere": "Il conto deve già esistere in \"Gestione strumenti\" — questo file non ne crea di nuovi.",
+    "erroreStrumentoMancante": "Strumento mancante",
+    "erroreContoNonTrovato": "conto non trovato: \"{valore}\" — crealo prima da Gestione strumenti",
+    "erroreTipoMovimentoNonRiconosciuto": "tipo movimento non riconosciuto: \"{valore}\"",
+    "erroreImportoNonValido": "importo non valido: \"{valore}\"",
+    "righeScartateErrori": " {n} scartate per errori."
   }
 }

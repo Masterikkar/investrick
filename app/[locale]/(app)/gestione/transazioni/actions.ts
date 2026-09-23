@@ -383,6 +383,7 @@ export async function importaMovimentiLiquiditaBulk(
 ): Promise<{ inserite: number; errori: { riga: number; messaggio: string }[]; avvisoRicostruzione?: string }> {
   const supabase = await createClient()
   const locale = await getLocale()
+  const t = await getTranslations('PaginaGestioneTransazioni')
 
   if (righe.length === 0) {
     return { inserite: 0, errori: [] }
@@ -416,7 +417,7 @@ export async function importaMovimentiLiquiditaBulk(
       return {
         inserite,
         errori,
-        avvisoRicostruzione: `La ricostruzione dello storico è fallita (${erroreRicostruzione.message}). Rilanciala manualmente dallo SQL Editor.`,
+        avvisoRicostruzione: t('avvisoRicostruzioneFallita', { errore: erroreRicostruzione.message }),
       }
     }
   }
