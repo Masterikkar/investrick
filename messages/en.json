@@ -180,6 +180,10 @@
     "contoDepositoVincolato": "Fixed-term deposit account",
     "librettoPostale": "Postal passbook"
   },
+  "GraficoAnello": {
+    "alertNessunDato": "No data to show.",
+    "etichettaTotale": "Total"
+  },
   "GraficoStorico": {
     "periodoGiorno": "1D",
     "periodoSettimana": "1W",

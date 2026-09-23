@@ -180,6 +180,10 @@
     "contoDepositoVincolato": "Conto deposito vincolato",
     "librettoPostale": "Libretto postale"
   },
+  "GraficoAnello": {
+    "alertNessunDato": "Nessun dato da mostrare.",
+    "etichettaTotale": "Totale"
+  },
   "GraficoStorico": {
     "periodoGiorno": "1G",
     "periodoSettimana": "1S",

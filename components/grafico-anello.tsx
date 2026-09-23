@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { formatEuro, formatPercent } from '@/lib/format'
 
@@ -34,15 +35,16 @@ function ordinaEColora(fette: FettaAnello[]) {
 const ALTEZZA_GRAFICO = 280
 
 export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
+  const t = useTranslations('GraficoAnello')
   const [selezionato, setSelezionato] = useState<number | null>(null)
   const { fetteValide, totale, colori } = ordinaEColora(fette)
 
   if (fetteValide.length === 0) {
-    return <p style={{ color: 'var(--text-secondary)' }}>Nessun dato da mostrare.</p>
+    return <p style={{ color: 'var(--text-secondary)' }}>{t('alertNessunDato')}</p>
   }
 
   const centroNome =
-    selezionato !== null ? fetteValide[selezionato].nomeVisualizzato ?? fetteValide[selezionato].nome : 'Totale'
+    selezionato !== null ? fetteValide[selezionato].nomeVisualizzato ?? fetteValide[selezionato].nome : t('etichettaTotale')
   const centroValore = selezionato !== null ? fetteValide[selezionato].valore : totale
   const centroPct = selezionato !== null ? (fetteValide[selezionato].valore / totale) * 100 : null
 
