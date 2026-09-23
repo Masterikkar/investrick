@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
@@ -22,6 +23,9 @@ export default async function TransazioniPage({
     errore_liquidita?: string
   }>
 }) {
+  const t = await getTranslations('PaginaGestioneTransazioni')
+  const tMenu = await getTranslations('Menu')
+  const tPaginaStorico = await getTranslations('PaginaStorico')
   const params = await searchParams
   const supabase = await createClient()
 
@@ -53,23 +57,23 @@ export default async function TransazioniPage({
 
   return (
     <div>
-      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>Account</div>
-      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 4, fontWeight: 500 }}>Transazioni</h1>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{tMenu('account')}</div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 4, fontWeight: 500 }}>{tMenu('transazioni')}</h1>
 
       <div style={{ display: 'flex', gap: 20, fontSize: 'var(--fs-body)', marginTop: 12, marginBottom: 24 }}>
         <RippleLink href="/storico/asset" className="link-dettaglio">
-          → Storico transazioni finanziarie
+          {t('linkStoricoTransazioniFinanziarie')}
         </RippleLink>
         <RippleLink href="/storico/liquidita" className="link-dettaglio">
-          → Storico transazioni di liquidità
+          {t('linkStoricoTransazioniLiquidita')}
         </RippleLink>
       </div>
 
       <section>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Transazioni finanziarie</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{tMenu('transazioniFinanziarie')}</h2>
         <Sezione>
           <div>
-            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>Importa</h3>
+            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>{t('titoloImporta')}</h3>
             <NuovaTransazioneFinanziaria
               strumenti={strumenti ?? []}
               contenitori={contenitori ?? []}
@@ -86,17 +90,17 @@ export default async function TransazioniPage({
           </div>
 
           <div style={stileBlocco}>
-            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>Esporta</h3>
+            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>{t('titoloEsporta')}</h3>
             <EsportaTransazioniFinanziarie />
           </div>
         </Sezione>
       </section>
 
       <section style={{ marginTop: 40 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Transazioni di liquidità</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{tPaginaStorico('titoloTransazioniLiquidita')}</h2>
         <Sezione>
           <div>
-            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>Importa</h3>
+            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>{t('titoloImporta')}</h3>
             <NuovaTransazioneLiquidita
               strumentiLiquidita={strumentiLiquidita.map((s) => ({ id: s.id, nome: s.nome }))}
               contenitori={contenitori ?? []}
@@ -112,7 +116,7 @@ export default async function TransazioniPage({
           </div>
 
           <div style={stileBlocco}>
-            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>Esporta</h3>
+            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>{t('titoloEsporta')}</h3>
             <EsportaTransazioniLiquidita />
           </div>
         </Sezione>

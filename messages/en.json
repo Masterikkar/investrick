@@ -395,5 +395,30 @@
     "hintDataAttivazione": "Optional activation date, mainly useful for insurance policies.",
     "checkboxTargetAttivo": "Target active",
     "bottoneCreaContenitore": "Create container"
+  },
+  "PaginaGestioneTransazioni": {
+    "linkStoricoTransazioniFinanziarie": "→ Investment transaction history",
+    "linkStoricoTransazioniLiquidita": "→ Cash transaction history",
+    "titoloImporta": "Import",
+    "titoloEsporta": "Export",
+    "bottoneNuovaTransazione": "+ New transaction",
+    "successoTransazioneSalvata": "Transaction saved.",
+    "erroreRiprova": "Something went wrong, please try again.",
+    "modaleTitoloNuovaTransazioneFinanziaria": "New investment transaction",
+    "modaleTitoloNuovaTransazioneLiquidita": "New cash transaction",
+    "hintStrumentoVuoto": "Leave empty only for \"{operazione}\".",
+    "hintCategoriaManuale": "Only needed if Instrument is empty (operation \"{operazione}\").",
+    "hintQuantitaCostoContanti": "For \"{operazione}\" use 1.",
+    "hintPrezzoCostoContanti": "For \"{operazione}\" this is the amount spent.",
+    "labelPrezzoUnitarioEuro": "Unit price (€)",
+    "labelCommissioneEuro": "Commission (€)",
+    "labelTassaTrattenutaEuro": "Tax withheld (€)",
+    "bottoneSalvaTransazione": "Save transaction",
+    "erroreSelezionaOperazione": "Select a transaction type.",
+    "erroreSelezionaStrumento": "Select an instrument.",
+    "erroreSelezionaTipoMovimento": "Select a movement type.",
+    "alertNessunoStrumentoLiquidita": "No instrument of category {liquidita} found. Create one from \"{pagina}\" before recording movements.",
+    "labelImportoLordoEuro": "Gross amount (€)",
+    "hintTassaSoloInteresse": "Relevant only for \"{tipo}\"."
   }
 }

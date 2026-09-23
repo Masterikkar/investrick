@@ -1,35 +1,33 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Modale } from '@/components/modale'
 import { MenuSelect } from '@/components/menu-select'
 import { aggiungiTransazione, aggiungiMovimentoLiquidita } from './actions'
+import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
+import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA } from '@/lib/i18n-tipi-movimento-liquidita'
 
 type Strumento = { id: string; nome: string; ticker: string | null; categoria: string }
 type StrumentoLiquidita = { id: string; nome: string }
 type Contenitore = { id: string; nome: string }
 
-const OPERAZIONI = [
-  { value: '', label: 'Seleziona...' },
-  { value: 'Acquisto', label: 'Acquisto' },
-  { value: 'Vendita', label: 'Vendita' },
-  { value: 'Dividendo', label: 'Dividendo' },
-  { value: 'Ricompensa', label: 'Ricompensa' },
-  { value: 'Costo_quote', label: 'Costo (in quote)' },
-  { value: 'Costo_contanti', label: 'Costo (in contanti)' },
-  { value: 'Scambio_cessione', label: 'Scambio (cessione)' },
-  { value: 'Scambio_acquisizione', label: 'Scambio (acquisizione)' },
+const CODICI_OPERAZIONE = [
+  'Acquisto',
+  'Vendita',
+  'Dividendo',
+  'Ricompensa',
+  'Costo_quote',
+  'Costo_contanti',
+  'Scambio_cessione',
+  'Scambio_acquisizione',
 ]
 
 const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
-const TIPI_MOVIMENTO_LIQUIDITA = [
-  { value: '', label: 'Seleziona...' },
-  { value: 'Versamento', label: 'Versamento' },
-  { value: 'Prelievo', label: 'Prelievo' },
-  { value: 'Interesse', label: 'Interesse' },
-  { value: 'Costo', label: 'Costo' },
-]
+const CODICI_TIPO_MOVIMENTO_LIQUIDITA = ['Versamento', 'Prelievo', 'Interesse', 'Costo']
 
 const stileEtichetta: React.CSSProperties = {
   fontSize: 'var(--fs-form-label)',
@@ -74,6 +72,22 @@ export function NuovaTransazioneFinanziaria({
   successo?: boolean
   errore?: boolean
 }) {
+  const t = useTranslations('PaginaGestioneTransazioni')
+  const tCategorie = useTranslations('Categorie')
+  const tContenitori = useTranslations('Contenitori')
+  const tTipiOperazione = useTranslations('TipiOperazione')
+  const tPaginaCategoria = useTranslations('PaginaCategoria')
+  const tPaginaFiscalita = useTranslations('PaginaFiscalita')
+  const tPaginaStorico = useTranslations('PaginaStorico')
+  const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
+  const tPaginaGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
+
+  function etichettaOperazione(codice: string): string {
+    const etichettaItaliana = ETICHETTA_OPERAZIONE[codice] ?? codice
+    const chiave = CHIAVE_TRADUZIONE_OPERAZIONE[etichettaItaliana]
+    return chiave ? tTipiOperazione(chiave) : etichettaItaliana
+  }
+
   const [aperto, setAperto] = useState(false)
   const [strumentoId, setStrumentoId] = useState('')
   const [categoriaManuale, setCategoriaManuale] = useState('')
@@ -81,19 +95,27 @@ export function NuovaTransazioneFinanziaria({
   const [operazione, setOperazione] = useState('')
   const [erroriCampo, setErroriCampo] = useState<Record<string, string>>({})
 
+  const opzioniOperazioni = [
+    { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
+    ...CODICI_OPERAZIONE.map((codice) => ({ value: codice, label: etichettaOperazione(codice) })),
+  ]
+
   const opzioniStrumenti = [
-    { value: '', label: 'Seleziona...' },
+    { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
     ...strumenti.map((s) => ({
       value: s.id,
-      label: `${s.nome} ${s.ticker ? `(${s.ticker})` : ''} — ${s.categoria}`,
+      label: `${s.nome} ${s.ticker ? `(${s.ticker})` : ''} — ${tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[s.categoria] ?? s.categoria)}`,
     })),
   ]
 
-  const opzioniCategoria = [{ value: '', label: '—' }, ...CATEGORIE.map((c) => ({ value: c, label: c }))]
+  const opzioniCategoria = [
+    { value: '', label: '—' },
+    ...CATEGORIE.map((c) => ({ value: c, label: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[c] ?? c) })),
+  ]
 
   const opzioniContenitore = [
-    { value: '', label: 'Seleziona...' },
-    { value: 'diretto', label: 'Diretto' },
+    { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
+    { value: 'diretto', label: tPaginaCategoria('provenienzaDiretto') },
     ...contenitori.map((c) => ({ value: c.id, label: c.nome })),
   ]
 
@@ -101,17 +123,17 @@ export function NuovaTransazioneFinanziaria({
     const nuoviErrori: Record<string, string> = {}
 
     if (!operazione) {
-      nuoviErrori.operazione = "Seleziona un'operazione."
+      nuoviErrori.operazione = t('erroreSelezionaOperazione')
     }
     if (!contenitoreId) {
-      nuoviErrori.contenitore_id = 'Seleziona un contenitore.'
+      nuoviErrori.contenitore_id = tPaginaRibilanciamento('erroreSelezionaContenitore')
     }
     if (operazione === 'Costo_contanti') {
       if (!categoriaManuale) {
-        nuoviErrori.categoria_manuale = 'Seleziona una categoria.'
+        nuoviErrori.categoria_manuale = tPaginaGestioneStrumenti('erroreSelezionaCategoria')
       }
     } else if (!strumentoId) {
-      nuoviErrori.strumento_id = 'Seleziona uno strumento.'
+      nuoviErrori.strumento_id = t('erroreSelezionaStrumento')
     }
 
     if (Object.keys(nuoviErrori).length > 0) {
@@ -125,20 +147,20 @@ export function NuovaTransazioneFinanziaria({
   return (
     <div>
       <button type="button" onClick={() => setAperto(true)} style={stileBottonePrimario}>
-        + Nuova transazione
+        {t('bottoneNuovaTransazione')}
       </button>
 
-      {successo && <p style={{ color: 'var(--success)', marginTop: 12 }}>Transazione salvata.</p>}
-      {errore && <p style={{ color: 'var(--danger)', marginTop: 12 }}>Qualcosa è andato storto, riprova.</p>}
+      {successo && <p style={{ color: 'var(--success)', marginTop: 12 }}>{t('successoTransazioneSalvata')}</p>}
+      {errore && <p style={{ color: 'var(--danger)', marginTop: 12 }}>{t('erroreRiprova')}</p>}
 
-      <Modale aperto={aperto} onChiudi={() => setAperto(false)} titolo="Nuova transazione finanziaria">
+      <Modale aperto={aperto} onChiudi={() => setAperto(false)} titolo={t('modaleTitoloNuovaTransazioneFinanziaria')}>
         <form
           action={aggiungiTransazione}
           onSubmit={handleSubmit}
           style={{ display: 'flex', flexDirection: 'column', gap: 12, color: 'var(--text-primary)' }}
         >
           <label style={stileEtichetta}>
-            Strumento
+            {tPaginaFiscalita('colonnaStrumento')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect
                 name="strumento_id"
@@ -152,12 +174,12 @@ export function NuovaTransazioneFinanziaria({
             </div>
             {erroriCampo.strumento_id && <p style={stileErroreCampo}>{erroriCampo.strumento_id}</p>}
             <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)', marginTop: 4, display: 'block' }}>
-              Lascia vuoto solo per &quot;Costo (in contanti)&quot;.
+              {t('hintStrumentoVuoto', { operazione: etichettaOperazione('Costo_contanti') })}
             </small>
           </label>
 
           <label style={stileEtichetta}>
-            Categoria
+            {tPaginaGestioneStrumenti('labelCategoria')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect
                 name="categoria_manuale"
@@ -171,12 +193,12 @@ export function NuovaTransazioneFinanziaria({
             </div>
             {erroriCampo.categoria_manuale && <p style={stileErroreCampo}>{erroriCampo.categoria_manuale}</p>}
             <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)', marginTop: 4, display: 'block' }}>
-              Necessaria solo se Strumento è vuoto (operazione &quot;Costo in contanti&quot;).
+              {t('hintCategoriaManuale', { operazione: etichettaOperazione('Costo_contanti') })}
             </small>
           </label>
 
           <label style={stileEtichetta}>
-            Contenitore
+            {tPaginaFiscalita('colonnaContenitore')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect
                 name="contenitore_id"
@@ -192,7 +214,7 @@ export function NuovaTransazioneFinanziaria({
           </label>
 
           <label style={stileEtichetta}>
-            Operazione
+            {tPaginaStorico('colonnaOperazione')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect
                 name="operazione"
@@ -201,45 +223,45 @@ export function NuovaTransazioneFinanziaria({
                   setOperazione(v)
                   if (v) setErroriCampo((prev) => ({ ...prev, operazione: '' }))
                 }}
-                options={OPERAZIONI}
+                options={opzioniOperazioni}
               />
             </div>
             {erroriCampo.operazione && <p style={stileErroreCampo}>{erroriCampo.operazione}</p>}
           </label>
 
           <label style={stileEtichetta}>
-            Data
+            {tPaginaFiscalita('colonnaData')}
             <input type="date" name="data" required style={stileCampo} />
           </label>
 
           <label style={stileEtichetta}>
-            Quantità
+            {tPaginaStorico('colonnaQuantita')}
             <input type="number" name="quantita" step="any" min={0} required style={stileCampo} />
             <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)', marginTop: 4, display: 'block' }}>
-              Per &quot;Costo in contanti&quot; usa 1.
+              {t('hintQuantitaCostoContanti', { operazione: etichettaOperazione('Costo_contanti') })}
             </small>
           </label>
 
           <label style={stileEtichetta}>
-            Prezzo unitario (€)
+            {t('labelPrezzoUnitarioEuro')}
             <input type="number" name="prezzo_unitario" step="any" min={0} required style={stileCampo} />
             <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)', marginTop: 4, display: 'block' }}>
-              Per &quot;Costo in contanti&quot; è l&apos;importo speso.
+              {t('hintPrezzoCostoContanti', { operazione: etichettaOperazione('Costo_contanti') })}
             </small>
           </label>
 
           <label style={stileEtichetta}>
-            Commissione (€)
+            {t('labelCommissioneEuro')}
             <input type="number" name="commissione" step="any" min={0} defaultValue={0} style={stileCampo} />
           </label>
 
           <label style={stileEtichetta}>
-            Tassa trattenuta (€)
+            {t('labelTassaTrattenutaEuro')}
             <input type="number" name="tassa_trattenuta" step="any" min={0} defaultValue={0} style={stileCampo} />
           </label>
 
           <button type="submit" style={stileBottonePrimario}>
-            Salva transazione
+            {t('bottoneSalvaTransazione')}
           </button>
         </form>
       </Modale>
@@ -258,20 +280,39 @@ export function NuovaTransazioneLiquidita({
   successo?: boolean
   errore?: boolean
 }) {
+  const t = useTranslations('PaginaGestioneTransazioni')
+  const tContenitori = useTranslations('Contenitori')
+  const tTipiMovimentoLiquidita = useTranslations('TipiMovimentoLiquidita')
+  const tPaginaCategoria = useTranslations('PaginaCategoria')
+  const tPaginaFiscalita = useTranslations('PaginaFiscalita')
+  const tPaginaStorico = useTranslations('PaginaStorico')
+  const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
+  const tPaginaGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
+
+  function etichettaTipoMovimento(codice: string): string {
+    const chiave = CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA[codice]
+    return chiave ? tTipiMovimentoLiquidita(chiave) : codice
+  }
+
   const [aperto, setAperto] = useState(false)
   const [strumentoId, setStrumentoId] = useState('')
   const [contenitoreId, setContenitoreId] = useState('')
   const [tipoMovimento, setTipoMovimento] = useState('')
   const [erroriCampo, setErroriCampo] = useState<Record<string, string>>({})
 
+  const opzioniTipoMovimento = [
+    { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
+    ...CODICI_TIPO_MOVIMENTO_LIQUIDITA.map((codice) => ({ value: codice, label: etichettaTipoMovimento(codice) })),
+  ]
+
   const opzioniStrumenti = [
-    { value: '', label: 'Seleziona...' },
+    { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
     ...strumentiLiquidita.map((s) => ({ value: s.id, label: s.nome })),
   ]
 
   const opzioniContenitore = [
-    { value: '', label: 'Seleziona...' },
-    { value: 'diretto', label: 'Diretto' },
+    { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
+    { value: 'diretto', label: tPaginaCategoria('provenienzaDiretto') },
     ...contenitori.map((c) => ({ value: c.id, label: c.nome })),
   ]
 
@@ -279,13 +320,13 @@ export function NuovaTransazioneLiquidita({
     const nuoviErrori: Record<string, string> = {}
 
     if (!strumentoId) {
-      nuoviErrori.strumento_id = 'Seleziona uno strumento.'
+      nuoviErrori.strumento_id = t('erroreSelezionaStrumento')
     }
     if (!contenitoreId) {
-      nuoviErrori.contenitore_id = 'Seleziona un contenitore.'
+      nuoviErrori.contenitore_id = tPaginaRibilanciamento('erroreSelezionaContenitore')
     }
     if (!tipoMovimento) {
-      nuoviErrori.tipo_movimento = 'Seleziona un tipo movimento.'
+      nuoviErrori.tipo_movimento = t('erroreSelezionaTipoMovimento')
     }
 
     if (Object.keys(nuoviErrori).length > 0) {
@@ -300,26 +341,28 @@ export function NuovaTransazioneLiquidita({
     <div>
       {strumentiLiquidita.length === 0 ? (
         <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
-          Nessuno strumento di categoria Liquidità trovato. Creane uno da &quot;Gestione strumenti&quot; prima di
-          registrare movimenti.
+          {t('alertNessunoStrumentoLiquidita', {
+            liquidita: tContenitori('liquidita'),
+            pagina: tPaginaGestioneStrumenti('titoloGestioneStrumenti'),
+          })}
         </p>
       ) : (
         <button type="button" onClick={() => setAperto(true)} style={stileBottonePrimario}>
-          + Nuova transazione
+          {t('bottoneNuovaTransazione')}
         </button>
       )}
 
-      {successo && <p style={{ color: 'var(--success)', marginTop: 12 }}>Transazione salvata.</p>}
-      {errore && <p style={{ color: 'var(--danger)', marginTop: 12 }}>Qualcosa è andato storto, riprova.</p>}
+      {successo && <p style={{ color: 'var(--success)', marginTop: 12 }}>{t('successoTransazioneSalvata')}</p>}
+      {errore && <p style={{ color: 'var(--danger)', marginTop: 12 }}>{t('erroreRiprova')}</p>}
 
-      <Modale aperto={aperto} onChiudi={() => setAperto(false)} titolo="Nuova transazione di liquidità">
+      <Modale aperto={aperto} onChiudi={() => setAperto(false)} titolo={t('modaleTitoloNuovaTransazioneLiquidita')}>
         <form
           action={aggiungiMovimentoLiquidita}
           onSubmit={handleSubmit}
           style={{ display: 'flex', flexDirection: 'column', gap: 12, color: 'var(--text-primary)' }}
         >
           <label style={stileEtichetta}>
-            Strumento
+            {tPaginaFiscalita('colonnaStrumento')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect
                 name="strumento_id"
@@ -335,7 +378,7 @@ export function NuovaTransazioneLiquidita({
           </label>
 
           <label style={stileEtichetta}>
-            Contenitore
+            {tPaginaFiscalita('colonnaContenitore')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect
                 name="contenitore_id"
@@ -351,7 +394,7 @@ export function NuovaTransazioneLiquidita({
           </label>
 
           <label style={stileEtichetta}>
-            Tipo movimento
+            {tPaginaStorico('colonnaTipoMovimento')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect
                 name="tipo_movimento"
@@ -360,32 +403,32 @@ export function NuovaTransazioneLiquidita({
                   setTipoMovimento(v)
                   if (v) setErroriCampo((prev) => ({ ...prev, tipo_movimento: '' }))
                 }}
-                options={TIPI_MOVIMENTO_LIQUIDITA}
+                options={opzioniTipoMovimento}
               />
             </div>
             {erroriCampo.tipo_movimento && <p style={stileErroreCampo}>{erroriCampo.tipo_movimento}</p>}
           </label>
 
           <label style={stileEtichetta}>
-            Data
+            {tPaginaFiscalita('colonnaData')}
             <input type="date" name="data" required style={stileCampo} />
           </label>
 
           <label style={stileEtichetta}>
-            Importo lordo (€)
+            {t('labelImportoLordoEuro')}
             <input type="number" name="importo" step="any" min={0} required style={stileCampo} />
           </label>
 
           <label style={stileEtichetta}>
-            Tassa trattenuta (€)
+            {t('labelTassaTrattenutaEuro')}
             <input type="number" name="tassa_trattenuta" step="any" min={0} defaultValue={0} style={stileCampo} />
             <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)', marginTop: 4, display: 'block' }}>
-              Rilevante solo per &quot;Interesse&quot;.
+              {t('hintTassaSoloInteresse', { tipo: etichettaTipoMovimento('Interesse') })}
             </small>
           </label>
 
           <button type="submit" style={stileBottonePrimario}>
-            Salva transazione
+            {t('bottoneSalvaTransazione')}
           </button>
         </form>
       </Modale>

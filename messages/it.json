@@ -395,5 +395,30 @@
     "hintDataAttivazione": "Data di attivazione facoltativa, utile soprattutto per le polizze.",
     "checkboxTargetAttivo": "Target attivo",
     "bottoneCreaContenitore": "Crea contenitore"
+  },
+  "PaginaGestioneTransazioni": {
+    "linkStoricoTransazioniFinanziarie": "→ Storico transazioni finanziarie",
+    "linkStoricoTransazioniLiquidita": "→ Storico transazioni di liquidità",
+    "titoloImporta": "Importa",
+    "titoloEsporta": "Esporta",
+    "bottoneNuovaTransazione": "+ Nuova transazione",
+    "successoTransazioneSalvata": "Transazione salvata.",
+    "erroreRiprova": "Qualcosa è andato storto, riprova.",
+    "modaleTitoloNuovaTransazioneFinanziaria": "Nuova transazione finanziaria",
+    "modaleTitoloNuovaTransazioneLiquidita": "Nuova transazione di liquidità",
+    "hintStrumentoVuoto": "Lascia vuoto solo per \"{operazione}\".",
+    "hintCategoriaManuale": "Necessaria solo se Strumento è vuoto (operazione \"{operazione}\").",
+    "hintQuantitaCostoContanti": "Per \"{operazione}\" usa 1.",
+    "hintPrezzoCostoContanti": "Per \"{operazione}\" è l'importo speso.",
+    "labelPrezzoUnitarioEuro": "Prezzo unitario (€)",
+    "labelCommissioneEuro": "Commissione (€)",
+    "labelTassaTrattenutaEuro": "Tassa trattenuta (€)",
+    "bottoneSalvaTransazione": "Salva transazione",
+    "erroreSelezionaOperazione": "Seleziona un'operazione.",
+    "erroreSelezionaStrumento": "Seleziona uno strumento.",
+    "erroreSelezionaTipoMovimento": "Seleziona un tipo movimento.",
+    "alertNessunoStrumentoLiquidita": "Nessuno strumento di categoria {liquidita} trovato. Creane uno da \"{pagina}\" prima di registrare movimenti.",
+    "labelImportoLordoEuro": "Importo lordo (€)",
+    "hintTassaSoloInteresse": "Rilevante solo per \"{tipo}\"."
   }
 }
