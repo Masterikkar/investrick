@@ -43,19 +43,39 @@ export async function GET(request: Request) {
     }
   }
 
+  const settGiorniFa = new Date()
+  settGiorniFa.setDate(settGiorniFa.getDate() - 7)
+  const daData = settGiorniFa.toISOString().slice(0, 10)
+
   for (const strumento of strumenti) {
     try {
-      const risposta = await fetch(
-        `https://eodhistoricaldata.com/api/real-time/${strumento.codice_prezzo}?api_token=${process.env.EODHD_API_KEY}&fmt=json`
-      )
-      const dati = await risposta.json()
+      const eFondoComune = strumento.codice_prezzo!.endsWith('.EUFUND')
 
-      if (!dati.close) {
+      let close: number | undefined
+      let dataPrezzo = oggi
+
+      if (eFondoComune) {
+        const risposta = await fetch(
+          `https://eodhistoricaldata.com/api/eod/${strumento.codice_prezzo}?api_token=${process.env.EODHD_API_KEY}&fmt=json&from=${daData}`
+        )
+        const dati = await risposta.json()
+        const ultimaRiga = Array.isArray(dati) ? dati[dati.length - 1] : undefined
+        close = ultimaRiga?.close
+        if (ultimaRiga?.date) dataPrezzo = ultimaRiga.date
+      } else {
+        const risposta = await fetch(
+          `https://eodhistoricaldata.com/api/real-time/${strumento.codice_prezzo}?api_token=${process.env.EODHD_API_KEY}&fmt=json`
+        )
+        const dati = await risposta.json()
+        close = dati.close
+      }
+
+      if (!close) {
         risultati.push({ strumento: strumento.codice_prezzo!, esito: 'nessun prezzo ricevuto' })
         continue
       }
 
-      let prezzoFinale = dati.close
+      let prezzoFinale = close
       let notaConversione = ''
 
       if (strumento.valuta && strumento.valuta !== 'EUR') {
@@ -66,14 +86,14 @@ export async function GET(request: Request) {
           })
           continue
         }
-        prezzoFinale = dati.close / tassoEurUsd
+        prezzoFinale = close / tassoEurUsd
         notaConversione = ` (convertito da ${strumento.valuta}, tasso EUR/USD ${tassoEurUsd})`
       }
 
       const { error } = await supabase.from('prezzi_storici').upsert(
         {
           strumento_id: strumento.id,
-          data: oggi,
+          data: dataPrezzo,
           prezzo: prezzoFinale,
           valuta: 'EUR',
           fonte: 'eodhd',
