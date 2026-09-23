@@ -180,6 +180,17 @@
     "contoDepositoVincolato": "Fixed-term deposit account",
     "librettoPostale": "Postal passbook"
   },
+  "GraficoStorico": {
+    "periodoGiorno": "1D",
+    "periodoSettimana": "1W",
+    "periodoMese": "1M",
+    "periodoAnno": "1Y",
+    "periodoYtd": "YTD",
+    "periodoSempre": "All time",
+    "etichettaTooltipValore": "Value",
+    "alertDatiInsufficientiPeriodo": "Not enough data for this period.",
+    "notaDatiParziali": "Data available only from {data} — the period shown is shorter than \"{periodo}\"."
+  },
   "PaginaRendimenti": {
     "paragrafoSpiegazione": "Calendar-year return (01/01 → 12/31), calculated as the change in unrealized gain/loss relative to capital invested at year-end. The current year shows the return accrued so far, up to the latest available update.",
     "alertNessunContenitore": "No Investment Plans or Insurance Policies registered.",

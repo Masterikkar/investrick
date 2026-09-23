@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { formatEuro, formatPercent } from '@/lib/format'
 
@@ -8,14 +9,16 @@ export type PuntoStorico = { data: string; valore: number }
 
 type Periodo = '1G' | '1S' | '1M' | '1A' | 'YTD' | 'SEMPRE'
 
-const PERIODI: { key: Periodo; label: string }[] = [
-  { key: '1G', label: '1G' },
-  { key: '1S', label: '1S' },
-  { key: '1M', label: '1M' },
-  { key: '1A', label: '1A' },
-  { key: 'YTD', label: 'YTD' },
-  { key: 'SEMPRE', label: 'Da sempre' },
-]
+const PERIODI: Periodo[] = ['1G', '1S', '1M', '1A', 'YTD', 'SEMPRE']
+
+const CHIAVE_LABEL_PERIODO: Record<Periodo, string> = {
+  '1G': 'periodoGiorno',
+  '1S': 'periodoSettimana',
+  '1M': 'periodoMese',
+  '1A': 'periodoAnno',
+  YTD: 'periodoYtd',
+  SEMPRE: 'periodoSempre',
+}
 
 const GRIGLIA = '#2B3350'
 const TESTO_ASSI = '#9198AD'
@@ -59,6 +62,8 @@ export function GraficoStorico({
   formato?: 'euro' | 'percent'
   valoreAttuale?: number
 }) {
+  const t = useTranslations('GraficoStorico')
+  const tPaginaRendimenti = useTranslations('PaginaRendimenti')
   const [periodo, setPeriodo] = useState<Periodo>('1M')
   const datiFiltrati = useMemo(() => filtraPerPeriodo(punti, periodo), [punti, periodo])
 
@@ -80,15 +85,18 @@ export function GraficoStorico({
     if (!soglia) return null
     const primoDatoReale = new Date(punti[0].data)
     if (primoDatoReale > soglia) {
-      return `Dati disponibili solo da ${primoDatoReale.toLocaleDateString('it-IT')} — il periodo mostrato è più corto di "${periodo}".`
+      return t('notaDatiParziali', {
+        data: primoDatoReale.toLocaleDateString('it-IT'),
+        periodo: t(CHIAVE_LABEL_PERIODO[periodo]),
+      })
     }
     return null
-  }, [formato, periodo, punti])
+  }, [formato, periodo, punti, t])
 
   const formatAsse = formato === 'percent' ? (v: number) => formatPercent(v, 0, false) : (v: number) => formatEuroCompatto.format(v)
   const formatTooltip =
     formato === 'percent' ? (v: number) => formatPercent(v, 2, true) : (v: number) => formatEuro(v)
-  const etichettaTooltip = formato === 'percent' ? 'Rendimento' : 'Valore'
+  const etichettaTooltip = formato === 'percent' ? tPaginaRendimenti('tooltipRendimento') : t('etichettaTooltipValore')
 
   return (
     <div>
@@ -114,19 +122,19 @@ export function GraficoStorico({
       <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
         {PERIODI.map((p) => (
           <button
-            key={p.key}
-            onClick={() => setPeriodo(p.key)}
+            key={p}
+            onClick={() => setPeriodo(p)}
             style={{
               padding: '4px 10px',
               borderRadius: 0,
               border: '1px solid var(--border-default)',
-              background: periodo === p.key ? 'var(--primary)' : 'var(--bg-surface)',
-              color: periodo === p.key ? '#FFFFFF' : 'var(--text-secondary)',
+              background: periodo === p ? 'var(--primary)' : 'var(--bg-surface)',
+              color: periodo === p ? '#FFFFFF' : 'var(--text-secondary)',
               cursor: 'pointer',
               fontSize: 'var(--fs-period)',
             }}
           >
-            {p.label}
+            {t(CHIAVE_LABEL_PERIODO[p])}
           </button>
         ))}
       </div>
@@ -136,9 +144,9 @@ export function GraficoStorico({
       )}
 
       {punti.length === 0 ? (
-        <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>Nessuno storico disponibile ancora.</p>
+        <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>{tPaginaRendimenti('alertNessunoStorico')}</p>
       ) : datiFiltrati.length < 2 ? (
-        <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>Non abbastanza dati per questo periodo.</p>
+        <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>{t('alertDatiInsufficientiPeriodo')}</p>
       ) : (
         <ResponsiveContainer width="100%" height={260}>
           <LineChart data={datiFiltrati} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>

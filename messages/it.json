@@ -180,6 +180,17 @@
     "contoDepositoVincolato": "Conto deposito vincolato",
     "librettoPostale": "Libretto postale"
   },
+  "GraficoStorico": {
+    "periodoGiorno": "1G",
+    "periodoSettimana": "1S",
+    "periodoMese": "1M",
+    "periodoAnno": "1A",
+    "periodoYtd": "YTD",
+    "periodoSempre": "Da sempre",
+    "etichettaTooltipValore": "Valore",
+    "alertDatiInsufficientiPeriodo": "Non abbastanza dati per questo periodo.",
+    "notaDatiParziali": "Dati disponibili solo da {data} — il periodo mostrato è più corto di \"{periodo}\"."
+  },
   "PaginaRendimenti": {
     "paragrafoSpiegazione": "Rendimento per anno solare (01/01 → 31/12), calcolato come variazione della plus/minusvalenza non realizzata rispetto al capitale investito a fine anno. L'anno in corso mostra il rendimento maturato finora, fino all'ultimo aggiornamento disponibile.",
     "alertNessunContenitore": "Nessun PAC o polizza registrato.",
