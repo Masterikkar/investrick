@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { formatEuro, formatPercent } from '@/lib/format'
 
-export type FettaAnello = { nome: string; valore: number }
+export type FettaAnello = { nome: string; valore: number; nomeVisualizzato?: string }
 
 // Sfumatura di indaco: dalla fetta più grande (più satura/scura) alla più
 // piccola (quasi bianca). Stessa tonalità (~235, il nostro indaco), sale
@@ -41,9 +41,14 @@ export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
     return <p style={{ color: 'var(--text-secondary)' }}>Nessun dato da mostrare.</p>
   }
 
-  const centroNome = selezionato !== null ? fetteValide[selezionato].nome : 'Totale'
+  const centroNome =
+    selezionato !== null ? fetteValide[selezionato].nomeVisualizzato ?? fetteValide[selezionato].nome : 'Totale'
   const centroValore = selezionato !== null ? fetteValide[selezionato].valore : totale
   const centroPct = selezionato !== null ? (fetteValide[selezionato].valore / totale) * 100 : null
+
+  // Solo per Recharts (nameKey legge "nome"): stesso ordine e stessi indici di
+  // fetteValide, quindi non altera in alcun modo colori o ordinamento.
+  const datiGrafico = fetteValide.map((f) => ({ ...f, nome: f.nomeVisualizzato ?? f.nome }))
 
   return (
     <div
@@ -56,7 +61,7 @@ export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
       <ResponsiveContainer width="100%" height={ALTEZZA_GRAFICO}>
         <PieChart>
           <Pie
-            data={fetteValide}
+            data={datiGrafico}
             dataKey="valore"
             nameKey="nome"
             cx="50%"
@@ -139,7 +144,7 @@ export function ElencoAllocazione({ fette }: { fette: FettaAnello[] }) {
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>
               <span style={{ width: 9, height: 9, background: colori[i], display: 'inline-block', flexShrink: 0 }} />
-              {f.nome}
+              {f.nomeVisualizzato ?? f.nome}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <span style={{ fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>{formatEuro(f.valore)}</span>

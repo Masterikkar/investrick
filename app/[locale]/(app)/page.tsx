@@ -39,6 +39,8 @@ const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario'
 export default async function DashboardPage() {
   const t = await getTranslations('Dashboard')
   const tCategorie = await getTranslations('Categorie')
+  const tContenitori = await getTranslations('Contenitori')
+  const tPaginaCategoria = await getTranslations('PaginaCategoria')
   const supabase = await createClient()
   const annoCorrente = new Date().getFullYear()
 
@@ -146,8 +148,12 @@ export default async function DashboardPage() {
     valorePerCategoria.set(r.categoria, (valorePerCategoria.get(r.categoria) ?? 0) + Number(r.valore))
   }
   const fetteCategorie: FettaAnello[] = [
-    ...ORDINE_CATEGORIE.map((cat) => ({ nome: cat, valore: valorePerCategoria.get(cat) ?? 0 })),
-    { nome: 'Liquidità', valore: valoreTotaleLiquidita },
+    ...ORDINE_CATEGORIE.map((cat) => ({
+      nome: cat,
+      valore: valorePerCategoria.get(cat) ?? 0,
+      nomeVisualizzato: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[cat] ?? cat),
+    })),
+    { nome: 'Liquidità', valore: valoreTotaleLiquidita, nomeVisualizzato: tContenitori('liquidita') },
   ]
 
   let valorePac = 0
@@ -160,10 +166,10 @@ export default async function DashboardPage() {
     else if (r.contenitore_tipo == null) valoreDiretto += Number(r.valore)
   }
   const fetteContenitori: FettaAnello[] = [
-    { nome: 'PAC', valore: valorePac },
-    { nome: 'Polizze', valore: valorePolizze },
-    { nome: 'Diretto', valore: valoreDiretto },
-    { nome: 'Liquidità', valore: valoreTotaleLiquidita },
+    { nome: 'PAC', valore: valorePac, nomeVisualizzato: tContenitori('pac') },
+    { nome: 'Polizze', valore: valorePolizze, nomeVisualizzato: tContenitori('polizze') },
+    { nome: 'Diretto', valore: valoreDiretto, nomeVisualizzato: tPaginaCategoria('provenienzaDiretto') },
+    { nome: 'Liquidità', valore: valoreTotaleLiquidita, nomeVisualizzato: tContenitori('liquidita') },
   ]
 
   return (
