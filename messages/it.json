@@ -191,6 +191,15 @@
     "colonnaStrumento": "Strumento",
     "colonnaCategoria": "Categoria"
   },
+  "FiltroTabellaStorico": {
+    "placeholderFiltraStrumento": "Filtra per strumento...",
+    "filtroPerAnno": "Filtra per anno",
+    "selezionaTutto": "Seleziona tutto",
+    "deselezionaTutto": "Deseleziona tutto",
+    "conteggioRighe": "{mostrate} di {totali}",
+    "paginazioneMostraAltre": "Mostra altre {n}",
+    "paginazioneMostraTutte": "Mostra tutte"
+  },
   "PaginaFiscalita": {
     "titoloAnnoCorrente": "Anno corrente — {anno}",
     "titoloStorico": "Storico",
@@ -223,10 +232,6 @@
     "serieNonRealizzate": "Non realizzate",
     "legendaGrafico": "Scuro = realizzato · Chiaro = non realizzato · Verde = plusvalenza · Rosso = minusvalenza",
     "toggleRealizzate": "Realizzate",
-    "placeholderFiltraStrumento": "Filtra per strumento...",
-    "filtroPerAnno": "Filtra per anno",
-    "selezionaTutto": "Seleziona tutto",
-    "deselezionaTutto": "Deseleziona tutto",
     "linkEsportaDati": "Esporta questi dati →",
     "alertNessunaVenditaTrovata": "Nessuna vendita trovata.",
     "alertNessunaPosizioneTrovata": "Nessuna posizione trovata.",
@@ -237,18 +242,11 @@
     "colonnaTassaAttesa": "Tassa attesa",
     "colonnaDifferenza": "Differenza",
     "colonnaContenitore": "Contenitore",
-    "colonnaRendimento": "Rendimento",
-    "conteggioRighe": "{mostrate} di {totali}",
-    "paginazioneMostraAltre": "Mostra altre {n}",
-    "paginazioneMostraTutte": "Mostra tutte"
+    "colonnaRendimento": "Rendimento"
   },
   "PaginaStorico": {
     "linkNuovaTransazione": "→ Nuova transazione",
     "titoloTransazioniLiquidita": "Transazioni di liquidità",
-    "placeholderFiltraStrumento": "Filtra per strumento...",
-    "filtroPerAnno": "Filtra per anno",
-    "selezionaTutto": "Seleziona tutto",
-    "deselezionaTutto": "Deseleziona tutto",
     "alertErroreOperazione": "Non è stato possibile completare l'operazione su quella transazione. Riprova.",
     "alertNessunaTransazioneTrovata": "Nessuna transazione trovata.",
     "colonnaOperazione": "Operazione",
@@ -262,10 +260,7 @@
     "optionSpostaIn": "Sposta in...",
     "titleEliminaTransazione": "Elimina transazione",
     "descrizioneOperazioneData": "{operazione} del {data}",
-    "confermaEliminazione": "Eliminare questa transazione?\n\n{descrizione}\n\nL'operazione non è reversibile.",
-    "conteggioRighe": "{mostrate} di {totali}",
-    "paginazioneMostraAltre": "Mostra altre {n}",
-    "paginazioneMostraTutte": "Mostra tutte"
+    "confermaEliminazione": "Eliminare questa transazione?\n\n{descrizione}\n\nL'operazione non è reversibile."
   },
   "TipiOperazione": {
     "acquisto": "Acquisto",

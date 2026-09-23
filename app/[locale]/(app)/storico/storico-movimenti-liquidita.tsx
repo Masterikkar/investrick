@@ -31,6 +31,7 @@ export function StoricoMovimentiLiquidita({
   contenitori: Contenitore[]
 }) {
   const t = useTranslations('PaginaStorico')
+  const tFiltroTabellaStorico = useTranslations('FiltroTabellaStorico')
   const tTipiMovimento = useTranslations('TipiMovimentoLiquidita')
   const tPaginaCategoria = useTranslations('PaginaCategoria')
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
@@ -134,7 +135,7 @@ export function StoricoMovimentiLiquidita({
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <input
           type="text"
-          placeholder={t('placeholderFiltraStrumento')}
+          placeholder={tFiltroTabellaStorico('placeholderFiltraStrumento')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           style={{
@@ -160,7 +161,7 @@ export function StoricoMovimentiLiquidita({
               color: 'var(--text-primary)',
             }}
           >
-            {t('filtroPerAnno')}
+            {tFiltroTabellaStorico('filtroPerAnno')}
             {anniSelezionati.size < anniDisponibili.length ? ` (${anniSelezionati.size})` : ''}
           </summary>
           <div
@@ -179,10 +180,10 @@ export function StoricoMovimentiLiquidita({
           >
             <div style={{ display: 'flex', gap: 8, marginBottom: 8, fontSize: 'var(--fs-table)' }}>
               <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set(anniDisponibili))}>
-                {t('selezionaTutto')}
+                {tFiltroTabellaStorico('selezionaTutto')}
               </button>
               <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set())}>
-                {t('deselezionaTutto')}
+                {tFiltroTabellaStorico('deselezionaTutto')}
               </button>
             </div>
             {anniDisponibili.map((anno) => (
@@ -307,7 +308,7 @@ export function StoricoMovimentiLiquidita({
 
           <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', fontSize: 'var(--fs-table)' }}>
             <span style={{ color: 'var(--text-secondary)' }}>
-              {t('conteggioRighe', { mostrate: righeMostrate.length, totali: righeFiltrate.length })}
+              {tFiltroTabellaStorico('conteggioRighe', { mostrate: righeMostrate.length, totali: righeFiltrate.length })}
             </span>
             {ciSonoAltre && (
               <>
@@ -317,7 +318,7 @@ export function StoricoMovimentiLiquidita({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili((v) => v + RIGHE_PER_PAGINA)}
                 >
-                  {t('paginazioneMostraAltre', { n: Math.min(RIGHE_PER_PAGINA, righeFiltrate.length - righeVisibili) })}
+                  {tFiltroTabellaStorico('paginazioneMostraAltre', { n: Math.min(RIGHE_PER_PAGINA, righeFiltrate.length - righeVisibili) })}
                 </button>
                 <button
                   type="button"
@@ -325,7 +326,7 @@ export function StoricoMovimentiLiquidita({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili(righeFiltrate.length)}
                 >
-                  {t('paginazioneMostraTutte')}
+                  {tFiltroTabellaStorico('paginazioneMostraTutte')}
                 </button>
               </>
             )}

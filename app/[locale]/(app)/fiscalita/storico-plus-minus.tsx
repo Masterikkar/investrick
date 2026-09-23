@@ -27,6 +27,7 @@ export function StoricoPlusMinus({
   righeNonRealizzate: RigaNonRealizzata[]
 }) {
   const t = useTranslations('PaginaFiscalita')
+  const tFiltroTabellaStorico = useTranslations('FiltroTabellaStorico')
   const [modalita, setModalita] = useState<Modalita>('realizzate')
   const [query, setQuery] = useState('')
   const [righeVisibili, setRigheVisibili] = useState(RIGHE_PER_PAGINA)
@@ -114,7 +115,7 @@ export function StoricoPlusMinus({
 
         <input
           type="text"
-          placeholder={t('placeholderFiltraStrumento')}
+          placeholder={tFiltroTabellaStorico('placeholderFiltraStrumento')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           style={{
@@ -139,7 +140,7 @@ export function StoricoPlusMinus({
                 color: 'var(--text-primary)',
               }}
             >
-              {t('filtroPerAnno')}
+              {tFiltroTabellaStorico('filtroPerAnno')}
               {anniSelezionati.size < anniDisponibili.length ? ` (${anniSelezionati.size})` : ''}
             </summary>
             <div
@@ -157,10 +158,10 @@ export function StoricoPlusMinus({
             >
               <div style={{ display: 'flex', gap: 8, marginBottom: 8, fontSize: 'var(--fs-table)' }}>
                 <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set(anniDisponibili))}>
-                  {t('selezionaTutto')}
+                  {tFiltroTabellaStorico('selezionaTutto')}
                 </button>
                 <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set())}>
-                  {t('deselezionaTutto')}
+                  {tFiltroTabellaStorico('deselezionaTutto')}
                 </button>
               </div>
               {anniDisponibili.map((anno) => (
@@ -237,7 +238,7 @@ export function StoricoPlusMinus({
 
           <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', fontSize: 'var(--fs-table)' }}>
             <span style={{ color: 'var(--text-secondary)' }}>
-              {t('conteggioRighe', { mostrate: righeMostrate.length, totali: righeFiltrateCorrenti.length })}
+              {tFiltroTabellaStorico('conteggioRighe', { mostrate: righeMostrate.length, totali: righeFiltrateCorrenti.length })}
             </span>
             {ciSonoAltre && (
               <>
@@ -247,7 +248,7 @@ export function StoricoPlusMinus({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili((v) => v + RIGHE_PER_PAGINA)}
                 >
-                  {t('paginazioneMostraAltre', { n: Math.min(RIGHE_PER_PAGINA, righeFiltrateCorrenti.length - righeVisibili) })}
+                  {tFiltroTabellaStorico('paginazioneMostraAltre', { n: Math.min(RIGHE_PER_PAGINA, righeFiltrateCorrenti.length - righeVisibili) })}
                 </button>
                 <button
                   type="button"
@@ -255,7 +256,7 @@ export function StoricoPlusMinus({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili(righeFiltrateCorrenti.length)}
                 >
-                  {t('paginazioneMostraTutte')}
+                  {tFiltroTabellaStorico('paginazioneMostraTutte')}
                 </button>
               </>
             )}
@@ -294,7 +295,7 @@ export function StoricoPlusMinus({
 
           <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', fontSize: 'var(--fs-table)' }}>
             <span style={{ color: 'var(--text-secondary)' }}>
-              {t('conteggioRighe', { mostrate: righeMostrate.length, totali: righeFiltrateCorrenti.length })}
+              {tFiltroTabellaStorico('conteggioRighe', { mostrate: righeMostrate.length, totali: righeFiltrateCorrenti.length })}
             </span>
             {ciSonoAltre && (
               <>
@@ -304,7 +305,7 @@ export function StoricoPlusMinus({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili((v) => v + RIGHE_PER_PAGINA)}
                 >
-                  {t('paginazioneMostraAltre', { n: Math.min(RIGHE_PER_PAGINA, righeFiltrateCorrenti.length - righeVisibili) })}
+                  {tFiltroTabellaStorico('paginazioneMostraAltre', { n: Math.min(RIGHE_PER_PAGINA, righeFiltrateCorrenti.length - righeVisibili) })}
                 </button>
                 <button
                   type="button"
@@ -312,7 +313,7 @@ export function StoricoPlusMinus({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili(righeFiltrateCorrenti.length)}
                 >
-                  {t('paginazioneMostraTutte')}
+                  {tFiltroTabellaStorico('paginazioneMostraTutte')}
                 </button>
               </>
             )}

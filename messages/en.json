@@ -191,6 +191,15 @@
     "colonnaStrumento": "Instrument",
     "colonnaCategoria": "Category"
   },
+  "FiltroTabellaStorico": {
+    "placeholderFiltraStrumento": "Filter by instrument...",
+    "filtroPerAnno": "Filter by year",
+    "selezionaTutto": "Select all",
+    "deselezionaTutto": "Deselect all",
+    "conteggioRighe": "{mostrate} of {totali}",
+    "paginazioneMostraAltre": "Show {n} more",
+    "paginazioneMostraTutte": "Show all"
+  },
   "PaginaFiscalita": {
     "titoloAnnoCorrente": "Current year — {anno}",
     "titoloStorico": "History",
@@ -223,10 +232,6 @@
     "serieNonRealizzate": "Unrealized",
     "legendaGrafico": "Dark = realized · Light = unrealized · Green = gain · Red = loss",
     "toggleRealizzate": "Realized",
-    "placeholderFiltraStrumento": "Filter by instrument...",
-    "filtroPerAnno": "Filter by year",
-    "selezionaTutto": "Select all",
-    "deselezionaTutto": "Deselect all",
     "linkEsportaDati": "Export this data →",
     "alertNessunaVenditaTrovata": "No sales found.",
     "alertNessunaPosizioneTrovata": "No positions found.",
@@ -237,18 +242,11 @@
     "colonnaTassaAttesa": "Expected tax",
     "colonnaDifferenza": "Difference",
     "colonnaContenitore": "Container",
-    "colonnaRendimento": "Return",
-    "conteggioRighe": "{mostrate} of {totali}",
-    "paginazioneMostraAltre": "Show {n} more",
-    "paginazioneMostraTutte": "Show all"
+    "colonnaRendimento": "Return"
   },
   "PaginaStorico": {
     "linkNuovaTransazione": "→ New transaction",
     "titoloTransazioniLiquidita": "Cash transactions",
-    "placeholderFiltraStrumento": "Filter by instrument...",
-    "filtroPerAnno": "Filter by year",
-    "selezionaTutto": "Select all",
-    "deselezionaTutto": "Deselect all",
     "alertErroreOperazione": "Could not complete the operation on that transaction. Please try again.",
     "alertNessunaTransazioneTrovata": "No transactions found.",
     "colonnaOperazione": "Transaction type",
@@ -262,10 +260,7 @@
     "optionSpostaIn": "Move to...",
     "titleEliminaTransazione": "Delete transaction",
     "descrizioneOperazioneData": "{operazione} on {data}",
-    "confermaEliminazione": "Delete this transaction?\n\n{descrizione}\n\nThis action cannot be undone.",
-    "conteggioRighe": "{mostrate} of {totali}",
-    "paginazioneMostraAltre": "Show {n} more",
-    "paginazioneMostraTutte": "Show all"
+    "confermaEliminazione": "Delete this transaction?\n\n{descrizione}\n\nThis action cannot be undone."
   },
   "TipiOperazione": {
     "acquisto": "Purchase",
