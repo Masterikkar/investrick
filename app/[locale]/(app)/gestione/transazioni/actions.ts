@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from '@/i18n/navigation'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import type { Database } from '@/types/database.types'
 
@@ -235,6 +235,7 @@ export async function creaAssetPerImport(dati: {
 }): Promise<{ id: string } | { errore: string }> {
   const supabase = await createClient()
   const locale = await getLocale()
+  const t = await getTranslations('PaginaGestioneTransazioni')
 
   const isinPulito = dati.isin.trim().toUpperCase()
   const isin = isinPulito || null
@@ -268,7 +269,7 @@ export async function creaAssetPerImport(dati: {
     .single()
 
   if (error || !nuovo) {
-    return { errore: error?.message ?? 'Errore sconosciuto durante la creazione' }
+    return { errore: error?.message ?? t('erroreSconosciutoCreazione') }
   }
 
   revalidatePath(`/${locale}/gestione/transazioni`)
@@ -292,6 +293,7 @@ export async function importaTransazioniBulk(
 ): Promise<{ inserite: number; errori: { riga: number; messaggio: string }[]; avvisoRicostruzione?: string }> {
   const supabase = await createClient()
   const locale = await getLocale()
+  const t = await getTranslations('PaginaGestioneTransazioni')
 
   if (righe.length === 0) {
     return { inserite: 0, errori: [] }
@@ -306,7 +308,7 @@ export async function importaTransazioniBulk(
   if (erroreStrumenti || !strumentiInfo) {
     return {
       inserite: 0,
-      errori: righe.map((r) => ({ riga: r.rigaOriginale, messaggio: 'Impossibile verificare gli strumenti' })),
+      errori: righe.map((r) => ({ riga: r.rigaOriginale, messaggio: t('erroreVerificaStrumenti') })),
     }
   }
 
@@ -319,7 +321,7 @@ export async function importaTransazioniBulk(
     const categoria = categoriaMap.get(r.strumentoId)
 
     if (!categoria) {
-      errori.push({ riga: r.rigaOriginale, messaggio: 'Impossibile determinare la categoria dello strumento' })
+      errori.push({ riga: r.rigaOriginale, messaggio: t('erroreCategoriaSconosciuta') })
       continue
     }
 
@@ -351,7 +353,7 @@ export async function importaTransazioniBulk(
       return {
         inserite,
         errori,
-        avvisoRicostruzione: `La ricostruzione dello storico è fallita (${erroreRicostruzione.message}). Rilanciala manualmente dallo SQL Editor.`,
+        avvisoRicostruzione: t('avvisoRicostruzioneFallita', { errore: erroreRicostruzione.message }),
       }
     }
   }

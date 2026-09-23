@@ -1,10 +1,14 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { creaAssetPerImport, importaTransazioniBulk, type RigaImport } from './actions'
-import { OPERAZIONE_DA_ETICHETTA } from '@/lib/operazioni'
+import { ETICHETTA_OPERAZIONE, OPERAZIONE_DA_ETICHETTA } from '@/lib/operazioni'
+import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
 import { IconaDownload } from '@/components/icone'
+
+type Traduttore = (key: string, values?: Record<string, string | number>) => string
 
 type StrumentoBase = { id: string; isin: string | null; ticker: string | null; nome: string }
 type ContenitoreBase = { id: string; nome: string }
@@ -61,7 +65,11 @@ type RigaParsata = {
   contenitoreId: string | null
 }
 
-function elabora(righeExcel: Record<string, unknown>[], mappaContenitori: Map<string, string>): RigaParsata[] {
+function elabora(
+  righeExcel: Record<string, unknown>[],
+  mappaContenitori: Map<string, string>,
+  t: Traduttore
+): RigaParsata[] {
   return righeExcel.map((riga, idx) => {
     const numeroRiga = idx + 2
     const isinRaw = testoCella(riga['ISIN']).toUpperCase()
@@ -93,14 +101,14 @@ function elabora(righeExcel: Record<string, unknown>[], mappaContenitori: Map<st
     }
 
     let errore: string | null = null
-    if (!identificatore) errore = 'ISIN o Ticker mancante (serve almeno uno dei due)'
-    else if (!data) errore = `data non valida: "${testoCella(riga['Data'])}"`
-    else if (!operazioneDb) errore = `operazione non riconosciuta: "${operazioneRaw}"`
-    else if (quantita === null || quantita <= 0) errore = `quantità non valida: "${testoCella(riga['Quantità'])}"`
-    else if (prezzoUnitario === null || prezzoUnitario < 0) errore = `prezzo unitario non valido: "${testoCella(riga['Prezzo unitario'])}"`
-    else if (commissione === null) errore = `commissione non valida: "${testoCella(riga['Commissione'])}"`
-    else if (tassaTrattenuta === null) errore = `tassa trattenuta non valida: "${testoCella(riga['Tassa trattenuta'])}"`
-    else if (contenitoreNonTrovato) errore = `contenitore non trovato: "${contenitoreNonTrovato}"`
+    if (!identificatore) errore = t('erroreIdentificatoreMancante')
+    else if (!data) errore = t('erroreDataNonValida', { valore: testoCella(riga['Data']) })
+    else if (!operazioneDb) errore = t('erroreOperazioneNonRiconosciuta', { valore: operazioneRaw })
+    else if (quantita === null || quantita <= 0) errore = t('erroreQuantitaNonValida', { valore: testoCella(riga['Quantità']) })
+    else if (prezzoUnitario === null || prezzoUnitario < 0) errore = t('errorePrezzoNonValido', { valore: testoCella(riga['Prezzo unitario']) })
+    else if (commissione === null) errore = t('erroreCommissioneNonValida', { valore: testoCella(riga['Commissione']) })
+    else if (tassaTrattenuta === null) errore = t('erroreTassaNonValida', { valore: testoCella(riga['Tassa trattenuta']) })
+    else if (contenitoreNonTrovato) errore = t('erroreContenitoreNonTrovato', { valore: contenitoreNonTrovato })
 
     return {
       numeroRiga,
@@ -146,6 +154,8 @@ function RisolviStrumento({
   tipiPerCategoria: Record<string, string[]>
   onRisolto: (identificatore: Identificatore, strumentoId: string) => void
 }) {
+  const t = useTranslations('PaginaGestioneTransazioni')
+  const tPaginaGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
   const categorie = Object.keys(tipiPerCategoria)
   const [categoria, setCategoria] = useState(categorie[0] ?? '')
   const [tipo, setTipo] = useState(tipiPerCategoria[categorie[0]]?.[0] ?? '')
@@ -158,7 +168,7 @@ function RisolviStrumento({
 
   async function handleSalva() {
     if (!nome.trim()) {
-      setErrore('Il nome è obbligatorio.')
+      setErrore(t('erroreNomeObbligatorio'))
       return
     }
     setSalvataggio(true)
@@ -184,13 +194,13 @@ function RisolviStrumento({
     <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--warning)', padding: 16, marginTop: 12, color: 'var(--text-primary)' }}>
       <div style={{ fontWeight: 500, marginBottom: 8 }}>
         {identificatore.tipo === 'isin'
-          ? `ISIN sconosciuto: ${identificatore.valore}`
-          : `Ticker sconosciuto (nessun ISIN nel file): ${identificatore.valore}`}
+          ? t('erroreIsinSconosciuto', { valore: identificatore.valore })
+          : t('erroreTickerSconosciuto', { valore: identificatore.valore })}
       </div>
       {errore && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{errore}</p>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 380 }}>
         <label>
-          Categoria
+          {tPaginaGestioneStrumenti('labelCategoria')}
           <select
             value={categoria}
             onChange={(e) => {
@@ -205,19 +215,19 @@ function RisolviStrumento({
           </select>
         </label>
         <label>
-          Nome
+          {tPaginaGestioneStrumenti('labelNome')}
           <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} style={stileCampo} />
         </label>
         <label>
-          Ticker
+          {tPaginaGestioneStrumenti('labelTicker')}
           <input type="text" value={ticker} onChange={(e) => setTicker(e.target.value)} style={stileCampo} />
         </label>
         <label>
-          Valuta
+          {tPaginaGestioneStrumenti('labelValuta')}
           <input type="text" value={valuta} onChange={(e) => setValuta(e.target.value)} style={stileCampo} />
         </label>
         <label>
-          Codice prezzo (EODHD)
+          {tPaginaGestioneStrumenti('labelCodicePrezzo')}
           <input type="text" value={codicePrezzo} onChange={(e) => setCodicePrezzo(e.target.value)} style={stileCampo} />
         </label>
         <button
@@ -226,7 +236,7 @@ function RisolviStrumento({
           disabled={salvataggio}
           style={{ ...stileBottonePrimario, alignSelf: 'flex-start', opacity: salvataggio ? 0.6 : 1 }}
         >
-          {salvataggio ? 'Creazione...' : 'Crea asset'}
+          {salvataggio ? t('statoCreazione') : tPaginaGestioneStrumenti('bottoneCreaAsset')}
         </button>
       </div>
     </div>
@@ -242,6 +252,15 @@ export function ImportaExcel({
   contenitori: ContenitoreBase[]
   tipiPerCategoria: Record<string, string[]>
 }) {
+  const t = useTranslations('PaginaGestioneTransazioni')
+  const tTipiOperazione = useTranslations('TipiOperazione')
+
+  function etichettaOperazione(codice: string): string {
+    const etichettaItaliana = ETICHETTA_OPERAZIONE[codice] ?? codice
+    const chiave = CHIAVE_TRADUZIONE_OPERAZIONE[etichettaItaliana]
+    return chiave ? tTipiOperazione(chiave) : etichettaItaliana
+  }
+
   const [righe, setRighe] = useState<RigaParsata[] | null>(null)
   const [mappaIsin, setMappaIsin] = useState<Map<string, string>>(
     () => new Map(strumenti.filter((s): s is StrumentoBase & { isin: string } => !!s.isin).map((s) => [s.isin.toUpperCase(), s.id]))
@@ -265,15 +284,15 @@ export function ImportaExcel({
     reader.onload = (e) => {
       try {
         const dati = e.target?.result
-        if (!dati) throw new Error('File vuoto')
+        if (!dati) throw new Error(t('erroreFileVuoto'))
         const workbook = XLSX.read(dati, { type: 'array', cellDates: true })
         const primoFoglio = workbook.SheetNames[0]
-        if (!primoFoglio) throw new Error('Nessun foglio trovato nel file')
+        if (!primoFoglio) throw new Error(t('erroreNessunFoglio'))
         const foglio = workbook.Sheets[primoFoglio]
         const righeGrezze = XLSX.utils.sheet_to_json<Record<string, unknown>>(foglio, { defval: '' })
-        setRighe(elabora(righeGrezze, mappaContenitori))
+        setRighe(elabora(righeGrezze, mappaContenitori, t))
       } catch (err) {
-        setErroreFile(err instanceof Error ? err.message : 'Impossibile leggere il file')
+        setErroreFile(err instanceof Error ? err.message : t('erroreLetturaFile'))
       }
     }
     reader.readAsArrayBuffer(file)
@@ -346,7 +365,7 @@ export function ImportaExcel({
           fontSize: 'var(--fs-body)',
         }}
       >
-        <p style={{ margin: 0 }}>Trascina qui il file Excel (.xlsx) delle transazioni, oppure</p>
+        <p style={{ margin: 0 }}>{t('dropzoneIstruzioni')}</p>
         <input
           type="file"
           accept=".xlsx,.xls"
@@ -368,24 +387,23 @@ export function ImportaExcel({
           style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
         >
           <IconaDownload />
-          Scarica template vuoto
+          {t('linkScaricaTemplate')}
         </a>
         <span style={{ color: 'var(--text-secondary)' }}>
-          &quot;Costo (in contanti)&quot; va inserito manualmente qui sotto — non è supportato dal file Excel. Per le crypto,
-          lascia ISIN vuoto e usa Ticker.
+          {t('hintCostoContantiManuale', { operazione: etichettaOperazione('Costo_contanti') })}
         </span>
       </div>
 
       {risultato && (
         <div style={{ marginTop: 16 }}>
           <p style={{ color: risultato.errori.length === 0 ? 'var(--success)' : 'var(--warning)' }}>
-            {risultato.inserite} transazioni importate.
-            {risultato.errori.length > 0 && ` ${risultato.errori.length} righe non importate:`}
+            {t('risultatoTransazioniImportate', { inserite: risultato.inserite })}
+            {risultato.errori.length > 0 && t('risultatoRigheNonImportate', { n: risultato.errori.length })}
           </p>
           {risultato.errori.length > 0 && (
             <ul style={{ fontSize: 13, color: 'var(--danger)' }}>
               {risultato.errori.map((e, i) => (
-                <li key={i}>Riga {e.riga}: {e.messaggio}</li>
+                <li key={i}>{t('rigaErrore', { n: e.riga, messaggio: e.messaggio })}</li>
               ))}
             </ul>
           )}
@@ -398,14 +416,14 @@ export function ImportaExcel({
       {righe && (
         <div style={{ marginTop: 16 }}>
           <p>
-            {righeValideFormato.length} righe valide su {righe.length} lette dal file.
-            {righeConErrore.length > 0 && ` ${righeConErrore.length} scartate per errori di formato.`}
+            {t('righeValideSuTotale', { valide: righeValideFormato.length, totali: righe.length })}
+            {righeConErrore.length > 0 && t('righeScartateFormato', { n: righeConErrore.length })}
           </p>
 
           {righeConErrore.length > 0 && (
             <ul style={{ fontSize: 13, color: 'var(--danger)', maxHeight: 160, overflowY: 'auto' }}>
               {righeConErrore.map((r) => (
-                <li key={r.numeroRiga}>Riga {r.numeroRiga}: {r.errore}</li>
+                <li key={r.numeroRiga}>{t('rigaErrore', { n: r.numeroRiga, messaggio: r.errore ?? '' })}</li>
               ))}
             </ul>
           )}
@@ -413,7 +431,7 @@ export function ImportaExcel({
           {identificatoriDaRisolvere.length > 0 && (
             <div style={{ marginTop: 16 }}>
               <p style={{ color: 'var(--warning)' }}>
-                {identificatoriDaRisolvere.length} strumenti non trovati nel database — crea l&apos;asset per ciascuno prima di poter importare:
+                {t('strumentiNonTrovatiIntro', { n: identificatoriDaRisolvere.length })}
               </p>
               {identificatoriDaRisolvere.map((id) => (
                 <RisolviStrumento
@@ -429,7 +447,7 @@ export function ImportaExcel({
           {identificatoriDaRisolvere.length === 0 && (
             <div style={{ marginTop: 16 }}>
               <p style={{ color: 'var(--success)' }}>
-                Tutti gli strumenti sono risolti. Pronte da importare: {righePronte.length} transazioni.
+                {t('tuttiStrumentiRisolti', { n: righePronte.length })}
               </p>
               <button
                 type="button"
@@ -437,7 +455,7 @@ export function ImportaExcel({
                 disabled={importando || righePronte.length === 0}
                 style={{ ...stileBottonePrimario, opacity: importando || righePronte.length === 0 ? 0.6 : 1 }}
               >
-                {importando ? 'Importazione...' : `Importa ${righePronte.length} transazioni`}
+                {importando ? t('statoImportazione') : t('bottoneImportaTransazioni', { n: righePronte.length })}
               </button>
             </div>
           )}

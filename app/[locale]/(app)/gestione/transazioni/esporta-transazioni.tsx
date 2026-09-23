@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { esportaTransazioniFinanziarie, esportaTransazioniLiquidita } from './actions'
 
@@ -22,6 +23,8 @@ const stileBottonePrimario: React.CSSProperties = {
 }
 
 export function EsportaTransazioniFinanziarie() {
+  const t = useTranslations('PaginaGestioneTransazioni')
+  const tGestioneFiscalita = useTranslations('PaginaGestioneFiscalita')
   const [scaricando, setScaricando] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
 
@@ -37,7 +40,7 @@ export function EsportaTransazioniFinanziarie() {
       XLSX.utils.book_append_sheet(wb, ws, 'Transazioni finanziarie')
       XLSX.writeFile(wb, `transazioni-finanziarie-${oggi}.xlsx`)
     } catch (err) {
-      setErrore(err instanceof Error ? err.message : 'Impossibile generare il file')
+      setErrore(err instanceof Error ? err.message : tGestioneFiscalita('erroreGenerazioneFile'))
     } finally {
       setScaricando(false)
     }
@@ -51,7 +54,7 @@ export function EsportaTransazioniFinanziarie() {
         disabled={scaricando}
         style={{ ...stileBottonePrimario, opacity: scaricando ? 0.6 : 1 }}
       >
-        {scaricando ? 'Preparazione...' : 'Scarica transazioni finanziarie'}
+        {scaricando ? t('statoPreparazione') : t('bottoneScaricaTransazioniFinanziarie')}
       </button>
       {errore && <p style={{ color: 'var(--danger)', margin: 0 }}>{errore}</p>}
     </div>
@@ -59,6 +62,8 @@ export function EsportaTransazioniFinanziarie() {
 }
 
 export function EsportaTransazioniLiquidita() {
+  const t = useTranslations('PaginaGestioneTransazioni')
+  const tGestioneFiscalita = useTranslations('PaginaGestioneFiscalita')
   const [scaricando, setScaricando] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
 
@@ -74,7 +79,7 @@ export function EsportaTransazioniLiquidita() {
       XLSX.utils.book_append_sheet(wb, ws, 'Transazioni liquidità')
       XLSX.writeFile(wb, `transazioni-liquidita-${oggi}.xlsx`)
     } catch (err) {
-      setErrore(err instanceof Error ? err.message : 'Impossibile generare il file')
+      setErrore(err instanceof Error ? err.message : tGestioneFiscalita('erroreGenerazioneFile'))
     } finally {
       setScaricando(false)
     }
@@ -88,7 +93,7 @@ export function EsportaTransazioniLiquidita() {
         disabled={scaricando}
         style={{ ...stileBottonePrimario, opacity: scaricando ? 0.6 : 1 }}
       >
-        {scaricando ? 'Preparazione...' : 'Scarica transazioni di liquidità'}
+        {scaricando ? t('statoPreparazione') : t('bottoneScaricaTransazioniLiquidita')}
       </button>
       {errore && <p style={{ color: 'var(--danger)', margin: 0 }}>{errore}</p>}
     </div>
