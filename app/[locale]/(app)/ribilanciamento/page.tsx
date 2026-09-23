@@ -68,6 +68,9 @@ export default async function RibilanciamentoPage({
   const tMenu = await getTranslations('Menu')
   const tCategorie = await getTranslations('Categorie')
   const tPaginaCosti = await getTranslations('PaginaCosti')
+  const tPaginaFiscalita = await getTranslations('PaginaFiscalita')
+  const tPaginaStorico = await getTranslations('PaginaStorico')
+  const tPaginaContenitore = await getTranslations('PaginaContenitore')
   const params = await searchParams
   const supabase = await createClient()
 
@@ -349,7 +352,7 @@ export default async function RibilanciamentoPage({
         </div>
       )}
 
-      <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginTop: 40, marginBottom: 12 }}>Simulazione</h2>
+      <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginTop: 40, marginBottom: 12 }}>{t('titoloSimulazione')}</h2>
 
       <Sezione>
         <FormSimulazione
@@ -365,34 +368,37 @@ export default async function RibilanciamentoPage({
         <div style={{ marginTop: 24 }}>
           <Sezione>
             <p style={{ fontSize: 'var(--fs-body)', margin: 0 }}>
-              Per bilanciare comprando soltanto servirebbero circa <strong>{formatEuro(necessario)}</strong>.
+              {t.rich('messaggioBudgetNecessario', {
+                importo: formatEuro(necessario),
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
             </p>
 
             {sufficiente ? (
               <p style={{ fontSize: 'var(--fs-body)', color: 'var(--success)', fontWeight: 500 }}>
-                Il versamento di {formatEuro(versamento)} basta.
+                {t('messaggioVersamentoSufficiente', { importo: formatEuro(versamento) })}
               </p>
             ) : (
               <>
                 <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)', fontWeight: 500 }}>
-                  Il versamento di {formatEuro(versamento)} non basta. Proposta di vendita per coprire la differenza:
+                  {t('messaggioVersamentoInsufficiente', { importo: formatEuro(versamento) })}
                 </p>
 
                 {venditeProposte.length === 0 ? (
                   <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
-                    Nessun comparto sovrappesato da cui vendere in questo contenitore.
+                    {t('alertNessunCompartoSovrappesato')}
                   </p>
                 ) : (
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
                     <thead>
                       <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
-                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Quantità</th>
-                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Valore</th>
-                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Plus/minus lorda</th>
-                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Aliquota</th>
-                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa</th>
-                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Netto</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaStrumento')}</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaQuantita')}</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaValore')}</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPlusMinusLorda')}</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaAliquota')}</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTassa')}</th>
+                        <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaNetto')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -403,7 +409,7 @@ export default async function RibilanciamentoPage({
                             {formatNumero(v.quantitaVenduta, 6)}
                             {!v.vincoloRispettato && (
                               <div style={{ color: 'var(--warning)', fontSize: 'var(--fs-card-link)' }}>
-                                ridotta da {formatNumero(v.quantitaIdeale, 6)} per evitare minusvalenza netta
+                                {t('notaQuantitaRidotta', { quantita: formatNumero(v.quantitaIdeale, 6) })}
                               </div>
                             )}
                           </td>
@@ -411,7 +417,11 @@ export default async function RibilanciamentoPage({
                           <td style={{ padding: 8, color: v.plusvalenzaLorda >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                             {formatEuroSigned(v.plusvalenzaLorda)}
                           </td>
-                          <td style={{ padding: 8 }}>{v.imponibile ? formatPercent(v.aliquota * 100, 1) : 'esente (Polizza)'}</td>
+                          <td style={{ padding: 8 }}>
+                            {v.imponibile
+                              ? formatPercent(v.aliquota * 100, 1)
+                              : t('esenteTipoContenitore', { tipo: tPaginaContenitore('etichettaPolizza') })}
+                          </td>
                           <td style={{ padding: 8 }}>{formatEuro(v.tassa)}</td>
                           <td style={{ padding: 8, fontWeight: 500 }}>{formatEuro(v.proventoNetto)}</td>
                         </tr>
@@ -421,27 +431,30 @@ export default async function RibilanciamentoPage({
                 )}
 
                 <p style={{ fontSize: 'var(--fs-body)', marginTop: 12 }}>
-                  Versamento + proventi netti disponibili da reinvestire: <strong>{formatEuro(poolTotale)}</strong>
+                  {t.rich('messaggioPoolReinvestire', {
+                    importo: formatEuro(poolTotale),
+                    strong: (chunks) => <strong>{chunks}</strong>,
+                  })}
                 </p>
               </>
             )}
 
             {allocazioneAcquisto.length > 0 && (
               <>
-                <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 24, marginBottom: 12 }}>Acquisti proposti</h3>
+                <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 24, marginBottom: 12 }}>{t('titoloAcquistiProposti')}</h3>
                 <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
                   <thead>
                     <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Categoria</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Da versare</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Peso finale</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Scostamento finale</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCosti('colonnaCategoria')}</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaDaVersare')}</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPesoFinale')}</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaScostamentoFinale')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {allocazioneAcquisto.map((a) => (
                       <tr key={a.categoria} className="tabella-riga">
-                        <td style={{ padding: 8 }}>{a.categoria}</td>
+                        <td style={{ padding: 8 }}>{tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[a.categoria] ?? a.categoria)}</td>
                         <td style={{ padding: 8 }}>{formatEuro(a.importo)}</td>
                         <td style={{ padding: 8 }}>{formatPercent(a.pesoFinalePct, 2)}</td>
                         <td style={{ padding: 8 }}>{formatNumero(a.scostamentoFinalePp, 2, true)} pp</td>
@@ -452,13 +465,13 @@ export default async function RibilanciamentoPage({
 
                 {allocazioneStrumenti.map((c) => (
                   <div key={c.categoria} style={{ marginTop: 16, fontSize: 'var(--fs-body)' }}>
-                    <strong>{c.categoria}</strong>{' '}
+                    <strong>{tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[c.categoria] ?? c.categoria)}</strong>{' '}
                     <span style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)' }}>
-                      ({c.usaTarget ? 'secondo target per strumento' : 'secondo pesi attuali — nessun target per strumento impostato'})
+                      ({c.usaTarget ? t('notaSecondoTargetStrumento') : t('notaSecondoPesiAttuali')})
                     </span>
                     {c.strumenti.length === 0 ? (
                       <p style={{ color: 'var(--warning)' }}>
-                        Nessuno strumento posseduto qui: scegli manualmente cosa comprare.
+                        {t('alertNessunoStrumentoPosseduto')}
                       </p>
                     ) : (
                       <ul>

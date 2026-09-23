@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { MenuSelect } from '@/components/menu-select'
 
 const stileCampo: React.CSSProperties = {
@@ -36,11 +37,13 @@ export function FormSimulazione({
   commissioneIniziale?: string
   forzaIniziale: boolean
 }) {
+  const t = useTranslations('PaginaRibilanciamento')
+  const tPaginaCosti = useTranslations('PaginaCosti')
   const [contenitoreId, setContenitoreId] = useState(contenitoreSelezionato ?? '')
   const [erroreContenitore, setErroreContenitore] = useState(false)
 
   const opzioniContenitore = [
-    { value: '', label: 'Seleziona...' },
+    { value: '', label: t('optionSeleziona') },
     ...contenitoriDisponibili.map(([id, nome]) => ({ value: id, label: nome })),
   ]
 
@@ -62,7 +65,7 @@ export function FormSimulazione({
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ minWidth: 200 }}>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            Contenitore
+            {tPaginaCosti('colonnaContenitore')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect
                 name="contenitore_id"
@@ -77,14 +80,14 @@ export function FormSimulazione({
           </label>
           {erroreContenitore && (
             <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-form-hint)', margin: '4px 0 0' }}>
-              Seleziona un contenitore.
+              {t('erroreSelezionaContenitore')}
             </p>
           )}
         </div>
 
         <div>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            Quanto sei disposto a versare (€)
+            {t('labelVersamento')}
             <input
               type="number"
               name="versamento"
@@ -98,7 +101,7 @@ export function FormSimulazione({
 
         <div>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            Commissione stimata per vendita (€)
+            {t('labelCommissioneVendita')}
             <input
               type="number"
               name="commissione_vendita"
@@ -113,11 +116,11 @@ export function FormSimulazione({
 
       <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-form-label)' }}>
         <input type="checkbox" name="forza" value="1" defaultChecked={forzaIniziale} style={{ accentColor: 'var(--primary)' }} />
-        Vendi comunque anche in perdita
+        {t('checkboxVendiInPerdita')}
       </label>
 
       <button type="submit" style={stileBottonePrimario}>
-        Calcola
+        {t('bottoneCalcola')}
       </button>
     </form>
   )
