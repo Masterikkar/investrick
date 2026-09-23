@@ -12,6 +12,7 @@ const CATEGORIA = 'Multiasset'
 export default async function MultiassetPage() {
   const t = await getTranslations('PaginaCategoria')
   const tCategorie = await getTranslations('Categorie')
+  const tDashboard = await getTranslations('Dashboard')
 
   const COLONNE: ColonnaTabella[] = [
     { key: 'nome', label: t('colonnaStrumento'), kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
@@ -157,6 +158,8 @@ export default async function MultiassetPage() {
             <CardRendimento
               rendimentoPct={rendimentoPctTotale}
               variazioneOggi={variazioneDaUltimoSnapshot}
+              label={tDashboard('titoloRendimentoLive')}
+              etichettaOggi={tDashboard('etichettaOggi')}
               href="/rendimenti"
               linkLabel={t('linkRendimenti')}
             />
