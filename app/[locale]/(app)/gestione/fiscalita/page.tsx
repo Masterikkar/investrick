@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { Sezione } from '@/components/sezione'
 import { EsportaFiscalita } from './esporta-fiscalita'
@@ -10,6 +11,8 @@ type Strumento = { id: string; nome: string; categoria: string; aliquota_tassazi
 const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto', 'Liquidita']
 
 export default async function GestioneFiscalitaPage() {
+  const t = await getTranslations('PaginaGestioneFiscalita')
+  const tMenu = await getTranslations('Menu')
   const supabase = await createClient()
 
   const [{ data: impostazioniRaw }, { data: strumentiRaw }] = await Promise.all([
@@ -41,25 +44,23 @@ export default async function GestioneFiscalitaPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>Account</div>
-      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Gestione fiscalità</h1>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{tMenu('account')}</div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{t('titoloGestioneFiscalita')}</h1>
 
       <section>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Esportazione</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloEsportazione')}</h2>
         <Sezione>
           <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 16 }}>
-            Esporta l&apos;intero storico, senza filtri — per un sottoinsieme filtrato, usa la tabella nella pagina Fiscalità.
+            {t('paragrafoEsportazione')}
           </p>
           <EsportaFiscalita />
         </Sezione>
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 4 }}>Aliquote per categoria</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 4 }}>{t('titoloAliquotePerCategoria')}</h2>
         <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 16 }}>
-          L&apos;aliquota di default si applica ai nuovi asset creati in quella categoria. &quot;Reimposta tutti gli
-          strumenti&quot; sovrascrive l&apos;aliquota di ogni asset già esistente in quella categoria con il valore di
-          default corrente.
+          {t('paragrafoAliquotePerCategoria', { bottone: t('bottoneReimpostaTutti') })}
         </p>
         <Sezione>
           <AliquoteCategoria categorie={categorie} />
@@ -67,7 +68,7 @@ export default async function GestioneFiscalitaPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Aliquote per strumento</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloAliquotePerStrumento')}</h2>
         <Sezione>
           <AliquoteStrumenti righe={righeStrumenti} />
         </Sezione>

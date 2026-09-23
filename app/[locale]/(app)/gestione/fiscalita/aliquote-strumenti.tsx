@@ -2,17 +2,15 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { aggiornaAliquotaStrumento } from './actions-aliquote'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 
 export type RigaAliquotaStrumento = {
   id: string
   nome: string
   categoria: string
   aliquotaTassazione: number
-}
-
-const ETICHETTA_CATEGORIA: Record<string, string> = {
-  Liquidita: 'Liquidità',
 }
 
 const stileBottoneOutline: React.CSSProperties = {
@@ -25,7 +23,18 @@ const stileBottoneOutline: React.CSSProperties = {
 }
 
 export function AliquoteStrumenti({ righe }: { righe: RigaAliquotaStrumento[] }) {
+  const t = useTranslations('PaginaGestioneFiscalita')
+  const tCategorie = useTranslations('Categorie')
+  const tContenitori = useTranslations('Contenitori')
+  const tPaginaFiscalita = useTranslations('PaginaFiscalita')
+  const tPaginaCosti = useTranslations('PaginaCosti')
+  const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const router = useRouter()
+
+  function etichettaCategoria(categoria: string): string {
+    if (categoria === 'Liquidita') return tContenitori('liquidita')
+    return tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[categoria] ?? categoria)
+  }
   const [valori, setValori] = useState<Record<string, string>>(() =>
     Object.fromEntries(righe.map((r) => [r.id, String(r.aliquotaTassazione)]))
   )
@@ -63,7 +72,7 @@ export function AliquoteStrumenti({ righe }: { righe: RigaAliquotaStrumento[] })
     <div>
       <input
         type="text"
-        placeholder="Filtra per strumento..."
+        placeholder={tPaginaFiscalita('placeholderFiltraStrumento')}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         style={{
@@ -78,14 +87,14 @@ export function AliquoteStrumenti({ righe }: { righe: RigaAliquotaStrumento[] })
       />
 
       {righeFiltrate.length === 0 ? (
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Nessuno strumento trovato.</p>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>{t('alertNessunoStrumentoTrovato')}</p>
       ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
           <thead>
             <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
-              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Categoria</th>
-              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Aliquota</th>
+              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaStrumento')}</th>
+              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCosti('colonnaCategoria')}</th>
+              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaRibilanciamento('colonnaAliquota')}</th>
               <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}></th>
             </tr>
           </thead>
@@ -98,7 +107,7 @@ export function AliquoteStrumenti({ righe }: { righe: RigaAliquotaStrumento[] })
               return (
                 <tr key={r.id} className="tabella-riga">
                   <td style={{ padding: 8 }}>{r.nome}</td>
-                  <td style={{ padding: 8 }}>{ETICHETTA_CATEGORIA[r.categoria] ?? r.categoria}</td>
+                  <td style={{ padding: 8 }}>{etichettaCategoria(r.categoria)}</td>
                   <td style={{ padding: 8 }}>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                       <input
@@ -131,7 +140,7 @@ export function AliquoteStrumenti({ righe }: { righe: RigaAliquotaStrumento[] })
                       disabled={inPending || invariato}
                       style={{ ...stileBottoneOutline, opacity: inPending || invariato ? 0.5 : 1 }}
                     >
-                      Salva
+                      {tPaginaRibilanciamento('bottoneSalva')}
                     </button>
                   </td>
                 </tr>

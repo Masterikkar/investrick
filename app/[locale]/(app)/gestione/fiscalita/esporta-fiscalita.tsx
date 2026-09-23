@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { esportaPlusMinusRealizzate, esportaPlusMinusNonRealizzate } from './actions'
 
@@ -15,6 +16,7 @@ const stileBottonePrimario: React.CSSProperties = {
 }
 
 export function EsportaFiscalita() {
+  const t = useTranslations('PaginaGestioneFiscalita')
   const [caricamento, setCaricamento] = useState<'realizzate' | 'non-realizzate' | null>(null)
   const [errore, setErrore] = useState<string | null>(null)
 
@@ -37,7 +39,7 @@ export function EsportaFiscalita() {
         XLSX.writeFile(wb, `plus-minus-non-realizzate-${oggi}.xlsx`)
       }
     } catch (err) {
-      setErrore(err instanceof Error ? err.message : 'Impossibile generare il file')
+      setErrore(err instanceof Error ? err.message : t('erroreGenerazioneFile'))
     } finally {
       setCaricamento(null)
     }
@@ -51,7 +53,7 @@ export function EsportaFiscalita() {
         disabled={caricamento !== null}
         style={{ ...stileBottonePrimario, opacity: caricamento !== null ? 0.6 : 1 }}
       >
-        {caricamento === 'realizzate' ? 'Generazione...' : 'Esporta realizzate (.xlsx)'}
+        {caricamento === 'realizzate' ? t('statoGenerazione') : t('bottoneEsportaRealizzate')}
       </button>
       <button
         type="button"
@@ -59,7 +61,7 @@ export function EsportaFiscalita() {
         disabled={caricamento !== null}
         style={{ ...stileBottonePrimario, opacity: caricamento !== null ? 0.6 : 1 }}
       >
-        {caricamento === 'non-realizzate' ? 'Generazione...' : 'Esporta non realizzate (.xlsx)'}
+        {caricamento === 'non-realizzate' ? t('statoGenerazione') : t('bottoneEsportaNonRealizzate')}
       </button>
       {errore && <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', margin: 0 }}>{errore}</p>}
     </div>

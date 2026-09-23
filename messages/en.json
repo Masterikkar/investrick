@@ -337,5 +337,22 @@
     "colonnaRicavo": "Proceeds",
     "titoloStoricoTransazioni": "Transaction history",
     "alertNessunaTransazione": "No transactions recorded for this instrument."
+  },
+  "PaginaGestioneFiscalita": {
+    "titoloGestioneFiscalita": "Tax management",
+    "titoloEsportazione": "Export",
+    "paragrafoEsportazione": "Exports the entire history, unfiltered — for a filtered subset, use the table on the Tax page.",
+    "bottoneEsportaRealizzate": "Export realized (.xlsx)",
+    "bottoneEsportaNonRealizzate": "Export unrealized (.xlsx)",
+    "statoGenerazione": "Generating...",
+    "erroreGenerazioneFile": "Could not generate the file",
+    "titoloAliquotePerCategoria": "Tax rates by category",
+    "paragrafoAliquotePerCategoria": "The default tax rate applies to new assets created in that category. \"{bottone}\" overwrites the tax rate of every asset already existing in that category with the current default value.",
+    "bottoneReimpostaTutti": "Reset all instruments",
+    "numeroStrumenti": "{numero, plural, one {# instrument} other {# instruments}}",
+    "confermaReimposta": "Reset the tax rate of ALL {numero} instruments in \"{categoria}\" to {aliquota}%?\n\nThis overwrites any customization made on individual instruments in this category.\n\nThis action cannot be undone.",
+    "successoReimposta": "{numero} instruments updated in \"{categoria}\".",
+    "titoloAliquotePerStrumento": "Tax rates by instrument",
+    "alertNessunoStrumentoTrovato": "No instrument found."
   }
 }

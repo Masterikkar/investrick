@@ -337,5 +337,22 @@
     "colonnaRicavo": "Ricavo",
     "titoloStoricoTransazioni": "Storico transazioni",
     "alertNessunaTransazione": "Nessuna transazione registrata per questo strumento."
+  },
+  "PaginaGestioneFiscalita": {
+    "titoloGestioneFiscalita": "Gestione fiscalità",
+    "titoloEsportazione": "Esportazione",
+    "paragrafoEsportazione": "Esporta l'intero storico, senza filtri — per un sottoinsieme filtrato, usa la tabella nella pagina Fiscalità.",
+    "bottoneEsportaRealizzate": "Esporta realizzate (.xlsx)",
+    "bottoneEsportaNonRealizzate": "Esporta non realizzate (.xlsx)",
+    "statoGenerazione": "Generazione...",
+    "erroreGenerazioneFile": "Impossibile generare il file",
+    "titoloAliquotePerCategoria": "Aliquote per categoria",
+    "paragrafoAliquotePerCategoria": "L'aliquota di default si applica ai nuovi asset creati in quella categoria. \"{bottone}\" sovrascrive l'aliquota di ogni asset già esistente in quella categoria con il valore di default corrente.",
+    "bottoneReimpostaTutti": "Reimposta tutti gli strumenti",
+    "numeroStrumenti": "{numero, plural, one {# strumento} other {# strumenti}}",
+    "confermaReimposta": "Reimpostare l'aliquota di TUTTI i {numero} strumenti in \"{categoria}\" a {aliquota}%?\n\nQuesto sovrascrive qualunque personalizzazione fatta sui singoli strumenti di questa categoria.\n\nL'operazione non è reversibile.",
+    "successoReimposta": "{numero} strumenti aggiornati in \"{categoria}\".",
+    "titoloAliquotePerStrumento": "Aliquote per strumento",
+    "alertNessunoStrumentoTrovato": "Nessuno strumento trovato."
   }
 }
