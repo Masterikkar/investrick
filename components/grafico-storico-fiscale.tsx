@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { formatEuro } from '@/lib/format'
 
@@ -16,8 +17,9 @@ const GRIGLIA = '#2B3350'
 const TESTO_ASSI = '#9198AD'
 
 export function GraficoStoricoFiscale({ punti }: { punti: PuntoStoricoFiscale[] }) {
+  const t = useTranslations('PaginaFiscalita')
   if (punti.length === 0) {
-    return <p style={{ color: 'var(--text-secondary)', marginTop: 12 }}>Non abbastanza storico per un grafico.</p>
+    return <p style={{ color: 'var(--text-secondary)', marginTop: 12 }}>{t('alertStoricoInsufficiente')}</p>
   }
 
   return (
@@ -34,12 +36,12 @@ export function GraficoStoricoFiscale({ punti }: { punti: PuntoStoricoFiscale[] 
             labelStyle={{ color: '#E8EBF2' }}
             itemStyle={{ color: '#E8EBF2' }}
           />
-          <Bar dataKey="realizzato" name="Realizzate nette" maxBarSize={36}>
+          <Bar dataKey="realizzato" name={t('labelRealizzateNette')} maxBarSize={36}>
             {punti.map((p, i) => (
               <Cell key={`realizzato-${i}`} fill={p.realizzato >= 0 ? VERDE : ROSSO} />
             ))}
           </Bar>
-          <Bar dataKey="nonRealizzato" name="Non realizzate" maxBarSize={36}>
+          <Bar dataKey="nonRealizzato" name={t('serieNonRealizzate')} maxBarSize={36}>
             {punti.map((p, i) => (
               <Cell
                 key={`nonrealizzato-${i}`}
@@ -51,7 +53,7 @@ export function GraficoStoricoFiscale({ punti }: { punti: PuntoStoricoFiscale[] 
         </BarChart>
       </ResponsiveContainer>
       <p style={{ fontSize: 'var(--fs-form-hint)', color: 'var(--text-secondary)', marginTop: 4 }}>
-        Scuro = realizzato · Chiaro = non realizzato · Verde = plusvalenza · Rosso = minusvalenza
+        {t('legendaGrafico')}
       </p>
     </div>
   )

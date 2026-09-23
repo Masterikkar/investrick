@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { CardMetrica } from '@/components/card-metrica'
 import { BarreDivergenti, type VoceBarra } from '@/components/barre-divergenti'
@@ -21,6 +22,7 @@ type RigaInteresse = {
 }
 
 function LinkDettagli({ aperto, onClick }: { aperto: boolean; onClick: () => void }) {
+  const t = useTranslations('PaginaFiscalita')
   return (
     <button
       type="button"
@@ -35,7 +37,7 @@ function LinkDettagli({ aperto, onClick }: { aperto: boolean; onClick: () => voi
         fontFamily: 'inherit',
       }}
     >
-      {aperto ? '→ Nascondi dettagli' : '→ Mostra dettagli'}
+      {aperto ? t('linkNascondiDettagli') : t('linkMostraDettagli')}
     </button>
   )
 }
@@ -61,24 +63,25 @@ export function SezioneAnnoCorrente({
   totaleInteressiNetti: number
   righeInteressi: RigaInteresse[]
 }) {
+  const t = useTranslations('PaginaFiscalita')
   const [dettagliRealizzateAperti, setDettagliRealizzateAperti] = useState(false)
   const [dettagliNonRealizzateAperti, setDettagliNonRealizzateAperti] = useState(false)
   const [dettagliInteressiAperti, setDettagliInteressiAperti] = useState(false)
 
   return (
     <Sezione>
-      <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 4 }}>Plus/minusvalenze realizzate</h3>
+      <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 4 }}>{t('titoloPlusMinusvalenzeRealizzate')}</h3>
       <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 16 }}>
-        Plus/minusvalenza realizzata da inizio anno ad oggi.
+        {t('paragrafoRealizzateYtd')}
       </p>
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <CardMetrica label="Realizzate nette" minWidth={220}>
+        <CardMetrica label={t('labelRealizzateNette')} minWidth={220}>
           <span style={{ color: Number(realizzato.netto_vendite) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
             {formatEuroSigned(Number(realizzato.netto_vendite))}
           </span>
         </CardMetrica>
-        <CardMetrica label="Tasse trattenute" minWidth={220}>
+        <CardMetrica label={t('labelTasseTrattenute')} minWidth={220}>
           {formatEuro(Number(realizzato.tasse_vendite))}
         </CardMetrica>
       </div>
@@ -92,22 +95,22 @@ export function SezioneAnnoCorrente({
 
       {dettagliRealizzateAperti && (
         <div style={{ marginTop: 16 }}>
-          <div style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginBottom: 4 }}>Per categoria</div>
+          <div style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginBottom: 4 }}>{t('labelPerCategoria')}</div>
           <BarreDivergenti voci={vociCategoriaRealizzate} />
 
-          <div style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginTop: 20, marginBottom: 4 }}>Per contenitore</div>
+          <div style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginTop: 20, marginBottom: 4 }}>{t('labelPerContenitore')}</div>
           <BarreDivergenti voci={vociContenitoreRealizzate} />
         </div>
       )}
 
-      <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 32, marginBottom: 4 }}>Plus/minusvalenze non realizzate</h3>
+      <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 32, marginBottom: 4 }}>{t('titoloPlusMinusvalenzeNonRealizzate')}</h3>
       <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 16 }}>
-        Variazione della plus/minusvalenza non realizzata da inizio anno a oggi.
-        <InfoTooltip testo="Un valore negativo non indica per forza una perdita: può significare che una plusvalenza non realizzata si è ridotta durante l'anno — ad esempio per vendite parziali della posizione — pur restando positiva." />
+        {t('paragrafoNonRealizzateYtd')}
+        <InfoTooltip testo={t('tooltipMovimentoNonRealizzato')} />
       </p>
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <CardMetrica label={`Totale ${annoCorrente}`} minWidth={220}>
+        <CardMetrica label={t('labelTotaleAnno', { anno: annoCorrente })} minWidth={220}>
           <span style={{ color: totaleMovimentoNonRealizzato >= 0 ? 'var(--success)' : 'var(--danger)' }}>
             {formatEuroSigned(totaleMovimentoNonRealizzato)}
           </span>
@@ -123,21 +126,21 @@ export function SezioneAnnoCorrente({
 
       {dettagliNonRealizzateAperti && (
         <div style={{ marginTop: 16 }}>
-          <div style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginBottom: 4 }}>Per categoria</div>
+          <div style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginBottom: 4 }}>{t('labelPerCategoria')}</div>
           <BarreDivergenti voci={vociCategoria} />
 
-          <div style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginTop: 20, marginBottom: 4 }}>Per contenitore</div>
+          <div style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginTop: 20, marginBottom: 4 }}>{t('labelPerContenitore')}</div>
           <BarreDivergenti voci={vociContenitore} />
         </div>
       )}
 
-      <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 32, marginBottom: 4 }}>Interessi maturati</h3>
+      <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 32, marginBottom: 4 }}>{t('titoloInteressiMaturati')}</h3>
       <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 16 }}>
-        Interessi maturati da inizio anno ad oggi.
+        {t('paragrafoInteressiYtd')}
       </p>
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <CardMetrica label={`Totale ${annoCorrente}`} minWidth={220}>
+        <CardMetrica label={t('labelTotaleAnno', { anno: annoCorrente })} minWidth={220}>
           <span style={{ color: totaleInteressiNetti >= 0 ? 'var(--success)' : 'var(--danger)' }}>
             {formatEuroSigned(totaleInteressiNetti)}
           </span>
@@ -163,17 +166,17 @@ export function SezioneAnnoCorrente({
         >
           <thead>
             <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
-              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Interesse lordo</th>
-              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa trattenuta</th>
-              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Interesse netto</th>
+              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaStrumento')}</th>
+              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaInteresseLordo')}</th>
+              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTassaTrattenuta')}</th>
+              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaInteresseNetto')}</th>
             </tr>
           </thead>
           <tbody>
             {righeInteressi.length === 0 ? (
               <tr>
                 <td colSpan={4} style={{ padding: 8, color: 'var(--text-secondary)' }}>
-                  Nessun interesse maturato quest&apos;anno.
+                  {t('alertNessunInteresseAnno')}
                 </td>
               </tr>
             ) : (

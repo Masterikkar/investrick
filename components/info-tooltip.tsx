@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 export function InfoTooltip({ testo }: { testo: string }) {
+  const t = useTranslations('PaginaFiscalita')
   const [aperto, setAperto] = useState(false)
   const contenitoreRef = useRef<HTMLSpanElement>(null)
 
@@ -27,7 +29,7 @@ export function InfoTooltip({ testo }: { testo: string }) {
       <button
         type="button"
         onClick={() => setAperto((a) => !a)}
-        aria-label="Maggiori informazioni"
+        aria-label={t('ariaLabelInfoTooltip')}
         style={{
           width: 16,
           height: 16,

@@ -1,12 +1,19 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuroSigned } from '@/lib/format'
 import { GraficoStoricoFiscale, type PuntoStoricoFiscale } from '@/components/grafico-storico-fiscale'
 import { CardMetrica } from '@/components/card-metrica'
 import { type VoceBarra } from '@/components/barre-divergenti'
 import { Sezione } from '@/components/sezione'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import { SezioneAnnoCorrente } from './sezione-anno-corrente'
 import { type RigaVerificaTrattenuta } from './verifica-trattenute'
 import { StoricoPlusMinus, type RigaNonRealizzata } from './storico-plus-minus'
+
+const CHIAVE_TRADUZIONE_CONTENITORE_MOVIMENTO: Record<string, string> = {
+  PAC: 'pac',
+  Polizze: 'polizze',
+}
 
 type RiepilogoPosizione = {
   strumento_id: string
@@ -85,6 +92,11 @@ function aggregaNonRealizzato(righe: { categoria: string; contenitore_tipo: stri
 }
 
 export default async function FiscalitaPage() {
+  const t = await getTranslations('PaginaFiscalita')
+  const tMenu = await getTranslations('Menu')
+  const tCategorie = await getTranslations('Categorie')
+  const tContenitori = await getTranslations('Contenitori')
+  const tPaginaCategoria = await getTranslations('PaginaCategoria')
   const supabase = await createClient()
   const annoCorrente = new Date().getFullYear()
 
@@ -158,8 +170,14 @@ export default async function FiscalitaPage() {
 
   const bucketMovimento = aggregaNonRealizzato(righeMovimento)
 
-  const vociCategoria: VoceBarra[] = CATEGORIE_MOVIMENTO.map((cat) => ({ etichetta: cat, valore: bucketMovimento[cat] }))
-  const vociContenitore: VoceBarra[] = CONTENITORI_MOVIMENTO.map((cont) => ({ etichetta: cont, valore: bucketMovimento[cont] }))
+  const vociCategoria: VoceBarra[] = CATEGORIE_MOVIMENTO.map((cat) => ({
+    etichetta: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[cat] ?? cat),
+    valore: bucketMovimento[cat],
+  }))
+  const vociContenitore: VoceBarra[] = CONTENITORI_MOVIMENTO.map((cont) => ({
+    etichetta: tContenitori(CHIAVE_TRADUZIONE_CONTENITORE_MOVIMENTO[cont] ?? cont),
+    valore: bucketMovimento[cont],
+  }))
 
   const venditeAnnoCorrente = verifica.filter((v) => Number(v.data_vendita.slice(0, 4)) === annoCorrente)
 
@@ -171,8 +189,14 @@ export default async function FiscalitaPage() {
 
   const bucketRealizzato = aggregaNonRealizzato(righeRealizzatoMovimento)
 
-  const vociCategoriaRealizzate: VoceBarra[] = CATEGORIE_MOVIMENTO.map((cat) => ({ etichetta: cat, valore: bucketRealizzato[cat] }))
-  const vociContenitoreRealizzate: VoceBarra[] = CONTENITORI_MOVIMENTO.map((cont) => ({ etichetta: cont, valore: bucketRealizzato[cont] }))
+  const vociCategoriaRealizzate: VoceBarra[] = CATEGORIE_MOVIMENTO.map((cat) => ({
+    etichetta: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[cat] ?? cat),
+    valore: bucketRealizzato[cat],
+  }))
+  const vociContenitoreRealizzate: VoceBarra[] = CONTENITORI_MOVIMENTO.map((cont) => ({
+    etichetta: tContenitori(CHIAVE_TRADUZIONE_CONTENITORE_MOVIMENTO[cont] ?? cont),
+    valore: bucketRealizzato[cont],
+  }))
 
   const interessiAnnoCorrente = (interessiRaw ?? []).filter((m) => Number(m.data.slice(0, 4)) === annoCorrente)
 
@@ -248,18 +272,18 @@ export default async function FiscalitaPage() {
       key: chiaveRiga(x.strumento_id, x.contenitore_id),
       strumento_id: x.strumento_id,
       strumento_nome: strumentoMap.get(x.strumento_id) ?? '—',
-      contenitore_nome: x.contenitore_id ? contenitoreMap.get(x.contenitore_id) ?? '—' : 'Diretto',
+      contenitore_nome: x.contenitore_id ? contenitoreMap.get(x.contenitore_id) ?? '—' : tPaginaCategoria('provenienzaDiretto'),
       plus_minus: Number(x.valore) - Number(x.capitale_investito),
       rendimento_pct: x.rendimento_pct ?? 0,
     }))
 
   return (
     <div>
-      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>Analisi</div>
-      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Fiscalità</h1>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{tMenu('analisi')}</div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{tMenu('fiscalita')}</h1>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Anno corrente — {annoCorrente}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloAnnoCorrente', { anno: annoCorrente })}</h2>
         <SezioneAnnoCorrente
           annoCorrente={annoCorrente}
           realizzato={r}
@@ -274,26 +298,26 @@ export default async function FiscalitaPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Storico</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloStorico')}</h2>
         <Sezione>
-          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 4 }}>Plus/minusvalenze</h3>
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 4 }}>{t('titoloPlusMinusvalenze')}</h3>
           <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 16 }}>
-            Storico delle plus/minusvalenze realizzate e non realizzate.
+            {t('paragrafoStoricoPlusMinus')}
           </p>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <CardMetrica label="Totale realizzate nette" minWidth={220}>
+            <CardMetrica label={t('labelTotaleRealizzateNette')} minWidth={220}>
               <span style={{ color: realizzatoTotaleDaSempre >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(realizzatoTotaleDaSempre)}
               </span>
             </CardMetrica>
-            <CardMetrica label="Totale non realizzate" minWidth={220}>
+            <CardMetrica label={t('labelTotaleNonRealizzate')} minWidth={220}>
               <span style={{ color: totaleNonRealizzato >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(totaleNonRealizzato)}
               </span>
             </CardMetrica>
           </div>
 
-          <p style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginTop: 24, marginBottom: 4 }}>Andamento</p>
+          <p style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginTop: 24, marginBottom: 4 }}>{t('labelAndamento')}</p>
           <GraficoStoricoFiscale punti={puntiStorico} />
 
           <div style={{ marginTop: 24 }}>
