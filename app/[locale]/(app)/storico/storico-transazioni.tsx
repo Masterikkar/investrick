@@ -2,9 +2,11 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { formatEuro, formatNumero } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
+import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
 import { aggiornaContenitoreTransazione, eliminaTransazione } from '../gestione/transazioni/actions'
 
 export type RigaStoricoTransazione = {
@@ -32,6 +34,10 @@ export function StoricoTransazioni({
   transazioni: RigaStoricoTransazione[]
   contenitori: Contenitore[]
 }) {
+  const t = useTranslations('PaginaStorico')
+  const tTipiOperazione = useTranslations('TipiOperazione')
+  const tPaginaCategoria = useTranslations('PaginaCategoria')
+  const tPaginaFiscalita = useTranslations('PaginaFiscalita')
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -47,8 +53,14 @@ export function StoricoTransazioni({
   const [anniSelezionati, setAnniSelezionati] = useState<Set<number>>(() => new Set(anniDisponibili))
 
   function nomeContenitore(id: string | null) {
-    if (id === null) return 'Diretto'
+    if (id === null) return tPaginaCategoria('provenienzaDiretto')
     return contenitori.find((c) => c.id === id)?.nome ?? '—'
+  }
+
+  function etichettaOperazione(operazione: string): string {
+    const etichettaItaliana = ETICHETTA_OPERAZIONE[operazione] ?? operazione
+    const chiave = CHIAVE_TRADUZIONE_OPERAZIONE[etichettaItaliana]
+    return chiave ? tTipiOperazione(chiave) : etichettaItaliana
   }
 
   const testo = query.trim().toLowerCase()
@@ -96,11 +108,13 @@ export function StoricoTransazioni({
   }
 
   function handleElimina(riga: RigaStoricoTransazione) {
-    const descrizione = `${ETICHETTA_OPERAZIONE[riga.operazione] ?? riga.operazione} del ${new Date(
-      riga.data
-    ).toLocaleDateString('it-IT')}${riga.strumento_nome !== '—' ? ` — ${riga.strumento_nome}` : ''}`
+    const base = t('descrizioneOperazioneData', {
+      operazione: etichettaOperazione(riga.operazione),
+      data: new Date(riga.data).toLocaleDateString('it-IT'),
+    })
+    const descrizione = riga.strumento_nome !== '—' ? `${base} — ${riga.strumento_nome}` : base
 
-    if (!window.confirm(`Eliminare questa transazione?\n\n${descrizione}\n\nL'operazione non è reversibile.`)) {
+    if (!window.confirm(t('confermaEliminazione', { descrizione }))) {
       return
     }
 
@@ -128,7 +142,7 @@ export function StoricoTransazioni({
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <input
           type="text"
-          placeholder="Filtra per strumento..."
+          placeholder={t('placeholderFiltraStrumento')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           style={{
@@ -154,7 +168,7 @@ export function StoricoTransazioni({
               color: 'var(--text-primary)',
             }}
           >
-            Filtra per anno
+            {t('filtroPerAnno')}
             {anniSelezionati.size < anniDisponibili.length ? ` (${anniSelezionati.size})` : ''}
           </summary>
           <div
@@ -173,10 +187,10 @@ export function StoricoTransazioni({
           >
             <div style={{ display: 'flex', gap: 8, marginBottom: 8, fontSize: 'var(--fs-table)' }}>
               <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set(anniDisponibili))}>
-                Seleziona tutto
+                {t('selezionaTutto')}
               </button>
               <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set())}>
-                Deseleziona tutto
+                {t('deselezionaTutto')}
               </button>
             </div>
             {anniDisponibili.map((anno) => (
@@ -196,56 +210,56 @@ export function StoricoTransazioni({
 
       {erroreId && (
         <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginTop: 8 }}>
-          Non è stato possibile completare l'operazione su quella transazione. Riprova.
+          {t('alertErroreOperazione')}
         </p>
       )}
 
       {righeFiltrate.length === 0 ? (
-        <p style={{ fontSize: 'var(--fs-body)', marginTop: 12, color: 'var(--text-secondary)' }}>Nessuna transazione trovata.</p>
+        <p style={{ fontSize: 'var(--fs-body)', marginTop: 12, color: 'var(--text-secondary)' }}>{t('alertNessunaTransazioneTrovata')}</p>
       ) : (
         <>
           <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
             <thead>
               <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Data</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Operazione</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Quantità</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Prezzo unitario</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Commissione</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa trattenuta</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Azioni</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaData')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaStrumento')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaOperazione')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaContenitore')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaQuantita')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPrezzoUnitario')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaCommissione')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaTassaTrattenuta')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaAzioni')}</th>
               </tr>
             </thead>
             <tbody>
-              {righeMostrate.map((t) => {
-                const inCorso = pendingId === t.id
+              {righeMostrate.map((riga) => {
+                const inCorso = pendingId === riga.id
                 return (
-                  <tr key={t.id} className="tabella-riga">
-                    <td style={{ padding: 8 }}>{new Date(t.data).toLocaleDateString('it-IT')}</td>
+                  <tr key={riga.id} className="tabella-riga">
+                    <td style={{ padding: 8 }}>{new Date(riga.data).toLocaleDateString('it-IT')}</td>
                     <td style={{ padding: 8 }}>
-                      {t.strumento_id ? (
-                        <RippleLink href={`/asset/${t.strumento_id}`} className="link-interattivo">
-                          {t.strumento_nome}
+                      {riga.strumento_id ? (
+                        <RippleLink href={`/asset/${riga.strumento_id}`} className="link-interattivo">
+                          {riga.strumento_nome}
                         </RippleLink>
                       ) : (
-                        t.strumento_nome
+                        riga.strumento_nome
                       )}
                     </td>
-                    <td style={{ padding: 8 }}>{ETICHETTA_OPERAZIONE[t.operazione] ?? t.operazione}</td>
-                    <td style={{ padding: 8 }}>{nomeContenitore(t.contenitore_id)}</td>
-                    <td style={{ padding: 8 }}>{formatNumero(t.quantita, 6)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(t.prezzo_unitario)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(t.commissione)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(t.tassa_trattenuta)}</td>
+                    <td style={{ padding: 8 }}>{etichettaOperazione(riga.operazione)}</td>
+                    <td style={{ padding: 8 }}>{nomeContenitore(riga.contenitore_id)}</td>
+                    <td style={{ padding: 8 }}>{formatNumero(riga.quantita, 6)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(riga.prezzo_unitario)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(riga.commissione)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(riga.tassa_trattenuta)}</td>
                     <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                         <div style={{ position: 'relative', display: 'inline-flex' }}>
                           <button
                             type="button"
                             disabled={inCorso}
-                            title="Sposta in un altro contenitore"
+                            title={t('titleSpostaContenitore')}
                             style={{
                               border: 'none',
                               background: 'none',
@@ -261,8 +275,8 @@ export function StoricoTransazioni({
                           <select
                             value=""
                             disabled={inCorso}
-                            onChange={(e) => handleSposta(t.id, e.target.value)}
-                            aria-label="Sposta in un altro contenitore"
+                            onChange={(e) => handleSposta(riga.id, e.target.value)}
+                            aria-label={t('titleSpostaContenitore')}
                             style={{
                               position: 'absolute',
                               inset: 0,
@@ -270,10 +284,10 @@ export function StoricoTransazioni({
                               cursor: inCorso ? 'default' : 'pointer',
                             }}
                           >
-                            <option value="">Sposta in...</option>
-                            {t.contenitore_id !== null && <option value="diretto">Diretto</option>}
+                            <option value="">{t('optionSpostaIn')}</option>
+                            {riga.contenitore_id !== null && <option value="diretto">{tPaginaCategoria('provenienzaDiretto')}</option>}
                             {contenitori
-                              .filter((c) => c.id !== t.contenitore_id)
+                              .filter((c) => c.id !== riga.contenitore_id)
                               .map((c) => (
                                 <option key={c.id} value={c.id}>
                                   {c.nome}
@@ -284,9 +298,9 @@ export function StoricoTransazioni({
 
                         <button
                           type="button"
-                          onClick={() => handleElimina(t)}
+                          onClick={() => handleElimina(riga)}
                           disabled={inCorso}
-                          title="Elimina transazione"
+                          title={t('titleEliminaTransazione')}
                           style={{
                             border: 'none',
                             background: 'none',
@@ -309,7 +323,7 @@ export function StoricoTransazioni({
 
           <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', fontSize: 'var(--fs-table)' }}>
             <span style={{ color: 'var(--text-secondary)' }}>
-              {righeMostrate.length} di {righeFiltrate.length}
+              {t('conteggioRighe', { mostrate: righeMostrate.length, totali: righeFiltrate.length })}
             </span>
             {ciSonoAltre && (
               <>
@@ -319,7 +333,7 @@ export function StoricoTransazioni({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili((v) => v + RIGHE_PER_PAGINA)}
                 >
-                  Mostra altre {Math.min(RIGHE_PER_PAGINA, righeFiltrate.length - righeVisibili)}
+                  {t('paginazioneMostraAltre', { n: Math.min(RIGHE_PER_PAGINA, righeFiltrate.length - righeVisibili) })}
                 </button>
                 <button
                   type="button"
@@ -327,7 +341,7 @@ export function StoricoTransazioni({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili(righeFiltrate.length)}
                 >
-                  Mostra tutte
+                  {t('paginazioneMostraTutte')}
                 </button>
               </>
             )}

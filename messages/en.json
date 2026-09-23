@@ -241,5 +241,60 @@
     "conteggioRighe": "{mostrate} of {totali}",
     "paginazioneMostraAltre": "Show {n} more",
     "paginazioneMostraTutte": "Show all"
+  },
+  "PaginaStorico": {
+    "linkNuovaTransazione": "→ New transaction",
+    "titoloTransazioniLiquidita": "Cash transactions",
+    "placeholderFiltraStrumento": "Filter by instrument...",
+    "filtroPerAnno": "Filter by year",
+    "selezionaTutto": "Select all",
+    "deselezionaTutto": "Deselect all",
+    "alertErroreOperazione": "Could not complete the operation on that transaction. Please try again.",
+    "alertNessunaTransazioneTrovata": "No transactions found.",
+    "colonnaOperazione": "Transaction type",
+    "colonnaQuantita": "Quantity",
+    "colonnaPrezzoUnitario": "Unit price",
+    "colonnaCommissione": "Commission",
+    "colonnaAzioni": "Actions",
+    "colonnaTipoMovimento": "Movement type",
+    "colonnaImporto": "Amount",
+    "titleSpostaContenitore": "Move to another container",
+    "optionSpostaIn": "Move to...",
+    "titleEliminaTransazione": "Delete transaction",
+    "descrizioneOperazioneData": "{operazione} on {data}",
+    "confermaEliminazione": "Delete this transaction?\n\n{descrizione}\n\nThis action cannot be undone.",
+    "conteggioRighe": "{mostrate} of {totali}",
+    "paginazioneMostraAltre": "Show {n} more",
+    "paginazioneMostraTutte": "Show all"
+  },
+  "TipiOperazione": {
+    "acquisto": "Purchase",
+    "vendita": "Sale",
+    "dividendo": "Dividend",
+    "ricompensa": "Reward",
+    "costoInQuote": "Cost (in units)",
+    "costoInContanti": "Cost (in cash)",
+    "scambioCessione": "Exchange (disposal)",
+    "scambioAcquisizione": "Exchange (acquisition)"
+  },
+  "TipiMovimentoLiquidita": {
+    "versamento": "Deposit",
+    "prelievo": "Withdrawal",
+    "interesse": "Interest",
+    "costo": "Cost"
+  },
+  "PaginaRibilanciamento": {
+    "alertNessunoScostamentoSoglia": "Everything in line with targets. No drift outside the threshold.",
+    "colonnaTarget": "Target",
+    "colonnaAttuale": "Current",
+    "colonnaScostamento": "Drift",
+    "sovrappeso": "overweight",
+    "sottopeso": "underweight",
+    "labelSogliaAlertPrefix": "Alert threshold: ±",
+    "puntiPercentuali": "percentage points",
+    "erroreSogliaNonValida": "Enter a number between 0 and 100.",
+    "linkModificaSoglia": "→ Edit",
+    "bottoneSalva": "Save",
+    "bottoneAnnulla": "Cancel"
   }
 }

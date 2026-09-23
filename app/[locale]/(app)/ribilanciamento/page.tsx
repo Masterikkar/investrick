@@ -1,8 +1,10 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned, formatNumero, formatPercent } from '@/lib/format'
 import { Sezione } from '@/components/sezione'
 import { SogliaRibilanciamento } from '@/components/soglia-ribilanciamento'
 import { FormSimulazione } from './form-simulazione'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import {
   calcolaRibilanciamentoConVersamento,
   distribuisciAcquisto,
@@ -62,6 +64,10 @@ export default async function RibilanciamentoPage({
     commissione_vendita?: string
   }>
 }) {
+  const t = await getTranslations('PaginaRibilanciamento')
+  const tMenu = await getTranslations('Menu')
+  const tCategorie = await getTranslations('Categorie')
+  const tPaginaCosti = await getTranslations('PaginaCosti')
   const params = await searchParams
   const supabase = await createClient()
 
@@ -301,13 +307,13 @@ export default async function RibilanciamentoPage({
 
   return (
     <div>
-      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>Analisi</div>
-      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Ribilanciamento</h1>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{tMenu('analisi')}</div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{tMenu('ribilanciamento')}</h1>
       <SogliaRibilanciamento sogliaIniziale={soglia} />
 
       {fuoriSoglia.length === 0 ? (
         <p style={{ fontSize: 'var(--fs-body)', marginTop: 16, color: 'var(--text-secondary)' }}>
-          Tutto in linea con i target. Nessuno scostamento fuori soglia.
+          {t('alertNessunoScostamentoSoglia')}
         </p>
       ) : (
         <div style={{ marginTop: 16 }}>
@@ -315,11 +321,11 @@ export default async function RibilanciamentoPage({
             <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Categoria</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Target</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Attuale</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Scostamento</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCosti('colonnaContenitore')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCosti('colonnaCategoria')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTarget')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaAttuale')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaScostamento')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -328,11 +334,11 @@ export default async function RibilanciamentoPage({
                   return (
                     <tr key={s.target_id} className="tabella-riga">
                       <td style={{ padding: 8 }}>{s.contenitore_nome}</td>
-                      <td style={{ padding: 8 }}>{s.categoria}</td>
+                      <td style={{ padding: 8 }}>{tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[s.categoria] ?? s.categoria)}</td>
                       <td style={{ padding: 8 }}>{formatPercent(s.target_percentuale, 2)}</td>
                       <td style={{ padding: 8 }}>{formatPercent(s.peso_attuale_pct, 2)}</td>
                       <td style={{ padding: 8, color: sovrappeso ? 'var(--warning)' : 'var(--primary-vivid)', fontWeight: 500 }}>
-                        {formatNumero(s.scostamento_pp, 2, true)} pp ({sovrappeso ? 'sovrappeso' : 'sottopeso'})
+                        {formatNumero(s.scostamento_pp, 2, true)} pp ({sovrappeso ? t('sovrappeso') : t('sottopeso')})
                       </td>
                     </tr>
                   )

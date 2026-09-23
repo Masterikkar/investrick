@@ -241,5 +241,60 @@
     "conteggioRighe": "{mostrate} di {totali}",
     "paginazioneMostraAltre": "Mostra altre {n}",
     "paginazioneMostraTutte": "Mostra tutte"
+  },
+  "PaginaStorico": {
+    "linkNuovaTransazione": "→ Nuova transazione",
+    "titoloTransazioniLiquidita": "Transazioni di liquidità",
+    "placeholderFiltraStrumento": "Filtra per strumento...",
+    "filtroPerAnno": "Filtra per anno",
+    "selezionaTutto": "Seleziona tutto",
+    "deselezionaTutto": "Deseleziona tutto",
+    "alertErroreOperazione": "Non è stato possibile completare l'operazione su quella transazione. Riprova.",
+    "alertNessunaTransazioneTrovata": "Nessuna transazione trovata.",
+    "colonnaOperazione": "Operazione",
+    "colonnaQuantita": "Quantità",
+    "colonnaPrezzoUnitario": "Prezzo unitario",
+    "colonnaCommissione": "Commissione",
+    "colonnaAzioni": "Azioni",
+    "colonnaTipoMovimento": "Tipo movimento",
+    "colonnaImporto": "Importo",
+    "titleSpostaContenitore": "Sposta in un altro contenitore",
+    "optionSpostaIn": "Sposta in...",
+    "titleEliminaTransazione": "Elimina transazione",
+    "descrizioneOperazioneData": "{operazione} del {data}",
+    "confermaEliminazione": "Eliminare questa transazione?\n\n{descrizione}\n\nL'operazione non è reversibile.",
+    "conteggioRighe": "{mostrate} di {totali}",
+    "paginazioneMostraAltre": "Mostra altre {n}",
+    "paginazioneMostraTutte": "Mostra tutte"
+  },
+  "TipiOperazione": {
+    "acquisto": "Acquisto",
+    "vendita": "Vendita",
+    "dividendo": "Dividendo",
+    "ricompensa": "Ricompensa",
+    "costoInQuote": "Costo (in quote)",
+    "costoInContanti": "Costo (in contanti)",
+    "scambioCessione": "Scambio (cessione)",
+    "scambioAcquisizione": "Scambio (acquisizione)"
+  },
+  "TipiMovimentoLiquidita": {
+    "versamento": "Versamento",
+    "prelievo": "Prelievo",
+    "interesse": "Interesse",
+    "costo": "Costo"
+  },
+  "PaginaRibilanciamento": {
+    "alertNessunoScostamentoSoglia": "Tutto in linea con i target. Nessuno scostamento fuori soglia.",
+    "colonnaTarget": "Target",
+    "colonnaAttuale": "Attuale",
+    "colonnaScostamento": "Scostamento",
+    "sovrappeso": "sovrappeso",
+    "sottopeso": "sottopeso",
+    "labelSogliaAlertPrefix": "Soglia di alert: ±",
+    "puntiPercentuali": "punti percentuali",
+    "erroreSogliaNonValida": "Inserisci un numero tra 0 e 100.",
+    "linkModificaSoglia": "→ Modifica",
+    "bottoneSalva": "Salva",
+    "bottoneAnnulla": "Annulla"
   }
 }

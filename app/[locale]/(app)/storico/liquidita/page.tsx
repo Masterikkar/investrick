@@ -1,9 +1,12 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
 import { StoricoMovimentiLiquidita, type RigaStoricoMovimentoLiquidita } from '../storico-movimenti-liquidita'
 
 export default async function TransazioniLiquiditaPage() {
+  const t = await getTranslations('PaginaStorico')
+  const tMenu = await getTranslations('Menu')
   const supabase = await createClient()
 
   const [{ data: strumenti }, { data: contenitori }, { data: movimentiLiquiditaStoricoRaw }] = await Promise.all([
@@ -34,11 +37,11 @@ export default async function TransazioniLiquiditaPage() {
   return (
     <div>
       <RippleLink href="/gestione/transazioni" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
-        → Nuova transazione
+        {t('linkNuovaTransazione')}
       </RippleLink>
 
-      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)', marginTop: 12 }}>Analisi</div>
-      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Transazioni di liquidità</h1>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)', marginTop: 12 }}>{tMenu('analisi')}</div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{t('titoloTransazioniLiquidita')}</h1>
 
       <Sezione>
         <StoricoMovimentiLiquidita movimenti={storicoMovimentiLiquidita} contenitori={contenitori ?? []} />

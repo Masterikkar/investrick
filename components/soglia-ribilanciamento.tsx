@@ -2,10 +2,12 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { formatNumero } from '@/lib/format'
 import { aggiornaSogliaRibilanciamento } from '@/app/[locale]/(app)/ribilanciamento/actions'
 
 export function SogliaRibilanciamento({ sogliaIniziale }: { sogliaIniziale: number }) {
+  const t = useTranslations('PaginaRibilanciamento')
   const router = useRouter()
   const [inModifica, setInModifica] = useState(false)
   const [valore, setValore] = useState(String(sogliaIniziale))
@@ -15,7 +17,7 @@ export function SogliaRibilanciamento({ sogliaIniziale }: { sogliaIniziale: numb
   function handleSalva() {
     const numero = Number(valore)
     if (!Number.isFinite(numero) || numero < 0 || numero > 100) {
-      setErrore('Inserisci un numero tra 0 e 100.')
+      setErrore(t('erroreSogliaNonValida'))
       return
     }
     setErrore(null)
@@ -40,7 +42,7 @@ export function SogliaRibilanciamento({ sogliaIniziale }: { sogliaIniziale: numb
   if (!inModifica) {
     return (
       <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
-        Soglia di alert: ±{formatNumero(sogliaIniziale, 2)} punti percentuali{' '}
+        {t('labelSogliaAlertPrefix')}{formatNumero(sogliaIniziale, 2)} {t('puntiPercentuali')}{' '}
         <button
           type="button"
           onClick={() => setInModifica(true)}
@@ -57,7 +59,7 @@ export function SogliaRibilanciamento({ sogliaIniziale }: { sogliaIniziale: numb
             appearance: 'none',
           }}
         >
-          → Modifica
+          {t('linkModificaSoglia')}
         </button>
       </p>
     )
@@ -65,7 +67,7 @@ export function SogliaRibilanciamento({ sogliaIniziale }: { sogliaIniziale: numb
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-      <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Soglia di alert: ±</span>
+      <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>{t('labelSogliaAlertPrefix')}</span>
       <input
         type="number"
         min={0}
@@ -83,7 +85,7 @@ export function SogliaRibilanciamento({ sogliaIniziale }: { sogliaIniziale: numb
           fontSize: 'var(--fs-body)',
         }}
       />
-      <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>punti percentuali</span>
+      <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>{t('puntiPercentuali')}</span>
       <button
         type="button"
         onClick={handleSalva}
@@ -99,7 +101,7 @@ export function SogliaRibilanciamento({ sogliaIniziale }: { sogliaIniziale: numb
           opacity: pending ? 0.6 : 1,
         }}
       >
-        Salva
+        {t('bottoneSalva')}
       </button>
       <button
         type="button"
@@ -114,7 +116,7 @@ export function SogliaRibilanciamento({ sogliaIniziale }: { sogliaIniziale: numb
           cursor: pending ? 'default' : 'pointer',
         }}
       >
-        Annulla
+        {t('bottoneAnnulla')}
       </button>
       {errore && <span style={{ color: 'var(--danger)', fontSize: 'var(--fs-form-hint)' }}>{errore}</span>}
     </div>

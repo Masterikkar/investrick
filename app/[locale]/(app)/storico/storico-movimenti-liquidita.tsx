@@ -2,8 +2,10 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { formatEuro } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
+import { CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA } from '@/lib/i18n-tipi-movimento-liquidita'
 import { aggiornaContenitoreMovimentoLiquidita, eliminaMovimentoLiquidita } from '../gestione/transazioni/actions'
 
 export type RigaStoricoMovimentoLiquidita = {
@@ -28,6 +30,10 @@ export function StoricoMovimentiLiquidita({
   movimenti: RigaStoricoMovimentoLiquidita[]
   contenitori: Contenitore[]
 }) {
+  const t = useTranslations('PaginaStorico')
+  const tTipiMovimento = useTranslations('TipiMovimentoLiquidita')
+  const tPaginaCategoria = useTranslations('PaginaCategoria')
+  const tPaginaFiscalita = useTranslations('PaginaFiscalita')
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -43,8 +49,13 @@ export function StoricoMovimentiLiquidita({
   const [anniSelezionati, setAnniSelezionati] = useState<Set<number>>(() => new Set(anniDisponibili))
 
   function nomeContenitore(id: string | null) {
-    if (id === null) return 'Diretto'
+    if (id === null) return tPaginaCategoria('provenienzaDiretto')
     return contenitori.find((c) => c.id === id)?.nome ?? '—'
+  }
+
+  function etichettaTipoMovimento(tipo: string): string {
+    const chiave = CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA[tipo]
+    return chiave ? tTipiMovimento(chiave) : tipo
   }
 
   const testo = query.trim().toLowerCase()
@@ -89,9 +100,13 @@ export function StoricoMovimentiLiquidita({
   }
 
   function handleElimina(riga: RigaStoricoMovimentoLiquidita) {
-    const descrizione = `${riga.tipo_movimento} del ${new Date(riga.data).toLocaleDateString('it-IT')} — ${riga.strumento_nome}`
+    const base = t('descrizioneOperazioneData', {
+      operazione: etichettaTipoMovimento(riga.tipo_movimento),
+      data: new Date(riga.data).toLocaleDateString('it-IT'),
+    })
+    const descrizione = `${base} — ${riga.strumento_nome}`
 
-    if (!window.confirm(`Eliminare questa transazione?\n\n${descrizione}\n\nL'operazione non è reversibile.`)) {
+    if (!window.confirm(t('confermaEliminazione', { descrizione }))) {
       return
     }
 
@@ -119,7 +134,7 @@ export function StoricoMovimentiLiquidita({
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <input
           type="text"
-          placeholder="Filtra per strumento..."
+          placeholder={t('placeholderFiltraStrumento')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           style={{
@@ -145,7 +160,7 @@ export function StoricoMovimentiLiquidita({
               color: 'var(--text-primary)',
             }}
           >
-            Filtra per anno
+            {t('filtroPerAnno')}
             {anniSelezionati.size < anniDisponibili.length ? ` (${anniSelezionati.size})` : ''}
           </summary>
           <div
@@ -164,10 +179,10 @@ export function StoricoMovimentiLiquidita({
           >
             <div style={{ display: 'flex', gap: 8, marginBottom: 8, fontSize: 'var(--fs-table)' }}>
               <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set(anniDisponibili))}>
-                Seleziona tutto
+                {t('selezionaTutto')}
               </button>
               <button type="button" className="link-interattivo" style={{ border: 'none', background: 'none', padding: 0 }} onClick={() => setAnniSelezionati(new Set())}>
-                Deseleziona tutto
+                {t('deselezionaTutto')}
               </button>
             </div>
             {anniDisponibili.map((anno) => (
@@ -187,24 +202,24 @@ export function StoricoMovimentiLiquidita({
 
       {erroreId && (
         <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginTop: 8 }}>
-          Non è stato possibile completare l'operazione su quella transazione. Riprova.
+          {t('alertErroreOperazione')}
         </p>
       )}
 
       {righeFiltrate.length === 0 ? (
-        <p style={{ fontSize: 'var(--fs-body)', marginTop: 12, color: 'var(--text-secondary)' }}>Nessuna transazione trovata.</p>
+        <p style={{ fontSize: 'var(--fs-body)', marginTop: 12, color: 'var(--text-secondary)' }}>{t('alertNessunaTransazioneTrovata')}</p>
       ) : (
         <>
           <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
             <thead>
               <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Data</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Strumento</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tipo movimento</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Importo</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa trattenuta</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Azioni</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaData')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaStrumento')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTipoMovimento')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaContenitore')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaImporto')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaTassaTrattenuta')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaAzioni')}</th>
               </tr>
             </thead>
             <tbody>
@@ -218,7 +233,7 @@ export function StoricoMovimentiLiquidita({
                         {m.strumento_nome}
                       </RippleLink>
                     </td>
-                    <td style={{ padding: 8 }}>{m.tipo_movimento}</td>
+                    <td style={{ padding: 8 }}>{etichettaTipoMovimento(m.tipo_movimento)}</td>
                     <td style={{ padding: 8 }}>{nomeContenitore(m.contenitore_id)}</td>
                     <td style={{ padding: 8 }}>{formatEuro(m.importo)}</td>
                     <td style={{ padding: 8 }}>{formatEuro(m.tassa_trattenuta)}</td>
@@ -228,7 +243,7 @@ export function StoricoMovimentiLiquidita({
                           <button
                             type="button"
                             disabled={inCorso}
-                            title="Sposta in un altro contenitore"
+                            title={t('titleSpostaContenitore')}
                             style={{
                               border: 'none',
                               background: 'none',
@@ -245,7 +260,7 @@ export function StoricoMovimentiLiquidita({
                             value=""
                             disabled={inCorso}
                             onChange={(e) => handleSposta(m.id, e.target.value)}
-                            aria-label="Sposta in un altro contenitore"
+                            aria-label={t('titleSpostaContenitore')}
                             style={{
                               position: 'absolute',
                               inset: 0,
@@ -253,8 +268,8 @@ export function StoricoMovimentiLiquidita({
                               cursor: inCorso ? 'default' : 'pointer',
                             }}
                           >
-                            <option value="">Sposta in...</option>
-                            {m.contenitore_id !== null && <option value="diretto">Diretto</option>}
+                            <option value="">{t('optionSpostaIn')}</option>
+                            {m.contenitore_id !== null && <option value="diretto">{tPaginaCategoria('provenienzaDiretto')}</option>}
                             {contenitori
                               .filter((c) => c.id !== m.contenitore_id)
                               .map((c) => (
@@ -269,7 +284,7 @@ export function StoricoMovimentiLiquidita({
                           type="button"
                           onClick={() => handleElimina(m)}
                           disabled={inCorso}
-                          title="Elimina transazione"
+                          title={t('titleEliminaTransazione')}
                           style={{
                             border: 'none',
                             background: 'none',
@@ -292,7 +307,7 @@ export function StoricoMovimentiLiquidita({
 
           <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', fontSize: 'var(--fs-table)' }}>
             <span style={{ color: 'var(--text-secondary)' }}>
-              {righeMostrate.length} di {righeFiltrate.length}
+              {t('conteggioRighe', { mostrate: righeMostrate.length, totali: righeFiltrate.length })}
             </span>
             {ciSonoAltre && (
               <>
@@ -302,7 +317,7 @@ export function StoricoMovimentiLiquidita({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili((v) => v + RIGHE_PER_PAGINA)}
                 >
-                  Mostra altre {Math.min(RIGHE_PER_PAGINA, righeFiltrate.length - righeVisibili)}
+                  {t('paginazioneMostraAltre', { n: Math.min(RIGHE_PER_PAGINA, righeFiltrate.length - righeVisibili) })}
                 </button>
                 <button
                   type="button"
@@ -310,7 +325,7 @@ export function StoricoMovimentiLiquidita({
                   style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
                   onClick={() => setRigheVisibili(righeFiltrate.length)}
                 >
-                  Mostra tutte
+                  {t('paginazioneMostraTutte')}
                 </button>
               </>
             )}
