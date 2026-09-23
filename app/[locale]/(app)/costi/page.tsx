@@ -1,7 +1,9 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatNumero } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { Sezione } from '@/components/sezione'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 
 type CostoPerContenitore = { contenitore_id: string; costo_totale: number }
 type CostoPerStrumento = { strumento_id: string; contenitore_id: string | null; categoria: string; costo_totale: number }
@@ -22,22 +24,27 @@ function costoPerEuro(costo: number, guadagno: number): string {
   return guadagno > 0 ? formatNumero(costo / guadagno, 2) : '—'
 }
 
-const COLONNE_CONTENITORE: ColonnaTabella[] = [
-  { key: 'nome', label: 'Contenitore', kind: 'text' },
-  { key: 'costo', label: 'Costo', kind: 'euro' },
-  { key: 'costoPerEuro', label: 'Costo / € guadagnato', kind: 'text' },
-]
-
-const COLONNE_ASSET: ColonnaTabella[] = [
-  { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
-  { key: 'categoria', label: 'Categoria', kind: 'text' },
-  { key: 'contenitore', label: 'Contenitore', kind: 'text' },
-  { key: 'costo', label: 'Costo', kind: 'euro' },
-  { key: 'costoPerEuro', label: 'Costo / € guadagnato', kind: 'text' },
-]
-
 export default async function CostiPage() {
+  const t = await getTranslations('PaginaCosti')
+  const tMenu = await getTranslations('Menu')
+  const tCategorie = await getTranslations('Categorie')
+  const tContenitori = await getTranslations('Contenitori')
+  const tPaginaCategoria = await getTranslations('PaginaCategoria')
   const supabase = await createClient()
+
+  const COLONNE_CONTENITORE: ColonnaTabella[] = [
+    { key: 'nome', label: t('colonnaContenitore'), kind: 'text' },
+    { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
+    { key: 'costoPerEuro', label: t('colonnaCostoPerEuro'), kind: 'text' },
+  ]
+
+  const COLONNE_ASSET: ColonnaTabella[] = [
+    { key: 'nome', label: t('colonnaStrumento'), kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
+    { key: 'categoria', label: t('colonnaCategoria'), kind: 'text' },
+    { key: 'contenitore', label: t('colonnaContenitore'), kind: 'text' },
+    { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
+    { key: 'costoPerEuro', label: t('colonnaCostoPerEuro'), kind: 'text' },
+  ]
 
   const [
     { data: costoContenitoreRaw },
@@ -80,7 +87,7 @@ export default async function CostiPage() {
   const getRiga = (id: string | null) => {
     const chiave = id ?? 'diretto'
     if (!perContenitore.has(chiave)) {
-      perContenitore.set(chiave, { nome: id ? contenitoreMap.get(id) ?? '—' : 'Diretto', costo: 0, guadagno: 0 })
+      perContenitore.set(chiave, { nome: id ? contenitoreMap.get(id) ?? '—' : tPaginaCategoria('provenienzaDiretto'), costo: 0, guadagno: 0 })
     }
     return perContenitore.get(chiave)!
   }
@@ -114,12 +121,13 @@ export default async function CostiPage() {
       const info = strumentoMap.get(r.strumento_id)
       const costo = costoStrumentoMap.get(`${r.strumento_id}|${r.contenitore_id ?? ''}`) ?? 0
       const guadagno = r.valore != null ? Number(r.valore) - Number(r.capitale_investito) : 0
+      const categoria = info?.categoria
       return {
         key: `${r.strumento_id}|${r.contenitore_id ?? 'diretto'}`,
         strumentoId: r.strumento_id,
         nome: info?.nome ?? '—',
-        categoria: info?.categoria ?? '—',
-        contenitore: r.contenitore_id ? contenitoreMap.get(r.contenitore_id) ?? '—' : 'Diretto',
+        categoria: categoria ? tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[categoria] ?? categoria) : '—',
+        contenitore: r.contenitore_id ? contenitoreMap.get(r.contenitore_id) ?? '—' : tPaginaCategoria('provenienzaDiretto'),
         costo,
         costoPerEuro: costoPerEuro(costo, guadagno),
       }
@@ -146,8 +154,8 @@ export default async function CostiPage() {
     return {
       key: chiave,
       nome: info?.provider ? `${info.nome} (${info.provider})` : info?.nome ?? '—',
-      categoria: 'Liquidita',
-      contenitore: contenitoreId ? contenitoreMap.get(contenitoreId) ?? '—' : 'Diretto',
+      categoria: tContenitori('liquidita'),
+      contenitore: contenitoreId ? contenitoreMap.get(contenitoreId) ?? '—' : tPaginaCategoria('provenienzaDiretto'),
       costo,
       costoPerEuro: costoPerEuro(costo, guadagno),
     }
@@ -159,12 +167,12 @@ export default async function CostiPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Analisi</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Costi</h1>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{tMenu('analisi')}</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{tMenu('costi')}</h1>
 
       <section>
         <Sezione>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Totale costi</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('titoloTotaleCosti')}</div>
           <div
             style={{
               fontFamily: 'var(--font-zilla-slab)',
@@ -180,14 +188,14 @@ export default async function CostiPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Per contenitore</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloPerContenitore')}</h2>
         <Sezione>
           <TabellaOrdinabile colonne={COLONNE_CONTENITORE} righe={righeContenitore} />
         </Sezione>
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Tutti gli asset</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloTuttiGliAsset')}</h2>
         <Sezione>
           <TabellaOrdinabile colonne={COLONNE_ASSET} righe={tuttiGliAsset} />
         </Sezione>

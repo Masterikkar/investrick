@@ -180,5 +180,15 @@
     "labelRendimentoCumulato": "Rendimento cumulato (da sempre)",
     "alertNessunoStorico": "Nessuno storico disponibile ancora.",
     "tooltipRendimento": "Rendimento"
+  },
+  "PaginaCosti": {
+    "titoloTotaleCosti": "Totale costi",
+    "titoloPerContenitore": "Per contenitore",
+    "titoloTuttiGliAsset": "Tutti gli asset",
+    "colonnaContenitore": "Contenitore",
+    "colonnaCosto": "Costo",
+    "colonnaCostoPerEuro": "Costo / € guadagnato",
+    "colonnaStrumento": "Strumento",
+    "colonnaCategoria": "Categoria"
   }
 }

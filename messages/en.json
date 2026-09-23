@@ -180,5 +180,15 @@
     "labelRendimentoCumulato": "Cumulative return (all-time)",
     "alertNessunoStorico": "No history available yet.",
     "tooltipRendimento": "Return"
+  },
+  "PaginaCosti": {
+    "titoloTotaleCosti": "Total costs",
+    "titoloPerContenitore": "By container",
+    "titoloTuttiGliAsset": "All assets",
+    "colonnaContenitore": "Container",
+    "colonnaCosto": "Cost",
+    "colonnaCostoPerEuro": "Cost / € gained",
+    "colonnaStrumento": "Instrument",
+    "colonnaCategoria": "Category"
   }
 }
