@@ -64,7 +64,7 @@ export function AliquoteCategoria({ categorie }: { categorie: CategoriaAliquota[
     if (
       !window.confirm(
         t('confermaReimposta', {
-          numero: numeroStrumenti,
+          numeroStrumenti: t('numeroStrumenti', { numero: numeroStrumenti }),
           categoria: etichettaCategoria(categoria),
           aliquota: aliquotaDefault,
         })
@@ -85,7 +85,10 @@ export function AliquoteCategoria({ categorie }: { categorie: CategoriaAliquota[
         setMessaggioErrore(risultato.errore)
       } else {
         setMessaggioSuccesso(
-          t('successoReimposta', { numero: risultato.aggiornati, categoria: etichettaCategoria(categoria) })
+          t('successoReimposta', {
+            numeroStrumenti: t('numeroStrumenti', { numero: risultato.aggiornati }),
+            categoria: etichettaCategoria(categoria),
+          })
         )
         router.refresh()
       }

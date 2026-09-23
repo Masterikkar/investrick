@@ -129,6 +129,7 @@ export function ImportaExcelLiquidita({
   contenitori: ContenitoreBase[]
 }) {
   const t = useTranslations('PaginaGestioneTransazioni')
+  const tGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
   const [righe, setRighe] = useState<RigaParsata[] | null>(null)
   const [risultato, setRisultato] = useState<{
     inserite: number
@@ -226,7 +227,9 @@ export function ImportaExcelLiquidita({
           <IconaDownload />
           {t('linkScaricaTemplate')}
         </a>
-        <span style={{ color: 'var(--text-secondary)' }}>{t('avvisoContoDeveEsistere')}</span>
+        <span style={{ color: 'var(--text-secondary)' }}>
+          {t('avvisoContoDeveEsistere', { pagina: tGestioneStrumenti('titoloGestioneStrumenti') })}
+        </span>
       </div>
 
       {risultato && (
