@@ -55,7 +55,16 @@
     "gestioneDatabase": "Data management",
     "strumenti": "Instruments",
     "transazioni": "Transactions",
+    "impostazioni": "Settings",
     "esci": "Log out"
+  },
+  "PaginaImpostazioni": {
+    "titolo": "Settings",
+    "etichettaLingua": "Language",
+    "lingueDisponibili": {
+      "it": "Italian",
+      "en": "English"
+    }
   },
   "Contenitori": {
     "pac": "Investment Plans",

@@ -20,6 +20,7 @@ import {
   IconaRibilanciamento,
   IconaStorico,
   IconaGestione,
+  IconaImpostazioni,
   IconaEsci,
 } from '@/components/icone'
 
@@ -223,6 +224,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                   </RippleLink>
                 </div>
               </details>
+              <hr className="menu-divider" />
+              <RippleLink
+                href="/account/impostazioni"
+                className="menu-row link-interattivo"
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
+              >
+                <IconaImpostazioni /> {t('impostazioni')}
+              </RippleLink>
               <hr className="menu-divider" />
               <form action={logout}>
                 <button

@@ -55,7 +55,16 @@
     "gestioneDatabase": "Gestione database",
     "strumenti": "Strumenti",
     "transazioni": "Transazioni",
+    "impostazioni": "Impostazioni",
     "esci": "Esci"
+  },
+  "PaginaImpostazioni": {
+    "titolo": "Impostazioni",
+    "etichettaLingua": "Lingua",
+    "lingueDisponibili": {
+      "it": "Italiano",
+      "en": "Inglese"
+    }
   },
   "Contenitori": {
     "pac": "PAC",
