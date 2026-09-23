@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
@@ -20,6 +21,8 @@ export default async function GestioneStrumentiPage({
     errore_contenitore?: string
   }>
 }) {
+  const t = await getTranslations('PaginaGestioneStrumenti')
+  const tMenu = await getTranslations('Menu')
   const params = await searchParams
   const supabase = await createClient()
 
@@ -50,13 +53,13 @@ export default async function GestioneStrumentiPage({
 
   return (
     <div>
-      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>Account</div>
-      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Gestione strumenti</h1>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{tMenu('account')}</div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{t('titoloGestioneStrumenti')}</h1>
 
       <section>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Asset</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloAsset')}</h2>
         <Sezione>
-          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 12 }}>Crea nuovo asset</h3>
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 12 }}>{t('titoloCreaNuovoAsset')}</h3>
 
           {params.errore === 'duplicato' && params.duplicato_id && (
             <div
@@ -70,17 +73,20 @@ export default async function GestioneStrumentiPage({
                 maxWidth: 420,
               }}
             >
-              Esiste già uno strumento con questo ISIN:{' '}
-              <strong>{decodeURIComponent(params.duplicato_nome ?? '')}</strong>.{' '}
-              <RippleLink href={`/asset/${params.duplicato_id}`} className="link-interattivo">
-                Vai alla sua scheda
-              </RippleLink>{' '}
-              invece di crearne uno nuovo.
+              {t.rich('erroreIsinDuplicato', {
+                nome: decodeURIComponent(params.duplicato_nome ?? ''),
+                strong: (chunks) => <strong>{chunks}</strong>,
+                link: (chunks) => (
+                  <RippleLink href={`/asset/${params.duplicato_id}`} className="link-interattivo">
+                    {chunks}
+                  </RippleLink>
+                ),
+              })}
             </div>
           )}
           {params.errore === '1' && (
             <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginBottom: 16 }}>
-              Qualcosa è andato storto, controlla i campi e riprova.
+              {t('erroreGenerico')}
             </p>
           )}
 
@@ -89,22 +95,22 @@ export default async function GestioneStrumentiPage({
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Contenitori</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloContenitori')}</h2>
         <Sezione>
-          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 12 }}>Modifica contenitori</h3>
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 12 }}>{t('titoloModificaContenitori')}</h3>
 
           <ListaContenitori contenitori={contenitori ?? []} />
 
           <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 24, marginBottom: 12 }}>
-            Crea nuovo contenitore
+            {t('titoloCreaNuovoContenitore')}
           </h3>
 
           {params.successo_contenitore === '1' && (
-            <p style={{ color: 'var(--success)', fontSize: 'var(--fs-body)', marginBottom: 12 }}>Contenitore creato.</p>
+            <p style={{ color: 'var(--success)', fontSize: 'var(--fs-body)', marginBottom: 12 }}>{t('successoContenitoreCreato')}</p>
           )}
           {params.errore_contenitore === '1' && (
             <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginBottom: 12 }}>
-              Qualcosa è andato storto, controlla i campi e riprova.
+              {t('erroreGenerico')}
             </p>
           )}
 

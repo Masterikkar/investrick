@@ -2,15 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { rinominaContenitore, eliminaContenitore } from './actions-contenitore'
 
 type Contenitore = { id: string; nome: string; tipo: string }
-
-const ETICHETTA_TIPO: Record<string, string> = {
-  PAC: 'PAC',
-  Polizza: 'Polizza vita',
-  Liquidita: 'Liquidità',
-}
 
 const stileBottoneOutline: React.CSSProperties = {
   border: '1px solid var(--border-default)',
@@ -22,7 +17,18 @@ const stileBottoneOutline: React.CSSProperties = {
 }
 
 export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }) {
+  const t = useTranslations('PaginaGestioneStrumenti')
+  const tPaginaContenitore = useTranslations('PaginaContenitore')
+  const tContenitori = useTranslations('Contenitori')
+  const tPaginaCategoria = useTranslations('PaginaCategoria')
+  const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const router = useRouter()
+
+  function etichettaTipo(tipo: string): string {
+    if (tipo === 'Polizza') return tPaginaContenitore('etichettaPolizza')
+    if (tipo === 'Liquidita') return tContenitori('liquidita')
+    return tipo
+  }
   const [nomi, setNomi] = useState<Record<string, string>>(() =>
     Object.fromEntries(contenitori.map((c) => [c.id, c.nome]))
   )
@@ -54,7 +60,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
   function handleElimina(id: string, nome: string) {
     if (
       !window.confirm(
-        `Eliminare il contenitore "${nome}"?\n\nLe transazioni e i movimenti collegati verranno spostati nel contenitore 'Diretto'; eventuali target impostati su questo contenitore verranno cancellati.\n\nL'operazione non è reversibile.`
+        t('confermaEliminaContenitore', { nome, diretto: tPaginaCategoria('provenienzaDiretto') })
       )
     )
       return
@@ -75,7 +81,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
   }
 
   if (contenitori.length === 0) {
-    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessun contenitore creato.</p>
+    return <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{t('alertNessunContenitoreCreato')}</p>
   }
 
   return (
@@ -98,7 +104,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
               }}
             />
             <span style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', minWidth: 80 }}>
-              {ETICHETTA_TIPO[c.tipo] ?? c.tipo}
+              {etichettaTipo(c.tipo)}
             </span>
             <button
               type="button"
@@ -106,7 +112,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
               disabled={pendingId === c.id || (nomi[c.id] ?? '').trim() === c.nome}
               style={{ ...stileBottoneOutline, opacity: pendingId === c.id || (nomi[c.id] ?? '').trim() === c.nome ? 0.5 : 1 }}
             >
-              Salva
+              {tPaginaRibilanciamento('bottoneSalva')}
             </button>
             <button
               type="button"
@@ -114,7 +120,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
               disabled={pendingId === c.id}
               style={{ ...stileBottoneOutline, color: 'var(--danger)', opacity: pendingId === c.id ? 0.5 : 1 }}
             >
-              Elimina
+              {t('bottoneElimina')}
             </button>
           </div>
         ))}

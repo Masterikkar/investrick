@@ -1,24 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { creaAsset } from './actions'
 import { MenuSelect } from '@/components/menu-select'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import { LARGHEZZA_STANDARD, GAP_CAMPI, LARGHEZZA_RIGA_QUATTRO_CAMPI, LARGHEZZA_NOME } from './layout-campi'
 
 type TipiPerCategoria = Record<string, string[]>
-
-const ETICHETTA_CATEGORIA: Record<string, string> = {
-  Liquidita: 'Liquidità',
-}
-
-const OPZIONI_FREQUENZA_CEDOLA = [
-  { value: '', label: 'Seleziona...' },
-  { value: 'Annuale', label: 'Annuale' },
-  { value: 'Semestrale', label: 'Semestrale' },
-  { value: 'Trimestrale', label: 'Trimestrale' },
-  { value: 'Mensile', label: 'Mensile' },
-  { value: 'Zero coupon', label: 'Zero coupon' },
-]
 
 const stileCampo: React.CSSProperties = {
   display: 'block',
@@ -43,6 +32,11 @@ export function FormNuovoAsset({
   tipiPerCategoria: TipiPerCategoria
   aliquoteDefaultPerCategoria: Record<string, number>
 }) {
+  const t = useTranslations('PaginaGestioneStrumenti')
+  const tCategorie = useTranslations('Categorie')
+  const tContenitori = useTranslations('Contenitori')
+  const tGestioneFiscalita = useTranslations('PaginaGestioneFiscalita')
+  const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const categorie = Object.keys(tipiPerCategoria)
   const [categoria, setCategoria] = useState('')
   const [tipo, setTipo] = useState('')
@@ -54,11 +48,28 @@ export function FormNuovoAsset({
   const isObbligazioni = categoria === 'Obbligazioni'
   const isMultiasset = categoria === 'Multiasset'
 
-  const opzioniCategoria = [
-    { value: '', label: 'Seleziona...' },
-    ...categorie.map((c) => ({ value: c, label: ETICHETTA_CATEGORIA[c] ?? c })),
+  function etichettaCategoria(cat: string): string {
+    if (cat === 'Liquidita') return tContenitori('liquidita')
+    return tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[cat] ?? cat)
+  }
+
+  const opzioniFrequenzaCedola = [
+    { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
+    { value: 'Annuale', label: t('optFrequenzaAnnuale') },
+    { value: 'Semestrale', label: t('optFrequenzaSemestrale') },
+    { value: 'Trimestrale', label: t('optFrequenzaTrimestrale') },
+    { value: 'Mensile', label: t('optFrequenzaMensile') },
+    { value: 'Zero coupon', label: t('optFrequenzaZeroCoupon') },
   ]
-  const opzioniTipo = [{ value: '', label: 'Seleziona...' }, ...tipiDisponibili.map((t) => ({ value: t, label: t }))]
+
+  const opzioniCategoria = [
+    { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
+    ...categorie.map((c) => ({ value: c, label: etichettaCategoria(c) })),
+  ]
+  const opzioniTipo = [
+    { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
+    ...tipiDisponibili.map((ti) => ({ value: ti, label: ti })),
+  ]
 
   function handleCategoriaChange(nuovaCategoria: string) {
     setCategoria(nuovaCategoria)
@@ -68,8 +79,8 @@ export function FormNuovoAsset({
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     const nuoviErrori: Record<string, string> = {}
-    if (!categoria) nuoviErrori.categoria = 'Seleziona una categoria.'
-    if (!tipo) nuoviErrori.tipo = 'Seleziona un tipo.'
+    if (!categoria) nuoviErrori.categoria = t('erroreSelezionaCategoria')
+    if (!tipo) nuoviErrori.tipo = t('erroreSelezionaTipo')
 
     if (Object.keys(nuoviErrori).length > 0) {
       e.preventDefault()
@@ -88,7 +99,7 @@ export function FormNuovoAsset({
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: GAP_CAMPI }}>
         <div style={{ width: LARGHEZZA_STANDARD }}>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            Categoria
+            {t('labelCategoria')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect name="categoria" value={categoria} onChange={handleCategoriaChange} options={opzioniCategoria} />
             </div>
@@ -98,7 +109,7 @@ export function FormNuovoAsset({
 
         <div style={{ width: LARGHEZZA_STANDARD }}>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            Tipo
+            {t('labelTipo')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect
                 name="tipo"
@@ -117,28 +128,28 @@ export function FormNuovoAsset({
 
         <div style={{ width: '100%', maxWidth: LARGHEZZA_NOME }}>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            Nome
+            {t('labelNome')}
             <input type="text" name="nome" required style={stileCampo} />
           </label>
         </div>
 
         <div style={{ width: LARGHEZZA_STANDARD }}>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            Ticker
+            {t('labelTicker')}
             <input type="text" name="ticker" style={stileCampo} />
           </label>
         </div>
 
         <div style={{ width: LARGHEZZA_STANDARD }}>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            ISIN
+            {t('labelIsin')}
             <input type="text" name="isin" style={stileCampo} />
           </label>
         </div>
 
         <div style={{ width: LARGHEZZA_STANDARD }}>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            Valuta
+            {t('labelValuta')}
             <input type="text" name="valuta" defaultValue="EUR" required style={stileCampo} />
           </label>
         </div>
@@ -146,7 +157,7 @@ export function FormNuovoAsset({
         {!isLiquidita && (
           <div style={{ width: LARGHEZZA_STANDARD }}>
             <label style={{ fontSize: 'var(--fs-form-label)' }}>
-              Codice prezzo (EODHD)
+              {t('labelCodicePrezzo')}
               <input type="text" name="codice_prezzo" placeholder="es. EUNL.XETRA" style={stileCampo} />
             </label>
           </div>
@@ -156,13 +167,13 @@ export function FormNuovoAsset({
           <>
             <div style={{ width: LARGHEZZA_STANDARD }}>
               <label style={{ fontSize: 'var(--fs-form-label)' }}>
-                Provider
+                {t('labelProvider')}
                 <input type="text" name="provider" style={stileCampo} />
               </label>
             </div>
             <div style={{ width: LARGHEZZA_STANDARD }}>
               <label style={{ fontSize: 'var(--fs-form-label)' }}>
-                Tasso %
+                {t('labelTassoPercentuale')}
                 <input type="number" name="tasso_percentuale" step="any" style={stileCampo} />
               </label>
             </div>
@@ -172,7 +183,7 @@ export function FormNuovoAsset({
 
       {!isLiquidita && (
         <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)' }}>
-          Codice prezzo: lascia vuoto se non vuoi ancora attivare l&apos;aggiornamento automatico.
+          {t('hintCodicePrezzo')}
         </small>
       )}
 
@@ -180,27 +191,27 @@ export function FormNuovoAsset({
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: GAP_CAMPI }}>
           <div style={{ width: LARGHEZZA_STANDARD }}>
             <label style={{ fontSize: 'var(--fs-form-label)' }}>
-              Scadenza
+              {t('labelScadenza')}
               <input type="date" name="data_scadenza" style={stileCampo} />
             </label>
           </div>
 
           <div style={{ width: LARGHEZZA_STANDARD }}>
             <label style={{ fontSize: 'var(--fs-form-label)' }}>
-              Cedola %
+              {t('labelCedolaPercentuale')}
               <input type="number" name="cedola_percentuale" min="0" step="any" style={stileCampo} />
             </label>
           </div>
 
           <div style={{ width: LARGHEZZA_STANDARD }}>
             <label style={{ fontSize: 'var(--fs-form-label)' }}>
-              Frequenza cedola
+              {t('labelFrequenzaCedola')}
               <div style={{ marginTop: 4 }}>
                 <MenuSelect
                   name="frequenza_cedola"
                   value={frequenzaCedola}
                   onChange={setFrequenzaCedola}
-                  options={OPZIONI_FREQUENZA_CEDOLA}
+                  options={opzioniFrequenzaCedola}
                 />
               </div>
             </label>
@@ -222,14 +233,16 @@ export function FormNuovoAsset({
             boxSizing: 'border-box',
           }}
         >
-          Questo asset riceverà l&apos;aliquota di default ({aliquoteDefaultPerCategoria.Multiasset ?? 26}%). Se vuoi puoi
-          modificarla in Gestione fiscalità dopo la creazione.
+          {t('notaMultiasset', {
+            percentuale: aliquoteDefaultPerCategoria.Multiasset ?? 26,
+            pagina: tGestioneFiscalita('titoloGestioneFiscalita'),
+          })}
         </p>
       )}
 
       <div style={{ width: '100%', maxWidth: LARGHEZZA_RIGA_QUATTRO_CAMPI }}>
         <label style={{ fontSize: 'var(--fs-form-label)' }}>
-          Note
+          {t('labelNote')}
           <textarea name="note" rows={3} style={stileCampo} />
         </label>
       </div>
@@ -247,7 +260,7 @@ export function FormNuovoAsset({
           alignSelf: 'flex-start',
         }}
       >
-        Crea asset
+        {t('bottoneCreaAsset')}
       </button>
     </form>
   )
