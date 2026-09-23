@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell } from 'recharts'
 import { formatPercent } from '@/lib/format'
 
@@ -17,6 +18,7 @@ export function GraficoRendimentiAnnuali({
   rendimentoCumulato: number | null
   rendimentiAnnuali: RendimentoAnnuale[]
 }) {
+  const t = useTranslations('PaginaRendimenti')
   const dati = rendimentiAnnuali.map((r) => ({
     anno: String(r.anno),
     valore: r.rendimentoPct,
@@ -25,7 +27,7 @@ export function GraficoRendimentiAnnuali({
   return (
     <div>
       <div style={{ marginBottom: 16 }}>
-        <span style={{ fontSize: 'var(--fs-card-label)', color: 'var(--text-secondary)' }}>Rendimento cumulato (da sempre)</span>
+        <span style={{ fontSize: 'var(--fs-card-label)', color: 'var(--text-secondary)' }}>{t('labelRendimentoCumulato')}</span>
         <div
           style={{
             fontFamily: 'var(--font-zilla-slab)',
@@ -40,7 +42,7 @@ export function GraficoRendimentiAnnuali({
       </div>
 
       {dati.length === 0 ? (
-        <p style={{ color: 'var(--text-secondary)' }}>Nessuno storico disponibile ancora.</p>
+        <p style={{ color: 'var(--text-secondary)' }}>{t('alertNessunoStorico')}</p>
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={dati}>
@@ -48,7 +50,7 @@ export function GraficoRendimentiAnnuali({
             <XAxis dataKey="anno" fontSize={11} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <YAxis tickFormatter={(v) => `${v}%`} fontSize={11} width={50} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <Tooltip
-              formatter={(value) => [value != null ? formatPercent(Number(value), 2, true) : '—', 'Rendimento']}
+              formatter={(value) => [value != null ? formatPercent(Number(value), 2, true) : '—', t('tooltipRendimento')]}
               cursor={{ fill: '#1A2036', fillOpacity: 0.5 }}
               contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
               labelStyle={{ color: '#E8EBF2' }}

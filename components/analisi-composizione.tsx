@@ -1,4 +1,6 @@
+import { getTranslations } from 'next-intl/server'
 import { formatPercent, formatNumero } from '@/lib/format'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import { BarreSottocategoria, type SottoTarget } from '@/components/barre-sottocategoria'
 
 export type ScostamentoCategoria = {
@@ -8,13 +10,13 @@ export type ScostamentoCategoria = {
   scostamento_pp: number | null
 }
 
-export function AnalisiComposizione({
+export async function AnalisiComposizione({
   composizione,
   sottoTargetPerCategoria,
   soglia,
   targetAttivo,
-  messaggioTargetDisattivato = 'Target disattivato per questo contenitore.',
-  messaggioNessunTarget = 'Nessun target impostato.',
+  messaggioTargetDisattivato,
+  messaggioNessunTarget,
 }: {
   composizione: ScostamentoCategoria[]
   sottoTargetPerCategoria: Record<string, SottoTarget[]>
@@ -23,11 +25,14 @@ export function AnalisiComposizione({
   messaggioTargetDisattivato?: string
   messaggioNessunTarget?: string
 }) {
+  const t = await getTranslations('PaginaContenitore')
+  const tCategorie = await getTranslations('Categorie')
+
   if (!targetAttivo) {
-    return <p style={{ color: 'var(--text-secondary)' }}>{messaggioTargetDisattivato}</p>
+    return <p style={{ color: 'var(--text-secondary)' }}>{messaggioTargetDisattivato ?? t('alertTargetDisattivato')}</p>
   }
   if (composizione.length === 0) {
-    return <p style={{ color: 'var(--text-secondary)' }}>{messaggioNessunTarget}</p>
+    return <p style={{ color: 'var(--text-secondary)' }}>{messaggioNessunTarget ?? t('alertNessunTarget')}</p>
   }
 
   return (
@@ -40,10 +45,13 @@ export function AnalisiComposizione({
         return (
           <div key={c.categoria}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-table)', marginBottom: 4 }}>
-              <span>{c.categoria}</span>
+              <span>{tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[c.categoria ?? ''] ?? c.categoria ?? '')}</span>
               <span>
-                {formatPercent(c.peso_attuale_pct ?? 0, 1)} attuale · {formatPercent(c.target_percentuale ?? 0, 1)} target (
-                {formatNumero(c.scostamento_pp ?? 0, 2, true)} pp)
+                {t('barraComposizione', {
+                  pesoAttuale: formatPercent(c.peso_attuale_pct ?? 0, 1),
+                  target: formatPercent(c.target_percentuale ?? 0, 1),
+                  scostamento: formatNumero(c.scostamento_pp ?? 0, 2, true),
+                })}
               </span>
             </div>
             <div style={{ position: 'relative', height: 10, background: 'var(--border-default)', borderRadius: 0 }}>

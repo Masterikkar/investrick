@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { GraficoLineaSemplice, type PuntoLineaSemplice } from '@/components/grafico-linea-semplice'
@@ -6,15 +7,8 @@ import { RippleLink } from '@/components/ripple-link'
 import { CardMetrica } from '@/components/card-metrica'
 import { Sezione } from '@/components/sezione'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
+import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
 import { StoricoMovimentiLiquidita, type RigaStoricoMovimentoLiquidita } from '../../storico/storico-movimenti-liquidita'
-
-const NOMI_MESI = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic']
-
-const COLONNE_STORICO_INTERESSI: ColonnaTabella[] = [
-  { key: 'anno', label: 'Anno', kind: 'text' },
-  { key: 'netto', label: 'Netto ricevuto', kind: 'euro-signed' },
-  { key: 'tasse', label: 'Tasse pagate', kind: 'euro' },
-]
 
 type SaldoRiga = { contenitore_id: string | null; saldo_corrente: number }
 type CostoRiga = { contenitore_id: string | null; costo_totale: number }
@@ -40,8 +34,19 @@ export default async function LiquiditaStrumentoPage({
   params: Promise<{ strumentoId: string }>
 }) {
   const { strumentoId } = await params
+  const t = await getTranslations('PaginaLiquidita')
+  const tTipi = await getTranslations('TipiLiquidita')
+  const tContenitori = await getTranslations('Contenitori')
   const supabase = await createClient()
   const annoCorrente = new Date().getFullYear()
+
+  const NOMI_MESI = Array.from({ length: 12 }, (_, i) => t(`mese${i + 1}`))
+
+  const COLONNE_STORICO_INTERESSI: ColonnaTabella[] = [
+    { key: 'anno', label: t('colonnaAnno'), kind: 'text' },
+    { key: 'netto', label: t('colonnaNettoRicevuto'), kind: 'euro-signed' },
+    { key: 'tasse', label: t('colonnaTassePagate'), kind: 'euro' },
+  ]
 
   const [
     { data: strumento },
@@ -84,7 +89,7 @@ export default async function LiquiditaStrumentoPage({
   ])
 
   if (!strumento) {
-    return <div>Strumento non trovato.</div>
+    return <div>{t('strumentoNonTrovato')}</div>
   }
 
   const saldoAttuale = (saldiRaw ?? []).reduce((s, r) => s + Number(r.saldo_corrente ?? 0), 0)
@@ -156,14 +161,18 @@ export default async function LiquiditaStrumentoPage({
     strumento_nome: strumento.nome,
   }))
 
+  const tipoVisualizzato = strumento.tipo
+    ? tTipi(CHIAVE_TRADUZIONE_TIPO_LIQUIDITA[strumento.tipo] ?? strumento.tipo)
+    : null
+
   return (
     <div>
       <RippleLink href="/liquidita" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
-        ← Liquidità
+        ← {tContenitori('liquidita')}
       </RippleLink>
 
       <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)', marginTop: 12 }}>
-        {[strumento.tipo, strumento.provider].filter(Boolean).join(' · ')}
+        {[tipoVisualizzato, strumento.provider].filter(Boolean).join(' · ')}
       </div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{strumento.nome}</h1>
 
@@ -173,7 +182,7 @@ export default async function LiquiditaStrumentoPage({
             {formatEuro(saldoAttuale)}
           </p>
           <div style={{ marginTop: 16, maxWidth: 1024 }}>
-            <GraficoLineaSemplice punti={puntiSaldo} />
+            <GraficoLineaSemplice punti={puntiSaldo} messaggioNessunDato={t('alertNessunDatoAnno')} />
           </div>
         </Sezione>
       </section>
@@ -181,10 +190,10 @@ export default async function LiquiditaStrumentoPage({
       <section style={{ marginTop: 24 }}>
         <Sezione>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <CardMetrica label="Interesse lordo">{formatEuro(interessiLordi)}</CardMetrica>
-            <CardMetrica label="Interesse netto">{formatEuro(interessiNetti)}</CardMetrica>
-            <CardMetrica label="Tassa trattenuta">{formatEuro(tasseTrattenute)}</CardMetrica>
-            <CardMetrica label="Costo totale" href="/costi" linkLabel="→ Dettaglio costi">
+            <CardMetrica label={t('labelInteresseLordo')}>{formatEuro(interessiLordi)}</CardMetrica>
+            <CardMetrica label={t('labelInteresseNetto')}>{formatEuro(interessiNetti)}</CardMetrica>
+            <CardMetrica label={t('labelTassaTrattenuta')}>{formatEuro(tasseTrattenute)}</CardMetrica>
+            <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkDettaglioCosti')}>
               {formatEuro(costoTotale)}
             </CardMetrica>
           </div>
@@ -192,7 +201,7 @@ export default async function LiquiditaStrumentoPage({
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Interessi — {annoCorrente}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloInteressiAnno', { anno: annoCorrente })}</h2>
         <Sezione>
           <p
             style={{
@@ -206,11 +215,11 @@ export default async function LiquiditaStrumentoPage({
             {formatEuroSigned(interesseNettoYtd)}
           </p>
           <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', marginTop: 4, marginBottom: 16 }}>
-            Netto, da inizio anno
+            {t('labelNettoDaInizioAnno')}
           </p>
 
           <div style={{ maxWidth: 1024 }}>
-            <GraficoLineaSemplice punti={puntiCumulati} />
+            <GraficoLineaSemplice punti={puntiCumulati} messaggioNessunDato={t('alertNessunDatoAnno')} />
           </div>
 
           <div style={{ marginTop: 24, maxWidth: 1024 }}>
@@ -220,11 +229,11 @@ export default async function LiquiditaStrumentoPage({
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Storico interessi</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloStoricoInteressi')}</h2>
         <Sezione>
           {righeStoricoAnni.length === 0 ? (
             <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', margin: 0 }}>
-              Nessun interesse registrato finora.
+              {t('alertNessunInteresse')}
             </p>
           ) : (
             <TabellaOrdinabile colonne={COLONNE_STORICO_INTERESSI} righe={righeStoricoAnni} />
@@ -233,7 +242,7 @@ export default async function LiquiditaStrumentoPage({
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>Storico movimenti</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloStoricoMovimenti')}</h2>
         <Sezione>
           <StoricoMovimentiLiquidita movimenti={storicoMovimenti} contenitori={contenitori ?? []} />
         </Sezione>

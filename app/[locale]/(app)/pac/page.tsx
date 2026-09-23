@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
@@ -6,28 +7,34 @@ import { RippleLink } from '@/components/ripple-link'
 import { CardMetrica, stileCardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
 import { Sezione } from '@/components/sezione'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import type { SottoTarget } from '@/components/barre-sottocategoria'
 import type { ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
 import { AnalisiRendimento, type ContributoCategoria } from '@/components/analisi-rendimento'
 import { AnalisiComposizione, type ScostamentoCategoria } from '@/components/analisi-composizione'
 
-const COLONNE: ColonnaTabella[] = [
-  { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
-  { key: 'tipo', label: 'Tipo', kind: 'text' },
-  { key: 'categoria', label: 'Categoria', kind: 'text' },
-  { key: 'rendimentoPct', label: 'Rendimento', kind: 'percent-signed' },
-  { key: 'rendimentoAssoluto', label: 'Rendimento (€)', kind: 'euro-signed' },
-  { key: 'valore', label: 'Valore', kind: 'euro' },
-  { key: 'peso', label: 'Peso', kind: 'percent' },
-  { key: 'nav', label: 'NAV', kind: 'euro' },
-  { key: 'prezzoMedioUnitario', label: 'Prezzo medio', kind: 'euro' },
-  { key: 'costo', label: 'Costo', kind: 'euro' },
-  { key: 'provenienza', label: 'Provenienza', kind: 'text' },
-]
-
 const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
 export default async function PacPage() {
+  const t = await getTranslations('PaginaContenitore')
+  const tCategorie = await getTranslations('Categorie')
+  const tPaginaCategoria = await getTranslations('PaginaCategoria')
+  const tContenitori = await getTranslations('Contenitori')
+
+  const COLONNE: ColonnaTabella[] = [
+    { key: 'nome', label: t('colonnaStrumento'), kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
+    { key: 'tipo', label: t('colonnaTipo'), kind: 'text' },
+    { key: 'categoriaVisualizzata', label: t('colonnaCategoria'), kind: 'text' },
+    { key: 'rendimentoPct', label: t('colonnaRendimento'), kind: 'percent-signed' },
+    { key: 'rendimentoAssoluto', label: t('colonnaRendimentoEuro'), kind: 'euro-signed' },
+    { key: 'valore', label: t('colonnaValore'), kind: 'euro' },
+    { key: 'peso', label: t('colonnaPeso'), kind: 'percent' },
+    { key: 'nav', label: t('colonnaNav'), kind: 'euro' },
+    { key: 'prezzoMedioUnitario', label: t('colonnaPrezzoMedio'), kind: 'euro' },
+    { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
+    { key: 'provenienza', label: t('colonnaProvenienza'), kind: 'text' },
+  ]
+
   const supabase = await createClient()
 
   const { data: pacs } = await supabase
@@ -138,13 +145,15 @@ export default async function PacPage() {
       const costo = costi?.find(
         (c) => c.strumento_id === p.strumento_id && c.contenitore_id === p.contenitore_id
       )
+      const categoria = strumento?.categoria ?? '—'
       return {
         key: `${p.contenitore_id ?? 'diretto'}-${p.strumento_id ?? '—'}`,
         strumentoId: p.strumento_id,
         contenitoreId: p.contenitore_id,
         nome: strumento?.nome ?? '—',
         tipo: strumento?.tipo ?? '—',
-        categoria: strumento?.categoria ?? '—',
+        categoria,
+        categoriaVisualizzata: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[categoria] ?? categoria),
         rendimentoPct: p.rendimento_pct ?? 0,
         rendimentoAssoluto: (p.valore ?? 0) - (p.capitale_investito ?? 0),
         valore: p.valore ?? 0,
@@ -154,7 +163,7 @@ export default async function PacPage() {
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
         peso: valoreTotalePac > 0 ? ((p.valore ?? 0) / valoreTotalePac) * 100 : 0,
         costo: costo?.costo_totale ?? 0,
-        provenienza: p.contenitore_id ? nomePac.get(p.contenitore_id) ?? '—' : 'Diretto',
+        provenienza: p.contenitore_id ? nomePac.get(p.contenitore_id) ?? '—' : tPaginaCategoria('provenienzaDiretto'),
       }
     })
     .sort((a, b) => (b.valore as number) - (a.valore as number))
@@ -192,10 +201,10 @@ export default async function PacPage() {
   }
 
   const targetPerCategoriaEContenitore: Record<string, Record<string, number>> = {}
-  for (const t of targetAllocazioniRaw ?? []) {
-    if (!t.contenitore_id) continue
-    if (!targetPerCategoriaEContenitore[t.categoria]) targetPerCategoriaEContenitore[t.categoria] = {}
-    targetPerCategoriaEContenitore[t.categoria][t.contenitore_id] = Number(t.target_percentuale)
+  for (const ta of targetAllocazioniRaw ?? []) {
+    if (!ta.contenitore_id) continue
+    if (!targetPerCategoriaEContenitore[ta.categoria]) targetPerCategoriaEContenitore[ta.categoria] = {}
+    targetPerCategoriaEContenitore[ta.categoria][ta.contenitore_id] = Number(ta.target_percentuale)
   }
 
   const categorieConTarget = ORDINE_CATEGORIE.filter((cat) =>
@@ -321,8 +330,8 @@ export default async function PacPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>PAC</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>PAC</h1>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{tContenitori('pac')}</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{tContenitori('pac')}</h1>
 
       <section>
         <Sezione>
@@ -337,20 +346,20 @@ export default async function PacPage() {
               rendimentoPct={rendimentoPctTotale}
               variazioneOggi={variazioneDaUltimoSnapshot}
               href="/rendimenti"
-              linkLabel="→ Rendimenti"
+              linkLabel={t('linkRendimenti')}
             />
 
-            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="→ Fiscalità">
+            <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/fiscalita" linkLabel={t('linkFiscalita')}>
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(plusMinusNonRealizzata)}
               </span>
             </CardMetrica>
 
-            <CardMetrica label="Capitale investito netto" href="/gestione/transazioni" linkLabel="→ Transazioni">
+            <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
               {formatEuro(capitaleInvestitoNettoTotale)}
             </CardMetrica>
 
-            <CardMetrica label="Costo totale" href="/costi" linkLabel="→ Costi">
+            <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>
               {formatEuro(costoTotalePac)}
             </CardMetrica>
           </div>
@@ -359,7 +368,7 @@ export default async function PacPage() {
 
       <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Analisi rendimento</h2>
+          <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloAnalisiRendimento')}</h2>
           <Sezione>
             <AnalisiRendimento
               contributoPerCategoria={contributoPerCategoria}
@@ -371,10 +380,10 @@ export default async function PacPage() {
 
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 18, margin: 0, fontWeight: 500 }}>Analisi composizione</h2>
+            <h2 style={{ fontSize: 18, margin: 0, fontWeight: 500 }}>{t('titoloAnalisiComposizione')}</h2>
             {idsConTargetAttivo.length === 1 && (
               <RippleLink href={`/target/${idsConTargetAttivo[0]}`} className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
-                → Modifica target
+                {t('linkModificaTarget')}
               </RippleLink>
             )}
           </div>
@@ -384,17 +393,17 @@ export default async function PacPage() {
               sottoTargetPerCategoria={sottoTargetPerCategoria}
               soglia={soglia}
               targetAttivo={idsConTargetAttivo.length > 0}
-              messaggioTargetDisattivato="Nessun PAC ha un target attivo."
+              messaggioTargetDisattivato={t('alertNessunPacConTarget')}
             />
           </Sezione>
         </div>
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>I tuoi PAC</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloITuoiPac')}</h2>
         <Sezione>
           {righePac.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessun PAC registrato.</p>
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{t('alertNessunPacRegistrato')}</p>
           ) : (
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
               {righePac.map((r) => (
@@ -406,9 +415,11 @@ export default async function PacPage() {
                 >
                   <div style={{ fontWeight: 500 }}>{r.nome}</div>
                   <div style={{ marginTop: 12, fontSize: 20 }}>{formatEuro(r.valore)}</div>
-                  <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-secondary)' }}>Costo: {formatEuro(r.costo)}</div>
+                  <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-secondary)' }}>
+                    {t('rigaCosto', { valore: formatEuro(r.costo) })}
+                  </div>
                   <div style={{ marginTop: 4, fontSize: 13, color: r.plusMinus >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                    Plus/minus: {formatEuroSigned(r.plusMinus)}
+                    {t('rigaPlusMinus', { valore: formatEuroSigned(r.plusMinus) })}
                   </div>
                 </RippleLink>
               ))}
@@ -418,7 +429,7 @@ export default async function PacPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Strumenti</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>
         <Sezione>
           <TabellaOrdinabile colonne={COLONNE} righe={righe} />
         </Sezione>

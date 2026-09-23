@@ -1,28 +1,11 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoLineaSemplice, type PuntoLineaSemplice } from '@/components/grafico-linea-semplice'
 import { GraficoBarre, type PuntoBarra } from '@/components/grafico-barre'
 import { Sezione } from '@/components/sezione'
-
-const COLONNE: ColonnaTabella[] = [
-  { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/liquidita/', linkKey: 'strumentoId' },
-  { key: 'tipo', label: 'Tipo', kind: 'text' },
-  { key: 'provider', label: 'Provider', kind: 'text' },
-  { key: 'valore', label: 'Valore', kind: 'euro' },
-  { key: 'interesseLordo', label: 'Interesse lordo', kind: 'euro' },
-  { key: 'interesseNetto', label: 'Interesse netto', kind: 'euro' },
-  { key: 'tassaTrattenuta', label: 'Tassa trattenuta', kind: 'euro' },
-  { key: 'costo', label: 'Costo', kind: 'euro' },
-]
-
-const COLONNE_STORICO_INTERESSI: ColonnaTabella[] = [
-  { key: 'anno', label: 'Anno', kind: 'text' },
-  { key: 'netto', label: 'Netto ricevuto', kind: 'euro-signed' },
-  { key: 'tasse', label: 'Tasse pagate', kind: 'euro' },
-]
-
-const NOMI_MESI = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic']
+import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
 
 type MovimentoInteresse = {
   data: string
@@ -31,8 +14,30 @@ type MovimentoInteresse = {
 }
 
 export default async function LiquiditaPage() {
+  const t = await getTranslations('PaginaLiquidita')
+  const tTipi = await getTranslations('TipiLiquidita')
+  const tContenitori = await getTranslations('Contenitori')
   const supabase = await createClient()
   const annoCorrente = new Date().getFullYear()
+
+  const COLONNE: ColonnaTabella[] = [
+    { key: 'nome', label: t('colonnaStrumento'), kind: 'link', linkPrefix: '/liquidita/', linkKey: 'strumentoId' },
+    { key: 'tipo', label: t('colonnaTipo'), kind: 'text' },
+    { key: 'provider', label: t('colonnaProvider'), kind: 'text' },
+    { key: 'valore', label: t('colonnaValore'), kind: 'euro' },
+    { key: 'interesseLordo', label: t('colonnaInteresseLordo'), kind: 'euro' },
+    { key: 'interesseNetto', label: t('colonnaInteresseNetto'), kind: 'euro' },
+    { key: 'tassaTrattenuta', label: t('colonnaTassaTrattenuta'), kind: 'euro' },
+    { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
+  ]
+
+  const COLONNE_STORICO_INTERESSI: ColonnaTabella[] = [
+    { key: 'anno', label: t('colonnaAnno'), kind: 'text' },
+    { key: 'netto', label: t('colonnaNettoRicevuto'), kind: 'euro-signed' },
+    { key: 'tasse', label: t('colonnaTassePagate'), kind: 'euro' },
+  ]
+
+  const NOMI_MESI = Array.from({ length: 12 }, (_, i) => t(`mese${i + 1}`))
 
   const { data: liquidita } = await supabase
     .from('v_valore_per_contenitore')
@@ -90,11 +95,12 @@ export default async function LiquiditaPage() {
       const strumento = strumenti?.find((str) => str.id === s.strumento_id)
       const costo = costi?.find((c) => c.strumento_id === s.strumento_id)
       const interesse = interessiAggregati?.find((i) => i.strumento_id === s.strumento_id)
+      const tipo = strumento?.tipo ?? '—'
       return {
         key: s.strumento_id ?? '—',
         strumentoId: s.strumento_id,
         nome: strumento?.nome ?? '—',
-        tipo: strumento?.tipo ?? '—',
+        tipo: strumento ? tTipi(CHIAVE_TRADUZIONE_TIPO_LIQUIDITA[tipo] ?? tipo) : '—',
         provider: strumento?.provider ?? '',
         valore: s.saldo_corrente ?? 0,
         interesseLordo: interesse?.interessi_lordi ?? 0,
@@ -146,9 +152,9 @@ export default async function LiquiditaPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Contenitore</div>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('etichettaContenitore')}</div>
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>
-        {liquidita?.nome ?? 'Liquidità'}
+        {liquidita?.nome ?? tContenitori('liquidita')}
       </h1>
 
       <section>
@@ -160,15 +166,15 @@ export default async function LiquiditaPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Interessi — {annoCorrente}</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloInteressiAnno', { anno: annoCorrente })}</h2>
         <Sezione>
           <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 36, margin: 0, color: interesseNettoYtd >= 0 ? 'var(--success)' : 'var(--danger)' }}>
             {formatEuroSigned(interesseNettoYtd)}
           </p>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4, marginBottom: 16 }}>Netto, da inizio anno</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4, marginBottom: 16 }}>{t('labelNettoDaInizioAnno')}</p>
 
           <div style={{ maxWidth: 1024 }}>
-            <GraficoLineaSemplice punti={puntiCumulati} />
+            <GraficoLineaSemplice punti={puntiCumulati} messaggioNessunDato={t('alertNessunDatoAnno')} />
           </div>
 
           <div style={{ marginTop: 24, maxWidth: 1024 }}>
@@ -178,10 +184,10 @@ export default async function LiquiditaPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Storico interessi</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloStoricoInteressi')}</h2>
         <Sezione>
           {righeStoricoAnni.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessun interesse registrato finora.</p>
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{t('alertNessunInteresse')}</p>
           ) : (
             <TabellaOrdinabile colonne={COLONNE_STORICO_INTERESSI} righe={righeStoricoAnni} />
           )}
@@ -189,7 +195,7 @@ export default async function LiquiditaPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Strumenti</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>
         <Sezione>
           <TabellaOrdinabile colonne={COLONNE} righe={righe} />
         </Sezione>

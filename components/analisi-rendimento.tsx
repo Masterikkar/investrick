@@ -1,4 +1,6 @@
+import { getTranslations } from 'next-intl/server'
 import { formatEuroSigned, formatPercent } from '@/lib/format'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import { BarreSottocategoriaRendimento, type ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
 
 export type ContributoCategoria = {
@@ -8,7 +10,7 @@ export type ContributoCategoria = {
   larghezzaPct: number
 }
 
-export function AnalisiRendimento({
+export async function AnalisiRendimento({
   contributoPerCategoria,
   contributoStrumentoPerCategoria,
   plusMinusNonRealizzata,
@@ -17,8 +19,11 @@ export function AnalisiRendimento({
   contributoStrumentoPerCategoria: Record<string, ContributoStrumento[]>
   plusMinusNonRealizzata: number
 }) {
+  const t = await getTranslations('PaginaContenitore')
+  const tCategorie = await getTranslations('Categorie')
+
   if (contributoPerCategoria.length === 0 || plusMinusNonRealizzata === 0) {
-    return <p style={{ color: 'var(--text-secondary)' }}>Nessun guadagno o perdita maturata ancora.</p>
+    return <p style={{ color: 'var(--text-secondary)' }}>{t('alertNessunGuadagnoPerdita')}</p>
   }
 
   return (
@@ -29,7 +34,7 @@ export function AnalisiRendimento({
         return (
           <div key={c.categoria}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-table)', marginBottom: 4 }}>
-              <span>{c.categoria}</span>
+              <span>{tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[c.categoria] ?? c.categoria)}</span>
               <span style={{ color: colore, fontWeight: 500 }}>
                 {formatEuroSigned(c.guadagno)}
                 {c.contributoPct != null && ` (${formatPercent(c.contributoPct, 1, true)})`}

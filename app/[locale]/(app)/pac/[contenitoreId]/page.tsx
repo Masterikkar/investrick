@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
@@ -6,23 +7,11 @@ import { RippleLink } from '@/components/ripple-link'
 import { CardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
 import { Sezione } from '@/components/sezione'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import type { SottoTarget } from '@/components/barre-sottocategoria'
 import type { ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
 import { AnalisiRendimento, type ContributoCategoria } from '@/components/analisi-rendimento'
 import { AnalisiComposizione, type ScostamentoCategoria } from '@/components/analisi-composizione'
-
-const COLONNE: ColonnaTabella[] = [
-  { key: 'nome', label: 'Strumento', kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
-  { key: 'tipo', label: 'Tipo', kind: 'text' },
-  { key: 'categoria', label: 'Categoria', kind: 'text' },
-  { key: 'rendimentoPct', label: 'Rendimento', kind: 'percent-signed' },
-  { key: 'rendimentoAssoluto', label: 'Rendimento (€)', kind: 'euro-signed' },
-  { key: 'valore', label: 'Valore', kind: 'euro' },
-  { key: 'peso', label: 'Peso', kind: 'percent' },
-  { key: 'nav', label: 'NAV', kind: 'euro' },
-  { key: 'prezzoMedioUnitario', label: 'Prezzo medio', kind: 'euro' },
-  { key: 'costo', label: 'Costo', kind: 'euro' },
-]
 
 const ORDINE_CATEGORIE_PAC = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
@@ -32,6 +21,9 @@ export default async function PacDettaglioPage({
   params: Promise<{ contenitoreId: string }>
 }) {
   const { contenitoreId } = await params
+  const t = await getTranslations('PaginaContenitore')
+  const tCategorie = await getTranslations('Categorie')
+  const tContenitori = await getTranslations('Contenitori')
   const supabase = await createClient()
 
   const { data: pac } = await supabase
@@ -41,8 +33,21 @@ export default async function PacDettaglioPage({
     .maybeSingle()
 
   if (!pac) {
-    return <div>Contenitore non trovato.</div>
+    return <div>{t('contenitoreNonTrovato')}</div>
   }
+
+  const COLONNE: ColonnaTabella[] = [
+    { key: 'nome', label: t('colonnaStrumento'), kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
+    { key: 'tipo', label: t('colonnaTipo'), kind: 'text' },
+    { key: 'categoriaVisualizzata', label: t('colonnaCategoria'), kind: 'text' },
+    { key: 'rendimentoPct', label: t('colonnaRendimento'), kind: 'percent-signed' },
+    { key: 'rendimentoAssoluto', label: t('colonnaRendimentoEuro'), kind: 'euro-signed' },
+    { key: 'valore', label: t('colonnaValore'), kind: 'euro' },
+    { key: 'peso', label: t('colonnaPeso'), kind: 'percent' },
+    { key: 'nav', label: t('colonnaNav'), kind: 'euro' },
+    { key: 'prezzoMedioUnitario', label: t('colonnaPrezzoMedio'), kind: 'euro' },
+    { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
+  ]
 
   const valoreTotalePac = pac.valore_totale ?? 0
 
@@ -124,12 +129,14 @@ export default async function PacDettaglioPage({
     .map((p) => {
       const strumento = strumenti?.find((s) => s.id === p.strumento_id)
       const costo = costi?.find((c) => c.strumento_id === p.strumento_id)
+      const categoria = strumento?.categoria ?? '—'
       return {
         key: p.strumento_id ?? '—',
         strumentoId: p.strumento_id,
         nome: strumento?.nome ?? '—',
         tipo: strumento?.tipo ?? '—',
-        categoria: strumento?.categoria ?? '—',
+        categoria,
+        categoriaVisualizzata: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[categoria] ?? categoria),
         rendimentoPct: p.rendimento_pct ?? 0,
         rendimentoAssoluto: (p.valore ?? 0) - (p.capitale_investito ?? 0),
         valore: p.valore ?? 0,
@@ -219,10 +226,10 @@ export default async function PacDettaglioPage({
   return (
     <div>
       <RippleLink href="/pac" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
-        ← Tutti i PAC
+        {t('linkTuttiPac')}
       </RippleLink>
 
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>PAC</div>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>{tContenitori('pac')}</div>
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{pac.nome ?? '—'}</h1>
 
       <section>
@@ -234,19 +241,19 @@ export default async function PacDettaglioPage({
       <section style={{ marginTop: 24 }}>
         <Sezione>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <CardRendimento rendimentoPct={rendimentoPctTotale} label="Rendimento" />
+            <CardRendimento rendimentoPct={rendimentoPctTotale} label={t('labelRendimento')} />
 
-            <CardMetrica label="Plus/minusvalenza non realizzata" href="/fiscalita" linkLabel="→ Fiscalità">
+            <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/fiscalita" linkLabel={t('linkFiscalita')}>
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(plusMinusNonRealizzata)}
               </span>
             </CardMetrica>
 
-            <CardMetrica label="Capitale investito netto" href="/gestione/transazioni" linkLabel="→ Transazioni">
+            <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
               {formatEuro(capitaleInvestitoNettoTotale)}
             </CardMetrica>
 
-            <CardMetrica label="Costo totale" href="/costi" linkLabel="→ Costi">
+            <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>
               {formatEuro(costoTotalePac)}
             </CardMetrica>
           </div>
@@ -255,7 +262,7 @@ export default async function PacDettaglioPage({
 
       <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Analisi rendimento</h2>
+          <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloAnalisiRendimento')}</h2>
           <Sezione>
             <AnalisiRendimento
               contributoPerCategoria={contributoPerCategoria}
@@ -267,9 +274,9 @@ export default async function PacDettaglioPage({
 
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 18, margin: 0, fontWeight: 500 }}>Analisi composizione</h2>
+            <h2 style={{ fontSize: 18, margin: 0, fontWeight: 500 }}>{t('titoloAnalisiComposizione')}</h2>
             <RippleLink href={`/target/${contenitoreId}`} className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
-              → Modifica target
+              {t('linkModificaTarget')}
             </RippleLink>
           </div>
           <Sezione>
@@ -284,7 +291,7 @@ export default async function PacDettaglioPage({
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>Strumenti</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>
         <Sezione>
           <TabellaOrdinabile colonne={COLONNE} righe={righe} />
         </Sezione>

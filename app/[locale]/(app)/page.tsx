@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned } from '@/lib/format'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { GraficoAnello, ElencoAllocazione, type FettaAnello } from '@/components/grafico-anello'
 import { CardMetrica } from '@/components/card-metrica'
@@ -34,18 +35,6 @@ type StoricoTotale = {
 type RealizzatoAnno = { anno: number; realizzato_netto_totale: number }
 
 const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
-
-// Mappa il valore italiano di categoria (quello usato per interrogare il
-// database) alla chiave camelCase del namespace i18n "Categorie" — serve solo
-// per tradurre a schermo il nome categoria dinamico dell'alert ribilanciamento.
-const CHIAVE_TRADUZIONE_CATEGORIA: Record<string, string> = {
-  Azioni: 'azioni',
-  Obbligazioni: 'obbligazioni',
-  'Materie prime': 'materiePrime',
-  Monetario: 'monetario',
-  Multiasset: 'multiasset',
-  Crypto: 'crypto',
-}
 
 export default async function DashboardPage() {
   const t = await getTranslations('Dashboard')

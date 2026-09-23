@@ -9,9 +9,15 @@ const GRIGLIA = '#2B3350'
 const TESTO_ASSI = '#9198AD'
 const LINEA = '#7C8CFF'
 
-export function GraficoLineaSemplice({ punti }: { punti: PuntoLineaSemplice[] }) {
+export function GraficoLineaSemplice({
+  punti,
+  messaggioNessunDato = "Non ci sono ancora dati per quest'anno.",
+}: {
+  punti: PuntoLineaSemplice[]
+  messaggioNessunDato?: string
+}) {
   if (punti.length === 0) {
-    return <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', marginTop: 12 }}>Non ci sono ancora dati per quest'anno.</p>
+    return <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', marginTop: 12 }}>{messaggioNessunDato}</p>
   }
 
   // Se tutti i valori della serie sono identici (es. una linea piatta a 0),

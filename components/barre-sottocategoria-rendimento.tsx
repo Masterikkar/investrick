@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { formatEuroSigned, formatPercent } from '@/lib/format'
 
 export type ContributoStrumento = {
@@ -12,6 +13,7 @@ export type ContributoStrumento = {
 }
 
 export function BarreSottocategoriaRendimento({ items }: { items: ContributoStrumento[] }) {
+  const t = useTranslations('PaginaContenitore')
   const [aperto, setAperto] = useState(false)
   if (items.length === 0) return null
 
@@ -32,7 +34,7 @@ export function BarreSottocategoriaRendimento({ items }: { items: ContributoStru
           color: 'var(--text-secondary)',
         }}
       >
-        {aperto ? '▾' : '▸'} Dettaglio per strumento
+        {aperto ? '▾' : '▸'} {t('linkDettaglioPerStrumento')}
       </button>
 
       {aperto && (

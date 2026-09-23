@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { GraficoRendimentiAnnuali, type RendimentoAnnuale } from '@/components/grafico-rendimenti-annuali'
 import { GraficoBarre, type PuntoBarra } from '@/components/grafico-barre'
@@ -39,13 +40,17 @@ function calcolaSerieAnnuale(punti: Snapshot[]): { cumulato: number | null; annu
   return { cumulato, annuali }
 }
 
-const ETICHETTA_TIPO: Record<string, string> = {
-  PAC: 'PAC',
-  Polizza: 'Polizza vita',
-}
-
 export default async function RendimentiPage() {
+  const t = await getTranslations('PaginaRendimenti')
+  const tMenu = await getTranslations('Menu')
+  const tContenitori = await getTranslations('Contenitori')
+  const tPaginaContenitore = await getTranslations('PaginaContenitore')
   const supabase = await createClient()
+
+  const ETICHETTA_TIPO: Record<string, string> = {
+    PAC: tContenitori('pac'),
+    Polizza: tPaginaContenitore('etichettaPolizza'),
+  }
 
   const [{ data: contenitori }, { data: liquidita }] = await Promise.all([
     supabase
@@ -101,17 +106,15 @@ export default async function RendimentiPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Analisi</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>Rendimenti</h1>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{tMenu('analisi')}</div>
+      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{tMenu('rendimenti')}</h1>
       <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24, maxWidth: 640 }}>
-        Rendimento per anno solare (01/01 → 31/12), calcolato come variazione della plus/minusvalenza non
-        realizzata rispetto al capitale investito a fine anno. L'anno in corso mostra il rendimento maturato
-        finora, fino all'ultimo aggiornamento disponibile.
+        {t('paragrafoSpiegazione')}
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
         {(contenitori ?? []).length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)' }}>Nessun PAC o polizza registrato.</p>
+          <p style={{ color: 'var(--text-secondary)' }}>{t('alertNessunContenitore')}</p>
         ) : (
           (contenitori ?? []).map((c) => {
             const mappaDate = perContenitore.get(c.id)
@@ -148,14 +151,15 @@ export default async function RendimentiPage() {
         )}
 
         <section>
-          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 4 }}>Liquidità — Interessi maturati</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 4 }}>
+            {tContenitori('liquidita')} — {t('suffissoInteressiMaturati')}
+          </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 12 }}>
-            Interessi netti ricevuti sui conti di liquidità, per anno solare. Qui non si applica una percentuale
-            su capitale investito — è un importo assoluto, come per un normale conto che matura interessi.
+            {t('paragrafoSpiegazioneLiquidita')}
           </p>
           <Sezione>
             {puntiInteressiAnnuali.length === 0 ? (
-              <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessun interesse registrato ancora.</p>
+              <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{t('alertNessunInteresseAnnuale')}</p>
             ) : (
               <GraficoBarre punti={puntiInteressiAnnuali} />
             )}
