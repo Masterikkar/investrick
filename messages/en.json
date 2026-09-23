@@ -321,5 +321,21 @@
     "notaSecondoTargetStrumento": "based on per-instrument target",
     "notaSecondoPesiAttuali": "based on current weights — no per-instrument target set",
     "alertNessunoStrumentoPosseduto": "No instrument held here: choose manually what to buy."
+  },
+  "PaginaAsset": {
+    "eyebrowAsset": "Asset",
+    "labelRendimento": "Return",
+    "labelNavConData": "NAV ({data})",
+    "labelPrezzoMedioUnitario": "Average unit price",
+    "capitaleInvestito": "Capital invested",
+    "titoloPosizioniPerContenitore": "Positions by container",
+    "titoloRicaviDaVendite": "Proceeds from sales",
+    "labelQuantitaVenduta": "Quantity sold",
+    "labelRicavoTotale": "Total proceeds",
+    "labelPlusvalenza": "Capital gain/loss",
+    "labelNettoDopoTasse": "Net after tax",
+    "colonnaRicavo": "Proceeds",
+    "titoloStoricoTransazioni": "Transaction history",
+    "alertNessunaTransazione": "No transactions recorded for this instrument."
   }
 }

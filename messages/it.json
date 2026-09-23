@@ -321,5 +321,21 @@
     "notaSecondoTargetStrumento": "secondo target per strumento",
     "notaSecondoPesiAttuali": "secondo pesi attuali — nessun target per strumento impostato",
     "alertNessunoStrumentoPosseduto": "Nessuno strumento posseduto qui: scegli manualmente cosa comprare."
+  },
+  "PaginaAsset": {
+    "eyebrowAsset": "Asset",
+    "labelRendimento": "Rendimento",
+    "labelNavConData": "NAV ({data})",
+    "labelPrezzoMedioUnitario": "Prezzo medio unitario",
+    "capitaleInvestito": "Capitale investito",
+    "titoloPosizioniPerContenitore": "Posizioni per contenitore",
+    "titoloRicaviDaVendite": "Ricavi da vendite",
+    "labelQuantitaVenduta": "Quantità venduta",
+    "labelRicavoTotale": "Ricavo totale",
+    "labelPlusvalenza": "Plusvalenza",
+    "labelNettoDopoTasse": "Netto dopo tasse",
+    "colonnaRicavo": "Ricavo",
+    "titoloStoricoTransazioni": "Storico transazioni",
+    "alertNessunaTransazione": "Nessuna transazione registrata per questo strumento."
   }
 }

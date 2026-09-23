@@ -1,9 +1,12 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned, formatPercent, formatNumero } from '@/lib/format'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { CardMetrica } from '@/components/card-metrica'
 import { Sezione } from '@/components/sezione'
 import { Breadcrumb } from '@/components/breadcrumb'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
 
 type Strumento = {
   id: string
@@ -80,6 +83,14 @@ export default async function AssetPage({
   params: Promise<{ strumentoId: string }>
 }) {
   const { strumentoId } = await params
+  const t = await getTranslations('PaginaAsset')
+  const tCategorie = await getTranslations('Categorie')
+  const tTipiOperazione = await getTranslations('TipiOperazione')
+  const tPaginaCategoria = await getTranslations('PaginaCategoria')
+  const tPaginaFiscalita = await getTranslations('PaginaFiscalita')
+  const tPaginaStorico = await getTranslations('PaginaStorico')
+  const tPaginaRibilanciamento = await getTranslations('PaginaRibilanciamento')
+  const tPaginaLiquidita = await getTranslations('PaginaLiquidita')
   const supabase = await createClient()
 
   const [
@@ -122,11 +133,11 @@ export default async function AssetPage({
   const variazione = variazioneRaw as Variazione | null
 
   if (!strumento) {
-    return <div>Strumento non trovato.</div>
+    return <div>{tPaginaLiquidita('strumentoNonTrovato')}</div>
   }
 
   const contenitoreMap = new Map((contenitoriRaw ?? []).map((c) => [c.id, c.nome]))
-  const nomeContenitore = (id: string | null) => (id ? contenitoreMap.get(id) ?? '—' : 'Diretto')
+  const nomeContenitore = (id: string | null) => (id ? contenitoreMap.get(id) ?? '—' : tPaginaCategoria('provenienzaDiretto'))
 
   const riepilogo = riepilogoRaw ?? []
   const posizioniAttuali = riepilogo.filter((r) => Number(r.quantita_posseduta) > 0)
@@ -198,10 +209,10 @@ export default async function AssetPage({
     <div>
       <Breadcrumb />
 
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>Asset</div>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>{t('eyebrowAsset')}</div>
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 4, fontWeight: 500 }}>{strumento.nome}</h1>
       <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
-        {strumento.categoria}
+        {tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[strumento.categoria] ?? strumento.categoria)}
         {strumento.isin ? ` · ${strumento.isin}` : ''}
         {strumento.ticker ? ` · ${strumento.ticker}` : ''}
         {` · ${strumento.valuta}`}
@@ -229,18 +240,20 @@ export default async function AssetPage({
       <section style={{ marginTop: 24 }}>
         <Sezione>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <CardMetrica label="Rendimento">
+            <CardMetrica label={t('labelRendimento')}>
               <span style={{ color: (rendimentoTotalePct ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {rendimentoTotalePct != null ? formatPercent(rendimentoTotalePct, 2, true) : '—'}
               </span>
             </CardMetrica>
 
             <CardMetrica
-              label={`NAV${
+              label={
                 variazione
-                  ? ` (${new Date(variazione.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })})`
-                  : ''
-              }`}
+                  ? t('labelNavConData', {
+                      data: new Date(variazione.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }),
+                    })
+                  : tPaginaCategoria('colonnaNav')
+              }
             >
               {variazione ? formatEuro(Number(variazione.prezzo)) : '—'}
               {variazione?.variazione_pct != null && (
@@ -256,32 +269,32 @@ export default async function AssetPage({
               )}
             </CardMetrica>
 
-            <CardMetrica label="Prezzo medio unitario">
+            <CardMetrica label={t('labelPrezzoMedioUnitario')}>
               {prezzoMedioPonderato != null ? formatEuro(prezzoMedioPonderato) : '—'}
             </CardMetrica>
 
-            <CardMetrica label="Capitale investito">{formatEuro(capitaleInvestitoTotale)}</CardMetrica>
+            <CardMetrica label={t('capitaleInvestito')}>{formatEuro(capitaleInvestitoTotale)}</CardMetrica>
           </div>
         </Sezione>
       </section>
 
       {posizioniAttuali.length > 0 && (
         <section style={{ marginTop: 32 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Posizioni per contenitore</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloPosizioniPerContenitore')}</h2>
           <Sezione>
             <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Provenienza</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Peso</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Quantità</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Rendimento</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Rendimento (€)</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Valore</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Capitale investito</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Costo</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>NAV</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Prezzo medio</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCategoria('colonnaProvenienza')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCategoria('colonnaPeso')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaQuantita')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCategoria('colonnaRendimento')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCategoria('colonnaRendimentoEuro')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaValore')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('capitaleInvestito')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCategoria('colonnaCosto')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCategoria('colonnaNav')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCategoria('colonnaPrezzoMedio')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -319,17 +332,17 @@ export default async function AssetPage({
 
       {ricavi.length > 0 && (
         <section style={{ marginTop: 32 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Ricavi da vendite</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloRicaviDaVendite')}</h2>
           <Sezione>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              <CardMetrica label="Quantità venduta">{formatNumero(ricaviTotali.quantita, 6)}</CardMetrica>
-              <CardMetrica label="Ricavo totale">{formatEuro(ricaviTotali.ricavo)}</CardMetrica>
-              <CardMetrica label="Plusvalenza">
+              <CardMetrica label={t('labelQuantitaVenduta')}>{formatNumero(ricaviTotali.quantita, 6)}</CardMetrica>
+              <CardMetrica label={t('labelRicavoTotale')}>{formatEuro(ricaviTotali.ricavo)}</CardMetrica>
+              <CardMetrica label={t('labelPlusvalenza')}>
                 <span style={{ color: ricaviTotali.plusvalenza >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                   {formatEuroSigned(ricaviTotali.plusvalenza)}
                 </span>
               </CardMetrica>
-              <CardMetrica label="Netto dopo tasse">{formatEuro(ricaviTotali.netto)}</CardMetrica>
+              <CardMetrica label={t('labelNettoDopoTasse')}>{formatEuro(ricaviTotali.netto)}</CardMetrica>
             </div>
 
             {ricavi.length > 1 && (
@@ -337,11 +350,11 @@ export default async function AssetPage({
                 <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
                   <thead>
                     <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Quantità</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Ricavo</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Plusvalenza</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Netto</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaContenitore')}</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaQuantita')}</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaRicavo')}</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('labelPlusvalenza')}</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaRibilanciamento('colonnaNetto')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -363,35 +376,39 @@ export default async function AssetPage({
       )}
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>Storico transazioni</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloStoricoTransazioni')}</h2>
         <Sezione>
           {transazioni.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Nessuna transazione registrata per questo strumento.</p>
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{t('alertNessunaTransazione')}</p>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Data</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Operazione</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Contenitore</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Quantità</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Prezzo unitario</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Commissione</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>Tassa trattenuta</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaData')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaOperazione')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaContenitore')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaQuantita')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaPrezzoUnitario')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaCommissione')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaTassaTrattenuta')}</th>
                 </tr>
               </thead>
               <tbody>
-                {transazioni.map((t) => (
-                  <tr key={t.id} className="tabella-riga">
-                    <td style={{ padding: 8 }}>{new Date(t.data).toLocaleDateString('it-IT')}</td>
-                    <td style={{ padding: 8 }}>{ETICHETTE_OPERAZIONE[t.operazione] ?? t.operazione}</td>
-                    <td style={{ padding: 8 }}>{nomeContenitore(t.contenitore_id)}</td>
-                    <td style={{ padding: 8 }}>{formatNumero(Number(t.quantita), 6)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(Number(t.prezzo_unitario))}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(Number(t.commissione))}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(Number(t.tassa_trattenuta))}</td>
-                  </tr>
-                ))}
+                {transazioni.map((riga) => {
+                  const etichettaItaliana = ETICHETTE_OPERAZIONE[riga.operazione] ?? riga.operazione
+                  const chiaveOperazione = CHIAVE_TRADUZIONE_OPERAZIONE[etichettaItaliana]
+                  return (
+                    <tr key={riga.id} className="tabella-riga">
+                      <td style={{ padding: 8 }}>{new Date(riga.data).toLocaleDateString('it-IT')}</td>
+                      <td style={{ padding: 8 }}>{chiaveOperazione ? tTipiOperazione(chiaveOperazione) : etichettaItaliana}</td>
+                      <td style={{ padding: 8 }}>{nomeContenitore(riga.contenitore_id)}</td>
+                      <td style={{ padding: 8 }}>{formatNumero(Number(riga.quantita), 6)}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(Number(riga.prezzo_unitario))}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(Number(riga.commissione))}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(Number(riga.tassa_trattenuta))}</td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           )}
