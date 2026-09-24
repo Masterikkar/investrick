@@ -1,7 +1,8 @@
 'use client'
 
+import { useLocale } from 'next-intl'
 import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, type LocaleFormato } from '@/lib/format'
 
 export type PuntoBarra = { etichetta: string; valore: number }
 
@@ -11,14 +12,16 @@ const GRIGLIA = '#2B3350'
 const TESTO_ASSI = '#9198AD'
 
 export function GraficoBarre({ punti }: { punti: PuntoBarra[] }) {
+  const locale = useLocale() as LocaleFormato
+
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={punti} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRIGLIA} />
         <XAxis dataKey="etichetta" tick={{ fill: TESTO_ASSI, fontSize: 11 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
-        <YAxis tickFormatter={(v) => formatEuro(Number(v))} width={80} tick={{ fill: TESTO_ASSI, fontSize: 11 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+        <YAxis tickFormatter={(v) => formatEuro(Number(v), locale)} width={80} tick={{ fill: TESTO_ASSI, fontSize: 11 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
         <Tooltip
-          formatter={(value) => formatEuro(Number(value))}
+          formatter={(value) => formatEuro(Number(value), locale)}
           cursor={{ fill: '#1A2036', fillOpacity: 0.5 }}
           contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
           labelStyle={{ color: '#E8EBF2' }}

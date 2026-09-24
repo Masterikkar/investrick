@@ -1,8 +1,8 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell } from 'recharts'
-import { formatPercent } from '@/lib/format'
+import { formatPercent, type LocaleFormato } from '@/lib/format'
 
 export type RendimentoAnnuale = { anno: number; rendimentoPct: number | null }
 
@@ -19,6 +19,7 @@ export function GraficoRendimentiAnnuali({
   rendimentiAnnuali: RendimentoAnnuale[]
 }) {
   const t = useTranslations('PaginaRendimenti')
+  const locale = useLocale() as LocaleFormato
   const dati = rendimentiAnnuali.map((r) => ({
     anno: String(r.anno),
     valore: r.rendimentoPct,
@@ -37,7 +38,7 @@ export function GraficoRendimentiAnnuali({
             color: (rendimentoCumulato ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)',
           }}
         >
-          {rendimentoCumulato != null ? formatPercent(rendimentoCumulato, 2, true) : '—'}
+          {rendimentoCumulato != null ? formatPercent(rendimentoCumulato, 2, true, locale) : '—'}
         </div>
       </div>
 
@@ -48,9 +49,9 @@ export function GraficoRendimentiAnnuali({
           <BarChart data={dati}>
             <CartesianGrid strokeDasharray="3 3" stroke={GRIGLIA} />
             <XAxis dataKey="anno" fontSize={11} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
-            <YAxis tickFormatter={(v) => `${v}%`} fontSize={11} width={50} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+            <YAxis allowDecimals={false} tickFormatter={(v) => formatPercent(Number(v), 0, false, locale)} fontSize={11} width={50} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <Tooltip
-              formatter={(value) => [value != null ? formatPercent(Number(value), 2, true) : '—', t('tooltipRendimento')]}
+              formatter={(value) => [value != null ? formatPercent(Number(value), 2, true, locale) : '—', t('tooltipRendimento')]}
               cursor={{ fill: '#1A2036', fillOpacity: 0.5 }}
               contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
               labelStyle={{ color: '#E8EBF2' }}
