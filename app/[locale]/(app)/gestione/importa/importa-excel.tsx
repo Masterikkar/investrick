@@ -1,12 +1,20 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { creaAssetPerImport, importaTransazioniBulk, type RigaImport } from '../transazioni/actions'
-import { ETICHETTA_OPERAZIONE, OPERAZIONE_DA_ETICHETTA } from '@/lib/operazioni'
-import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
+import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
+import { CHIAVE_TRADUZIONE_OPERAZIONE, operazioneDaEtichettaExcel } from '@/lib/i18n-tipi-operazione'
+import {
+  COLONNE_EXCEL_FINANZIARIE,
+  isContenitoreDirettoExcel,
+  risolviIntestazioniExcel,
+  TEMPLATE_EXCEL,
+  type ColonnaExcelFinanziaria,
+} from '@/lib/i18n-intestazioni-excel'
 import { IconaDownload } from '@/components/icone'
+import type { LocaleFormato } from '@/lib/format'
 
 type Traduttore = (key: string, values?: Record<string, string | number>) => string
 
@@ -67,15 +75,22 @@ type RigaParsata = {
 
 function elabora(
   righeExcel: Record<string, unknown>[],
+  intestazionePerColonna: Map<ColonnaExcelFinanziaria, string>,
   mappaContenitori: Map<string, string>,
   t: Traduttore
 ): RigaParsata[] {
   return righeExcel.map((riga, idx) => {
     const numeroRiga = idx + 2
-    const isinRaw = testoCella(riga['ISIN']).toUpperCase()
-    const tickerRaw = testoCella(riga['Ticker']).toUpperCase()
-    const operazioneRaw = testoCella(riga['Operazione'])
-    const contenitoreRaw = testoCella(riga['Contenitore'])
+    // Le righe hanno come chiavi le intestazioni scritte nel file, in qualunque
+    // lingua: si legge ogni colonna tramite la sua intestazione risolta.
+    const cella = (colonna: ColonnaExcelFinanziaria) => {
+      const intestazione = intestazionePerColonna.get(colonna)
+      return intestazione === undefined ? undefined : riga[intestazione]
+    }
+    const isinRaw = testoCella(cella('ISIN')).toUpperCase()
+    const tickerRaw = testoCella(cella('Ticker')).toUpperCase()
+    const operazioneRaw = testoCella(cella('Operazione'))
+    const contenitoreRaw = testoCella(cella('Contenitore'))
 
     const identificatore: Identificatore | null = isinRaw
       ? { tipo: 'isin', valore: isinRaw }
@@ -83,16 +98,16 @@ function elabora(
       ? { tipo: 'ticker', valore: tickerRaw }
       : null
 
-    const data = parseDataCella(riga['Data'])
-    const operazioneDb = OPERAZIONE_DA_ETICHETTA[operazioneRaw]
-    const quantita = parseNumeroCella(riga['Quantità'], false)
-    const prezzoUnitario = parseNumeroCella(riga['Prezzo unitario'], false)
-    const commissione = parseNumeroCella(riga['Commissione'], true)
-    const tassaTrattenuta = parseNumeroCella(riga['Tassa trattenuta'], true)
+    const data = parseDataCella(cella('Data'))
+    const operazioneDb = operazioneDaEtichettaExcel(operazioneRaw)
+    const quantita = parseNumeroCella(cella('Quantità'), false)
+    const prezzoUnitario = parseNumeroCella(cella('Prezzo unitario'), false)
+    const commissione = parseNumeroCella(cella('Commissione'), true)
+    const tassaTrattenuta = parseNumeroCella(cella('Tassa trattenuta'), true)
 
     let contenitoreId: string | null = null
     let contenitoreNonTrovato: string | null = null
-    if (contenitoreRaw === '' || contenitoreRaw.toLowerCase() === 'diretto') {
+    if (contenitoreRaw === '' || isContenitoreDirettoExcel(contenitoreRaw)) {
       contenitoreId = null
     } else {
       const trovato = mappaContenitori.get(contenitoreRaw.toLowerCase())
@@ -102,12 +117,12 @@ function elabora(
 
     let errore: string | null = null
     if (!identificatore) errore = t('erroreIdentificatoreMancante')
-    else if (!data) errore = t('erroreDataNonValida', { valore: testoCella(riga['Data']) })
+    else if (!data) errore = t('erroreDataNonValida', { valore: testoCella(cella('Data')) })
     else if (!operazioneDb) errore = t('erroreOperazioneNonRiconosciuta', { valore: operazioneRaw })
-    else if (quantita === null || quantita <= 0) errore = t('erroreQuantitaNonValida', { valore: testoCella(riga['Quantità']) })
-    else if (prezzoUnitario === null || prezzoUnitario < 0) errore = t('errorePrezzoNonValido', { valore: testoCella(riga['Prezzo unitario']) })
-    else if (commissione === null) errore = t('erroreCommissioneNonValida', { valore: testoCella(riga['Commissione']) })
-    else if (tassaTrattenuta === null) errore = t('erroreTassaNonValida', { valore: testoCella(riga['Tassa trattenuta']) })
+    else if (quantita === null || quantita <= 0) errore = t('erroreQuantitaNonValida', { valore: testoCella(cella('Quantità')) })
+    else if (prezzoUnitario === null || prezzoUnitario < 0) errore = t('errorePrezzoNonValido', { valore: testoCella(cella('Prezzo unitario')) })
+    else if (commissione === null) errore = t('erroreCommissioneNonValida', { valore: testoCella(cella('Commissione')) })
+    else if (tassaTrattenuta === null) errore = t('erroreTassaNonValida', { valore: testoCella(cella('Tassa trattenuta')) })
     else if (contenitoreNonTrovato) errore = t('erroreContenitoreNonTrovato', { valore: contenitoreNonTrovato })
 
     return {
@@ -254,6 +269,7 @@ export function ImportaExcel({
 }) {
   const t = useTranslations('PaginaGestioneTransazioni')
   const tTipiOperazione = useTranslations('TipiOperazione')
+  const locale = useLocale() as LocaleFormato
 
   function etichettaOperazione(codice: string): string {
     const etichettaItaliana = ETICHETTA_OPERAZIONE[codice] ?? codice
@@ -289,8 +305,12 @@ export function ImportaExcel({
         const primoFoglio = workbook.SheetNames[0]
         if (!primoFoglio) throw new Error(t('erroreNessunFoglio'))
         const foglio = workbook.Sheets[primoFoglio]
+        const intestazioni = XLSX.utils.sheet_to_json<unknown[]>(foglio, { header: 1, raw: false })[0] ?? []
+        const { intestazionePerColonna, sconosciute, duplicate } = risolviIntestazioniExcel(intestazioni, COLONNE_EXCEL_FINANZIARIE)
+        if (sconosciute.length > 0) throw new Error(t('erroreIntestazioniSconosciute', { elenco: sconosciute.join(', ') }))
+        if (duplicate.length > 0) throw new Error(t('erroreIntestazioniDuplicate', { elenco: duplicate.join(', ') }))
         const righeGrezze = XLSX.utils.sheet_to_json<Record<string, unknown>>(foglio, { defval: '' })
-        setRighe(elabora(righeGrezze, mappaContenitori, t))
+        setRighe(elabora(righeGrezze, intestazionePerColonna, mappaContenitori, t))
       } catch (err) {
         setErroreFile(err instanceof Error ? err.message : t('erroreLetturaFile'))
       }
@@ -381,7 +401,7 @@ export function ImportaExcel({
 
       <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 'var(--fs-body)', flexWrap: 'wrap', alignItems: 'center' }}>
         <a
-          href="/template-transazioni.xlsx"
+          href={TEMPLATE_EXCEL.finanziarie[locale]}
           download
           className="link-interattivo"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}

@@ -66,3 +66,45 @@ const COLONNA_DA_INTESTAZIONE = new Map<string, ColonnaExcel>(
 export function colonnaDaIntestazioneExcel(intestazione: string): ColonnaExcel | null {
   return COLONNA_DA_INTESTAZIONE.get(intestazione.trim().toLowerCase()) ?? null
 }
+
+// Risolve la riga di intestazione di un file importato. Per ogni colonna
+// riconosciuta restituisce l'intestazione così com'è scritta nel file (la
+// chiave delle righe di XLSX.utils.sheet_to_json). Le celle di intestazione
+// vuote sono ignorate; sono invece segnalate le intestazioni che non
+// corrispondono a nessuna colonna di questo tipo di file (in nessuna lingua)
+// e le colonne presenti più di una volta (es. "Data" e "Date").
+export function risolviIntestazioniExcel<C extends ColonnaExcel>(
+  intestazioni: unknown[],
+  colonneAmmesse: readonly C[],
+): { intestazionePerColonna: Map<C, string>; sconosciute: string[]; duplicate: string[] } {
+  const intestazionePerColonna = new Map<C, string>()
+  const sconosciute: string[] = []
+  const duplicate: string[] = []
+  for (const cella of intestazioni) {
+    const intestazione = String(cella ?? '')
+    if (intestazione.trim() === '') continue
+    const colonna = colonnaDaIntestazioneExcel(intestazione)
+    if (!colonna || !(colonneAmmesse as readonly ColonnaExcel[]).includes(colonna)) sconosciute.push(intestazione.trim())
+    else if (intestazionePerColonna.has(colonna as C)) duplicate.push(intestazione.trim())
+    else intestazionePerColonna.set(colonna as C, intestazione)
+  }
+  return { intestazionePerColonna, sconosciute, duplicate }
+}
+
+// Valore della colonna Contenitore per le posizioni senza contenitore. L'export
+// scrive ancora sempre la forma italiana; l'import le accetta tutte.
+export const CONTENITORE_DIRETTO_EXCEL: Record<LocaleFormato, string> = { it: 'Diretto', en: 'Direct' }
+
+const VALORI_CONTENITORE_DIRETTO = new Set(Object.values(CONTENITORE_DIRETTO_EXCEL).map((v) => v.toLowerCase()))
+
+export function isContenitoreDirettoExcel(valore: string): boolean {
+  return VALORI_CONTENITORE_DIRETTO.has(valore.trim().toLowerCase())
+}
+
+// Template vuoti scaricabili dalla pagina Importa, uno per lingua. Le versioni
+// non italiane sono generate da scripts/genera-template-excel.mjs a partire da
+// quella italiana, con le intestazioni di INTESTAZIONI_EXCEL.
+export const TEMPLATE_EXCEL: Record<'finanziarie' | 'liquidita', Record<LocaleFormato, string>> = {
+  finanziarie: { it: '/template-transazioni.xlsx', en: '/template-transazioni-en.xlsx' },
+  liquidita: { it: '/template-transazioni-liquidita.xlsx', en: '/template-transazioni-liquidita-en.xlsx' },
+}

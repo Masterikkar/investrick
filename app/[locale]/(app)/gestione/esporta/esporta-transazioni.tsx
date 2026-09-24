@@ -56,8 +56,8 @@ export function EsportaTransazioniFinanziarie() {
       const ws = XLSX.utils.json_to_sheet(righe, { header: COLONNE_EXCEL_FINANZIARIE.map((c) => intestazioneExcel(c, locale)) })
       ws['!cols'] = LARGHEZZE_FINANZIARIE
       const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, 'Transazioni finanziarie')
-      XLSX.writeFile(wb, `transazioni-finanziarie-${oggi}.xlsx`)
+      XLSX.utils.book_append_sheet(wb, ws, t('nomeFoglioExportFinanziarie'))
+      XLSX.writeFile(wb, `${t('nomeFileExportFinanziarie')}-${oggi}.xlsx`)
     } catch (err) {
       setErrore(err instanceof Error ? err.message : tGestioneFiscalita('erroreGenerazioneFile'))
     } finally {
@@ -99,8 +99,8 @@ export function EsportaTransazioniLiquidita() {
       const ws = XLSX.utils.json_to_sheet(righe, { header: COLONNE_EXCEL_LIQUIDITA.map((c) => intestazioneExcel(c, locale)) })
       ws['!cols'] = LARGHEZZE_LIQUIDITA
       const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, 'Transazioni liquidità')
-      XLSX.writeFile(wb, `transazioni-liquidita-${oggi}.xlsx`)
+      XLSX.utils.book_append_sheet(wb, ws, t('nomeFoglioExportLiquidita'))
+      XLSX.writeFile(wb, `${t('nomeFileExportLiquidita')}-${oggi}.xlsx`)
     } catch (err) {
       setErrore(err instanceof Error ? err.message : tGestioneFiscalita('erroreGenerazioneFile'))
     } finally {
