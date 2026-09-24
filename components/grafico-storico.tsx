@@ -155,7 +155,7 @@ export function GraficoStorico({
               axisLine={{ stroke: GRIGLIA }}
               tickLine={{ stroke: GRIGLIA }}
             />
-            <YAxis tickFormatter={(v) => formatAsse(Number(v))} fontSize={11} width={70} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+            <YAxis allowDecimals={false} tickFormatter={(v) => formatAsse(Number(v))} fontSize={11} width={70} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <Tooltip
               formatter={(value) => [formatTooltip(Number(value)), etichettaTooltip]}
               labelFormatter={(label) => (label ? formatData(String(label), locale) : '')}
