@@ -287,7 +287,8 @@
     "optionSpostaIn": "Sposta in...",
     "titleEliminaTransazione": "Elimina transazione",
     "descrizioneOperazioneData": "{operazione} del {data}",
-    "confermaEliminazione": "Eliminare questa transazione?\n\n{descrizione}\n\nL'operazione non è reversibile."
+    "confermaEliminazione": "Eliminare questa transazione?\n\n{descrizione}\n\nL'operazione non è reversibile.",
+    "confermaEliminazioneMovimento": "Eliminare questo movimento?\n\n{descrizione}\n\nL'operazione non è reversibile."
   },
   "TipiOperazione": {
     "acquisto": "Acquisto",

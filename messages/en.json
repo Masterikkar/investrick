@@ -287,7 +287,8 @@
     "optionSpostaIn": "Move to...",
     "titleEliminaTransazione": "Delete transaction",
     "descrizioneOperazioneData": "{operazione} on {data}",
-    "confermaEliminazione": "Delete this transaction?\n\n{descrizione}\n\nThis action cannot be undone."
+    "confermaEliminazione": "Delete this transaction?\n\n{descrizione}\n\nThis action cannot be undone.",
+    "confermaEliminazioneMovimento": "Delete this cash movement?\n\n{descrizione}\n\nThis action cannot be undone."
   },
   "TipiOperazione": {
     "acquisto": "Purchase",

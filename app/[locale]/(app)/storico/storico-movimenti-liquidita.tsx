@@ -108,7 +108,7 @@ export function StoricoMovimentiLiquidita({
     })
     const descrizione = `${base} — ${riga.strumento_nome}`
 
-    if (!window.confirm(t('confermaEliminazione', { descrizione }))) {
+    if (!window.confirm(t('confermaEliminazioneMovimento', { descrizione }))) {
       return
     }
 
