@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
-import { formatEuro, formatPercent } from '@/lib/format'
+import { formatEuro, formatPercent, type LocaleFormato } from '@/lib/format'
 
 export type FettaAnello = { nome: string; valore: number; nomeVisualizzato?: string }
 
@@ -36,6 +36,7 @@ const ALTEZZA_GRAFICO = 280
 
 export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
   const t = useTranslations('GraficoAnello')
+  const locale = useLocale() as LocaleFormato
   const [selezionato, setSelezionato] = useState<number | null>(null)
   const { fetteValide, totale, colori } = ordinaEColora(fette)
 
@@ -102,11 +103,11 @@ export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
       >
         <div style={{ fontSize: 'var(--fs-card-label)', color: 'var(--text-secondary)' }}>{centroNome}</div>
         <div style={{ fontSize: 'var(--fs-card-value)', fontWeight: 500, color: 'var(--text-primary)', marginTop: 4 }}>
-          {formatEuro(centroValore)}
+          {formatEuro(centroValore, locale)}
         </div>
         {centroPct !== null && (
           <div style={{ fontSize: 'var(--fs-card-label)', color: 'var(--text-secondary)', marginTop: 2 }}>
-            {formatPercent(centroPct, 2)}
+            {formatPercent(centroPct, 2, false, locale)}
           </div>
         )}
       </div>
@@ -120,6 +121,7 @@ export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
 // e proprio (pallino, nome, euro, percentuale) sta in un blocco interno con
 // larghezza massima propria — così resta compatto anche se il box è largo.
 export function ElencoAllocazione({ fette }: { fette: FettaAnello[] }) {
+  const locale = useLocale() as LocaleFormato
   const { fetteValide, totale, colori } = ordinaEColora(fette)
 
   if (fetteValide.length === 0) {
@@ -149,9 +151,9 @@ export function ElencoAllocazione({ fette }: { fette: FettaAnello[] }) {
               {f.nomeVisualizzato ?? f.nome}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <span style={{ fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>{formatEuro(f.valore)}</span>
+              <span style={{ fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>{formatEuro(f.valore, locale)}</span>
               <span style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', minWidth: 44, textAlign: 'right' }}>
-                {formatPercent((f.valore / totale) * 100, 2)}
+                {formatPercent((f.valore / totale) * 100, 2, false, locale)}
               </span>
             </span>
           </div>

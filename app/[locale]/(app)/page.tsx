@@ -1,6 +1,6 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro, formatEuroSigned } from '@/lib/format'
+import { formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
 import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { GraficoAnello, ElencoAllocazione, type FettaAnello } from '@/components/grafico-anello'
@@ -37,6 +37,7 @@ type RealizzatoAnno = { anno: number; realizzato_netto_totale: number }
 const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
 export default async function DashboardPage() {
+  const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('Dashboard')
   const tCategorie = await getTranslations('Categorie')
   const tContenitori = await getTranslations('Contenitori')
@@ -197,7 +198,7 @@ export default async function DashboardPage() {
 
             <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/fiscalita" linkLabel={t('linkFiscalita')}>
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                {formatEuroSigned(plusMinusNonRealizzata)}
+                {formatEuroSigned(plusMinusNonRealizzata, locale)}
               </span>
             </CardMetrica>
 
@@ -207,16 +208,16 @@ export default async function DashboardPage() {
               linkLabel={t('linkFiscalita')}
             >
               <span style={{ color: realizzatoNettoAnno >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                {formatEuroSigned(realizzatoNettoAnno)}
+                {formatEuroSigned(realizzatoNettoAnno, locale)}
               </span>
             </CardMetrica>
 
             <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>
-              {formatEuro(costoTotale)}
+              {formatEuro(costoTotale, locale)}
             </CardMetrica>
 
             <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
-              {formatEuro(capitaleInvestitoNetto)}
+              {formatEuro(capitaleInvestitoNetto, locale)}
             </CardMetrica>
           </div>
         </Sezione>

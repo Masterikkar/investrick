@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
-import { formatEuro, formatPercent } from '@/lib/format'
+import { formatEuro, formatEuroCompatto, formatPercent } from '@/lib/format'
 
 export type PuntoStorico = { data: string; valore: number }
 
@@ -47,12 +47,6 @@ function filtraPerPeriodo(punti: PuntoStorico[], periodo: Periodo): PuntoStorico
   return punti.filter((p) => new Date(p.data) >= soglia)
 }
 
-const formatEuroCompatto = new Intl.NumberFormat('it-IT', {
-  style: 'currency',
-  currency: 'EUR',
-  notation: 'compact',
-})
-
 export function GraficoStorico({
   punti,
   formato = 'euro',
@@ -93,7 +87,7 @@ export function GraficoStorico({
     return null
   }, [formato, periodo, punti, t])
 
-  const formatAsse = formato === 'percent' ? (v: number) => formatPercent(v, 0, false) : (v: number) => formatEuroCompatto.format(v)
+  const formatAsse = formato === 'percent' ? (v: number) => formatPercent(v, 0, false) : (v: number) => formatEuroCompatto(v)
   const formatTooltip =
     formato === 'percent' ? (v: number) => formatPercent(v, 2, true) : (v: number) => formatEuro(v)
   const etichettaTooltip = formato === 'percent' ? tPaginaRendimenti('tooltipRendimento') : t('etichettaTooltipValore')
