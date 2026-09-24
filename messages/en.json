@@ -480,5 +480,22 @@
     "erroreTipoMovimentoNonRiconosciuto": "unrecognized movement type: \"{valore}\"",
     "erroreImportoNonValido": "invalid amount: \"{valore}\"",
     "righeScartateErrori": " {n} discarded due to errors."
+  },
+  "ValoriChiusura": {
+    "titolo": "Closing results",
+    "titoloRialzi": "Gainers",
+    "titoloRibassi": "Losers",
+    "alertNessunRialzo": "No gainers.",
+    "alertNessunRibasso": "No losers."
+  },
+  "FormTarget": {
+    "checkboxTargetAttivo": "Target active for this container",
+    "hintTargetDisattivato": "With the target disabled, this container won't appear in rebalancing alerts or in the composition bar, regardless of the values below.",
+    "bottoneTargetPerStrumento": "Per-instrument target in {categoria}",
+    "labelSommaStrumenti": "Total: {somma}",
+    "erroreSommaStrumenti": " — must be 0 (not set) or 100",
+    "labelSommaCategorie": "Category total: {somma}",
+    "erroreSommaCategorie": " — must be 100%",
+    "bottoneSalvaTarget": "Save target"
   }
 }

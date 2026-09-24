@@ -480,5 +480,22 @@
     "erroreTipoMovimentoNonRiconosciuto": "tipo movimento non riconosciuto: \"{valore}\"",
     "erroreImportoNonValido": "importo non valido: \"{valore}\"",
     "righeScartateErrori": " {n} scartate per errori."
+  },
+  "ValoriChiusura": {
+    "titolo": "Risultati di chiusura",
+    "titoloRialzi": "Rialzi",
+    "titoloRibassi": "Ribassi",
+    "alertNessunRialzo": "Nessun titolo in rialzo.",
+    "alertNessunRibasso": "Nessun titolo in ribasso."
+  },
+  "FormTarget": {
+    "checkboxTargetAttivo": "Target attivo per questo contenitore",
+    "hintTargetDisattivato": "Con il target disattivato, questo contenitore non comparirà negli alert di ribilanciamento né nella barra di composizione, indipendentemente dai valori sotto.",
+    "bottoneTargetPerStrumento": "Target per singolo strumento in {categoria}",
+    "labelSommaStrumenti": "Somma: {somma}",
+    "erroreSommaStrumenti": " — deve fare 0 (non impostato) o 100",
+    "labelSommaCategorie": "Somma categorie: {somma}",
+    "erroreSommaCategorie": " — deve fare 100%",
+    "bottoneSalvaTarget": "Salva target"
   }
 }

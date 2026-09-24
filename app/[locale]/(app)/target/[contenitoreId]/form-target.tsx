@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatPercent, type LocaleFormato } from '@/lib/format'
+import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import { salvaTarget } from './actions'
 
 const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Crypto', 'Multiasset'] as const
@@ -38,6 +41,9 @@ export function FormTarget({
   percentualiIniziali: Record<string, number>
   strumentiPerCategoria: Record<string, StrumentoConPeso[]>
 }) {
+  const t = useTranslations('FormTarget')
+  const tCategorie = useTranslations('Categorie')
+  const locale = useLocale() as LocaleFormato
   const [targetAttivo, setTargetAttivo] = useState(targetAttivoIniziale)
   const [percentuali, setPercentuali] = useState<Record<string, number>>(percentualiIniziali)
   const [percentualiStrumento, setPercentualiStrumento] = useState<Record<string, number>>(() => {
@@ -89,13 +95,12 @@ export function FormTarget({
           onChange={(e) => setTargetAttivo(e.target.checked)}
           style={{ accentColor: 'var(--primary)' }}
         />
-        Target attivo per questo contenitore
+        {t('checkboxTargetAttivo')}
       </label>
 
       {!targetAttivo && (
         <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)', margin: 0 }}>
-          Con il target disattivato, questo contenitore non comparirà negli alert di ribilanciamento
-          né nella barra di composizione, indipendentemente dai valori sotto.
+          {t('hintTargetDisattivato')}
         </p>
       )}
 
@@ -106,11 +111,12 @@ export function FormTarget({
           const sommaStrumenti = haSottotarget ? sommaCategoria(cat) : 0
           const sommaStrumentiOk = sommaStrumenti === 0 || Math.abs(sommaStrumenti - 100) < 0.01
           const aperta = categorieAperte[cat] ?? false
+          const nomeCategoria = tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[cat])
 
           return (
             <div key={cat}>
               <label style={{ fontSize: 'var(--fs-form-label)' }}>
-                {cat}
+                {nomeCategoria}
                 <input
                   type="number"
                   name={`percentuale_${cat}`}
@@ -130,7 +136,7 @@ export function FormTarget({
                     onClick={() => setCategorieAperte((prev) => ({ ...prev, [cat]: !aperta }))}
                     style={stileBottoneEspandi}
                   >
-                    {aperta ? '▾' : '▸'} Target per singolo strumento in {cat}
+                    {aperta ? '▾' : '▸'} {t('bottoneTargetPerStrumento', { categoria: nomeCategoria })}
                   </button>
 
                   {aperta && (
@@ -156,8 +162,8 @@ export function FormTarget({
                           color: sommaStrumentiOk ? 'var(--text-secondary)' : 'var(--danger)',
                         }}
                       >
-                        Somma: {sommaStrumenti.toFixed(2)}%
-                        {!sommaStrumentiOk && ' — deve fare 0 (non impostato) o 100'}
+                        {t('labelSommaStrumenti', { somma: formatPercent(sommaStrumenti, 2, false, locale) })}
+                        {!sommaStrumentiOk && t('erroreSommaStrumenti')}
                       </div>
                     </div>
                   )}
@@ -174,7 +180,8 @@ export function FormTarget({
           color: targetAttivo ? (sommaOk ? 'var(--success)' : 'var(--danger)') : 'var(--text-secondary)',
         }}
       >
-        Somma categorie: {somma.toFixed(2)}%{targetAttivo && !sommaOk ? ' — deve fare 100%' : ''}
+        {t('labelSommaCategorie', { somma: formatPercent(somma, 2, false, locale) })}
+        {targetAttivo && !sommaOk ? t('erroreSommaCategorie') : ''}
       </div>
 
       <button
@@ -192,7 +199,7 @@ export function FormTarget({
           alignSelf: 'flex-start',
         }}
       >
-        Salva target
+        {t('bottoneSalvaTarget')}
       </button>
     </form>
   )
