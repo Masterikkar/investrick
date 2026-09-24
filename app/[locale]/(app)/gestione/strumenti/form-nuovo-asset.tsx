@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { creaAsset } from './actions'
 import { MenuSelect } from '@/components/menu-select'
 import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
 import { LARGHEZZA_STANDARD, GAP_CAMPI, LARGHEZZA_RIGA_QUATTRO_CAMPI, LARGHEZZA_NOME } from './layout-campi'
 
 type TipiPerCategoria = Record<string, string[]>
@@ -35,6 +36,7 @@ export function FormNuovoAsset({
   const t = useTranslations('PaginaGestioneStrumenti')
   const tCategorie = useTranslations('Categorie')
   const tContenitori = useTranslations('Contenitori')
+  const tTipiLiquidita = useTranslations('TipiLiquidita')
   const tPaginaImpostazioni = useTranslations('PaginaImpostazioni')
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const categorie = Object.keys(tipiPerCategoria)
@@ -53,6 +55,13 @@ export function FormNuovoAsset({
     return tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[cat] ?? cat)
   }
 
+  // Solo i tipi di liquidità hanno una traduzione; un tipo non mappato
+  // resta com'è scritto nel database.
+  function etichettaTipo(ti: string): string {
+    const chiave = isLiquidita ? CHIAVE_TRADUZIONE_TIPO_LIQUIDITA[ti] : undefined
+    return chiave ? tTipiLiquidita(chiave) : ti
+  }
+
   const opzioniFrequenzaCedola = [
     { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
     { value: 'Annuale', label: t('optFrequenzaAnnuale') },
@@ -68,7 +77,7 @@ export function FormNuovoAsset({
   ]
   const opzioniTipo = [
     { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
-    ...tipiDisponibili.map((ti) => ({ value: ti, label: ti })),
+    ...tipiDisponibili.map((ti) => ({ value: ti, label: etichettaTipo(ti) })),
   ]
 
   function handleCategoriaChange(nuovaCategoria: string) {
@@ -133,19 +142,23 @@ export function FormNuovoAsset({
           </label>
         </div>
 
-        <div style={{ width: LARGHEZZA_STANDARD }}>
-          <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            {t('labelTicker')}
-            <input type="text" name="ticker" style={stileCampo} />
-          </label>
-        </div>
+        {!isLiquidita && (
+          <>
+            <div style={{ width: LARGHEZZA_STANDARD }}>
+              <label style={{ fontSize: 'var(--fs-form-label)' }}>
+                {t('labelTicker')}
+                <input type="text" name="ticker" style={stileCampo} />
+              </label>
+            </div>
 
-        <div style={{ width: LARGHEZZA_STANDARD }}>
-          <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            {t('labelIsin')}
-            <input type="text" name="isin" style={stileCampo} />
-          </label>
-        </div>
+            <div style={{ width: LARGHEZZA_STANDARD }}>
+              <label style={{ fontSize: 'var(--fs-form-label)' }}>
+                {t('labelIsin')}
+                <input type="text" name="isin" style={stileCampo} />
+              </label>
+            </div>
+          </>
+        )}
 
         <div style={{ width: LARGHEZZA_STANDARD }}>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>
