@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
-import { formatPercent, formatNumero } from '@/lib/format'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatPercent, formatNumero, type LocaleFormato } from '@/lib/format'
 
 export type SottoTarget = {
   strumentoId: string
@@ -15,6 +15,7 @@ export type SottoTarget = {
 
 export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; soglia: number }) {
   const t = useTranslations('PaginaContenitore')
+  const locale = useLocale() as LocaleFormato
   const [aperto, setAperto] = useState(false)
   if (items.length === 0) return null
 
@@ -59,9 +60,9 @@ export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; s
                   </span>
                   <span>
                     {t('barraComposizione', {
-                      pesoAttuale: formatPercent(it.pesoAttualePct, 1),
-                      target: formatPercent(it.targetPct, 1),
-                      scostamento: formatNumero(it.scostamentoPp, 2, true),
+                      pesoAttuale: formatPercent(it.pesoAttualePct, 1, false, locale),
+                      target: formatPercent(it.targetPct, 1, false, locale),
+                      scostamento: formatNumero(it.scostamentoPp, 2, true, locale),
                     })}
                   </span>
                 </div>

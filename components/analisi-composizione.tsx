@@ -1,5 +1,5 @@
-import { getTranslations } from 'next-intl/server'
-import { formatPercent, formatNumero } from '@/lib/format'
+import { getLocale, getTranslations } from 'next-intl/server'
+import { formatPercent, formatNumero, type LocaleFormato } from '@/lib/format'
 import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import { BarreSottocategoria, type SottoTarget } from '@/components/barre-sottocategoria'
 
@@ -25,6 +25,7 @@ export async function AnalisiComposizione({
   messaggioTargetDisattivato?: string
   messaggioNessunTarget?: string
 }) {
+  const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaContenitore')
   const tCategorie = await getTranslations('Categorie')
 
@@ -48,9 +49,9 @@ export async function AnalisiComposizione({
               <span>{tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[c.categoria ?? ''] ?? c.categoria ?? '')}</span>
               <span>
                 {t('barraComposizione', {
-                  pesoAttuale: formatPercent(c.peso_attuale_pct ?? 0, 1),
-                  target: formatPercent(c.target_percentuale ?? 0, 1),
-                  scostamento: formatNumero(c.scostamento_pp ?? 0, 2, true),
+                  pesoAttuale: formatPercent(c.peso_attuale_pct ?? 0, 1, false, locale),
+                  target: formatPercent(c.target_percentuale ?? 0, 1, false, locale),
+                  scostamento: formatNumero(c.scostamento_pp ?? 0, 2, true, locale),
                 })}
               </span>
             </div>
