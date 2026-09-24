@@ -1,6 +1,6 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro, formatEuroSigned } from '@/lib/format'
+import { formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoLineaSemplice, type PuntoLineaSemplice } from '@/components/grafico-linea-semplice'
 import { GraficoBarre, type PuntoBarra } from '@/components/grafico-barre'
@@ -14,6 +14,7 @@ type MovimentoInteresse = {
 }
 
 export default async function LiquiditaPage() {
+  const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaLiquidita')
   const tTipi = await getTranslations('TipiLiquidita')
   const tContenitori = await getTranslations('Contenitori')
@@ -160,7 +161,7 @@ export default async function LiquiditaPage() {
       <section>
         <Sezione>
           <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 48, margin: 0, color: 'var(--text-primary)' }}>
-            {formatEuro(valoreTotale)}
+            {formatEuro(valoreTotale, locale)}
           </p>
         </Sezione>
       </section>
@@ -169,7 +170,7 @@ export default async function LiquiditaPage() {
         <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloInteressiAnno', { anno: annoCorrente })}</h2>
         <Sezione>
           <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 36, margin: 0, color: interesseNettoYtd >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-            {formatEuroSigned(interesseNettoYtd)}
+            {formatEuroSigned(interesseNettoYtd, locale)}
           </p>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4, marginBottom: 16 }}>{t('labelNettoDaInizioAnno')}</p>
 

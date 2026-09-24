@@ -1,6 +1,6 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro, formatEuroSigned } from '@/lib/format'
+import { formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
 import { GraficoLineaSemplice, type PuntoLineaSemplice } from '@/components/grafico-linea-semplice'
 import { GraficoBarre, type PuntoBarra } from '@/components/grafico-barre'
 import { RippleLink } from '@/components/ripple-link'
@@ -34,6 +34,7 @@ export default async function LiquiditaStrumentoPage({
   params: Promise<{ strumentoId: string }>
 }) {
   const { strumentoId } = await params
+  const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaLiquidita')
   const tTipi = await getTranslations('TipiLiquidita')
   const tContenitori = await getTranslations('Contenitori')
@@ -179,7 +180,7 @@ export default async function LiquiditaStrumentoPage({
       <section>
         <Sezione>
           <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 'var(--fs-hero)', margin: 0, color: 'var(--text-primary)' }}>
-            {formatEuro(saldoAttuale)}
+            {formatEuro(saldoAttuale, locale)}
           </p>
           <div style={{ marginTop: 16, maxWidth: 1024 }}>
             <GraficoLineaSemplice punti={puntiSaldo} messaggioNessunDato={t('alertNessunDatoAnno')} />
@@ -190,11 +191,11 @@ export default async function LiquiditaStrumentoPage({
       <section style={{ marginTop: 24 }}>
         <Sezione>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <CardMetrica label={t('labelInteresseLordo')}>{formatEuro(interessiLordi)}</CardMetrica>
-            <CardMetrica label={t('labelInteresseNetto')}>{formatEuro(interessiNetti)}</CardMetrica>
-            <CardMetrica label={t('labelTassaTrattenuta')}>{formatEuro(tasseTrattenute)}</CardMetrica>
+            <CardMetrica label={t('labelInteresseLordo')}>{formatEuro(interessiLordi, locale)}</CardMetrica>
+            <CardMetrica label={t('labelInteresseNetto')}>{formatEuro(interessiNetti, locale)}</CardMetrica>
+            <CardMetrica label={t('labelTassaTrattenuta')}>{formatEuro(tasseTrattenute, locale)}</CardMetrica>
             <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkDettaglioCosti')}>
-              {formatEuro(costoTotale)}
+              {formatEuro(costoTotale, locale)}
             </CardMetrica>
           </div>
         </Sezione>
@@ -212,7 +213,7 @@ export default async function LiquiditaStrumentoPage({
               color: interesseNettoYtd >= 0 ? 'var(--success)' : 'var(--danger)',
             }}
           >
-            {formatEuroSigned(interesseNettoYtd)}
+            {formatEuroSigned(interesseNettoYtd, locale)}
           </p>
           <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', marginTop: 4, marginBottom: 16 }}>
             {t('labelNettoDaInizioAnno')}

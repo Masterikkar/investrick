@@ -1,6 +1,6 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro, formatNumero } from '@/lib/format'
+import { formatEuro, formatNumero, type LocaleFormato } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { Sezione } from '@/components/sezione'
 import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
@@ -20,11 +20,12 @@ type RiepilogoPosizione = {
 type Strumento = { id: string; nome: string; categoria: string; tipo: string; provider: string | null }
 type Contenitore = { id: string; nome: string }
 
-function costoPerEuro(costo: number, guadagno: number): string {
-  return guadagno > 0 ? formatNumero(costo / guadagno, 2) : '—'
+function costoPerEuro(costo: number, guadagno: number, locale: LocaleFormato): string {
+  return guadagno > 0 ? formatNumero(costo / guadagno, 2, false, locale) : '—'
 }
 
 export default async function CostiPage() {
+  const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaCosti')
   const tMenu = await getTranslations('Menu')
   const tCategorie = await getTranslations('Categorie')
@@ -109,7 +110,7 @@ export default async function CostiPage() {
       key: r.nome,
       nome: r.nome,
       costo: r.costo,
-      costoPerEuro: costoPerEuro(r.costo, r.guadagno),
+      costoPerEuro: costoPerEuro(r.costo, r.guadagno, locale),
     }))
 
   const costoStrumentoMap = new Map<string, number>()
@@ -129,7 +130,7 @@ export default async function CostiPage() {
         categoria: categoria ? tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[categoria] ?? categoria) : '—',
         contenitore: r.contenitore_id ? contenitoreMap.get(r.contenitore_id) ?? '—' : tPaginaCategoria('provenienzaDiretto'),
         costo,
-        costoPerEuro: costoPerEuro(costo, guadagno),
+        costoPerEuro: costoPerEuro(costo, guadagno, locale),
       }
     })
 
@@ -157,7 +158,7 @@ export default async function CostiPage() {
       categoria: tContenitori('liquidita'),
       contenitore: contenitoreId ? contenitoreMap.get(contenitoreId) ?? '—' : tPaginaCategoria('provenienzaDiretto'),
       costo,
-      costoPerEuro: costoPerEuro(costo, guadagno),
+      costoPerEuro: costoPerEuro(costo, guadagno, locale),
     }
   })
 
@@ -182,7 +183,7 @@ export default async function CostiPage() {
               color: 'var(--text-primary)',
             }}
           >
-            {formatEuro(totaleCosti)}
+            {formatEuro(totaleCosti, locale)}
           </div>
         </Sezione>
       </section>
