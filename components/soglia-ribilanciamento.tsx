@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { formatNumero } from '@/lib/format'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatNumero, type LocaleFormato } from '@/lib/format'
 import { aggiornaSogliaRibilanciamento } from '@/app/[locale]/(app)/ribilanciamento/actions'
 
 export function SogliaRibilanciamento({ sogliaIniziale }: { sogliaIniziale: number }) {
   const t = useTranslations('PaginaRibilanciamento')
+  const locale = useLocale() as LocaleFormato
   const router = useRouter()
   const [inModifica, setInModifica] = useState(false)
   const [valore, setValore] = useState(String(sogliaIniziale))
@@ -42,7 +43,7 @@ export function SogliaRibilanciamento({ sogliaIniziale }: { sogliaIniziale: numb
   if (!inModifica) {
     return (
       <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
-        {t('labelSogliaAlertPrefix')}{formatNumero(sogliaIniziale, 2)} {t('puntiPercentuali')}{' '}
+        {t('labelSogliaAlertPrefix')}{formatNumero(sogliaIniziale, 2, false, locale)} {t('puntiPercentuali')}{' '}
         <button
           type="button"
           onClick={() => setInModifica(true)}

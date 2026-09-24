@@ -1,10 +1,12 @@
-import { formatEuroSigned } from '@/lib/format'
+import { useLocale } from 'next-intl'
+import { formatEuroSigned, type LocaleFormato } from '@/lib/format'
 
 export type VoceBarra = { etichetta: string; valore: number }
 
 const LARGHEZZA_MINIMA_VISIBILE = 4
 
 export function BarreDivergenti({ voci }: { voci: VoceBarra[] }) {
+  const locale = useLocale() as LocaleFormato
   const maxAssoluto = Math.max(...voci.map((v) => Math.abs(v.valore)), 1)
 
   return (
@@ -43,7 +45,7 @@ export function BarreDivergenti({ voci }: { voci: VoceBarra[] }) {
               />
             </div>
             <div style={{ width: 90, textAlign: 'right', fontSize: 'var(--fs-card-link)', color: colore, flexShrink: 0 }}>
-              {formatEuroSigned(v.valore)}
+              {formatEuroSigned(v.valore, locale)}
             </div>
           </div>
         )
