@@ -1,6 +1,6 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro, formatEuroSigned, formatPercent, formatNumero } from '@/lib/format'
+import { formatData, formatEuro, formatEuroSigned, formatPercent, formatNumero, type LocaleFormato } from '@/lib/format'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { CardMetrica } from '@/components/card-metrica'
 import { Sezione } from '@/components/sezione'
@@ -83,6 +83,7 @@ export default async function AssetPage({
   params: Promise<{ strumentoId: string }>
 }) {
   const { strumentoId } = await params
+  const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaAsset')
   const tCategorie = await getTranslations('Categorie')
   const tTipiOperazione = await getTranslations('TipiOperazione')
@@ -242,7 +243,7 @@ export default async function AssetPage({
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <CardMetrica label={t('labelRendimento')}>
               <span style={{ color: (rendimentoTotalePct ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                {rendimentoTotalePct != null ? formatPercent(rendimentoTotalePct, 2, true) : '—'}
+                {rendimentoTotalePct != null ? formatPercent(rendimentoTotalePct, 2, true, locale) : '—'}
               </span>
             </CardMetrica>
 
@@ -250,12 +251,12 @@ export default async function AssetPage({
               label={
                 variazione
                   ? t('labelNavConData', {
-                      data: new Date(variazione.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }),
+                      data: formatData(variazione.data, locale, { day: '2-digit', month: '2-digit' }),
                     })
                   : tPaginaCategoria('colonnaNav')
               }
             >
-              {variazione ? formatEuro(Number(variazione.prezzo)) : '—'}
+              {variazione ? formatEuro(Number(variazione.prezzo), locale) : '—'}
               {variazione?.variazione_pct != null && (
                 <span
                   style={{
@@ -264,16 +265,16 @@ export default async function AssetPage({
                     color: Number(variazione.variazione_pct) >= 0 ? 'var(--success)' : 'var(--danger)',
                   }}
                 >
-                  {formatPercent(Number(variazione.variazione_pct), 2, true)}
+                  {formatPercent(Number(variazione.variazione_pct), 2, true, locale)}
                 </span>
               )}
             </CardMetrica>
 
             <CardMetrica label={t('labelPrezzoMedioUnitario')}>
-              {prezzoMedioPonderato != null ? formatEuro(prezzoMedioPonderato) : '—'}
+              {prezzoMedioPonderato != null ? formatEuro(prezzoMedioPonderato, locale) : '—'}
             </CardMetrica>
 
-            <CardMetrica label={t('capitaleInvestito')}>{formatEuro(capitaleInvestitoTotale)}</CardMetrica>
+            <CardMetrica label={t('capitaleInvestito')}>{formatEuro(capitaleInvestitoTotale, locale)}</CardMetrica>
           </div>
         </Sezione>
       </section>
@@ -308,19 +309,19 @@ export default async function AssetPage({
                   return (
                     <tr key={chiave} className="tabella-riga">
                       <td style={{ padding: 8 }}>{nomeContenitore(r.contenitore_id)}</td>
-                      <td style={{ padding: 8 }}>{peso != null ? formatPercent(peso, 2) : '—'}</td>
-                      <td style={{ padding: 8 }}>{formatNumero(Number(r.quantita_posseduta), 6)}</td>
+                      <td style={{ padding: 8 }}>{peso != null ? formatPercent(peso, 2, false, locale) : '—'}</td>
+                      <td style={{ padding: 8 }}>{formatNumero(Number(r.quantita_posseduta), 6, false, locale)}</td>
                       <td style={{ padding: 8 }}>
-                        {r.rendimento_pct != null ? formatPercent(Number(r.rendimento_pct), 2, true) : '—'}
+                        {r.rendimento_pct != null ? formatPercent(Number(r.rendimento_pct), 2, true, locale) : '—'}
                       </td>
                       <td style={{ padding: 8, color: rendimentoEuro != null && rendimentoEuro >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                        {rendimentoEuro != null ? formatEuroSigned(rendimentoEuro) : '—'}
+                        {rendimentoEuro != null ? formatEuroSigned(rendimentoEuro, locale) : '—'}
                       </td>
-                      <td style={{ padding: 8 }}>{r.valore != null ? formatEuro(Number(r.valore)) : '—'}</td>
-                      <td style={{ padding: 8 }}>{formatEuro(Number(r.capitale_investito))}</td>
-                      <td style={{ padding: 8 }}>{formatEuro(costo)}</td>
-                      <td style={{ padding: 8 }}>{r.prezzo_attuale != null ? formatEuro(Number(r.prezzo_attuale)) : '—'}</td>
-                      <td style={{ padding: 8 }}>{formatEuro(Number(r.prezzo_medio_unitario))}</td>
+                      <td style={{ padding: 8 }}>{r.valore != null ? formatEuro(Number(r.valore), locale) : '—'}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(Number(r.capitale_investito), locale)}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(costo, locale)}</td>
+                      <td style={{ padding: 8 }}>{r.prezzo_attuale != null ? formatEuro(Number(r.prezzo_attuale), locale) : '—'}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(Number(r.prezzo_medio_unitario), locale)}</td>
                     </tr>
                   )
                 })}
@@ -335,14 +336,14 @@ export default async function AssetPage({
           <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloRicaviDaVendite')}</h2>
           <Sezione>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              <CardMetrica label={t('labelQuantitaVenduta')}>{formatNumero(ricaviTotali.quantita, 6)}</CardMetrica>
-              <CardMetrica label={t('labelRicavoTotale')}>{formatEuro(ricaviTotali.ricavo)}</CardMetrica>
+              <CardMetrica label={t('labelQuantitaVenduta')}>{formatNumero(ricaviTotali.quantita, 6, false, locale)}</CardMetrica>
+              <CardMetrica label={t('labelRicavoTotale')}>{formatEuro(ricaviTotali.ricavo, locale)}</CardMetrica>
               <CardMetrica label={t('labelPlusvalenza')}>
                 <span style={{ color: ricaviTotali.plusvalenza >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                  {formatEuroSigned(ricaviTotali.plusvalenza)}
+                  {formatEuroSigned(ricaviTotali.plusvalenza, locale)}
                 </span>
               </CardMetrica>
-              <CardMetrica label={t('labelNettoDopoTasse')}>{formatEuro(ricaviTotali.netto)}</CardMetrica>
+              <CardMetrica label={t('labelNettoDopoTasse')}>{formatEuro(ricaviTotali.netto, locale)}</CardMetrica>
             </div>
 
             {ricavi.length > 1 && (
@@ -361,10 +362,10 @@ export default async function AssetPage({
                     {ricavi.map((r) => (
                       <tr key={chiaveContenitore(r.contenitore_id)} className="tabella-riga">
                         <td style={{ padding: 8 }}>{nomeContenitore(r.contenitore_id)}</td>
-                        <td style={{ padding: 8 }}>{formatNumero(Number(r.quantita_venduta), 6)}</td>
-                        <td style={{ padding: 8 }}>{formatEuro(Number(r.ricavo_totale))}</td>
-                        <td style={{ padding: 8 }}>{formatEuro(Number(r.plusvalenza_totale))}</td>
-                        <td style={{ padding: 8 }}>{formatEuro(Number(r.netto_dopo_tasse_stimato))}</td>
+                        <td style={{ padding: 8 }}>{formatNumero(Number(r.quantita_venduta), 6, false, locale)}</td>
+                        <td style={{ padding: 8 }}>{formatEuro(Number(r.ricavo_totale), locale)}</td>
+                        <td style={{ padding: 8 }}>{formatEuro(Number(r.plusvalenza_totale), locale)}</td>
+                        <td style={{ padding: 8 }}>{formatEuro(Number(r.netto_dopo_tasse_stimato), locale)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -399,13 +400,13 @@ export default async function AssetPage({
                   const chiaveOperazione = CHIAVE_TRADUZIONE_OPERAZIONE[etichettaItaliana]
                   return (
                     <tr key={riga.id} className="tabella-riga">
-                      <td style={{ padding: 8 }}>{new Date(riga.data).toLocaleDateString('it-IT')}</td>
+                      <td style={{ padding: 8 }}>{formatData(riga.data, locale)}</td>
                       <td style={{ padding: 8 }}>{chiaveOperazione ? tTipiOperazione(chiaveOperazione) : etichettaItaliana}</td>
                       <td style={{ padding: 8 }}>{nomeContenitore(riga.contenitore_id)}</td>
-                      <td style={{ padding: 8 }}>{formatNumero(Number(riga.quantita), 6)}</td>
-                      <td style={{ padding: 8 }}>{formatEuro(Number(riga.prezzo_unitario))}</td>
-                      <td style={{ padding: 8 }}>{formatEuro(Number(riga.commissione))}</td>
-                      <td style={{ padding: 8 }}>{formatEuro(Number(riga.tassa_trattenuta))}</td>
+                      <td style={{ padding: 8 }}>{formatNumero(Number(riga.quantita), 6, false, locale)}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(Number(riga.prezzo_unitario), locale)}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(Number(riga.commissione), locale)}</td>
+                      <td style={{ padding: 8 }}>{formatEuro(Number(riga.tassa_trattenuta), locale)}</td>
                     </tr>
                   )
                 })}
