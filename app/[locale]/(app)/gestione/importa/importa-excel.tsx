@@ -446,7 +446,7 @@ export function ImportaExcel({
 
           {identificatoriDaRisolvere.length === 0 && (
             <div style={{ marginTop: 16 }}>
-              <p style={{ color: 'var(--success)' }}>
+              <p style={{ color: 'var(--success)', marginBottom: 16 }}>
                 {t('tuttiStrumentiRisolti', { n: righePronte.length })}
               </p>
               <button
