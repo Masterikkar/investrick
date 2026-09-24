@@ -37,6 +37,13 @@ export default async function LiquiditaStrumentoPage({
   const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaLiquidita')
   const tTipi = await getTranslations('TipiLiquidita')
+
+  // Solo i tipi mappati hanno una traduzione; un tipo non mappato resta
+  // com'è scritto nel database invece di finire in t() come chiave.
+  function etichettaTipo(ti: string): string {
+    const chiave = CHIAVE_TRADUZIONE_TIPO_LIQUIDITA[ti]
+    return chiave ? tTipi(chiave) : ti
+  }
   const tContenitori = await getTranslations('Contenitori')
   const supabase = await createClient()
   const annoCorrente = new Date().getFullYear()
@@ -163,7 +170,7 @@ export default async function LiquiditaStrumentoPage({
   }))
 
   const tipoVisualizzato = strumento.tipo
-    ? tTipi(CHIAVE_TRADUZIONE_TIPO_LIQUIDITA[strumento.tipo] ?? strumento.tipo)
+    ? etichettaTipo(strumento.tipo)
     : null
 
   return (
