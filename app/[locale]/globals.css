@@ -30,7 +30,7 @@
   --fs-h3: 14px;        /* sotto-titolo, es. "Transazione manuale" */
 
   /* Numeri "hero" (Zilla Slab) */
-  --fs-hero: 36px;             /* valore totale principale */
+  --fs-hero: 32px;             /* valore totale principale */
   --fs-hero-secondario: 24px;  /* rendimento cumulato, stato attuale, YTD */
   --fs-hero-badge: 14px;       /* variazione accanto a un numero hero */
 

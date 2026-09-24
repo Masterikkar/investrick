@@ -167,7 +167,7 @@ export default async function LiquiditaPage() {
 
       <section>
         <Sezione>
-          <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 48, margin: 0, color: 'var(--text-primary)' }}>
+          <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 'var(--fs-hero)', margin: 0, color: 'var(--text-primary)' }}>
             {formatEuro(valoreTotale, locale)}
           </p>
         </Sezione>
@@ -176,7 +176,7 @@ export default async function LiquiditaPage() {
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloInteressiAnno', { anno: annoCorrente })}</h2>
         <Sezione>
-          <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 36, margin: 0, color: interesseNettoYtd >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+          <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 'var(--fs-hero-secondario)', margin: 0, color: interesseNettoYtd >= 0 ? 'var(--success)' : 'var(--danger)' }}>
             {formatEuroSigned(interesseNettoYtd, locale)}
           </p>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4, marginBottom: 16 }}>{t('labelNettoDaInizioAnno')}</p>

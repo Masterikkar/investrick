@@ -179,7 +179,7 @@ export default async function CostiPage() {
             style={{
               fontFamily: 'var(--font-zilla-slab)',
               fontWeight: 600,
-              fontSize: 32,
+              fontSize: 'var(--fs-hero)',
               marginTop: 4,
               color: 'var(--text-primary)',
             }}
