@@ -1,6 +1,6 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { formatEuroSigned } from '@/lib/format'
+import { formatEuroSigned, type LocaleFormato } from '@/lib/format'
 import { GraficoStoricoFiscale, type PuntoStoricoFiscale } from '@/components/grafico-storico-fiscale'
 import { CardMetrica } from '@/components/card-metrica'
 import { type VoceBarra } from '@/components/barre-divergenti'
@@ -92,6 +92,7 @@ function aggregaNonRealizzato(righe: { categoria: string; contenitore_tipo: stri
 }
 
 export default async function FiscalitaPage() {
+  const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaFiscalita')
   const tMenu = await getTranslations('Menu')
   const tCategorie = await getTranslations('Categorie')
@@ -307,12 +308,12 @@ export default async function FiscalitaPage() {
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <CardMetrica label={t('labelTotaleRealizzateNette')} minWidth={220}>
               <span style={{ color: realizzatoTotaleDaSempre >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                {formatEuroSigned(realizzatoTotaleDaSempre)}
+                {formatEuroSigned(realizzatoTotaleDaSempre, locale)}
               </span>
             </CardMetrica>
             <CardMetrica label={t('labelTotaleNonRealizzate')} minWidth={220}>
               <span style={{ color: totaleNonRealizzato >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                {formatEuroSigned(totaleNonRealizzato)}
+                {formatEuroSigned(totaleNonRealizzato, locale)}
               </span>
             </CardMetrica>
           </div>

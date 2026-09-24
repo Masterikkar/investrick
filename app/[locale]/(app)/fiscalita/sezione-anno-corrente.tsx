@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
-import { formatEuro, formatEuroSigned } from '@/lib/format'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
 import { CardMetrica } from '@/components/card-metrica'
 import { BarreDivergenti, type VoceBarra } from '@/components/barre-divergenti'
 import { InfoTooltip } from '@/components/info-tooltip'
@@ -64,6 +64,7 @@ export function SezioneAnnoCorrente({
   righeInteressi: RigaInteresse[]
 }) {
   const t = useTranslations('PaginaFiscalita')
+  const locale = useLocale() as LocaleFormato
   const [dettagliRealizzateAperti, setDettagliRealizzateAperti] = useState(false)
   const [dettagliNonRealizzateAperti, setDettagliNonRealizzateAperti] = useState(false)
   const [dettagliInteressiAperti, setDettagliInteressiAperti] = useState(false)
@@ -78,11 +79,11 @@ export function SezioneAnnoCorrente({
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <CardMetrica label={t('labelRealizzateNette')} minWidth={220}>
           <span style={{ color: Number(realizzato.netto_vendite) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-            {formatEuroSigned(Number(realizzato.netto_vendite))}
+            {formatEuroSigned(Number(realizzato.netto_vendite), locale)}
           </span>
         </CardMetrica>
         <CardMetrica label={t('labelTasseTrattenute')} minWidth={220}>
-          {formatEuro(Number(realizzato.tasse_vendite))}
+          {formatEuro(Number(realizzato.tasse_vendite), locale)}
         </CardMetrica>
       </div>
 
@@ -112,7 +113,7 @@ export function SezioneAnnoCorrente({
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <CardMetrica label={t('labelTotaleAnno', { anno: annoCorrente })} minWidth={220}>
           <span style={{ color: totaleMovimentoNonRealizzato >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-            {formatEuroSigned(totaleMovimentoNonRealizzato)}
+            {formatEuroSigned(totaleMovimentoNonRealizzato, locale)}
           </span>
         </CardMetrica>
       </div>
@@ -142,7 +143,7 @@ export function SezioneAnnoCorrente({
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <CardMetrica label={t('labelTotaleAnno', { anno: annoCorrente })} minWidth={220}>
           <span style={{ color: totaleInteressiNetti >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-            {formatEuroSigned(totaleInteressiNetti)}
+            {formatEuroSigned(totaleInteressiNetti, locale)}
           </span>
         </CardMetrica>
       </div>
@@ -183,9 +184,9 @@ export function SezioneAnnoCorrente({
               righeInteressi.map((riga) => (
                 <tr key={riga.strumentoId} className="tabella-riga">
                   <td style={{ padding: 8 }}>{riga.nome}</td>
-                  <td style={{ padding: 8 }}>{formatEuro(riga.lordo)}</td>
-                  <td style={{ padding: 8 }}>{formatEuro(riga.tassa)}</td>
-                  <td style={{ padding: 8, fontWeight: 500 }}>{formatEuro(riga.netto)}</td>
+                  <td style={{ padding: 8 }}>{formatEuro(riga.lordo, locale)}</td>
+                  <td style={{ padding: 8 }}>{formatEuro(riga.tassa, locale)}</td>
+                  <td style={{ padding: 8, fontWeight: 500 }}>{formatEuro(riga.netto, locale)}</td>
                 </tr>
               ))
             )}

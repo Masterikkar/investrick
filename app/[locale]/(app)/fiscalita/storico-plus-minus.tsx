@@ -1,8 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useTranslations } from 'next-intl'
-import { formatEuro, formatEuroSigned, formatPercent } from '@/lib/format'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatData, formatEuro, formatEuroSigned, formatPercent, type LocaleFormato } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
 import type { RigaVerificaTrattenuta } from './verifica-trattenute'
 
@@ -27,6 +27,7 @@ export function StoricoPlusMinus({
   righeNonRealizzate: RigaNonRealizzata[]
 }) {
   const t = useTranslations('PaginaFiscalita')
+  const locale = useLocale() as LocaleFormato
   const tFiltroTabellaStorico = useTranslations('FiltroTabellaStorico')
   const [modalita, setModalita] = useState<Modalita>('realizzate')
   const [query, setQuery] = useState('')
@@ -210,17 +211,17 @@ export function StoricoPlusMinus({
                 const scostamentoRilevante = Math.abs(Number(v.differenza)) > 0.01
                 return (
                   <tr key={v.vendita_id} className="tabella-riga">
-                    <td style={{ padding: 8 }}>{new Date(v.data_vendita).toLocaleDateString('it-IT')}</td>
+                    <td style={{ padding: 8 }}>{formatData(v.data_vendita, locale)}</td>
                     <td style={{ padding: 8 }}>
                       <RippleLink href={`/asset/${v.strumento_id}`} className="link-interattivo">
                         {v.strumento_nome}
                       </RippleLink>
                     </td>
-                    <td style={{ padding: 8 }}>{formatEuro(Number(v.valore))}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(Number(v.plusvalenza_totale_vendita))}</td>
-                    <td style={{ padding: 8 }}>{formatPercent(Number(v.aliquota_attesa_pct), 2)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(Number(v.tassa_attesa))}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(Number(v.tassa_trattenuta_effettiva))}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(Number(v.valore), locale)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(Number(v.plusvalenza_totale_vendita), locale)}</td>
+                    <td style={{ padding: 8 }}>{formatPercent(Number(v.aliquota_attesa_pct), 2, false, locale)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(Number(v.tassa_attesa), locale)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(Number(v.tassa_trattenuta_effettiva), locale)}</td>
                     <td
                       style={{
                         padding: 8,
@@ -228,7 +229,7 @@ export function StoricoPlusMinus({
                         fontWeight: scostamentoRilevante ? 500 : undefined,
                       }}
                     >
-                      {formatEuro(Number(v.differenza))}
+                      {formatEuro(Number(v.differenza), locale)}
                     </td>
                   </tr>
                 )
@@ -283,10 +284,10 @@ export function StoricoPlusMinus({
                   </td>
                   <td style={{ padding: 8 }}>{n.contenitore_nome}</td>
                   <td style={{ padding: 8, color: n.plus_minus >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                    {formatEuroSigned(n.plus_minus)}
+                    {formatEuroSigned(n.plus_minus, locale)}
                   </td>
                   <td style={{ padding: 8, color: n.rendimento_pct >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                    {formatPercent(n.rendimento_pct, 2, true)}
+                    {formatPercent(n.rendimento_pct, 2, true, locale)}
                   </td>
                 </tr>
               ))}
