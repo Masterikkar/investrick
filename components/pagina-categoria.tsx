@@ -7,6 +7,7 @@ import { CardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
 import { Sezione } from '@/components/sezione'
 import { traduciTipoStrumento } from '@/lib/i18n-tipi-strumento'
+import { tutteLeRighe } from '@/lib/supabase-tutte-le-righe'
 
 // Pagina di una categoria di investimento (Azioni, Obbligazioni, …), condivisa
 // dalle sei route di categoria. categoria è il valore usato per interrogare il
@@ -42,11 +43,15 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
 
   const valoreTotaleCategoria = categoriaValore?.valore_totale ?? 0
 
-  const { data: storicoRaw } = await supabase
-    .from('v_storico_valorizzazioni_per_categoria')
-    .select('data, valore_totale, capitale_investito_totale')
-    .eq('categoria', categoria)
-    .order('data', { ascending: true })
+  // Una riga per giorno: letta a blocchi per non fermarsi a 1000 righe.
+  const { data: storicoRaw } = await tutteLeRighe((da, a) =>
+    supabase
+      .from('v_storico_valorizzazioni_per_categoria')
+      .select('data, valore_totale, capitale_investito_totale')
+      .eq('categoria', categoria)
+      .order('data', { ascending: true })
+      .range(da, a)
+  )
 
   const storicoValoreMap = new Map<string, number>()
   const storicoCapitaleMap = new Map<string, number>()

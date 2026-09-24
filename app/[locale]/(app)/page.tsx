@@ -1,5 +1,6 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { tutteLeRighe } from '@/lib/supabase-tutte-le-righe'
 import { formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
@@ -67,11 +68,15 @@ export default async function DashboardPage() {
     supabase.from('v_saldo_liquidita').select('strumento_id, contenitore_id, saldo_corrente').returns<SaldoLiquidita[]>(),
     supabase.from('v_costo_per_strumento').select('strumento_id, contenitore_id, costo_totale').returns<CostoRiga[]>(),
     supabase.from('v_costo_liquidita').select('strumento_id, contenitore_id, costo_totale').returns<CostoRiga[]>(),
-    supabase
-      .from('v_storico_valorizzazioni_totale')
-      .select('data, valore_totale, capitale_investito_totale')
-      .order('data', { ascending: true })
-      .returns<StoricoTotale[]>(),
+    // Una riga per giorno: letta a blocchi per non fermarsi a 1000 righe.
+    tutteLeRighe((da, a) =>
+      supabase
+        .from('v_storico_valorizzazioni_totale')
+        .select('data, valore_totale, capitale_investito_totale')
+        .order('data', { ascending: true })
+        .range(da, a)
+        .returns<StoricoTotale[]>()
+    ),
     supabase.from('v_realizzato_per_anno').select('anno, realizzato_netto_totale').eq('anno', annoCorrente).maybeSingle().returns<RealizzatoAnno>(),
     supabase.from('v_valore_per_contenitore').select('contenitore_id, tipo, nome, valore_totale').order('tipo'),
     supabase.from('v_valore_per_categoria').select('categoria, valore_totale'),
