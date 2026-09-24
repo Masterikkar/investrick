@@ -53,7 +53,7 @@ export function GraficoRendimentiAnnuali({
             <Tooltip
               formatter={(value) => [value != null ? formatPercent(Number(value), 2, true, locale) : '—', t('tooltipRendimento')]}
               cursor={{ fill: '#1A2036', fillOpacity: 0.5 }}
-              contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
+              contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2', fontSize: 'var(--fs-tooltip)' }}
               labelStyle={{ color: '#E8EBF2' }}
               itemStyle={{ color: '#E8EBF2' }}
             />

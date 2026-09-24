@@ -33,7 +33,7 @@ export function GraficoStoricoFiscale({ punti }: { punti: PuntoStoricoFiscale[] 
           <Tooltip
             formatter={(value) => formatEuro(Number(value), locale)}
             cursor={{ fill: '#1A2036', fillOpacity: 0.5 }}
-            contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
+            contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2', fontSize: 'var(--fs-tooltip)' }}
             labelStyle={{ color: '#E8EBF2' }}
             itemStyle={{ color: '#E8EBF2' }}
           />
