@@ -25,7 +25,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
     { key: 'rendimentoPct', label: t('colonnaRendimento'), kind: 'percent-signed' },
     { key: 'rendimentoAssoluto', label: t('colonnaRendimentoEuro'), kind: 'euro-signed' },
     { key: 'valore', label: t('colonnaValore'), kind: 'euro' },
-    { key: 'peso', label: t('colonnaPeso'), kind: 'percent' },
+    { key: 'peso', label: t('colonnaPeso'), kind: 'percent', tooltip: t('tooltipPeso') },
     { key: 'nav', label: t('colonnaNav'), kind: 'euro' },
     { key: 'prezzoMedioUnitario', label: t('colonnaPrezzoMedio'), kind: 'euro' },
     { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
@@ -81,6 +81,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
           'strumento_id, contenitore_id, valore, rendimento_pct, capitale_investito, prezzo_medio_unitario, prezzo_attuale, quantita_posseduta'
         )
         .in('strumento_id', strumentoIds)
+        .gt('quantita_posseduta', 0)
     : { data: null }
 
   const { data: costi } = strumentoIds.length

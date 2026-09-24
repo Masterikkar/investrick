@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { RippleLink } from '@/components/ripple-link'
+import { InfoTooltip } from '@/components/info-tooltip'
 import { formatData, formatEuro, formatEuroSigned, formatNumero, formatPercent, type LocaleFormato } from '@/lib/format'
 
 export type ColonnaTabella = {
@@ -11,6 +12,9 @@ export type ColonnaTabella = {
   kind: 'text' | 'link' | 'euro' | 'euro-signed' | 'percent' | 'percent-signed' | 'date' | 'numero'
   linkPrefix?: string
   linkKey?: string
+  // Testo di un InfoTooltip accanto all'intestazione, per spiegare il
+  // riferimento della colonna (es. su cosa è calcolato il Peso).
+  tooltip?: string
 }
 
 export type RigaTabella = Record<string, string | number | null> & { key: string }
@@ -23,6 +27,7 @@ export function TabellaOrdinabile({
   righe: RigaTabella[]
 }) {
   const locale = useLocale() as LocaleFormato
+  const t = useTranslations('TabellaOrdinabile')
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortAsc, setSortAsc] = useState(true)
 
@@ -108,6 +113,12 @@ export function TabellaOrdinabile({
               style={{ padding: '8px 12px', cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap', color: 'var(--text-secondary)', fontWeight: 500 }}
             >
               {c.label}
+              {c.tooltip && (
+                // Aprire il tooltip non deve ordinare la colonna.
+                <span onClick={(e) => e.stopPropagation()}>
+                  <InfoTooltip testo={c.tooltip} />
+                </span>
+              )}
               {sortKey === c.key ? (sortAsc ? ' ▲' : ' ▼') : ''}
             </th>
           ))}
@@ -117,7 +128,7 @@ export function TabellaOrdinabile({
         {righeOrdinate.length === 0 ? (
           <tr>
             <td colSpan={colonne.length} style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>
-              Nessun dato.
+              {t('alertNessunDato')}
             </td>
           </tr>
         ) : (

@@ -15,6 +15,7 @@
     "colonnaRendimentoEuro": "Rendimento (€)",
     "colonnaValore": "Valore",
     "colonnaPeso": "Peso",
+    "tooltipPeso": "Quota del valore di ogni posizione sul totale di questa sola categoria, non sull'intero portafoglio.",
     "colonnaNav": "NAV",
     "colonnaPrezzoMedio": "Prezzo medio",
     "colonnaCosto": "Costo",
@@ -29,6 +30,9 @@
     "linkCosti": "Vedi dettaglio costi →",
     "titoloAsset": "Asset"
   },
+  "PaginaTuttiAsset": {
+    "tooltipPeso": "Peso calcolato sul totale degli asset finanziari posseduti. È esclusa la liquidità."
+  },
   "Categorie": {
     "azioni": "Azioni",
     "obbligazioni": "Obbligazioni",
@@ -42,6 +46,7 @@
     "analisi": "Analisi",
     "account": "Account",
     "asset": "Asset",
+    "tuttiAsset": "Tutti gli asset",
     "liquidita": "Liquidità",
     "pianiDiAccumulo": "Piani di Accumulo",
     "polizze": "Polizze",
@@ -194,6 +199,9 @@
     "share": "Share",
     "stablecoin": "Stablecoin",
     "token": "Token"
+  },
+  "TabellaOrdinabile": {
+    "alertNessunDato": "Nessun dato."
   },
   "GraficoAnello": {
     "alertNessunDato": "Nessun dato da mostrare.",

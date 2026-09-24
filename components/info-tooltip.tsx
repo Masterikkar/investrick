@@ -58,7 +58,13 @@ export function InfoTooltip({ testo }: { testo: string }) {
             position: 'absolute',
             bottom: 'calc(100% + 8px)',
             left: 0,
-            width: 260,
+            // Larghezza sul contenuto ma mai oltre 300px; white-space va
+            // ripristinato perché il tooltip può stare in un'intestazione di
+            // tabella con nowrap, che altrimenti impedirebbe di andare a capo.
+            width: 'max-content',
+            maxWidth: 300,
+            whiteSpace: 'normal',
+            overflowWrap: 'break-word',
             background: 'var(--bg-surface)',
             border: '1px solid var(--border-default)',
             padding: '10px 12px',

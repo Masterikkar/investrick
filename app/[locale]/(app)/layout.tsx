@@ -114,6 +114,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     </span>
                   </summary>
                   <div className="menu-submenu-items">
+                    <RippleLink href="/asset" className="menu-row link-interattivo">
+                      {t('tuttiAsset')}
+                    </RippleLink>
+                    <hr className="menu-divider" />
                     {vociAsset.map((v) => (
                       <RippleLink key={v.href} href={v.href} className="menu-row link-interattivo">
                         {v.etichetta}

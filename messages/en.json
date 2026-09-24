@@ -15,6 +15,7 @@
     "colonnaRendimentoEuro": "Return (€)",
     "colonnaValore": "Value",
     "colonnaPeso": "Weight",
+    "tooltipPeso": "Share of each position's value in the total of this category only, not of the whole portfolio.",
     "colonnaNav": "NAV",
     "colonnaPrezzoMedio": "Average price",
     "colonnaCosto": "Cost",
@@ -29,6 +30,9 @@
     "linkCosti": "View cost details →",
     "titoloAsset": "Assets"
   },
+  "PaginaTuttiAsset": {
+    "tooltipPeso": "Weight calculated on the total of financial assets held. Cash is excluded."
+  },
   "Categorie": {
     "azioni": "Shares",
     "obbligazioni": "Bonds",
@@ -42,6 +46,7 @@
     "analisi": "Analysis",
     "account": "Account",
     "asset": "Assets",
+    "tuttiAsset": "All assets",
     "liquidita": "Cash",
     "pianiDiAccumulo": "Investment Plans",
     "polizze": "Insurance Policies",
@@ -194,6 +199,9 @@
     "share": "Share",
     "stablecoin": "Stablecoin",
     "token": "Token"
+  },
+  "TabellaOrdinabile": {
+    "alertNessunDato": "No data."
   },
   "GraficoAnello": {
     "alertNessunDato": "No data to show.",
