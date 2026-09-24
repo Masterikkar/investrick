@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/[locale]/login/actions'
 import { ChiudiTendineAutomaticamente } from '@/components/chiudi-tendine-automaticamente'
@@ -24,6 +24,17 @@ import {
   IconaEsci,
 } from '@/components/icone'
 
+// Voci del sottomenu Portafoglio → Asset: categoria del database, pagina,
+// chiave nel namespace "Categorie".
+const VOCI_ASSET = [
+  { categoria: 'Azioni', href: '/azioni', chiave: 'azioni' },
+  { categoria: 'Obbligazioni', href: '/obbligazioni', chiave: 'obbligazioni' },
+  { categoria: 'Materie prime', href: '/materie-prime', chiave: 'materiePrime' },
+  { categoria: 'Monetario', href: '/monetario', chiave: 'monetario' },
+  { categoria: 'Multiasset', href: '/multiasset', chiave: 'multiasset' },
+  { categoria: 'Crypto', href: '/crypto', chiave: 'crypto' },
+]
+
 // top: 100% = bordo inferiore reale dell'header. +1px bordo header, +5px distacco richiesto.
 const stilePannello: React.CSSProperties = {
   position: 'absolute',
@@ -36,16 +47,27 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const t = await getTranslations('Menu')
   const tCategorie = await getTranslations('Categorie')
   const tGestioneTransazioni = await getTranslations('PaginaGestioneTransazioni')
+  const locale = await getLocale()
   const supabase = await createClient()
 
-  const [{ data: strumenti }, { data: contenitori }] = await Promise.all([
+  const [{ data: strumenti }, { data: contenitori }, { data: posizioniAperte }] = await Promise.all([
     supabase
       .from('strumenti')
       .select('id, nome, categoria, ticker')
       .neq('categoria', 'Liquidita')
       .order('nome'),
     supabase.from('contenitori').select('id, nome, tipo').order('nome'),
+    supabase.from('v_riepilogo_posizione').select('strumento_id').gt('quantita_posseduta', 0),
   ])
+
+  // Categorie con almeno una posizione aperta, ricavate dagli strumenti già
+  // caricati per la barra di ricerca. Il sottomenu Asset mostra solo quelle,
+  // in ordine alfabetico sul nome tradotto (quindi diverso tra it ed en).
+  const categoriaPerStrumento = new Map((strumenti ?? []).map((s) => [s.id, s.categoria]))
+  const categorieConPosizioni = new Set((posizioniAperte ?? []).map((p) => (p.strumento_id ? categoriaPerStrumento.get(p.strumento_id) : undefined)))
+  const vociAsset = VOCI_ASSET.filter((v) => categorieConPosizioni.has(v.categoria))
+    .map((v) => ({ href: v.href, etichetta: tCategorie(v.chiave) }))
+    .sort((a, b) => a.etichetta.localeCompare(b.etichetta, locale))
 
   return (
     <div>
@@ -81,36 +103,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </span>
             </summary>
             <div className="menu-panel" style={stilePannello}>
-              <details>
-                <summary className="menu-toggle" style={{ padding: '9px 10px' }}>
-                  <span className="menu-row-left">
-                    <IconaAsset /> {t('asset')}
-                  </span>
-                  <span className="menu-chevron">
-                    <IconaChevron />
-                  </span>
-                </summary>
-                <div className="menu-submenu-items">
-                  <RippleLink href="/azioni" className="menu-row link-interattivo">
-                    {tCategorie('azioni')}
-                  </RippleLink>
-                  <RippleLink href="/obbligazioni" className="menu-row link-interattivo">
-                    {tCategorie('obbligazioni')}
-                  </RippleLink>
-                  <RippleLink href="/materie-prime" className="menu-row link-interattivo">
-                    {tCategorie('materiePrime')}
-                  </RippleLink>
-                  <RippleLink href="/monetario" className="menu-row link-interattivo">
-                    {tCategorie('monetario')}
-                  </RippleLink>
-                  <RippleLink href="/multiasset" className="menu-row link-interattivo">
-                    {tCategorie('multiasset')}
-                  </RippleLink>
-                  <RippleLink href="/crypto" className="menu-row link-interattivo">
-                    {tCategorie('crypto')}
-                  </RippleLink>
-                </div>
-              </details>
+              {vociAsset.length > 0 && (
+                <details>
+                  <summary className="menu-toggle" style={{ padding: '9px 10px' }}>
+                    <span className="menu-row-left">
+                      <IconaAsset /> {t('asset')}
+                    </span>
+                    <span className="menu-chevron">
+                      <IconaChevron />
+                    </span>
+                  </summary>
+                  <div className="menu-submenu-items">
+                    {vociAsset.map((v) => (
+                      <RippleLink key={v.href} href={v.href} className="menu-row link-interattivo">
+                        {v.etichetta}
+                      </RippleLink>
+                    ))}
+                  </div>
+                </details>
+              )}
               <RippleLink
                 href="/liquidita"
                 className="menu-row link-interattivo"
