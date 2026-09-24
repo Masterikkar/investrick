@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useLocale } from 'next-intl'
 import { RippleLink } from '@/components/ripple-link'
-import { formatEuro, formatEuroSigned, formatPercent } from '@/lib/format'
+import { formatData, formatEuro, formatEuroSigned, formatPercent, type LocaleFormato } from '@/lib/format'
 
 export type ColonnaTabella = {
   key: string
@@ -21,6 +22,7 @@ export function TabellaOrdinabile({
   colonne: ColonnaTabella[]
   righe: RigaTabella[]
 }) {
+  const locale = useLocale() as LocaleFormato
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortAsc, setSortAsc] = useState(true)
 
@@ -41,14 +43,14 @@ export function TabellaOrdinabile({
       const vb = b[sortKey]
       let cmp = 0
       if (typeof va === 'string' && typeof vb === 'string') {
-        cmp = va.localeCompare(vb, 'it')
+        cmp = va.localeCompare(vb, locale)
       } else {
         cmp = (Number(va) || 0) - (Number(vb) || 0)
       }
       return sortAsc ? cmp : -cmp
     })
     return copia
-  }, [righe, sortKey, sortAsc])
+  }, [righe, sortKey, sortAsc, locale])
 
   function renderCella(colonna: ColonnaTabella, riga: RigaTabella) {
     const valore = riga[colonna.key]
@@ -66,23 +68,23 @@ export function TabellaOrdinabile({
         )
       }
       case 'euro':
-        return formatEuro(Number(valore) || 0)
+        return formatEuro(Number(valore) || 0, locale)
       case 'euro-signed': {
         const n = Number(valore) || 0
         return (
-          <span style={{ color: n >= 0 ? 'var(--success)' : 'var(--danger)' }}>{formatEuroSigned(n)}</span>
+          <span style={{ color: n >= 0 ? 'var(--success)' : 'var(--danger)' }}>{formatEuroSigned(n, locale)}</span>
         )
       }
       case 'percent':
-        return formatPercent(Number(valore) || 0, 2)
+        return formatPercent(Number(valore) || 0, 2, false, locale)
       case 'percent-signed': {
         const n = Number(valore) || 0
         return (
-          <span style={{ color: n >= 0 ? 'var(--success)' : 'var(--danger)' }}>{formatPercent(n, 2, true)}</span>
+          <span style={{ color: n >= 0 ? 'var(--success)' : 'var(--danger)' }}>{formatPercent(n, 2, true, locale)}</span>
         )
       }
       case 'date':
-        return valore ? new Date(String(valore)).toLocaleDateString('it-IT') : '—'
+        return valore ? formatData(String(valore), locale) : '—'
       default:
         return valore ?? '—'
     }
