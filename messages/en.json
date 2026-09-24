@@ -60,6 +60,11 @@
   },
   "PaginaImpostazioni": {
     "titolo": "Settings",
+    "tabApp": "App settings",
+    "tabFiscalita": "Tax settings",
+    "placeholderFiscalita": "Coming soon",
+    "sezioneLingua": "Language",
+    "sezioneAliquote": "Tax rates",
     "etichettaLingua": "Language",
     "lingueDisponibili": {
       "it": "Italian",

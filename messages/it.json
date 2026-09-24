@@ -60,6 +60,11 @@
   },
   "PaginaImpostazioni": {
     "titolo": "Impostazioni",
+    "tabApp": "Impostazioni app",
+    "tabFiscalita": "Impostazioni fiscalità",
+    "placeholderFiscalita": "In arrivo",
+    "sezioneLingua": "Lingua",
+    "sezioneAliquote": "Aliquote",
     "etichettaLingua": "Lingua",
     "lingueDisponibili": {
       "it": "Italiano",
