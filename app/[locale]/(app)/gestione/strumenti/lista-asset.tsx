@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { eliminaAsset } from './actions'
 import { IconaElimina } from '@/components/icone'
+import { useConferma } from '@/components/conferma'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { traduciTipoStrumento } from '@/lib/i18n-tipi-strumento'
 import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
@@ -40,6 +41,7 @@ export function ListaAsset({ asset }: { asset: AssetElenco[] }) {
   const tMenu = useTranslations('Menu')
   const tGestioneTransazioni = useTranslations('PaginaGestioneTransazioni')
   const router = useRouter()
+  const conferma = useConferma()
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [messaggio, setMessaggio] = useState<{ tipo: 'successo' | 'errore'; testo: string } | null>(null)
   const [, startTransition] = useTransition()
@@ -67,22 +69,31 @@ export function ListaAsset({ asset }: { asset: AssetElenco[] }) {
     [asset]
   )
 
-  function handleElimina(a: AssetElenco) {
-    if (!window.confirm(t('confermaEliminaAsset', { nome: a.nome }))) return
+  async function handleElimina(a: AssetElenco) {
+    const confermato = await conferma({
+      titolo: t('titoloEliminaAsset'),
+      messaggio: t('confermaEliminaAsset', { nome: a.nome }),
+      etichettaConferma: t('bottoneElimina'),
+      pericoloso: true,
+    })
+    if (!confermato) return
+
     // Con transazioni o movimenti collegati serve una seconda conferma: vengono
     // eliminati anche quelli, e non si torna indietro.
-    if (
-      (a.transazioni > 0 || a.movimenti > 0) &&
-      !window.confirm(
-        t('confermaEliminaAssetConDati', {
+    if (a.transazioni > 0 || a.movimenti > 0) {
+      const confermatoConDati = await conferma({
+        titolo: t('titoloEliminaAssetIrreversibile'),
+        messaggio: t('confermaEliminaAssetConDati', {
           nome: a.nome,
           transazioni: a.transazioni,
           movimenti: a.movimenti,
           percorsoEsporta: `${tMenu('gestioneDatabase')} → ${tGestioneTransazioni('titoloEsporta')}`,
-        })
-      )
-    )
-      return
+        }),
+        etichettaConferma: t('bottoneElimina'),
+        pericoloso: true,
+      })
+      if (!confermatoConDati) return
+    }
 
     setMessaggio(null)
     setPendingId(a.id)

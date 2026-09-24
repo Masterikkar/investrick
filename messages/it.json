@@ -200,6 +200,10 @@
     "stablecoin": "Stablecoin",
     "token": "Token"
   },
+  "DialogoConferma": {
+    "bottoneAnnulla": "Annulla",
+    "bottoneConferma": "Conferma"
+  },
   "TabellaOrdinabile": {
     "alertNessunDato": "Nessun dato."
   },
@@ -403,6 +407,8 @@
     "titoloAssetEsistenti": "Asset esistenti",
     "alertNessunAssetCreato": "Nessun asset creato.",
     "ariaLabelEliminaAsset": "Elimina {nome}",
+    "titoloEliminaAsset": "Elimina asset",
+    "titoloEliminaAssetIrreversibile": "Eliminazione irreversibile",
     "confermaEliminaAsset": "Eliminare l'asset \"{nome}\"?",
     "confermaEliminaAssetConDati": "\"{nome}\" ha {transazioni, plural, =0 {nessuna transazione} one {# transazione} other {# transazioni}} e {movimenti, plural, =0 {nessun movimento di liquidità} one {# movimento di liquidità} other {# movimenti di liquidità}} collegati: verranno eliminati insieme all'asset.\n\nL'operazione è irreversibile. Se vuoi conservarli, esporta prima le transazioni da {percorsoEsporta}.\n\nProcedere con l'eliminazione?",
     "successoEliminaAsset": "\"{nome}\" eliminato, insieme a {transazioni, plural, =0 {nessuna transazione} one {# transazione} other {# transazioni}} e {movimenti, plural, =0 {nessun movimento di liquidità} one {# movimento di liquidità} other {# movimenti di liquidità}}.",
