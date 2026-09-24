@@ -8,6 +8,7 @@ export function Modale({
   titolo,
   children,
   mostraChiusura = true,
+  larghezzaMassima = 480,
 }: {
   aperto: boolean
   onChiudi: () => void
@@ -17,6 +18,7 @@ export function Modale({
   // pulsante per annullare (es. il dialogo di conferma); Esc e clic fuori
   // chiudono comunque.
   mostraChiusura?: boolean
+  larghezzaMassima?: number
 }) {
   useEffect(() => {
     if (!aperto) return
@@ -57,7 +59,7 @@ export function Modale({
           background: 'var(--bg-section)',
           border: '1px solid var(--border-section)',
           width: '100%',
-          maxWidth: 480,
+          maxWidth: larghezzaMassima,
           padding: 24,
         }}
       >

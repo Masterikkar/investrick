@@ -12,10 +12,10 @@ import type { Database } from '@/types/database.types'
 // obbligatorio — il payload lo omette di proposito.
 type InsertStrumento = Omit<Database['public']['Tables']['strumenti']['Insert'], 'aliquota_tassazione'>
 
-export async function creaAsset(formData: FormData) {
-  const supabase = await createClient()
-  const locale = await getLocale()
-
+// Legge i campi del form asset, condiviso da creaAsset e aggiornaAsset. Un
+// campo nascosto per la categoria scelta (es. ISIN per la Liquidità) non
+// arriva nel FormData e diventa null.
+function leggiCampiAsset(formData: FormData) {
   const categoria = formData.get('categoria') as string
   const tipo = formData.get('tipo') as string
   const nome = (formData.get('nome') as string)?.trim()
@@ -33,6 +33,31 @@ export async function creaAsset(formData: FormData) {
   const cedolaPercentualeRaw = formData.get('cedola_percentuale') as string
   const cedolaPercentuale = cedolaPercentualeRaw ? Number(cedolaPercentualeRaw) : null
   const frequenzaCedola = ((formData.get('frequenza_cedola') as string) || '').trim() || null
+
+  const payload: InsertStrumento = {
+    categoria,
+    tipo,
+    nome,
+    ticker,
+    isin,
+    valuta,
+    note,
+    codice_prezzo: codicePrezzo,
+    provider,
+    tasso_percentuale: tassoPercentuale,
+    data_scadenza: dataScadenza,
+    cedola_percentuale: cedolaPercentuale,
+    frequenza_cedola: frequenzaCedola,
+  }
+  return payload
+}
+
+export async function creaAsset(formData: FormData) {
+  const supabase = await createClient()
+  const locale = await getLocale()
+
+  const payload = leggiCampiAsset(formData)
+  const { categoria, tipo, nome, isin } = payload
 
   if (!categoria || !tipo || !nome) {
     redirect({ href: '/gestione/strumenti?errore=1', locale })
@@ -53,22 +78,6 @@ export async function creaAsset(formData: FormData) {
     }
   }
 
-  const payload: InsertStrumento = {
-    categoria,
-    tipo,
-    nome,
-    ticker,
-    isin,
-    valuta,
-    note,
-    codice_prezzo: codicePrezzo,
-    provider,
-    tasso_percentuale: tassoPercentuale,
-    data_scadenza: dataScadenza,
-    cedola_percentuale: cedolaPercentuale,
-    frequenza_cedola: frequenzaCedola,
-  }
-
   const { data: nuovo, error } = await supabase
     .from('strumenti')
     .insert(payload as Database['public']['Tables']['strumenti']['Insert'])
@@ -83,6 +92,38 @@ export async function creaAsset(formData: FormData) {
   // I conti di liquidità hanno la loro pagina di dettaglio, non quella Asset.
   redirect({ href: categoria === 'Liquidita' ? `/liquidita/${nuovo.id}` : `/asset/${nuovo.id}`, locale })
 }
+// Modifica di uno strumento esistente dal modale di Gestione strumenti: stessi
+// campi di creaAsset, ma niente redirect (il client chiude il modale e
+// aggiorna la pagina). aliquota_tassazione non fa parte del payload, quindi
+// resta quella attuale anche se cambia la categoria.
+export async function aggiornaAsset(
+  id: string,
+  formData: FormData
+): Promise<{ successo: true } | { errore: 'campi' | 'generico' } | { errore: 'duplicato'; duplicatoId: string; duplicatoNome: string }> {
+  const supabase = await createClient()
+
+  const payload = leggiCampiAsset(formData)
+  if (!payload.categoria || !payload.tipo || !payload.nome) return { errore: 'campi' }
+
+  // Un altro strumento con lo stesso ISIN, escluso quello che si sta modificando.
+  if (payload.isin) {
+    const { data: esistente } = await supabase
+      .from('strumenti')
+      .select('id, nome')
+      .eq('isin', payload.isin)
+      .neq('id', id)
+      .maybeSingle()
+
+    if (esistente) return { errore: 'duplicato', duplicatoId: esistente.id, duplicatoNome: esistente.nome }
+  }
+
+  const { error } = await supabase.from('strumenti').update(payload).eq('id', id)
+  if (error) return { errore: 'generico' }
+
+  revalidatePath('/', 'layout')
+  return { successo: true }
+}
+
 // Elimina uno strumento con tutte le sue transazioni e i suoi movimenti di
 // liquidità. La funzione database elimina_strumento fa tutto in un'unica
 // transazione Postgres (movimenti, transazioni, strumento — il resto è

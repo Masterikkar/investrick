@@ -4,23 +4,29 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { eliminaAsset } from './actions'
-import { IconaElimina } from '@/components/icone'
+import { IconaElimina, IconaModifica } from '@/components/icone'
+import { Modale } from '@/components/modale'
 import { useConferma } from '@/components/conferma'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { traduciTipoStrumento } from '@/lib/i18n-tipi-strumento'
 import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
 import { LARGHEZZA_RIGA_QUATTRO_CAMPI, STILE_BOTTONE_ICONA } from './layout-campi'
+import { FormAsset, type StrumentoModificabile } from './form-asset'
 
-export type AssetElenco = {
-  id: string
-  nome: string
-  categoria: string
-  tipo: string
+export type AssetElenco = StrumentoModificabile & {
   transazioni: number
   movimenti: number
 }
 
-export function ListaAsset({ asset }: { asset: AssetElenco[] }) {
+export function ListaAsset({
+  asset,
+  tipiPerCategoria,
+  aliquoteDefaultPerCategoria,
+}: {
+  asset: AssetElenco[]
+  tipiPerCategoria: Record<string, string[]>
+  aliquoteDefaultPerCategoria: Record<string, number>
+}) {
   const t = useTranslations('PaginaGestioneStrumenti')
   const tCategorie = useTranslations('Categorie')
   const tContenitori = useTranslations('Contenitori')
@@ -33,6 +39,7 @@ export function ListaAsset({ asset }: { asset: AssetElenco[] }) {
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [messaggio, setMessaggio] = useState<{ tipo: 'successo' | 'errore'; testo: string } | null>(null)
   const [, startTransition] = useTransition()
+  const [inModifica, setInModifica] = useState<AssetElenco | null>(null)
 
   function etichettaCategoria(categoria: string): string {
     return categoria === 'Liquidita' ? tContenitori('liquidita') : traduciCategoria(tCategorie, categoria)
@@ -143,6 +150,19 @@ export function ListaAsset({ asset }: { asset: AssetElenco[] }) {
             </span>
             <button
               type="button"
+              onClick={() => {
+                setMessaggio(null)
+                setInModifica(a)
+              }}
+              disabled={pendingId !== null}
+              aria-label={t('ariaLabelModificaAsset', { nome: a.nome })}
+              title={t('ariaLabelModificaAsset', { nome: a.nome })}
+              style={{ ...STILE_BOTTONE_ICONA, color: 'var(--text-primary)', cursor: pendingId !== null ? 'default' : 'pointer' }}
+            >
+              <IconaModifica />
+            </button>
+            <button
+              type="button"
               onClick={() => handleElimina(a)}
               disabled={pendingId !== null}
               aria-label={t('ariaLabelEliminaAsset', { nome: a.nome })}
@@ -154,6 +174,31 @@ export function ListaAsset({ asset }: { asset: AssetElenco[] }) {
           </div>
         ))}
       </div>
+
+      <Modale
+        aperto={inModifica !== null}
+        onChiudi={() => setInModifica(null)}
+        titolo={t('titoloModificaAsset')}
+        mostraChiusura={false}
+        larghezzaMassima={760}
+      >
+        {inModifica && (
+          <FormAsset
+            // key: un altro strumento riparte da un form nuovo, non dallo stato del precedente.
+            key={inModifica.id}
+            tipiPerCategoria={tipiPerCategoria}
+            aliquoteDefaultPerCategoria={aliquoteDefaultPerCategoria}
+            strumento={inModifica}
+            haCollegamenti={inModifica.transazioni > 0 || inModifica.movimenti > 0}
+            onAnnulla={() => setInModifica(null)}
+            onSalvato={() => {
+              setMessaggio({ tipo: 'successo', testo: t('successoModificaAsset', { nome: inModifica.nome }) })
+              setInModifica(null)
+              router.refresh()
+            }}
+          />
+        )}
+      </Modale>
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { tutteLeRighe } from '@/lib/supabase-tutte-le-righe'
 import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
-import { FormNuovoAsset } from './form-nuovo-asset'
+import { FormAsset } from './form-asset'
 import { FormNuovoContenitore } from './form-nuovo-contenitore'
 import { ListaContenitori } from './lista-contenitori'
 import { ListaAsset, type AssetElenco } from './lista-asset'
@@ -47,7 +47,12 @@ export default async function GestioneStrumentiPage({
       .select('categoria, aliquota_default')
       .returns<ImpostazioneCategoria[]>(),
     supabase.from('contenitori').select('id, nome, tipo').order('nome').returns<Contenitore[]>(),
-    supabase.from('strumenti').select('id, nome, categoria, tipo').order('nome'),
+    supabase
+      .from('strumenti')
+      .select(
+        'id, nome, categoria, tipo, ticker, isin, valuta, codice_prezzo, provider, tasso_percentuale, data_scadenza, cedola_percentuale, frequenza_cedola, note'
+      )
+      .order('nome'),
     // Solo strumento_id, per contare transazioni e movimenti collegati a ogni
     // strumento: decidono se l'eliminazione chiede la seconda conferma.
     tutteLeRighe((da, a) => supabase.from('transazioni').select('strumento_id').order('id').range(da, a)),
@@ -62,10 +67,7 @@ export default async function GestioneStrumentiPage({
   const nTransazioni = conteggio(transazioniPerStrumento)
   const nMovimenti = conteggio(movimentiPerStrumento)
   const assetElenco: AssetElenco[] = (strumenti ?? []).map((s) => ({
-    id: s.id,
-    nome: s.nome,
-    categoria: s.categoria,
-    tipo: s.tipo,
+    ...s,
     transazioni: nTransazioni.get(s.id) ?? 0,
     movimenti: nMovimenti.get(s.id) ?? 0,
   }))
@@ -120,10 +122,14 @@ export default async function GestioneStrumentiPage({
             </p>
           )}
 
-          <FormNuovoAsset tipiPerCategoria={tipiPerCategoria} aliquoteDefaultPerCategoria={aliquoteDefaultPerCategoria} />
+          <FormAsset tipiPerCategoria={tipiPerCategoria} aliquoteDefaultPerCategoria={aliquoteDefaultPerCategoria} />
 
           <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 24, marginBottom: 12 }}>{t('titoloAssetEsistenti')}</h3>
-          <ListaAsset asset={assetElenco} />
+          <ListaAsset
+            asset={assetElenco}
+            tipiPerCategoria={tipiPerCategoria}
+            aliquoteDefaultPerCategoria={aliquoteDefaultPerCategoria}
+          />
         </Sezione>
       </section>
 
