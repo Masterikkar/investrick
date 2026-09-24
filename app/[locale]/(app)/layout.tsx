@@ -35,6 +35,7 @@ const stilePannello: React.CSSProperties = {
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations('Menu')
   const tCategorie = await getTranslations('Categorie')
+  const tGestioneTransazioni = await getTranslations('PaginaGestioneTransazioni')
   const supabase = await createClient()
 
   const [{ data: strumenti }, { data: contenitori }] = await Promise.all([
@@ -213,8 +214,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                   </span>
                 </summary>
                 <div className="menu-submenu-items">
-                  <RippleLink href="/gestione/fiscalita" className="menu-row link-interattivo">
-                    {t('fiscalita')}
+                  <RippleLink href="/gestione/esporta" className="menu-row link-interattivo">
+                    {tGestioneTransazioni('titoloEsporta')}
+                  </RippleLink>
+                  <RippleLink href="/gestione/importa" className="menu-row link-interattivo">
+                    {tGestioneTransazioni('titoloImporta')}
                   </RippleLink>
                   <RippleLink href="/gestione/strumenti" className="menu-row link-interattivo">
                     {t('strumenti')}
