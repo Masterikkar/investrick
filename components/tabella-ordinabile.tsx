@@ -3,12 +3,12 @@
 import { useState, useMemo } from 'react'
 import { useLocale } from 'next-intl'
 import { RippleLink } from '@/components/ripple-link'
-import { formatData, formatEuro, formatEuroSigned, formatPercent, type LocaleFormato } from '@/lib/format'
+import { formatData, formatEuro, formatEuroSigned, formatNumero, formatPercent, type LocaleFormato } from '@/lib/format'
 
 export type ColonnaTabella = {
   key: string
   label: string
-  kind: 'text' | 'link' | 'euro' | 'euro-signed' | 'percent' | 'percent-signed' | 'date'
+  kind: 'text' | 'link' | 'euro' | 'euro-signed' | 'percent' | 'percent-signed' | 'date' | 'numero'
   linkPrefix?: string
   linkKey?: string
 }
@@ -41,6 +41,11 @@ export function TabellaOrdinabile({
     copia.sort((a, b) => {
       const va = a[sortKey]
       const vb = b[sortKey]
+      // I valori mancanti (mostrati come "—") vanno sempre in fondo, in
+      // entrambe le direzioni, invece di essere ordinati come se valessero 0.
+      const mancanteA = va === null || va === undefined
+      const mancanteB = vb === null || vb === undefined
+      if (mancanteA || mancanteB) return mancanteA === mancanteB ? 0 : mancanteA ? 1 : -1
       let cmp = 0
       if (typeof va === 'string' && typeof vb === 'string') {
         cmp = va.localeCompare(vb, locale)
@@ -85,6 +90,8 @@ export function TabellaOrdinabile({
       }
       case 'date':
         return valore ? formatData(String(valore), locale) : '—'
+      case 'numero':
+        return valore === null || valore === undefined ? '—' : formatNumero(Number(valore), 2, false, locale)
       default:
         return valore ?? '—'
     }
