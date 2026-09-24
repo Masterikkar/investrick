@@ -39,6 +39,7 @@
      non come style HTML, e lì le CSS custom properties non sono affidabili
      su tutti i browser. Tooltip, pulsanti periodo e didascalie invece sì. */
   --fs-period: 12px;
+  --fs-tooltip: 12px;  /* tooltip dei grafici: dati di supporto, appena sopra i tick (11px) */
 
   /* Card metriche (CardMetrica) */
   --fs-card-label: 11px;
