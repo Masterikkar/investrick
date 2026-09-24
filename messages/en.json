@@ -9,7 +9,7 @@
   },
   "PaginaCategoria": {
     "etichettaAsset": "Asset",
-    "colonnaStrumento": "Instrument",
+    "colonnaStrumento": "Name",
     "colonnaTipo": "Type",
     "colonnaRendimento": "Return",
     "colonnaRendimentoEuro": "Return (€)",
@@ -28,7 +28,7 @@
     "linkTransazioni": "View transactions →",
     "labelCostoTotale": "Total cost",
     "linkCosti": "View cost details →",
-    "titoloAsset": "Assets"
+    "titoloAsset": "Positions"
   },
   "PaginaTuttiAsset": {
     "tooltipPeso": "Weight calculated on the total of financial assets held. Cash is excluded."

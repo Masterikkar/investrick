@@ -9,7 +9,7 @@
   },
   "PaginaCategoria": {
     "etichettaAsset": "Asset",
-    "colonnaStrumento": "Strumento",
+    "colonnaStrumento": "Nome",
     "colonnaTipo": "Tipo",
     "colonnaRendimento": "Rendimento",
     "colonnaRendimentoEuro": "Rendimento (€)",
@@ -28,7 +28,7 @@
     "linkTransazioni": "Vedi transazioni →",
     "labelCostoTotale": "Costo totale",
     "linkCosti": "Vedi dettaglio costi →",
-    "titoloAsset": "Asset"
+    "titoloAsset": "Posizioni"
   },
   "PaginaTuttiAsset": {
     "tooltipPeso": "Peso calcolato sul totale degli asset finanziari posseduti. È esclusa la liquidità."

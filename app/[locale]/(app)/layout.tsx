@@ -93,7 +93,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <BarraRicerca strumenti={strumenti ?? []} contenitori={contenitori ?? []} />
         </div>
 
-        <nav style={{ display: 'flex', gap: 4, alignItems: 'stretch' }}>
+        <nav data-menu-principale style={{ display: 'flex', gap: 4, alignItems: 'stretch' }}>
           <details style={{ position: 'relative' }}>
             <summary className="menu-toggle menu-toggle-bar">
               <IconaPortafoglio />
