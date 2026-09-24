@@ -144,7 +144,7 @@ export function GraficoStorico({
         <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>{t('alertDatiInsufficientiPeriodo')}</p>
       ) : (
         <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={datiFiltrati} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+          <LineChart data={datiFiltrati} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={GRIGLIA} />
             <XAxis
               dataKey="data"
@@ -155,7 +155,7 @@ export function GraficoStorico({
               axisLine={{ stroke: GRIGLIA }}
               tickLine={{ stroke: GRIGLIA }}
             />
-            <YAxis allowDecimals={false} tickFormatter={(v) => formatAsse(Number(v))} fontSize={11} width={70} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+            <YAxis allowDecimals={false} tickFormatter={(v) => formatAsse(Number(v))} fontSize={11} width="auto" tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <Tooltip
               formatter={(value) => [formatTooltip(Number(value)), etichettaTooltip]}
               labelFormatter={(label) => (label ? formatData(String(label), locale) : '')}
