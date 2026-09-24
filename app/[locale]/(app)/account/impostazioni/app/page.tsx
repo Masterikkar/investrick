@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server'
-import { SelettoreLingua } from '../../impostazioni/selettore-lingua'
+import { SelettoreLingua } from './selettore-lingua'
 import { SezioneImpostazioni } from '../sezione-impostazioni'
 
 export default async function ImpostazioniAppPage() {
