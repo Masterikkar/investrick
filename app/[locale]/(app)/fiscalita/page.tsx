@@ -5,7 +5,7 @@ import { GraficoStoricoFiscale, type PuntoStoricoFiscale } from '@/components/gr
 import { CardMetrica } from '@/components/card-metrica'
 import { type VoceBarra } from '@/components/barre-divergenti'
 import { Sezione } from '@/components/sezione'
-import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 import { SezioneAnnoCorrente } from './sezione-anno-corrente'
 import { StoricoPlusMinus, type RigaNonRealizzata, type RigaRealizzata } from './storico-plus-minus'
 
@@ -170,12 +170,18 @@ export default async function FiscalitaPage() {
 
   const bucketMovimento = aggregaNonRealizzato(righeMovimento)
 
+  // Come traduciCategoria: t() solo se la chiave è nella mappa.
+  function etichettaContenitore(cont: string): string {
+    const chiave = CHIAVE_TRADUZIONE_CONTENITORE_MOVIMENTO[cont]
+    return chiave ? tContenitori(chiave) : cont
+  }
+
   const vociCategoria: VoceBarra[] = CATEGORIE_MOVIMENTO.map((cat) => ({
-    etichetta: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[cat] ?? cat),
+    etichetta: traduciCategoria(tCategorie, cat),
     valore: bucketMovimento[cat],
   }))
   const vociContenitore: VoceBarra[] = CONTENITORI_MOVIMENTO.map((cont) => ({
-    etichetta: tContenitori(CHIAVE_TRADUZIONE_CONTENITORE_MOVIMENTO[cont] ?? cont),
+    etichetta: etichettaContenitore(cont),
     valore: bucketMovimento[cont],
   }))
 
@@ -190,11 +196,11 @@ export default async function FiscalitaPage() {
   const bucketRealizzato = aggregaNonRealizzato(righeRealizzatoMovimento)
 
   const vociCategoriaRealizzate: VoceBarra[] = CATEGORIE_MOVIMENTO.map((cat) => ({
-    etichetta: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[cat] ?? cat),
+    etichetta: traduciCategoria(tCategorie, cat),
     valore: bucketRealizzato[cat],
   }))
   const vociContenitoreRealizzate: VoceBarra[] = CONTENITORI_MOVIMENTO.map((cont) => ({
-    etichetta: tContenitori(CHIAVE_TRADUZIONE_CONTENITORE_MOVIMENTO[cont] ?? cont),
+    etichetta: etichettaContenitore(cont),
     valore: bucketRealizzato[cont],
   }))
 

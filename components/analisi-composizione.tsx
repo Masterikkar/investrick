@@ -1,6 +1,6 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { formatPercent, formatNumero, type LocaleFormato } from '@/lib/format'
-import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 import { BarreSottocategoria, type SottoTarget } from '@/components/barre-sottocategoria'
 
 export type ScostamentoCategoria = {
@@ -46,7 +46,7 @@ export async function AnalisiComposizione({
         return (
           <div key={c.categoria}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-table)', marginBottom: 4 }}>
-              <span>{tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[c.categoria ?? ''] ?? c.categoria ?? '')}</span>
+              <span>{traduciCategoria(tCategorie, c.categoria ?? '')}</span>
               <span>
                 {t('barraComposizione', {
                   pesoAttuale: formatPercent(c.peso_attuale_pct ?? 0, 1, false, locale),

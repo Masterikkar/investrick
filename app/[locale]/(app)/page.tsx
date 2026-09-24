@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
-import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { GraficoAnello, ElencoAllocazione, type FettaAnello } from '@/components/grafico-anello'
 import { CardMetrica } from '@/components/card-metrica'
@@ -152,7 +152,7 @@ export default async function DashboardPage() {
     ...ORDINE_CATEGORIE.map((cat) => ({
       nome: cat,
       valore: valorePerCategoria.get(cat) ?? 0,
-      nomeVisualizzato: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[cat] ?? cat),
+      nomeVisualizzato: traduciCategoria(tCategorie, cat),
     })),
     { nome: 'Liquidità', valore: valoreTotaleLiquidita, nomeVisualizzato: tContenitori('liquidita') },
   ]
@@ -270,7 +270,7 @@ export default async function DashboardPage() {
                 <div key={`${a.contenitore_id}-${a.categoria}`} style={{ fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>
                   <strong>{a.contenitore_nome}</strong> —{' '}
                   {t('alertScostamento', {
-                    categoria: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[a.categoria ?? ''] ?? a.categoria ?? ''),
+                    categoria: traduciCategoria(tCategorie, a.categoria ?? ''),
                     pesoAttuale: a.peso_attuale_pct ?? 0,
                     target: a.target_percentuale ?? 0,
                     segnoScostamento: a.scostamento_pp && a.scostamento_pp > 0 ? '+' : '',

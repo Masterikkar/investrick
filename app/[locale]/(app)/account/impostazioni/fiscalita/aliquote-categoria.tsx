@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { aggiornaAliquotaDefaultCategoria, reimpostaAliquotaCategoria } from './actions-aliquote'
-import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 
 export type CategoriaAliquota = {
   categoria: string
@@ -30,7 +30,7 @@ export function AliquoteCategoria({ categorie }: { categorie: CategoriaAliquota[
 
   function etichettaCategoria(categoria: string): string {
     if (categoria === 'Liquidita') return tContenitori('liquidita')
-    return tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[categoria] ?? categoria)
+    return traduciCategoria(tCategorie, categoria)
   }
   const [valori, setValori] = useState<Record<string, string>>(() =>
     Object.fromEntries(categorie.map((c) => [c.categoria, String(c.aliquotaDefault)]))

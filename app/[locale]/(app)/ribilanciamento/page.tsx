@@ -4,7 +4,7 @@ import { formatEuro, formatEuroSigned, formatNumero, formatPercent, type LocaleF
 import { Sezione } from '@/components/sezione'
 import { SogliaRibilanciamento } from '@/components/soglia-ribilanciamento'
 import { FormSimulazione } from './form-simulazione'
-import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 import {
   calcolaRibilanciamentoConVersamento,
   distribuisciAcquisto,
@@ -338,7 +338,7 @@ export default async function RibilanciamentoPage({
                   return (
                     <tr key={s.target_id} className="tabella-riga">
                       <td style={{ padding: 8 }}>{s.contenitore_nome}</td>
-                      <td style={{ padding: 8 }}>{tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[s.categoria] ?? s.categoria)}</td>
+                      <td style={{ padding: 8 }}>{traduciCategoria(tCategorie, s.categoria)}</td>
                       <td style={{ padding: 8 }}>{formatPercent(s.target_percentuale, 2, false, locale)}</td>
                       <td style={{ padding: 8 }}>{formatPercent(s.peso_attuale_pct, 2, false, locale)}</td>
                       <td style={{ padding: 8, color: sovrappeso ? 'var(--warning)' : 'var(--primary-vivid)', fontWeight: 500 }}>
@@ -455,7 +455,7 @@ export default async function RibilanciamentoPage({
                   <tbody>
                     {allocazioneAcquisto.map((a) => (
                       <tr key={a.categoria} className="tabella-riga">
-                        <td style={{ padding: 8 }}>{tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[a.categoria] ?? a.categoria)}</td>
+                        <td style={{ padding: 8 }}>{traduciCategoria(tCategorie, a.categoria)}</td>
                         <td style={{ padding: 8 }}>{formatEuro(a.importo, locale)}</td>
                         <td style={{ padding: 8 }}>{formatPercent(a.pesoFinalePct, 2, false, locale)}</td>
                         <td style={{ padding: 8 }}>{formatNumero(a.scostamentoFinalePp, 2, true, locale)} pp</td>
@@ -466,7 +466,7 @@ export default async function RibilanciamentoPage({
 
                 {allocazioneStrumenti.map((c) => (
                   <div key={c.categoria} style={{ marginTop: 16, fontSize: 'var(--fs-body)' }}>
-                    <strong>{tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[c.categoria] ?? c.categoria)}</strong>{' '}
+                    <strong>{traduciCategoria(tCategorie, c.categoria)}</strong>{' '}
                     <span style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)' }}>
                       ({c.usaTarget ? t('notaSecondoTargetStrumento') : t('notaSecondoPesiAttuali')})
                     </span>

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { creaAsset } from './actions'
 import { MenuSelect } from '@/components/menu-select'
-import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
 import { LARGHEZZA_STANDARD, GAP_CAMPI, LARGHEZZA_RIGA_QUATTRO_CAMPI, LARGHEZZA_NOME } from './layout-campi'
 
@@ -52,7 +52,7 @@ export function FormNuovoAsset({
 
   function etichettaCategoria(cat: string): string {
     if (cat === 'Liquidita') return tContenitori('liquidita')
-    return tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[cat] ?? cat)
+    return traduciCategoria(tCategorie, cat)
   }
 
   // Solo i tipi di liquidità hanno una traduzione; un tipo non mappato

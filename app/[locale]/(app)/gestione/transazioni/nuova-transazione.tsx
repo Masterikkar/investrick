@@ -7,7 +7,7 @@ import { MenuSelect } from '@/components/menu-select'
 import { aggiungiTransazione, aggiungiMovimentoLiquidita } from './actions'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
-import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 import { CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA } from '@/lib/i18n-tipi-movimento-liquidita'
 
 type Strumento = { id: string; nome: string; ticker: string | null; categoria: string }
@@ -104,13 +104,13 @@ export function NuovaTransazioneFinanziaria({
     { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
     ...strumenti.map((s) => ({
       value: s.id,
-      label: `${s.nome} ${s.ticker ? `(${s.ticker})` : ''} — ${tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[s.categoria] ?? s.categoria)}`,
+      label: `${s.nome} ${s.ticker ? `(${s.ticker})` : ''} — ${traduciCategoria(tCategorie, s.categoria)}`,
     })),
   ]
 
   const opzioniCategoria = [
     { value: '', label: '—' },
-    ...CATEGORIE.map((c) => ({ value: c, label: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[c] ?? c) })),
+    ...CATEGORIE.map((c) => ({ value: c, label: traduciCategoria(tCategorie, c) })),
   ]
 
   const opzioniContenitore = [

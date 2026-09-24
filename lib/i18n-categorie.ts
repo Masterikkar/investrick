@@ -10,3 +10,11 @@ export const CHIAVE_TRADUZIONE_CATEGORIA: Record<string, string> = {
   Multiasset: 'multiasset',
   Crypto: 'crypto',
 }
+
+// Traduce una categoria solo se è nella mappa: un valore non mappato resta
+// com'è scritto nel database invece di finire in t() come chiave
+// (MISSING_MESSAGE). t è il traduttore del namespace "Categorie".
+export function traduciCategoria(t: (chiave: string) => string, categoria: string): string {
+  const chiave = CHIAVE_TRADUZIONE_CATEGORIA[categoria]
+  return chiave ? t(chiave) : categoria
+}

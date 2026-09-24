@@ -7,7 +7,7 @@ import { RippleLink } from '@/components/ripple-link'
 import { CardMetrica, stileCardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
 import { Sezione } from '@/components/sezione'
-import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 import type { SottoTarget } from '@/components/barre-sottocategoria'
 import type { ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
 import { AnalisiRendimento, type ContributoCategoria } from '@/components/analisi-rendimento'
@@ -154,7 +154,7 @@ export default async function PacPage() {
         nome: strumento?.nome ?? '—',
         tipo: strumento?.tipo ?? '—',
         categoria,
-        categoriaVisualizzata: tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[categoria] ?? categoria),
+        categoriaVisualizzata: traduciCategoria(tCategorie, categoria),
         rendimentoPct: p.rendimento_pct ?? 0,
         rendimentoAssoluto: (p.valore ?? 0) - (p.capitale_investito ?? 0),
         valore: p.valore ?? 0,

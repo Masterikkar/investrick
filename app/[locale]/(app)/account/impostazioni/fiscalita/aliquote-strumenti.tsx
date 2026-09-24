@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { aggiornaAliquotaStrumento } from './actions-aliquote'
-import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 
 export type RigaAliquotaStrumento = {
   id: string
@@ -34,7 +34,7 @@ export function AliquoteStrumenti({ righe }: { righe: RigaAliquotaStrumento[] })
 
   function etichettaCategoria(categoria: string): string {
     if (categoria === 'Liquidita') return tContenitori('liquidita')
-    return tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[categoria] ?? categoria)
+    return traduciCategoria(tCategorie, categoria)
   }
   const [valori, setValori] = useState<Record<string, string>>(() =>
     Object.fromEntries(righe.map((r) => [r.id, String(r.aliquotaTassazione)]))

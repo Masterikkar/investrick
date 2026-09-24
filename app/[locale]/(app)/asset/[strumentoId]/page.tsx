@@ -6,7 +6,7 @@ import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { CardMetrica } from '@/components/card-metrica'
 import { Sezione } from '@/components/sezione'
 import { Breadcrumb } from '@/components/breadcrumb'
-import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
 
 type Strumento = {
@@ -219,7 +219,7 @@ export default async function AssetPage({
       <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>{t('eyebrowAsset')}</div>
       <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 4, fontWeight: 500 }}>{strumento.nome}</h1>
       <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
-        {tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[strumento.categoria] ?? strumento.categoria)}
+        {traduciCategoria(tCategorie, strumento.categoria)}
         {strumento.isin ? ` · ${strumento.isin}` : ''}
         {strumento.ticker ? ` · ${strumento.ticker}` : ''}
         {` · ${strumento.valuta}`}

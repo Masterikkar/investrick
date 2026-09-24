@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatEuro, type LocaleFormato } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { Sezione } from '@/components/sezione'
-import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 
 type CostoPerContenitore = { contenitore_id: string; costo_totale: number }
 type CostoPerStrumento = { strumento_id: string; contenitore_id: string | null; categoria: string; costo_totale: number }
@@ -128,7 +128,7 @@ export default async function CostiPage() {
         key: `${r.strumento_id}|${r.contenitore_id ?? 'diretto'}`,
         strumentoId: r.strumento_id,
         nome: info?.nome ?? '—',
-        categoria: categoria ? tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[categoria] ?? categoria) : '—',
+        categoria: categoria ? traduciCategoria(tCategorie, categoria) : '—',
         contenitore: r.contenitore_id ? contenitoreMap.get(r.contenitore_id) ?? '—' : tPaginaCategoria('provenienzaDiretto'),
         costo,
         costoPerEuro: costoPerEuro(costo, guadagno),

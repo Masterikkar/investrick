@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatPercent, type LocaleFormato } from '@/lib/format'
-import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 import { salvaTarget } from './actions'
 
 const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Crypto', 'Multiasset'] as const
@@ -111,7 +111,7 @@ export function FormTarget({
           const sommaStrumenti = haSottotarget ? sommaCategoria(cat) : 0
           const sommaStrumentiOk = sommaStrumenti === 0 || Math.abs(sommaStrumenti - 100) < 0.01
           const aperta = categorieAperte[cat] ?? false
-          const nomeCategoria = tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[cat])
+          const nomeCategoria = traduciCategoria(tCategorie, cat)
 
           return (
             <div key={cat}>
