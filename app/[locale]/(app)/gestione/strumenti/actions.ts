@@ -79,5 +79,6 @@ export async function creaAsset(formData: FormData) {
     return
   }
 
-  redirect({ href: `/asset/${nuovo.id}`, locale })
+  // I conti di liquidità hanno la loro pagina di dettaglio, non quella Asset.
+  redirect({ href: categoria === 'Liquidita' ? `/liquidita/${nuovo.id}` : `/asset/${nuovo.id}`, locale })
 }

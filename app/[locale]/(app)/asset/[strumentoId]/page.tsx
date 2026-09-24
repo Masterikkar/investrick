@@ -1,5 +1,6 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from '@/i18n/navigation'
 import { formatData, formatEuro, formatEuroSigned, formatPercent, formatNumero, type LocaleFormato } from '@/lib/format'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { CardMetrica } from '@/components/card-metrica'
@@ -135,6 +136,11 @@ export default async function AssetPage({
 
   if (!strumento) {
     return <div>{tPaginaLiquidita('strumentoNonTrovato')}</div>
+  }
+
+  // Un conto di liquidità ha la sua pagina di dettaglio: copre link diretti o salvati.
+  if (strumento.categoria === 'Liquidita') {
+    redirect({ href: `/liquidita/${strumento.id}`, locale })
   }
 
   const contenitoreMap = new Map((contenitoriRaw ?? []).map((c) => [c.id, c.nome]))
