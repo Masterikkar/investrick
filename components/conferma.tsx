@@ -59,7 +59,7 @@ export function ConfermaProvider({ children }: { children: React.ReactNode }) {
   return (
     <ContestoConferma.Provider value={conferma}>
       {children}
-      <Modale aperto={opzioni !== null} onChiudi={annulla} titolo={opzioni?.titolo ?? ''}>
+      <Modale aperto={opzioni !== null} onChiudi={annulla} titolo={opzioni?.titolo ?? ''} mostraChiusura={false}>
         <p style={{ margin: 0, fontSize: 'var(--fs-body)', color: 'var(--text-primary)', whiteSpace: 'pre-line', lineHeight: 1.5 }}>
           {opzioni?.messaggio}
         </p>

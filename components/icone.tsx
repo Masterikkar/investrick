@@ -177,6 +177,14 @@ export function IconaModifica() {
   )
 }
 
+export function IconaSalva() {
+  return (
+    <IconaBase>
+      <path d="M4 3.5h9.5L16.5 6.5v10H4zM7 3.5v4h6v-4M7 16.5v-5h6v5" />
+    </IconaBase>
+  )
+}
+
 export function IconaElimina() {
   return (
     <IconaBase>

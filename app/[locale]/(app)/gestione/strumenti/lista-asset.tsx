@@ -9,7 +9,7 @@ import { useConferma } from '@/components/conferma'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { traduciTipoStrumento } from '@/lib/i18n-tipi-strumento'
 import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
-import { LARGHEZZA_RIGA_QUATTRO_CAMPI } from './layout-campi'
+import { LARGHEZZA_RIGA_QUATTRO_CAMPI, STILE_BOTTONE_ICONA } from './layout-campi'
 
 export type AssetElenco = {
   id: string
@@ -18,18 +18,6 @@ export type AssetElenco = {
   tipo: string
   transazioni: number
   movimenti: number
-}
-
-const stileBottoneIcona: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  border: '1px solid var(--border-default)',
-  background: 'var(--bg-surface)',
-  color: 'var(--danger)',
-  padding: 4,
-  cursor: 'pointer',
-  flexShrink: 0,
 }
 
 export function ListaAsset({ asset }: { asset: AssetElenco[] }) {
@@ -136,7 +124,7 @@ export function ListaAsset({ asset }: { asset: AssetElenco[] }) {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', maxWidth: LARGHEZZA_RIGA_QUATTRO_CAMPI }}>
-        {assetOrdinati.map((a) => (
+        {assetOrdinati.map((a, indice) => (
           <div
             key={a.id}
             style={{
@@ -144,7 +132,8 @@ export function ListaAsset({ asset }: { asset: AssetElenco[] }) {
               alignItems: 'center',
               gap: 12,
               padding: '8px 0',
-              borderBottom: '1px solid var(--border-default)',
+              // Divisore tra le righe, non dopo l'ultima.
+              borderBottom: indice < assetOrdinati.length - 1 ? '1px solid var(--border-default)' : 'none',
               opacity: pendingId === a.id ? 0.5 : 1,
             }}
           >
@@ -158,7 +147,7 @@ export function ListaAsset({ asset }: { asset: AssetElenco[] }) {
               disabled={pendingId !== null}
               aria-label={t('ariaLabelEliminaAsset', { nome: a.nome })}
               title={t('ariaLabelEliminaAsset', { nome: a.nome })}
-              style={{ ...stileBottoneIcona, cursor: pendingId !== null ? 'default' : 'pointer' }}
+              style={{ ...STILE_BOTTONE_ICONA, color: 'var(--danger)', cursor: pendingId !== null ? 'default' : 'pointer' }}
             >
               <IconaElimina />
             </button>

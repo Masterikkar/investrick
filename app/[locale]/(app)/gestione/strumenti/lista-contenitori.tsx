@@ -4,18 +4,10 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { rinominaContenitore, eliminaContenitore } from './actions-contenitore'
-import { LARGHEZZA_STANDARD, LARGHEZZA_RIGA_QUATTRO_CAMPI } from './layout-campi'
+import { LARGHEZZA_STANDARD, LARGHEZZA_RIGA_QUATTRO_CAMPI, STILE_BOTTONE_ICONA } from './layout-campi'
+import { IconaElimina, IconaSalva } from '@/components/icone'
 
 type Contenitore = { id: string; nome: string; tipo: string }
-
-const stileBottoneOutline: React.CSSProperties = {
-  border: '1px solid var(--border-default)',
-  background: 'var(--bg-surface)',
-  color: 'var(--text-primary)',
-  padding: '6px 12px',
-  fontSize: 'var(--fs-table)',
-  cursor: 'pointer',
-}
 
 export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }) {
   const t = useTranslations('PaginaGestioneStrumenti')
@@ -122,17 +114,25 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
               type="button"
               onClick={() => handleRinomina(c.id)}
               disabled={pendingId === c.id || (nomi[c.id] ?? '').trim() === c.nome}
-              style={{ ...stileBottoneOutline, opacity: pendingId === c.id || (nomi[c.id] ?? '').trim() === c.nome ? 0.5 : 1 }}
+              aria-label={tPaginaRibilanciamento('bottoneSalva')}
+              title={tPaginaRibilanciamento('bottoneSalva')}
+              style={{
+                ...STILE_BOTTONE_ICONA,
+                color: 'var(--text-primary)',
+                opacity: pendingId === c.id || (nomi[c.id] ?? '').trim() === c.nome ? 0.5 : 1,
+              }}
             >
-              {tPaginaRibilanciamento('bottoneSalva')}
+              <IconaSalva />
             </button>
             <button
               type="button"
               onClick={() => handleElimina(c.id, c.nome)}
               disabled={pendingId === c.id}
-              style={{ ...stileBottoneOutline, color: 'var(--danger)', opacity: pendingId === c.id ? 0.5 : 1 }}
+              aria-label={t('bottoneElimina')}
+              title={t('bottoneElimina')}
+              style={{ ...STILE_BOTTONE_ICONA, color: 'var(--danger)', opacity: pendingId === c.id ? 0.5 : 1 }}
             >
-              {t('bottoneElimina')}
+              <IconaElimina />
             </button>
           </div>
         ))}
