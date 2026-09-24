@@ -423,6 +423,7 @@
   "PaginaGestioneTransazioni": {
     "linkStoricoTransazioniFinanziarie": "→ Storico transazioni finanziarie",
     "linkStoricoTransazioniLiquidita": "→ Storico transazioni di liquidità",
+    "linkImportaDaFile": "→ Importa da file",
     "titoloImporta": "Importa",
     "titoloEsporta": "Esporta",
     "bottoneNuovaTransazione": "+ Nuova transazione",

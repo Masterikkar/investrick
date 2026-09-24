@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
-import { importaMovimentiLiquiditaBulk, type RigaImportLiquidita } from './actions'
+import { importaMovimentiLiquiditaBulk, type RigaImportLiquidita } from '../transazioni/actions'
 import { IconaDownload } from '@/components/icone'
 
 type StrumentoLiquidita = { id: string; nome: string }
