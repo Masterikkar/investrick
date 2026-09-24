@@ -1,15 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { importaMovimentiLiquiditaBulk, type RigaImportLiquidita } from '../transazioni/actions'
 import { IconaDownload } from '@/components/icone'
+import type { LocaleFormato } from '@/lib/format'
+import {
+  COLONNE_EXCEL_LIQUIDITA,
+  isContenitoreDirettoExcel,
+  risolviIntestazioniExcel,
+  TEMPLATE_EXCEL,
+  type ColonnaExcelLiquidita,
+} from '@/lib/i18n-intestazioni-excel'
+import { tipoMovimentoLiquiditaDaEtichettaExcel } from '@/lib/i18n-tipi-movimento-liquidita'
 
 type StrumentoLiquidita = { id: string; nome: string }
 type ContenitoreBase = { id: string; nome: string }
-
-const TIPI_MOVIMENTO_VALIDI = ['Versamento', 'Prelievo', 'Interesse', 'Costo']
 
 function testoCella(v: unknown): string {
   return String(v ?? '').trim()
@@ -63,25 +70,32 @@ type Traduttore = (key: string, values?: Record<string, string | number>) => str
 
 function elabora(
   righeExcel: Record<string, unknown>[],
+  intestazionePerColonna: Map<ColonnaExcelLiquidita, string>,
   mappaStrumenti: Map<string, string>,
   mappaContenitori: Map<string, string>,
   t: Traduttore
 ): RigaParsata[] {
   return righeExcel.map((riga, idx) => {
     const numeroRiga = idx + 2
-    const strumentoRaw = testoCella(riga['Strumento'])
-    const tipoMovimentoRaw = testoCella(riga['Tipo movimento'])
-    const contenitoreRaw = testoCella(riga['Contenitore'])
+    // Le righe hanno come chiavi le intestazioni scritte nel file, in qualunque
+    // lingua: si legge ogni colonna tramite la sua intestazione risolta.
+    const cella = (colonna: ColonnaExcelLiquidita) => {
+      const intestazione = intestazionePerColonna.get(colonna)
+      return intestazione === undefined ? undefined : riga[intestazione]
+    }
+    const strumentoRaw = testoCella(cella('Strumento'))
+    const tipoMovimentoRaw = testoCella(cella('Tipo movimento'))
+    const contenitoreRaw = testoCella(cella('Contenitore'))
 
     const strumentoId = strumentoRaw ? mappaStrumenti.get(strumentoRaw.toLowerCase()) ?? null : null
-    const data = parseDataCella(riga['Data'])
-    const tipoMovimento = TIPI_MOVIMENTO_VALIDI.find((tm) => tm.toLowerCase() === tipoMovimentoRaw.toLowerCase()) ?? null
-    const importo = parseNumeroCella(riga['Importo'], false)
-    const tassaTrattenuta = parseNumeroCella(riga['Tassa trattenuta'], true)
+    const data = parseDataCella(cella('Data'))
+    const tipoMovimento = tipoMovimentoLiquiditaDaEtichettaExcel(tipoMovimentoRaw) ?? null
+    const importo = parseNumeroCella(cella('Importo'), false)
+    const tassaTrattenuta = parseNumeroCella(cella('Tassa trattenuta'), true)
 
     let contenitoreId: string | null = null
     let contenitoreNonTrovato: string | null = null
-    if (contenitoreRaw === '' || contenitoreRaw.toLowerCase() === 'diretto') {
+    if (contenitoreRaw === '' || isContenitoreDirettoExcel(contenitoreRaw)) {
       contenitoreId = null
     } else {
       const trovato = mappaContenitori.get(contenitoreRaw.toLowerCase())
@@ -92,10 +106,10 @@ function elabora(
     let errore: string | null = null
     if (!strumentoRaw) errore = t('erroreStrumentoMancante')
     else if (!strumentoId) errore = t('erroreContoNonTrovato', { valore: strumentoRaw })
-    else if (!data) errore = t('erroreDataNonValida', { valore: testoCella(riga['Data']) })
+    else if (!data) errore = t('erroreDataNonValida', { valore: testoCella(cella('Data')) })
     else if (!tipoMovimento) errore = t('erroreTipoMovimentoNonRiconosciuto', { valore: tipoMovimentoRaw })
-    else if (importo === null) errore = t('erroreImportoNonValido', { valore: testoCella(riga['Importo']) })
-    else if (tassaTrattenuta === null) errore = t('erroreTassaNonValida', { valore: testoCella(riga['Tassa trattenuta']) })
+    else if (importo === null) errore = t('erroreImportoNonValido', { valore: testoCella(cella('Importo')) })
+    else if (tassaTrattenuta === null) errore = t('erroreTassaNonValida', { valore: testoCella(cella('Tassa trattenuta')) })
     else if (contenitoreNonTrovato) errore = t('erroreContenitoreNonTrovato', { valore: contenitoreNonTrovato })
 
     return {
@@ -130,6 +144,7 @@ export function ImportaExcelLiquidita({
 }) {
   const t = useTranslations('PaginaGestioneTransazioni')
   const tGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
+  const locale = useLocale() as LocaleFormato
   const [righe, setRighe] = useState<RigaParsata[] | null>(null)
   const [risultato, setRisultato] = useState<{
     inserite: number
@@ -154,8 +169,12 @@ export function ImportaExcelLiquidita({
         const primoFoglio = workbook.SheetNames[0]
         if (!primoFoglio) throw new Error(t('erroreNessunFoglio'))
         const foglio = workbook.Sheets[primoFoglio]
+        const intestazioni = XLSX.utils.sheet_to_json<unknown[]>(foglio, { header: 1, raw: false })[0] ?? []
+        const { intestazionePerColonna, sconosciute, duplicate } = risolviIntestazioniExcel(intestazioni, COLONNE_EXCEL_LIQUIDITA)
+        if (sconosciute.length > 0) throw new Error(t('erroreIntestazioniSconosciute', { elenco: sconosciute.join(', ') }))
+        if (duplicate.length > 0) throw new Error(t('erroreIntestazioniDuplicate', { elenco: duplicate.join(', ') }))
         const righeGrezze = XLSX.utils.sheet_to_json<Record<string, unknown>>(foglio, { defval: '' })
-        setRighe(elabora(righeGrezze, mappaStrumenti, mappaContenitori, t))
+        setRighe(elabora(righeGrezze, intestazionePerColonna, mappaStrumenti, mappaContenitori, t))
       } catch (err) {
         setErroreFile(err instanceof Error ? err.message : t('erroreLetturaFile'))
       }
@@ -219,7 +238,7 @@ export function ImportaExcelLiquidita({
 
       <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 'var(--fs-body)', flexWrap: 'wrap', alignItems: 'center' }}>
         <a
-          href="/template-transazioni-liquidita.xlsx"
+          href={TEMPLATE_EXCEL.liquidita[locale]}
           download
           className="link-interattivo"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}

@@ -1,15 +1,30 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { esportaTransazioniFinanziarie, esportaTransazioniLiquidita } from '../transazioni/actions'
+import type { LocaleFormato } from '@/lib/format'
+import { COLONNE_EXCEL_FINANZIARIE, COLONNE_EXCEL_LIQUIDITA, intestazioneExcel, type ColonnaExcel } from '@/lib/i18n-intestazioni-excel'
+import { traduciOperazione } from '@/lib/i18n-tipi-operazione'
+import { traduciTipoMovimentoLiquidita } from '@/lib/i18n-tipi-movimento-liquidita'
 
-const COLONNE_FINANZIARIE = ['Data', 'ISIN', 'Ticker', 'Strumento', 'Operazione', 'Quantità', 'Prezzo unitario', 'Commissione', 'Tassa trattenuta', 'Contenitore']
 const LARGHEZZE_FINANZIARIE = [12, 14, 10, 26, 20, 12, 14, 12, 14, 18].map((wch) => ({ wch }))
-
-const COLONNE_LIQUIDITA = ['Data', 'Strumento', 'Tipo movimento', 'Importo', 'Tassa trattenuta', 'Contenitore']
 const LARGHEZZE_LIQUIDITA = [12, 26, 16, 12, 14, 18].map((wch) => ({ wch }))
+
+// Riscrive le righe (con chiavi italiane canoniche) con le intestazioni della
+// lingua corrente; traduciValore permette di tradurre anche il contenuto di
+// singole colonne.
+function righeLocalizzate<C extends ColonnaExcel, R extends Record<C, unknown>>(
+  righe: R[],
+  colonne: readonly C[],
+  locale: LocaleFormato,
+  traduciValore: (colonna: C, valore: unknown) => unknown = (_, valore) => valore,
+) {
+  return righe.map((riga) =>
+    Object.fromEntries(colonne.map((colonna) => [intestazioneExcel(colonna, locale), traduciValore(colonna, riga[colonna])])),
+  )
+}
 
 const stileBottonePrimario: React.CSSProperties = {
   background: 'var(--primary)',
@@ -25,6 +40,8 @@ const stileBottonePrimario: React.CSSProperties = {
 export function EsportaTransazioniFinanziarie() {
   const t = useTranslations('PaginaGestioneTransazioni')
   const tGestioneFiscalita = useTranslations('PaginaGestioneFiscalita')
+  const tTipiOperazione = useTranslations('TipiOperazione')
+  const locale = useLocale() as LocaleFormato
   const [scaricando, setScaricando] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
 
@@ -32,13 +49,15 @@ export function EsportaTransazioniFinanziarie() {
     setScaricando(true)
     setErrore(null)
     try {
-      const righe = await esportaTransazioniFinanziarie()
+      const righe = righeLocalizzate(await esportaTransazioniFinanziarie(), COLONNE_EXCEL_FINANZIARIE, locale, (colonna, valore) =>
+        colonna === 'Operazione' ? traduciOperazione(tTipiOperazione, valore as string) : valore,
+      )
       const oggi = new Date().toISOString().slice(0, 10)
-      const ws = XLSX.utils.json_to_sheet(righe, { header: COLONNE_FINANZIARIE })
+      const ws = XLSX.utils.json_to_sheet(righe, { header: COLONNE_EXCEL_FINANZIARIE.map((c) => intestazioneExcel(c, locale)) })
       ws['!cols'] = LARGHEZZE_FINANZIARIE
       const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, 'Transazioni finanziarie')
-      XLSX.writeFile(wb, `transazioni-finanziarie-${oggi}.xlsx`)
+      XLSX.utils.book_append_sheet(wb, ws, t('nomeFoglioExportFinanziarie'))
+      XLSX.writeFile(wb, `${t('nomeFileExportFinanziarie')}-${oggi}.xlsx`)
     } catch (err) {
       setErrore(err instanceof Error ? err.message : tGestioneFiscalita('erroreGenerazioneFile'))
     } finally {
@@ -64,6 +83,8 @@ export function EsportaTransazioniFinanziarie() {
 export function EsportaTransazioniLiquidita() {
   const t = useTranslations('PaginaGestioneTransazioni')
   const tGestioneFiscalita = useTranslations('PaginaGestioneFiscalita')
+  const tTipiMovimento = useTranslations('TipiMovimentoLiquidita')
+  const locale = useLocale() as LocaleFormato
   const [scaricando, setScaricando] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
 
@@ -71,13 +92,15 @@ export function EsportaTransazioniLiquidita() {
     setScaricando(true)
     setErrore(null)
     try {
-      const righe = await esportaTransazioniLiquidita()
+      const righe = righeLocalizzate(await esportaTransazioniLiquidita(), COLONNE_EXCEL_LIQUIDITA, locale, (colonna, valore) =>
+        colonna === 'Tipo movimento' ? traduciTipoMovimentoLiquidita(tTipiMovimento, valore as string) : valore,
+      )
       const oggi = new Date().toISOString().slice(0, 10)
-      const ws = XLSX.utils.json_to_sheet(righe, { header: COLONNE_LIQUIDITA })
+      const ws = XLSX.utils.json_to_sheet(righe, { header: COLONNE_EXCEL_LIQUIDITA.map((c) => intestazioneExcel(c, locale)) })
       ws['!cols'] = LARGHEZZE_LIQUIDITA
       const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, 'Transazioni liquidità')
-      XLSX.writeFile(wb, `transazioni-liquidita-${oggi}.xlsx`)
+      XLSX.utils.book_append_sheet(wb, ws, t('nomeFoglioExportLiquidita'))
+      XLSX.writeFile(wb, `${t('nomeFileExportLiquidita')}-${oggi}.xlsx`)
     } catch (err) {
       setErrore(err instanceof Error ? err.message : tGestioneFiscalita('erroreGenerazioneFile'))
     } finally {
