@@ -8,7 +8,7 @@
     "bottoneAccedi": "Accedi"
   },
   "PaginaCategoria": {
-    "etichettaCategoria": "Categoria",
+    "etichettaAsset": "Asset",
     "colonnaStrumento": "Strumento",
     "colonnaTipo": "Tipo",
     "colonnaRendimento": "Rendimento",
@@ -182,6 +182,18 @@
     "contoDepositoNonVincolato": "Conto deposito non vincolato",
     "contoDepositoVincolato": "Conto deposito vincolato",
     "librettoPostale": "Libretto postale"
+  },
+  "TipiStrumento": {
+    "altcoin": "Altcoin",
+    "bond": "Bond",
+    "btc": "BTC",
+    "etc": "ETC",
+    "etf": "ETF",
+    "fondo": "Fondo",
+    "gestito": "Gestito",
+    "share": "Share",
+    "stablecoin": "Stablecoin",
+    "token": "Token"
   },
   "GraficoAnello": {
     "alertNessunDato": "Nessun dato da mostrare.",

@@ -8,7 +8,7 @@
     "bottoneAccedi": "Sign in"
   },
   "PaginaCategoria": {
-    "etichettaCategoria": "Category",
+    "etichettaAsset": "Asset",
     "colonnaStrumento": "Instrument",
     "colonnaTipo": "Type",
     "colonnaRendimento": "Return",
@@ -182,6 +182,18 @@
     "contoDepositoNonVincolato": "Unrestricted deposit account",
     "contoDepositoVincolato": "Fixed-term deposit account",
     "librettoPostale": "Postal passbook"
+  },
+  "TipiStrumento": {
+    "altcoin": "Altcoin",
+    "bond": "Bond",
+    "btc": "BTC",
+    "etc": "ETC",
+    "etf": "ETF",
+    "fondo": "Fund",
+    "gestito": "Managed",
+    "share": "Share",
+    "stablecoin": "Stablecoin",
+    "token": "Token"
   },
   "GraficoAnello": {
     "alertNessunDato": "No data to show.",
