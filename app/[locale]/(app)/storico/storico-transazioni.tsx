@@ -2,8 +2,8 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { formatEuro, formatNumero } from '@/lib/format'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatData, formatEuro, formatNumero, type LocaleFormato } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
@@ -35,6 +35,7 @@ export function StoricoTransazioni({
   contenitori: Contenitore[]
 }) {
   const t = useTranslations('PaginaStorico')
+  const locale = useLocale() as LocaleFormato
   const tFiltroTabellaStorico = useTranslations('FiltroTabellaStorico')
   const tTipiOperazione = useTranslations('TipiOperazione')
   const tPaginaCategoria = useTranslations('PaginaCategoria')
@@ -111,7 +112,7 @@ export function StoricoTransazioni({
   function handleElimina(riga: RigaStoricoTransazione) {
     const base = t('descrizioneOperazioneData', {
       operazione: etichettaOperazione(riga.operazione),
-      data: new Date(riga.data).toLocaleDateString('it-IT'),
+      data: formatData(riga.data, locale),
     })
     const descrizione = riga.strumento_nome !== '—' ? `${base} — ${riga.strumento_nome}` : base
 
@@ -238,7 +239,7 @@ export function StoricoTransazioni({
                 const inCorso = pendingId === riga.id
                 return (
                   <tr key={riga.id} className="tabella-riga">
-                    <td style={{ padding: 8 }}>{new Date(riga.data).toLocaleDateString('it-IT')}</td>
+                    <td style={{ padding: 8 }}>{formatData(riga.data, locale)}</td>
                     <td style={{ padding: 8 }}>
                       {riga.strumento_id ? (
                         <RippleLink href={`/asset/${riga.strumento_id}`} className="link-interattivo">
@@ -250,10 +251,10 @@ export function StoricoTransazioni({
                     </td>
                     <td style={{ padding: 8 }}>{etichettaOperazione(riga.operazione)}</td>
                     <td style={{ padding: 8 }}>{nomeContenitore(riga.contenitore_id)}</td>
-                    <td style={{ padding: 8 }}>{formatNumero(riga.quantita, 6)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(riga.prezzo_unitario)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(riga.commissione)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(riga.tassa_trattenuta)}</td>
+                    <td style={{ padding: 8 }}>{formatNumero(riga.quantita, 6, false, locale)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(riga.prezzo_unitario, locale)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(riga.commissione, locale)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(riga.tassa_trattenuta, locale)}</td>
                     <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                         <div style={{ position: 'relative', display: 'inline-flex' }}>

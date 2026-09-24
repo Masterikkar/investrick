@@ -2,8 +2,8 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { formatEuro } from '@/lib/format'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatData, formatEuro, type LocaleFormato } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
 import { CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA } from '@/lib/i18n-tipi-movimento-liquidita'
 import { aggiornaContenitoreMovimentoLiquidita, eliminaMovimentoLiquidita } from '../gestione/transazioni/actions'
@@ -31,6 +31,7 @@ export function StoricoMovimentiLiquidita({
   contenitori: Contenitore[]
 }) {
   const t = useTranslations('PaginaStorico')
+  const locale = useLocale() as LocaleFormato
   const tFiltroTabellaStorico = useTranslations('FiltroTabellaStorico')
   const tTipiMovimento = useTranslations('TipiMovimentoLiquidita')
   const tPaginaCategoria = useTranslations('PaginaCategoria')
@@ -103,7 +104,7 @@ export function StoricoMovimentiLiquidita({
   function handleElimina(riga: RigaStoricoMovimentoLiquidita) {
     const base = t('descrizioneOperazioneData', {
       operazione: etichettaTipoMovimento(riga.tipo_movimento),
-      data: new Date(riga.data).toLocaleDateString('it-IT'),
+      data: formatData(riga.data, locale),
     })
     const descrizione = `${base} — ${riga.strumento_nome}`
 
@@ -228,7 +229,7 @@ export function StoricoMovimentiLiquidita({
                 const inCorso = pendingId === m.id
                 return (
                   <tr key={m.id} className="tabella-riga">
-                    <td style={{ padding: 8 }}>{new Date(m.data).toLocaleDateString('it-IT')}</td>
+                    <td style={{ padding: 8 }}>{formatData(m.data, locale)}</td>
                     <td style={{ padding: 8 }}>
                       <RippleLink href={`/liquidita/${m.strumento_id}`} className="link-interattivo">
                         {m.strumento_nome}
@@ -236,8 +237,8 @@ export function StoricoMovimentiLiquidita({
                     </td>
                     <td style={{ padding: 8 }}>{etichettaTipoMovimento(m.tipo_movimento)}</td>
                     <td style={{ padding: 8 }}>{nomeContenitore(m.contenitore_id)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(m.importo)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(m.tassa_trattenuta)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(m.importo, locale)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(m.tassa_trattenuta, locale)}</td>
                     <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                         <div style={{ position: 'relative', display: 'inline-flex' }}>
