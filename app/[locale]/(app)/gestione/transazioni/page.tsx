@@ -2,14 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
-import { EsportaTransazioniFinanziarie, EsportaTransazioniLiquidita } from './esporta-transazioni'
 import { NuovaTransazioneFinanziaria, NuovaTransazioneLiquidita } from './nuova-transazione'
-
-const stileBlocco: React.CSSProperties = {
-  marginTop: 32,
-  paddingTop: 32,
-  borderTop: '1px solid var(--border-default)',
-}
 
 export default async function TransazioniPage({
   searchParams,
@@ -38,6 +31,9 @@ export default async function TransazioniPage({
     .select('id, nome')
     .order('nome')
 
+  // I conti di liquidità hanno il loro form (movimenti di liquidità): nel form
+  // delle transazioni finanziarie vanno esclusi.
+  const strumentiFinanziari = (strumenti ?? []).filter((s) => s.categoria !== 'Liquidita')
   const strumentiLiquidita = (strumenti ?? []).filter((s) => s.categoria === 'Liquidita')
 
   return (
@@ -55,22 +51,20 @@ export default async function TransazioniPage({
         <RippleLink href="/gestione/importa" className="link-dettaglio">
           {t('linkImportaDaFile')}
         </RippleLink>
+        <RippleLink href="/gestione/esporta" className="link-dettaglio">
+          {t('linkEsporta')}
+        </RippleLink>
       </div>
 
       <section>
         <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{tMenu('transazioniFinanziarie')}</h2>
         <Sezione>
           <NuovaTransazioneFinanziaria
-            strumenti={strumenti ?? []}
+            strumenti={strumentiFinanziari}
             contenitori={contenitori ?? []}
             successo={params.successo_finanziaria === '1'}
             errore={params.errore_finanziaria === '1'}
           />
-
-          <div style={stileBlocco}>
-            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>{t('titoloEsporta')}</h3>
-            <EsportaTransazioniFinanziarie />
-          </div>
         </Sezione>
       </section>
 
@@ -83,11 +77,6 @@ export default async function TransazioniPage({
             successo={params.successo_liquidita === '1'}
             errore={params.errore_liquidita === '1'}
           />
-
-          <div style={stileBlocco}>
-            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>{t('titoloEsporta')}</h3>
-            <EsportaTransazioniLiquidita />
-          </div>
         </Sezione>
       </section>
     </div>

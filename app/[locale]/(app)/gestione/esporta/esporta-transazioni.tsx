@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
-import { esportaTransazioniFinanziarie, esportaTransazioniLiquidita } from './actions'
+import { esportaTransazioniFinanziarie, esportaTransazioniLiquidita } from '../transazioni/actions'
 
 const COLONNE_FINANZIARIE = ['Data', 'ISIN', 'Ticker', 'Strumento', 'Operazione', 'Quantità', 'Prezzo unitario', 'Commissione', 'Tassa trattenuta', 'Contenitore']
 const LARGHEZZE_FINANZIARIE = [12, 14, 10, 26, 20, 12, 14, 12, 14, 18].map((wch) => ({ wch }))

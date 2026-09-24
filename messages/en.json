@@ -424,6 +424,7 @@
     "linkStoricoTransazioniFinanziarie": "→ Investment transaction history",
     "linkStoricoTransazioniLiquidita": "→ Cash transaction history",
     "linkImportaDaFile": "→ Import from file",
+    "linkEsporta": "→ Export",
     "titoloImporta": "Import",
     "titoloEsporta": "Export",
     "bottoneNuovaTransazione": "+ New transaction",

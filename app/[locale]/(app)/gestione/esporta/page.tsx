@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import { Sezione } from '@/components/sezione'
-import { EsportaTransazioniFinanziarie, EsportaTransazioniLiquidita } from '../transazioni/esporta-transazioni'
-import { EsportaFiscalita } from '../fiscalita/esporta-fiscalita'
+import { EsportaTransazioniFinanziarie, EsportaTransazioniLiquidita } from './esporta-transazioni'
+import { EsportaFiscalita } from './esporta-fiscalita'
 
 const stileBlocco: React.CSSProperties = {
   marginTop: 32,

@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { AliquoteCategoria, type CategoriaAliquota } from '../../../gestione/fiscalita/aliquote-categoria'
-import { AliquoteStrumenti, type RigaAliquotaStrumento } from '../../../gestione/fiscalita/aliquote-strumenti'
+import { AliquoteCategoria, type CategoriaAliquota } from './aliquote-categoria'
+import { AliquoteStrumenti, type RigaAliquotaStrumento } from './aliquote-strumenti'
 import { SezioneImpostazioni } from '../sezione-impostazioni'
 
 type ImpostazioneCategoria = { categoria: string; aliquota_default: number }

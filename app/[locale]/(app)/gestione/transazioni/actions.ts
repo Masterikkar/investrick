@@ -50,7 +50,7 @@ export async function aggiungiTransazione(formData: FormData) {
       .eq('id', strumentoId)
       .single()
 
-    if (erroreStrumento || !strumento) {
+    if (erroreStrumento || !strumento || strumento.categoria === 'Liquidita') {
       redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
       return
     }

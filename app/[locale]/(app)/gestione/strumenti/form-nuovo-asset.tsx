@@ -35,7 +35,7 @@ export function FormNuovoAsset({
   const t = useTranslations('PaginaGestioneStrumenti')
   const tCategorie = useTranslations('Categorie')
   const tContenitori = useTranslations('Contenitori')
-  const tGestioneFiscalita = useTranslations('PaginaGestioneFiscalita')
+  const tPaginaImpostazioni = useTranslations('PaginaImpostazioni')
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const categorie = Object.keys(tipiPerCategoria)
   const [categoria, setCategoria] = useState('')
@@ -235,7 +235,7 @@ export function FormNuovoAsset({
         >
           {t('notaMultiasset', {
             percentuale: aliquoteDefaultPerCategoria.Multiasset ?? 26,
-            pagina: tGestioneFiscalita('titoloGestioneFiscalita'),
+            pagina: tPaginaImpostazioni('tabFiscalita'),
           })}
         </p>
       )}
