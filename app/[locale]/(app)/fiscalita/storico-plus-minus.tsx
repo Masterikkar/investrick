@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { formatData, formatEuro, formatEuroSigned, formatPercent, type LocaleFormato } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
 
-export type RigaVerificaTrattenuta = {
+export type RigaRealizzata = {
   vendita_id: string
   data_vendita: string
   strumento_id: string
@@ -35,7 +35,7 @@ export function StoricoPlusMinus({
   righeRealizzate,
   righeNonRealizzate,
 }: {
-  righeRealizzate: RigaVerificaTrattenuta[]
+  righeRealizzate: RigaRealizzata[]
   righeNonRealizzate: RigaNonRealizzata[]
 }) {
   const t = useTranslations('PaginaFiscalita')
@@ -68,7 +68,7 @@ export function StoricoPlusMinus({
     return righeNonRealizzate.filter((r) => r.strumento_nome.toLowerCase().includes(testo))
   }, [righeNonRealizzate, testo])
 
-  const righeFiltrateCorrenti: (RigaVerificaTrattenuta | RigaNonRealizzata)[] =
+  const righeFiltrateCorrenti: (RigaRealizzata | RigaNonRealizzata)[] =
     modalita === 'realizzate' ? righeRealizzateFiltrate : righeNonRealizzateFiltrate
   const righeMostrate = righeFiltrateCorrenti.slice(0, righeVisibili)
   const ciSonoAltre = righeVisibili < righeFiltrateCorrenti.length
@@ -219,7 +219,7 @@ export function StoricoPlusMinus({
               </tr>
             </thead>
             <tbody>
-              {(righeMostrate as RigaVerificaTrattenuta[]).map((v) => {
+              {(righeMostrate as RigaRealizzata[]).map((v) => {
                 const scostamentoRilevante = Math.abs(Number(v.differenza)) > 0.01
                 return (
                   <tr key={v.vendita_id} className="tabella-riga">

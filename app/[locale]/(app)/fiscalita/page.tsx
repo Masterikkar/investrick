@@ -7,7 +7,7 @@ import { type VoceBarra } from '@/components/barre-divergenti'
 import { Sezione } from '@/components/sezione'
 import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import { SezioneAnnoCorrente } from './sezione-anno-corrente'
-import { StoricoPlusMinus, type RigaNonRealizzata, type RigaVerificaTrattenuta } from './storico-plus-minus'
+import { StoricoPlusMinus, type RigaNonRealizzata, type RigaRealizzata } from './storico-plus-minus'
 
 const CHIAVE_TRADUZIONE_CONTENITORE_MOVIMENTO: Record<string, string> = {
   PAC: 'pac',
@@ -253,7 +253,7 @@ export default async function FiscalitaPage() {
       }
     })
 
-  const righeVerifica: RigaVerificaTrattenuta[] = verifica.map((v) => ({
+  const righeVerifica: RigaRealizzata[] = verifica.map((v) => ({
     vendita_id: v.vendita_id,
     data_vendita: v.data_vendita,
     strumento_id: v.strumento_id,
