@@ -27,6 +27,7 @@ export function AliquoteStrumenti({ righe }: { righe: RigaAliquotaStrumento[] })
   const tCategorie = useTranslations('Categorie')
   const tContenitori = useTranslations('Contenitori')
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
+  const tFiltroTabellaStorico = useTranslations('FiltroTabellaStorico')
   const tPaginaCosti = useTranslations('PaginaCosti')
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const router = useRouter()
@@ -72,7 +73,7 @@ export function AliquoteStrumenti({ righe }: { righe: RigaAliquotaStrumento[] })
     <div>
       <input
         type="text"
-        placeholder={tPaginaFiscalita('placeholderFiltraStrumento')}
+        placeholder={tFiltroTabellaStorico('placeholderFiltraStrumento')}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         style={{
