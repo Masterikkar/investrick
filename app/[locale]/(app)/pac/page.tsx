@@ -1,6 +1,6 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro, formatEuroSigned } from '@/lib/format'
+import { formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { RippleLink } from '@/components/ripple-link'
@@ -16,6 +16,7 @@ import { AnalisiComposizione, type ScostamentoCategoria } from '@/components/ana
 const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
 export default async function PacPage() {
+  const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaContenitore')
   const tCategorie = await getTranslations('Categorie')
   const tPaginaCategoria = await getTranslations('PaginaCategoria')
@@ -351,16 +352,16 @@ export default async function PacPage() {
 
             <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/fiscalita" linkLabel={t('linkFiscalita')}>
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                {formatEuroSigned(plusMinusNonRealizzata)}
+                {formatEuroSigned(plusMinusNonRealizzata, locale)}
               </span>
             </CardMetrica>
 
             <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
-              {formatEuro(capitaleInvestitoNettoTotale)}
+              {formatEuro(capitaleInvestitoNettoTotale, locale)}
             </CardMetrica>
 
             <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>
-              {formatEuro(costoTotalePac)}
+              {formatEuro(costoTotalePac, locale)}
             </CardMetrica>
           </div>
         </Sezione>
@@ -414,12 +415,12 @@ export default async function PacPage() {
                   style={{ ...stileCardMetrica, minWidth: 220, display: 'block' }}
                 >
                   <div style={{ fontWeight: 500 }}>{r.nome}</div>
-                  <div style={{ marginTop: 12, fontSize: 20 }}>{formatEuro(r.valore)}</div>
+                  <div style={{ marginTop: 12, fontSize: 20 }}>{formatEuro(r.valore, locale)}</div>
                   <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-secondary)' }}>
-                    {t('rigaCosto', { valore: formatEuro(r.costo) })}
+                    {t('rigaCosto', { valore: formatEuro(r.costo, locale) })}
                   </div>
                   <div style={{ marginTop: 4, fontSize: 13, color: r.plusMinus >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                    {t('rigaPlusMinus', { valore: formatEuroSigned(r.plusMinus) })}
+                    {t('rigaPlusMinus', { valore: formatEuroSigned(r.plusMinus, locale) })}
                   </div>
                 </RippleLink>
               ))}

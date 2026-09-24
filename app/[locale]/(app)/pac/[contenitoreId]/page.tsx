@@ -1,6 +1,6 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro, formatEuroSigned } from '@/lib/format'
+import { formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { RippleLink } from '@/components/ripple-link'
@@ -21,6 +21,7 @@ export default async function PacDettaglioPage({
   params: Promise<{ contenitoreId: string }>
 }) {
   const { contenitoreId } = await params
+  const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaContenitore')
   const tCategorie = await getTranslations('Categorie')
   const tContenitori = await getTranslations('Contenitori')
@@ -245,16 +246,16 @@ export default async function PacDettaglioPage({
 
             <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/fiscalita" linkLabel={t('linkFiscalita')}>
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                {formatEuroSigned(plusMinusNonRealizzata)}
+                {formatEuroSigned(plusMinusNonRealizzata, locale)}
               </span>
             </CardMetrica>
 
             <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
-              {formatEuro(capitaleInvestitoNettoTotale)}
+              {formatEuro(capitaleInvestitoNettoTotale, locale)}
             </CardMetrica>
 
             <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>
-              {formatEuro(costoTotalePac)}
+              {formatEuro(costoTotalePac, locale)}
             </CardMetrica>
           </div>
         </Sezione>
