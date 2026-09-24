@@ -53,6 +53,9 @@ export default async function TransazioniPage({
     tipiPerCategoria[t.categoria].push(t.tipo)
   }
 
+  // I conti di liquidità hanno il loro form (movimenti di liquidità): nel form
+  // delle transazioni finanziarie vanno esclusi.
+  const strumentiFinanziari = (strumenti ?? []).filter((s) => s.categoria !== 'Liquidita')
   const strumentiLiquidita = (strumenti ?? []).filter((s) => s.categoria === 'Liquidita')
 
   return (
@@ -75,7 +78,7 @@ export default async function TransazioniPage({
           <div>
             <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>{t('titoloImporta')}</h3>
             <NuovaTransazioneFinanziaria
-              strumenti={strumenti ?? []}
+              strumenti={strumentiFinanziari}
               contenitori={contenitori ?? []}
               successo={params.successo_finanziaria === '1'}
               errore={params.errore_finanziaria === '1'}
