@@ -62,9 +62,7 @@
     "titolo": "Impostazioni",
     "tabApp": "Impostazioni app",
     "tabFiscalita": "Impostazioni fiscalità",
-    "placeholderFiscalita": "In arrivo",
     "sezioneLingua": "Lingua",
-    "sezioneAliquote": "Aliquote",
     "etichettaLingua": "Lingua",
     "lingueDisponibili": {
       "it": "Italiano",
@@ -363,8 +361,6 @@
     "alertNessunaTransazione": "Nessuna transazione registrata per questo strumento."
   },
   "PaginaGestioneFiscalita": {
-    "titoloGestioneFiscalita": "Gestione fiscalità",
-    "titoloEsportazione": "Esportazione",
     "paragrafoEsportazione": "Esporta l'intero storico, senza filtri — per un sottoinsieme filtrato, usa la tabella nella pagina Fiscalità.",
     "bottoneEsportaRealizzate": "Esporta realizzate (.xlsx)",
     "bottoneEsportaNonRealizzate": "Esporta non realizzate (.xlsx)",

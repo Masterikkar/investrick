@@ -62,9 +62,7 @@
     "titolo": "Settings",
     "tabApp": "App settings",
     "tabFiscalita": "Tax settings",
-    "placeholderFiscalita": "Coming soon",
     "sezioneLingua": "Language",
-    "sezioneAliquote": "Tax rates",
     "etichettaLingua": "Language",
     "lingueDisponibili": {
       "it": "Italian",
@@ -363,8 +361,6 @@
     "alertNessunaTransazione": "No transactions recorded for this instrument."
   },
   "PaginaGestioneFiscalita": {
-    "titoloGestioneFiscalita": "Tax management",
-    "titoloEsportazione": "Export",
     "paragrafoEsportazione": "Exports the entire history, unfiltered — for a filtered subset, use the table on the Tax page.",
     "bottoneEsportaRealizzate": "Export realized (.xlsx)",
     "bottoneEsportaNonRealizzate": "Export unrealized (.xlsx)",
