@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { tutteLeRighe } from '@/lib/supabase-tutte-le-righe'
 import { GraficoRendimentiAnnuali, type RendimentoAnnuale } from '@/components/grafico-rendimenti-annuali'
 import { GraficoBarre, type PuntoBarra } from '@/components/grafico-barre'
 import { Sezione } from '@/components/sezione'
@@ -64,12 +65,18 @@ export default async function RendimentiPage() {
 
   const ids = (contenitori ?? []).map((c) => c.id)
 
+  // Una riga per contenitore e per giorno, oltre 1000 righe per PAC e Polizze
+  // insieme: va letta a blocchi, con un ordinamento univoco (data, contenitore).
   const { data: storicoRaw } = ids.length
-    ? await supabase
-        .from('v_storico_valorizzazioni_per_contenitore')
-        .select('contenitore_id, data, valore_totale, capitale_investito_totale')
-        .in('contenitore_id', ids)
-        .order('data', { ascending: true })
+    ? await tutteLeRighe((da, a) =>
+        supabase
+          .from('v_storico_valorizzazioni_per_contenitore')
+          .select('contenitore_id, data, valore_totale, capitale_investito_totale')
+          .in('contenitore_id', ids)
+          .order('data', { ascending: true })
+          .order('contenitore_id', { ascending: true })
+          .range(da, a)
+      )
     : { data: null }
 
   const perContenitore = new Map<string, Map<string, { valore: number; capitaleInvestito: number }>>()
