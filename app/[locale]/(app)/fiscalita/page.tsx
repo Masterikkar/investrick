@@ -7,8 +7,7 @@ import { type VoceBarra } from '@/components/barre-divergenti'
 import { Sezione } from '@/components/sezione'
 import { CHIAVE_TRADUZIONE_CATEGORIA } from '@/lib/i18n-categorie'
 import { SezioneAnnoCorrente } from './sezione-anno-corrente'
-import { type RigaVerificaTrattenuta } from './verifica-trattenute'
-import { StoricoPlusMinus, type RigaNonRealizzata } from './storico-plus-minus'
+import { StoricoPlusMinus, type RigaNonRealizzata, type RigaVerificaTrattenuta } from './storico-plus-minus'
 
 const CHIAVE_TRADUZIONE_CONTENITORE_MOVIMENTO: Record<string, string> = {
   PAC: 'pac',

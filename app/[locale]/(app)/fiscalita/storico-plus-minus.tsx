@@ -4,7 +4,19 @@ import { useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatData, formatEuro, formatEuroSigned, formatPercent, type LocaleFormato } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
-import type { RigaVerificaTrattenuta } from './verifica-trattenute'
+
+export type RigaVerificaTrattenuta = {
+  vendita_id: string
+  data_vendita: string
+  strumento_id: string
+  strumento_nome: string
+  valore: number
+  plusvalenza_totale_vendita: number
+  aliquota_attesa_pct: number
+  tassa_attesa: number
+  tassa_trattenuta_effettiva: number
+  differenza: number
+}
 
 export type RigaNonRealizzata = {
   key: string
