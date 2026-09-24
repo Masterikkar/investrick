@@ -1,6 +1,6 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { formatEuro, formatEuroSigned, formatNumero, formatPercent } from '@/lib/format'
+import { formatEuro, formatEuroSigned, formatNumero, formatPercent, type LocaleFormato } from '@/lib/format'
 import { Sezione } from '@/components/sezione'
 import { SogliaRibilanciamento } from '@/components/soglia-ribilanciamento'
 import { FormSimulazione } from './form-simulazione'
@@ -64,6 +64,7 @@ export default async function RibilanciamentoPage({
     commissione_vendita?: string
   }>
 }) {
+  const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaRibilanciamento')
   const tMenu = await getTranslations('Menu')
   const tCategorie = await getTranslations('Categorie')
@@ -338,10 +339,10 @@ export default async function RibilanciamentoPage({
                     <tr key={s.target_id} className="tabella-riga">
                       <td style={{ padding: 8 }}>{s.contenitore_nome}</td>
                       <td style={{ padding: 8 }}>{tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[s.categoria] ?? s.categoria)}</td>
-                      <td style={{ padding: 8 }}>{formatPercent(s.target_percentuale, 2)}</td>
-                      <td style={{ padding: 8 }}>{formatPercent(s.peso_attuale_pct, 2)}</td>
+                      <td style={{ padding: 8 }}>{formatPercent(s.target_percentuale, 2, false, locale)}</td>
+                      <td style={{ padding: 8 }}>{formatPercent(s.peso_attuale_pct, 2, false, locale)}</td>
                       <td style={{ padding: 8, color: sovrappeso ? 'var(--warning)' : 'var(--primary-vivid)', fontWeight: 500 }}>
-                        {formatNumero(s.scostamento_pp, 2, true)} pp ({sovrappeso ? t('sovrappeso') : t('sottopeso')})
+                        {formatNumero(s.scostamento_pp, 2, true, locale)} pp ({sovrappeso ? t('sovrappeso') : t('sottopeso')})
                       </td>
                     </tr>
                   )
@@ -369,19 +370,19 @@ export default async function RibilanciamentoPage({
           <Sezione>
             <p style={{ fontSize: 'var(--fs-body)', margin: 0 }}>
               {t.rich('messaggioBudgetNecessario', {
-                importo: formatEuro(necessario),
+                importo: formatEuro(necessario, locale),
                 strong: (chunks) => <strong>{chunks}</strong>,
               })}
             </p>
 
             {sufficiente ? (
               <p style={{ fontSize: 'var(--fs-body)', color: 'var(--success)', fontWeight: 500 }}>
-                {t('messaggioVersamentoSufficiente', { importo: formatEuro(versamento) })}
+                {t('messaggioVersamentoSufficiente', { importo: formatEuro(versamento, locale) })}
               </p>
             ) : (
               <>
                 <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)', fontWeight: 500 }}>
-                  {t('messaggioVersamentoInsufficiente', { importo: formatEuro(versamento) })}
+                  {t('messaggioVersamentoInsufficiente', { importo: formatEuro(versamento, locale) })}
                 </p>
 
                 {venditeProposte.length === 0 ? (
@@ -406,24 +407,24 @@ export default async function RibilanciamentoPage({
                         <tr key={v.strumentoId} className="tabella-riga">
                           <td style={{ padding: 8 }}>{v.nome}</td>
                           <td style={{ padding: 8 }}>
-                            {formatNumero(v.quantitaVenduta, 6)}
+                            {formatNumero(v.quantitaVenduta, 6, false, locale)}
                             {!v.vincoloRispettato && (
                               <div style={{ color: 'var(--warning)', fontSize: 'var(--fs-card-link)' }}>
-                                {t('notaQuantitaRidotta', { quantita: formatNumero(v.quantitaIdeale, 6) })}
+                                {t('notaQuantitaRidotta', { quantita: formatNumero(v.quantitaIdeale, 6, false, locale) })}
                               </div>
                             )}
                           </td>
-                          <td style={{ padding: 8 }}>{formatEuro(v.valoreVenduto)}</td>
+                          <td style={{ padding: 8 }}>{formatEuro(v.valoreVenduto, locale)}</td>
                           <td style={{ padding: 8, color: v.plusvalenzaLorda >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                            {formatEuroSigned(v.plusvalenzaLorda)}
+                            {formatEuroSigned(v.plusvalenzaLorda, locale)}
                           </td>
                           <td style={{ padding: 8 }}>
                             {v.imponibile
-                              ? formatPercent(v.aliquota * 100, 1)
+                              ? formatPercent(v.aliquota * 100, 1, false, locale)
                               : t('esenteTipoContenitore', { tipo: tPaginaContenitore('etichettaPolizza') })}
                           </td>
-                          <td style={{ padding: 8 }}>{formatEuro(v.tassa)}</td>
-                          <td style={{ padding: 8, fontWeight: 500 }}>{formatEuro(v.proventoNetto)}</td>
+                          <td style={{ padding: 8 }}>{formatEuro(v.tassa, locale)}</td>
+                          <td style={{ padding: 8, fontWeight: 500 }}>{formatEuro(v.proventoNetto, locale)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -432,7 +433,7 @@ export default async function RibilanciamentoPage({
 
                 <p style={{ fontSize: 'var(--fs-body)', marginTop: 12 }}>
                   {t.rich('messaggioPoolReinvestire', {
-                    importo: formatEuro(poolTotale),
+                    importo: formatEuro(poolTotale, locale),
                     strong: (chunks) => <strong>{chunks}</strong>,
                   })}
                 </p>
@@ -455,9 +456,9 @@ export default async function RibilanciamentoPage({
                     {allocazioneAcquisto.map((a) => (
                       <tr key={a.categoria} className="tabella-riga">
                         <td style={{ padding: 8 }}>{tCategorie(CHIAVE_TRADUZIONE_CATEGORIA[a.categoria] ?? a.categoria)}</td>
-                        <td style={{ padding: 8 }}>{formatEuro(a.importo)}</td>
-                        <td style={{ padding: 8 }}>{formatPercent(a.pesoFinalePct, 2)}</td>
-                        <td style={{ padding: 8 }}>{formatNumero(a.scostamentoFinalePp, 2, true)} pp</td>
+                        <td style={{ padding: 8 }}>{formatEuro(a.importo, locale)}</td>
+                        <td style={{ padding: 8 }}>{formatPercent(a.pesoFinalePct, 2, false, locale)}</td>
+                        <td style={{ padding: 8 }}>{formatNumero(a.scostamentoFinalePp, 2, true, locale)} pp</td>
                       </tr>
                     ))}
                   </tbody>
@@ -476,7 +477,7 @@ export default async function RibilanciamentoPage({
                     ) : (
                       <ul>
                         {c.strumenti.map((s) => (
-                          <li key={s.nome}>{s.nome} {s.ticker ? `(${s.ticker})` : ''}: {formatEuro(s.importo)}</li>
+                          <li key={s.nome}>{s.nome} {s.ticker ? `(${s.ticker})` : ''}: {formatEuro(s.importo, locale)}</li>
                         ))}
                       </ul>
                     )}
