@@ -161,7 +161,7 @@ export default async function LiquiditaPage() {
   return (
     <div>
       <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('etichettaContenitore')}</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>
         {liquidita?.nome ?? tContenitori('liquidita')}
       </h1>
 

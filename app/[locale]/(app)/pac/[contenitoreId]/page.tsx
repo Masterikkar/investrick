@@ -231,7 +231,7 @@ export default async function PacDettaglioPage({
       </RippleLink>
 
       <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>{tContenitori('pac')}</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{pac.nome ?? '—'}</h1>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{pac.nome ?? '—'}</h1>
 
       <section>
         <Sezione>

@@ -176,7 +176,7 @@ export default async function DashboardPage() {
   return (
     <div>
       <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('etichettaDashboard')}</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{t('titolo')}</h1>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{t('titolo')}</h1>
 
       <section>
         <Sezione>

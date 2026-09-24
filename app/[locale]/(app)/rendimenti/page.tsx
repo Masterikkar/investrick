@@ -107,7 +107,7 @@ export default async function RendimentiPage() {
   return (
     <div>
       <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{tMenu('analisi')}</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{tMenu('rendimenti')}</h1>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{tMenu('rendimenti')}</h1>
       <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24, maxWidth: 640 }}>
         {t('paragrafoSpiegazione')}
       </p>

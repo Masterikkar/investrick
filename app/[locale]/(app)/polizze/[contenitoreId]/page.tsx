@@ -230,7 +230,7 @@ export default async function PolizzaDettaglioPage({
       </RippleLink>
 
       <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>{t('etichettaPolizza')}</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 4, fontWeight: 500 }}>{polizza.nome ?? '—'}</h1>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 4, fontWeight: 500 }}>{polizza.nome ?? '—'}</h1>
       <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
         {contenitoreInfo?.data_attivazione
           ? t('dataAttivazioneAttiva', { data: formatData(contenitoreInfo.data_attivazione, locale) })

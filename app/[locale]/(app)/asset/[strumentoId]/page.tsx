@@ -217,7 +217,7 @@ export default async function AssetPage({
       <Breadcrumb />
 
       <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>{t('eyebrowAsset')}</div>
-      <h1 style={{ fontSize: 20, marginTop: 4, marginBottom: 4, fontWeight: 500 }}>{strumento.nome}</h1>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 4, fontWeight: 500 }}>{strumento.nome}</h1>
       <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
         {traduciCategoria(tCategorie, strumento.categoria)}
         {strumento.isin ? ` · ${strumento.isin}` : ''}
