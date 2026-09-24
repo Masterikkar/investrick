@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
-import { formatEuro, formatEuroCompatto, formatPercent } from '@/lib/format'
+import { formatData, formatEuro, formatEuroCompatto, formatPercent, type LocaleFormato } from '@/lib/format'
 
 export type PuntoStorico = { data: string; valore: number }
 
@@ -58,6 +58,7 @@ export function GraficoStorico({
 }) {
   const t = useTranslations('GraficoStorico')
   const tPaginaRendimenti = useTranslations('PaginaRendimenti')
+  const locale = useLocale() as LocaleFormato
   const [periodo, setPeriodo] = useState<Periodo>('1M')
   const datiFiltrati = useMemo(() => filtraPerPeriodo(punti, periodo), [punti, periodo])
 
@@ -80,16 +81,16 @@ export function GraficoStorico({
     const primoDatoReale = new Date(punti[0].data)
     if (primoDatoReale > soglia) {
       return t('notaDatiParziali', {
-        data: primoDatoReale.toLocaleDateString('it-IT'),
+        data: formatData(primoDatoReale, locale),
         periodo: t(CHIAVE_LABEL_PERIODO[periodo]),
       })
     }
     return null
-  }, [formato, periodo, punti, t])
+  }, [formato, periodo, punti, t, locale])
 
-  const formatAsse = formato === 'percent' ? (v: number) => formatPercent(v, 0, false) : (v: number) => formatEuroCompatto(v)
+  const formatAsse = formato === 'percent' ? (v: number) => formatPercent(v, 0, false, locale) : (v: number) => formatEuroCompatto(v, locale)
   const formatTooltip =
-    formato === 'percent' ? (v: number) => formatPercent(v, 2, true) : (v: number) => formatEuro(v)
+    formato === 'percent' ? (v: number) => formatPercent(v, 2, true, locale) : (v: number) => formatEuro(v, locale)
   const etichettaTooltip = formato === 'percent' ? tPaginaRendimenti('tooltipRendimento') : t('etichettaTooltipValore')
 
   return (
@@ -97,7 +98,7 @@ export function GraficoStorico({
       {valoreAttuale !== undefined && (
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 16 }}>
           <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 'var(--fs-hero)', margin: 0, color: 'var(--text-primary)' }}>
-            {formatEuro(valoreAttuale)}
+            {formatEuro(valoreAttuale, locale)}
           </p>
           {rendimentoBadge !== null && (
             <span
@@ -107,7 +108,7 @@ export function GraficoStorico({
                 color: rendimentoBadge >= 0 ? 'var(--success)' : 'var(--danger)',
               }}
             >
-              {formatPercent(rendimentoBadge, 2, true)}
+              {formatPercent(rendimentoBadge, 2, true, locale)}
             </span>
           )}
         </div>
@@ -148,7 +149,7 @@ export function GraficoStorico({
             <XAxis
               dataKey="data"
               interval="preserveStartEnd"
-              tickFormatter={(d) => new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
+              tickFormatter={(d) => formatData(d, locale, { day: '2-digit', month: '2-digit' })}
               fontSize={11}
               tick={{ fill: TESTO_ASSI }}
               axisLine={{ stroke: GRIGLIA }}
@@ -157,7 +158,7 @@ export function GraficoStorico({
             <YAxis tickFormatter={(v) => formatAsse(Number(v))} fontSize={11} width={70} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <Tooltip
               formatter={(value) => [formatTooltip(Number(value)), etichettaTooltip]}
-              labelFormatter={(label) => (label ? new Date(String(label)).toLocaleDateString('it-IT') : '')}
+              labelFormatter={(label) => (label ? formatData(String(label), locale) : '')}
               cursor={{ stroke: '#2B3350', strokeWidth: 1 }}
               contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
               labelStyle={{ color: '#E8EBF2' }}
