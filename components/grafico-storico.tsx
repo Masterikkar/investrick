@@ -160,7 +160,7 @@ export function GraficoStorico({
               formatter={(value) => [formatTooltip(Number(value)), etichettaTooltip]}
               labelFormatter={(label) => (label ? formatData(String(label), locale) : '')}
               cursor={{ stroke: '#2B3350', strokeWidth: 1 }}
-              contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
+              contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2', fontSize: 'var(--fs-tooltip)' }}
               labelStyle={{ color: '#E8EBF2' }}
               itemStyle={{ color: '#E8EBF2' }}
             />

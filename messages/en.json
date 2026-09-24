@@ -60,6 +60,9 @@
   },
   "PaginaImpostazioni": {
     "titolo": "Settings",
+    "tabApp": "App settings",
+    "tabFiscalita": "Tax settings",
+    "sezioneLingua": "Language",
     "etichettaLingua": "Language",
     "lingueDisponibili": {
       "it": "Italian",
@@ -358,8 +361,6 @@
     "alertNessunaTransazione": "No transactions recorded for this instrument."
   },
   "PaginaGestioneFiscalita": {
-    "titoloGestioneFiscalita": "Tax management",
-    "titoloEsportazione": "Export",
     "paragrafoEsportazione": "Exports the entire history, unfiltered — for a filtered subset, use the table on the Tax page.",
     "bottoneEsportaRealizzate": "Export realized (.xlsx)",
     "bottoneEsportaNonRealizzate": "Export unrealized (.xlsx)",
@@ -418,6 +419,8 @@
   "PaginaGestioneTransazioni": {
     "linkStoricoTransazioniFinanziarie": "→ Investment transaction history",
     "linkStoricoTransazioniLiquidita": "→ Cash transaction history",
+    "linkImportaDaFile": "→ Import from file",
+    "linkEsporta": "→ Export",
     "titoloImporta": "Import",
     "titoloEsporta": "Export",
     "bottoneNuovaTransazione": "+ New transaction",

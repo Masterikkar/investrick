@@ -2,16 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
-import { ImportaExcel } from './importa-excel'
-import { ImportaExcelLiquidita } from './importa-excel-liquidita'
-import { EsportaTransazioniFinanziarie, EsportaTransazioniLiquidita } from './esporta-transazioni'
 import { NuovaTransazioneFinanziaria, NuovaTransazioneLiquidita } from './nuova-transazione'
-
-const stileBlocco: React.CSSProperties = {
-  marginTop: 32,
-  paddingTop: 32,
-  borderTop: '1px solid var(--border-default)',
-}
 
 export default async function TransazioniPage({
   searchParams,
@@ -40,19 +31,6 @@ export default async function TransazioniPage({
     .select('id, nome')
     .order('nome')
 
-  const { data: tipiRaw } = await supabase
-    .from('tipi_strumento')
-    .select('categoria, tipo')
-    .neq('categoria', 'Liquidita')
-    .order('categoria')
-    .order('tipo')
-
-  const tipiPerCategoria: Record<string, string[]> = {}
-  for (const t of tipiRaw ?? []) {
-    if (!tipiPerCategoria[t.categoria]) tipiPerCategoria[t.categoria] = []
-    tipiPerCategoria[t.categoria].push(t.tipo)
-  }
-
   // I conti di liquidità hanno il loro form (movimenti di liquidità): nel form
   // delle transazioni finanziarie vanno esclusi.
   const strumentiFinanziari = (strumenti ?? []).filter((s) => s.categoria !== 'Liquidita')
@@ -70,58 +48,35 @@ export default async function TransazioniPage({
         <RippleLink href="/storico/liquidita" className="link-dettaglio">
           {t('linkStoricoTransazioniLiquidita')}
         </RippleLink>
+        <RippleLink href="/gestione/importa" className="link-dettaglio">
+          {t('linkImportaDaFile')}
+        </RippleLink>
+        <RippleLink href="/gestione/esporta" className="link-dettaglio">
+          {t('linkEsporta')}
+        </RippleLink>
       </div>
 
       <section>
         <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{tMenu('transazioniFinanziarie')}</h2>
         <Sezione>
-          <div>
-            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>{t('titoloImporta')}</h3>
-            <NuovaTransazioneFinanziaria
-              strumenti={strumentiFinanziari}
-              contenitori={contenitori ?? []}
-              successo={params.successo_finanziaria === '1'}
-              errore={params.errore_finanziaria === '1'}
-            />
-            <div style={{ marginTop: 20 }}>
-              <ImportaExcel
-                strumenti={(strumenti ?? []).map((s) => ({ id: s.id, isin: s.isin, ticker: s.ticker, nome: s.nome }))}
-                contenitori={contenitori ?? []}
-                tipiPerCategoria={tipiPerCategoria}
-              />
-            </div>
-          </div>
-
-          <div style={stileBlocco}>
-            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>{t('titoloEsporta')}</h3>
-            <EsportaTransazioniFinanziarie />
-          </div>
+          <NuovaTransazioneFinanziaria
+            strumenti={strumentiFinanziari}
+            contenitori={contenitori ?? []}
+            successo={params.successo_finanziaria === '1'}
+            errore={params.errore_finanziaria === '1'}
+          />
         </Sezione>
       </section>
 
       <section style={{ marginTop: 40 }}>
         <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{tPaginaStorico('titoloTransazioniLiquidita')}</h2>
         <Sezione>
-          <div>
-            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>{t('titoloImporta')}</h3>
-            <NuovaTransazioneLiquidita
-              strumentiLiquidita={strumentiLiquidita.map((s) => ({ id: s.id, nome: s.nome }))}
-              contenitori={contenitori ?? []}
-              successo={params.successo_liquidita === '1'}
-              errore={params.errore_liquidita === '1'}
-            />
-            <div style={{ marginTop: 20 }}>
-              <ImportaExcelLiquidita
-                strumenti={strumentiLiquidita.map((s) => ({ id: s.id, nome: s.nome }))}
-                contenitori={contenitori ?? []}
-              />
-            </div>
-          </div>
-
-          <div style={stileBlocco}>
-            <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 0, marginBottom: 12 }}>{t('titoloEsporta')}</h3>
-            <EsportaTransazioniLiquidita />
-          </div>
+          <NuovaTransazioneLiquidita
+            strumentiLiquidita={strumentiLiquidita.map((s) => ({ id: s.id, nome: s.nome }))}
+            contenitori={contenitori ?? []}
+            successo={params.successo_liquidita === '1'}
+            errore={params.errore_liquidita === '1'}
+          />
         </Sezione>
       </section>
     </div>

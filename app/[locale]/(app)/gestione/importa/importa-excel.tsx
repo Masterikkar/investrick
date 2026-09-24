@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
-import { creaAssetPerImport, importaTransazioniBulk, type RigaImport } from './actions'
+import { creaAssetPerImport, importaTransazioniBulk, type RigaImport } from '../transazioni/actions'
 import { ETICHETTA_OPERAZIONE, OPERAZIONE_DA_ETICHETTA } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
 import { IconaDownload } from '@/components/icone'
@@ -446,7 +446,7 @@ export function ImportaExcel({
 
           {identificatoriDaRisolvere.length === 0 && (
             <div style={{ marginTop: 16 }}>
-              <p style={{ color: 'var(--success)' }}>
+              <p style={{ color: 'var(--success)', marginBottom: 16 }}>
                 {t('tuttiStrumentiRisolti', { n: righePronte.length })}
               </p>
               <button

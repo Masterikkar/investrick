@@ -193,7 +193,7 @@ export function StoricoPlusMinus({
         )}
 
         <div style={{ marginLeft: 'auto', fontSize: 'var(--fs-card-link)' }}>
-          <RippleLink href="/gestione/fiscalita" className="link-interattivo">
+          <RippleLink href="/gestione/esporta" className="link-interattivo">
             {t('linkEsportaDati')}
           </RippleLink>
         </div>

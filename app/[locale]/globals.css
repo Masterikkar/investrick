@@ -39,6 +39,7 @@
      non come style HTML, e lì le CSS custom properties non sono affidabili
      su tutti i browser. Tooltip, pulsanti periodo e didascalie invece sì. */
   --fs-period: 12px;
+  --fs-tooltip: 12px;  /* tooltip dei grafici: dati di supporto, appena sopra i tick (11px) */
 
   /* Card metriche (CardMetrica) */
   --fs-card-label: 11px;
@@ -279,4 +280,13 @@ textarea:focus {
   outline: none;
   border-color: var(--primary-vivid);
   box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.25);
+}
+/* Grafici Recharts: con accessibilityLayer (attivo di default in Recharts 3)
+   l'<svg> radice ha tabIndex=0 e i settori delle torte tabIndex=-1, quindi un
+   click li mette a fuoco. Chrome disegna l'anello di focus sugli elementi SVG
+   già con :focus (sugli HTML solo con :focus-visible), da cui il rettangolo
+   azzurro al click. Lo si toglie solo quando il focus non è "visibile":
+   navigando con Tab (:focus-visible) l'anello resta. */
+.recharts-wrapper :focus:not(:focus-visible) {
+  outline: none;
 }

@@ -52,7 +52,7 @@
     "storico": "Storico",
     "transazioniLiquidita": "Transazioni liquidità",
     "transazioniFinanziarie": "Transazioni finanziarie",
-    "gestioneDatabase": "Gestione database",
+    "gestioneDatabase": "Gestione dati",
     "strumenti": "Strumenti",
     "transazioni": "Transazioni",
     "impostazioni": "Impostazioni",
@@ -60,6 +60,9 @@
   },
   "PaginaImpostazioni": {
     "titolo": "Impostazioni",
+    "tabApp": "Impostazioni app",
+    "tabFiscalita": "Impostazioni fiscalità",
+    "sezioneLingua": "Lingua",
     "etichettaLingua": "Lingua",
     "lingueDisponibili": {
       "it": "Italiano",
@@ -358,8 +361,6 @@
     "alertNessunaTransazione": "Nessuna transazione registrata per questo strumento."
   },
   "PaginaGestioneFiscalita": {
-    "titoloGestioneFiscalita": "Gestione fiscalità",
-    "titoloEsportazione": "Esportazione",
     "paragrafoEsportazione": "Esporta l'intero storico, senza filtri — per un sottoinsieme filtrato, usa la tabella nella pagina Fiscalità.",
     "bottoneEsportaRealizzate": "Esporta realizzate (.xlsx)",
     "bottoneEsportaNonRealizzate": "Esporta non realizzate (.xlsx)",
@@ -418,6 +419,8 @@
   "PaginaGestioneTransazioni": {
     "linkStoricoTransazioniFinanziarie": "→ Storico transazioni finanziarie",
     "linkStoricoTransazioniLiquidita": "→ Storico transazioni di liquidità",
+    "linkImportaDaFile": "→ Importa da file",
+    "linkEsporta": "→ Esporta",
     "titoloImporta": "Importa",
     "titoloEsporta": "Esporta",
     "bottoneNuovaTransazione": "+ Nuova transazione",
