@@ -1,10 +1,12 @@
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { tutteLeRighe } from '@/lib/supabase-tutte-le-righe'
 import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
 import { FormNuovoAsset } from './form-nuovo-asset'
 import { FormNuovoContenitore } from './form-nuovo-contenitore'
 import { ListaContenitori } from './lista-contenitori'
+import { ListaAsset, type AssetElenco } from './lista-asset'
 
 type TipoStrumento = { categoria: string; tipo: string }
 type ImpostazioneCategoria = { categoria: string; aliquota_default: number }
@@ -26,7 +28,14 @@ export default async function GestioneStrumentiPage({
   const params = await searchParams
   const supabase = await createClient()
 
-  const [{ data: tipiRaw }, { data: impostazioniRaw }, { data: contenitori }] = await Promise.all([
+  const [
+    { data: tipiRaw },
+    { data: impostazioniRaw },
+    { data: contenitori },
+    { data: strumenti },
+    { data: transazioniPerStrumento },
+    { data: movimentiPerStrumento },
+  ] = await Promise.all([
     supabase
       .from('tipi_strumento')
       .select('categoria, tipo')
@@ -38,7 +47,28 @@ export default async function GestioneStrumentiPage({
       .select('categoria, aliquota_default')
       .returns<ImpostazioneCategoria[]>(),
     supabase.from('contenitori').select('id, nome, tipo').order('nome').returns<Contenitore[]>(),
+    supabase.from('strumenti').select('id, nome, categoria, tipo').order('nome'),
+    // Solo strumento_id, per contare transazioni e movimenti collegati a ogni
+    // strumento: decidono se l'eliminazione chiede la seconda conferma.
+    tutteLeRighe((da, a) => supabase.from('transazioni').select('strumento_id').order('id').range(da, a)),
+    tutteLeRighe((da, a) => supabase.from('movimenti_liquidita').select('strumento_id').order('id').range(da, a)),
   ])
+
+  const conteggio = (righe: { strumento_id: string | null }[] | null) => {
+    const mappa = new Map<string, number>()
+    for (const r of righe ?? []) if (r.strumento_id) mappa.set(r.strumento_id, (mappa.get(r.strumento_id) ?? 0) + 1)
+    return mappa
+  }
+  const nTransazioni = conteggio(transazioniPerStrumento)
+  const nMovimenti = conteggio(movimentiPerStrumento)
+  const assetElenco: AssetElenco[] = (strumenti ?? []).map((s) => ({
+    id: s.id,
+    nome: s.nome,
+    categoria: s.categoria,
+    tipo: s.tipo,
+    transazioni: nTransazioni.get(s.id) ?? 0,
+    movimenti: nMovimenti.get(s.id) ?? 0,
+  }))
 
   const tipiPerCategoria: Record<string, string[]> = {}
   for (const t of tipiRaw ?? []) {
@@ -91,6 +121,9 @@ export default async function GestioneStrumentiPage({
           )}
 
           <FormNuovoAsset tipiPerCategoria={tipiPerCategoria} aliquoteDefaultPerCategoria={aliquoteDefaultPerCategoria} />
+
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 24, marginBottom: 12 }}>{t('titoloAssetEsistenti')}</h3>
+          <ListaAsset asset={assetElenco} />
         </Sezione>
       </section>
 

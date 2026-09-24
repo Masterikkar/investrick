@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 import { redirect } from '@/i18n/navigation'
 import { getLocale } from 'next-intl/server'
 import type { Database } from '@/types/database.types'
@@ -81,4 +82,26 @@ export async function creaAsset(formData: FormData) {
 
   // I conti di liquidità hanno la loro pagina di dettaglio, non quella Asset.
   redirect({ href: categoria === 'Liquidita' ? `/liquidita/${nuovo.id}` : `/asset/${nuovo.id}`, locale })
+}
+// Elimina uno strumento con tutte le sue transazioni e i suoi movimenti di
+// liquidità. La funzione database elimina_strumento fa tutto in un'unica
+// transazione Postgres (movimenti, transazioni, strumento — il resto è
+// CASCADE — poi ricostruisci_storico_valorizzazioni): o riesce tutto o non
+// cambia niente. Restituisce quante transazioni e movimenti ha eliminato.
+export async function eliminaAsset(
+  id: string
+): Promise<{ transazioniEliminate: number; movimentiEliminati: number } | { errore: string }> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('elimina_strumento', { p_strumento_id: id })
+
+  if (error) {
+    return { errore: error.message }
+  }
+
+  revalidatePath('/', 'layout')
+  return {
+    transazioniEliminate: data?.[0]?.transazioni_eliminate ?? 0,
+    movimentiEliminati: data?.[0]?.movimenti_eliminati ?? 0,
+  }
 }

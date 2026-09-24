@@ -1527,6 +1527,13 @@ export type Database = {
         }
         Returns: number
       }
+      elimina_strumento: {
+        Args: { p_strumento_id: string }
+        Returns: {
+          movimenti_eliminati: number
+          transazioni_eliminate: number
+        }[]
+      }
       ricostruisci_storico_valorizzazioni: {
         Args: never
         Returns: {

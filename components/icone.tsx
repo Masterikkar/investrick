@@ -169,6 +169,22 @@ export function IconaEsci() {
   )
 }
 
+export function IconaModifica() {
+  return (
+    <IconaBase>
+      <path d="M13.5 3.5l3 3L7 16H4v-3l9.5-9.5zM11.5 5.5l3 3" />
+    </IconaBase>
+  )
+}
+
+export function IconaElimina() {
+  return (
+    <IconaBase>
+      <path d="M3.5 6h13M8 6V3.5h4V6M5.5 6l1 10.5h7l1-10.5M8.5 9v4.5M11.5 9v4.5" />
+    </IconaBase>
+  )
+}
+
 export function IconaDownload() {
   return (
     <svg
