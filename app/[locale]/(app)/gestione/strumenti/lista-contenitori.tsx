@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { rinominaContenitore, eliminaContenitore } from './actions-contenitore'
+import { LARGHEZZA_STANDARD, LARGHEZZA_RIGA_QUATTRO_CAMPI } from './layout-campi'
 
 type Contenitore = { id: string; nome: string; tipo: string }
 
@@ -86,7 +87,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
 
   return (
     <div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 520 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: LARGHEZZA_RIGA_QUATTRO_CAMPI }}>
         {contenitori.map((c) => (
           <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
@@ -101,9 +102,20 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
                 color: 'var(--text-primary)',
                 fontSize: 'var(--fs-table)',
                 flex: 1,
+                minWidth: 120,
               }}
             />
-            <span style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', minWidth: 80 }}>
+            <span
+              style={{
+                fontSize: 'var(--fs-card-link)',
+                color: 'var(--text-secondary)',
+                width: LARGHEZZA_STANDARD,
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
               {etichettaTipo(c.tipo)}
             </span>
             <button
