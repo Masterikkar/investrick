@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
-import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
+import { TabellaOrdinabile, CHIAVI_FILTRO_POSIZIONE, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { RippleLink } from '@/components/ripple-link'
 import { CardMetrica } from '@/components/card-metrica'
@@ -89,7 +89,7 @@ export default async function PacDettaglioPage({
     .filter((id): id is string => id !== null)
 
   const { data: strumenti } = strumentoIds.length
-    ? await supabase.from('strumenti').select('id, nome, ticker, tipo, categoria').in('id', strumentoIds)
+    ? await supabase.from('strumenti').select('id, nome, ticker, isin, tipo, categoria').in('id', strumentoIds)
     : { data: null }
 
   const { data: costi } = await supabase
@@ -135,6 +135,8 @@ export default async function PacDettaglioPage({
         key: p.strumento_id ?? '—',
         strumentoId: p.strumento_id,
         nome: strumento?.nome ?? '—',
+        ticker: strumento?.ticker ?? null,
+        isin: strumento?.isin ?? null,
         tipo: strumento?.tipo ?? '—',
         categoria,
         categoriaVisualizzata: traduciCategoria(tCategorie, categoria),
@@ -294,7 +296,7 @@ export default async function PacDettaglioPage({
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>
         <Sezione>
-          <TabellaOrdinabile colonne={COLONNE} righe={righe} />
+          <TabellaOrdinabile colonne={COLONNE} righe={righe} filtro={{ chiavi: CHIAVI_FILTRO_POSIZIONE }} />
         </Sezione>
       </section>
     </div>

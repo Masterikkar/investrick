@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatData, formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
-import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
+import { TabellaOrdinabile, CHIAVI_FILTRO_POSIZIONE, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { RippleLink } from '@/components/ripple-link'
 import { CardMetrica, stileCardMetrica } from '@/components/card-metrica'
@@ -111,6 +111,8 @@ export async function PaginaGruppi({
         strumentoId: p.strumentoId,
         contenitoreId: p.contenitoreId,
         nome: strumento?.nome ?? '—',
+        ticker: strumento?.ticker ?? null,
+        isin: strumento?.isin ?? null,
         tipo: strumento?.tipo ?? '—',
         categoria,
         categoriaVisualizzata: traduciCategoria(tCategorie, categoria),
@@ -393,7 +395,7 @@ export async function PaginaGruppi({
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>
         <Sezione>
-          <TabellaOrdinabile colonne={COLONNE} righe={righe} />
+          <TabellaOrdinabile colonne={COLONNE} righe={righe} filtro={{ chiavi: CHIAVI_FILTRO_POSIZIONE }} />
         </Sezione>
       </section>
     </div>

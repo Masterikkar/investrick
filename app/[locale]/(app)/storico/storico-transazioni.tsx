@@ -151,7 +151,7 @@ export function StoricoTransazioni({
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <input
           type="text"
-          placeholder={tFiltroTabellaStorico('placeholderFiltraStrumento')}
+          placeholder={tFiltroTabellaStorico('placeholderFiltraPosizione')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           style={{

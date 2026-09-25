@@ -255,6 +255,7 @@
     "colonnaCategoria": "Categoria"
   },
   "FiltroTabellaStorico": {
+    "placeholderFiltraPosizione": "Filtra per posizione...",
     "placeholderFiltraStrumento": "Filtra per strumento...",
     "filtroPerAnno": "Filtra per anno",
     "selezionaTutto": "Seleziona tutto",
@@ -265,7 +266,6 @@
   },
   "PaginaFiscalita": {
     "colonnaPosizione": "Posizione",
-    "placeholderFiltraPosizione": "Filtra per posizione...",
     "titoloAnnoCorrente": "Anno corrente — {anno}",
     "titoloStorico": "Storico",
     "titoloPlusMinusvalenze": "Plus/minusvalenze",
@@ -594,11 +594,10 @@
   },
   "PaginaMembriGruppo": {
     "intro": "Un gruppo personalizzato raccoglie strumenti interi, per seguirli insieme: il valore di ogni strumento è la somma di tutte le sue posizioni, in qualunque PAC, Polizza o posizione diretta. Il gruppo non contiene transazioni: aggiungere o togliere uno strumento non cambia nulla nel portafoglio.",
-    "titoloMembri": "Strumenti nel gruppo ({numero})",
-    "titoloDisponibili": "Strumenti da aggiungere",
+    "titoloMembri": "Posizioni per gruppo ({numero})",
+    "titoloDisponibili": "Posizioni da aggiungere",
     "alertNessunMembro": "Nessuno strumento nel gruppo: aggiungine dall'elenco qui sotto.",
     "alertNessunDisponibile": "Tutti gli strumenti sono già nel gruppo.",
-    "placeholderCerca": "Cerca per nome o ticker",
     "bottoneAggiungi": "Aggiungi",
     "bottoneRimuovi": "Rimuovi",
     "erroreGenerico": "Qualcosa è andato storto, riprova."

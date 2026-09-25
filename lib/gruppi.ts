@@ -35,7 +35,14 @@ export type PosizioneGruppo = {
   costo: number
 }
 
-export type StrumentoGruppo = { id: string; nome: string; ticker: string | null; tipo: string; categoria: string }
+export type StrumentoGruppo = {
+  id: string
+  nome: string
+  ticker: string | null
+  isin: string | null
+  tipo: string
+  categoria: string
+}
 
 // Somma di tutti i gruppi del tipo, per giorno. capitale è null se quel
 // giorno non ha nessun capitale investito noto.
@@ -140,7 +147,7 @@ export async function caricaGruppiReali(
 
   const strumentoIds = Array.from(new Set(posizioni.map((p) => p.strumentoId)))
   const { data: strumenti } = strumentoIds.length
-    ? await supabase.from('strumenti').select('id, nome, ticker, tipo, categoria').in('id', strumentoIds)
+    ? await supabase.from('strumenti').select('id, nome, ticker, isin, tipo, categoria').in('id', strumentoIds)
     : { data: null }
 
   return {
@@ -243,7 +250,7 @@ export async function leggiMembriPersonalizzati(
 
   const strumentoIds = Array.from(new Set((membri ?? []).map((m) => m.strumento_id)))
   const { data: strumenti } = strumentoIds.length
-    ? await supabase.from('strumenti').select('id, nome, ticker, tipo, categoria').in('id', strumentoIds)
+    ? await supabase.from('strumenti').select('id, nome, ticker, isin, tipo, categoria').in('id', strumentoIds)
     : { data: null }
 
   return { membri: membri ?? [], strumenti: strumenti ?? [] }

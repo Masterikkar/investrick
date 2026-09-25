@@ -129,7 +129,7 @@ export function StoricoPlusMinus({
 
         <input
           type="text"
-          placeholder={t('placeholderFiltraPosizione')}
+          placeholder={tFiltroTabellaStorico('placeholderFiltraPosizione')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           style={{

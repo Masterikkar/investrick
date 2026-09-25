@@ -19,15 +19,37 @@ export type ColonnaTabella = {
 
 export type RigaTabella = Record<string, string | number | null> & { key: string }
 
+// Campi su cui cerca il filtro "Filtra per posizione...": nome, ticker e ISIN
+// dello strumento. Le righe li devono contenere anche se non sono colonne.
+export const CHIAVI_FILTRO_POSIZIONE: readonly string[] = ['nome', 'ticker', 'isin']
+
+// Stesso campo dei filtri testuali di Storico e Fiscalità.
+export const stileCampoFiltro: React.CSSProperties = {
+  padding: '6px 10px',
+  border: '1px solid var(--border-default)',
+  borderRadius: 0,
+  width: 260,
+  maxWidth: '100%',
+  fontSize: 'var(--fs-table)',
+  background: 'var(--bg-surface)',
+  color: 'var(--text-primary)',
+}
+
 export function TabellaOrdinabile({
   colonne,
   righe,
+  filtro,
 }: {
   colonne: ColonnaTabella[]
   righe: RigaTabella[]
+  // Con questa prop, sopra la tabella compare un campo che tiene solo le
+  // righe in cui uno dei campi indicati contiene il testo cercato.
+  filtro?: { chiavi: readonly string[]; placeholder?: string }
 }) {
   const locale = useLocale() as LocaleFormato
   const t = useTranslations('TabellaOrdinabile')
+  const tFiltro = useTranslations('FiltroTabellaStorico')
+  const [query, setQuery] = useState('')
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortAsc, setSortAsc] = useState(true)
 
@@ -40,9 +62,15 @@ export function TabellaOrdinabile({
     }
   }
 
+  const righeFiltrate = useMemo(() => {
+    const testo = query.trim().toLowerCase()
+    if (!filtro || !testo) return righe
+    return righe.filter((r) => filtro.chiavi.some((k) => String(r[k] ?? '').toLowerCase().includes(testo)))
+  }, [righe, filtro, query])
+
   const righeOrdinate = useMemo(() => {
-    if (!sortKey) return righe
-    const copia = [...righe]
+    if (!sortKey) return righeFiltrate
+    const copia = [...righeFiltrate]
     copia.sort((a, b) => {
       const va = a[sortKey]
       const vb = b[sortKey]
@@ -60,7 +88,7 @@ export function TabellaOrdinabile({
       return sortAsc ? cmp : -cmp
     })
     return copia
-  }, [righe, sortKey, sortAsc, locale])
+  }, [righeFiltrate, sortKey, sortAsc, locale])
 
   function renderCella(colonna: ColonnaTabella, riga: RigaTabella) {
     const valore = riga[colonna.key]
@@ -106,7 +134,7 @@ export function TabellaOrdinabile({
     }
   }
 
-  return (
+  const tabella = (
     <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
       <thead>
         <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
@@ -148,5 +176,20 @@ export function TabellaOrdinabile({
         )}
       </tbody>
     </table>
+  )
+
+  if (!filtro) return tabella
+
+  return (
+    <>
+      <input
+        type="text"
+        placeholder={filtro.placeholder ?? tFiltro('placeholderFiltraPosizione')}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        style={{ ...stileCampoFiltro, display: 'block', marginBottom: 12 }}
+      />
+      {tabella}
+    </>
   )
 }

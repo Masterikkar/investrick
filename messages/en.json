@@ -255,6 +255,7 @@
     "colonnaCategoria": "Category"
   },
   "FiltroTabellaStorico": {
+    "placeholderFiltraPosizione": "Filter by position...",
     "placeholderFiltraStrumento": "Filter by instrument...",
     "filtroPerAnno": "Filter by year",
     "selezionaTutto": "Select all",
@@ -265,7 +266,6 @@
   },
   "PaginaFiscalita": {
     "colonnaPosizione": "Position",
-    "placeholderFiltraPosizione": "Filter by position...",
     "titoloAnnoCorrente": "Current year — {anno}",
     "titoloStorico": "History",
     "titoloPlusMinusvalenze": "Capital gains/losses",
@@ -594,11 +594,10 @@
   },
   "PaginaMembriGruppo": {
     "intro": "A custom group collects whole instruments so you can follow them together: the value of each instrument is the sum of all its positions, in any Investment Plan, Insurance Policy or direct position. The group holds no transactions: adding or removing an instrument changes nothing in the portfolio.",
-    "titoloMembri": "Instruments in the group ({numero})",
-    "titoloDisponibili": "Instruments to add",
+    "titoloMembri": "Positions in the group ({numero})",
+    "titoloDisponibili": "Positions to add",
     "alertNessunMembro": "No instruments in the group yet: add some from the list below.",
     "alertNessunDisponibile": "All instruments are already in the group.",
-    "placeholderCerca": "Search by name or ticker",
     "bottoneAggiungi": "Add",
     "bottoneRimuovi": "Remove",
     "erroreGenerico": "Something went wrong, please try again."

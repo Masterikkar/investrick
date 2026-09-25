@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
-import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
+import { TabellaOrdinabile, CHIAVI_FILTRO_POSIZIONE, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { CardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
@@ -75,7 +75,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
 
   const { data: strumentiCategoria } = await supabase
     .from('strumenti')
-    .select('id, nome, tipo')
+    .select('id, nome, tipo, ticker, isin')
     .eq('categoria', categoria)
 
   const strumentoIds = strumentiCategoria?.map((s) => s.id) ?? []
@@ -122,6 +122,8 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
         key: `${p.strumento_id}-${p.contenitore_id ?? 'diretto'}`,
         strumentoId: p.strumento_id,
         nome: strumento?.nome ?? '—',
+        ticker: strumento?.ticker ?? null,
+        isin: strumento?.isin ?? null,
         tipo: strumento?.tipo != null ? traduciTipoStrumento(tTipiStrumento, strumento.tipo) : '—',
         rendimentoPct: p.rendimento_pct ?? 0,
         rendimentoAssoluto: (p.valore ?? 0) - (p.capitale_investito ?? 0),
@@ -202,7 +204,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 'var(--fs-h2)', marginBottom: 12, fontWeight: 500 }}>{t('titoloAsset')}</h2>
         <Sezione>
-          <TabellaOrdinabile colonne={COLONNE} righe={righe} />
+          <TabellaOrdinabile colonne={COLONNE} righe={righe} filtro={{ chiavi: CHIAVI_FILTRO_POSIZIONE }} />
         </Sezione>
       </section>
     </div>
