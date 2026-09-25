@@ -1,5 +1,6 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { leggiGruppiDestinazione } from '@/lib/contenitori'
 import { formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
 import { GraficoLineaSemplice, type PuntoLineaSemplice } from '@/components/grafico-linea-semplice'
 import { GraficoBarre, type PuntoBarra } from '@/components/grafico-barre'
@@ -93,7 +94,7 @@ export default async function LiquiditaStrumentoPage({
       .eq('strumento_id', strumentoId)
       .order('data', { ascending: false })
       .returns<MovimentoRaw[]>(),
-    supabase.from('contenitori').select('id, nome').order('nome'),
+    leggiGruppiDestinazione(supabase),
   ])
 
   if (!strumento) {

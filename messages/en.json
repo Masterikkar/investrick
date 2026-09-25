@@ -41,6 +41,7 @@
     "liquidita": "Cash"
   },
   "Menu": {
+    "personalizzati": "Custom groups",
     "portafoglio": "Portfolio",
     "analisi": "Analysis",
     "account": "Account",
@@ -482,6 +483,7 @@
     "bottoneCreaContenitore": "Create group"
   },
   "PaginaGestioneTransazioni": {
+    "erroreGruppoPersonalizzato": "a custom group is for monitoring only and cannot hold transactions or movements: \"{valore}\"",
     "linkStoricoTransazioniFinanziarie": "→ Investment transaction history",
     "linkStoricoTransazioniLiquidita": "→ Cash transaction history",
     "linkImportaDaFile": "→ Import from file",

@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { leggiGruppiDestinazione } from '@/lib/contenitori'
 import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
 import { StoricoMovimentiLiquidita, type RigaStoricoMovimentoLiquidita } from '../storico-movimenti-liquidita'
@@ -11,7 +12,7 @@ export default async function TransazioniLiquiditaPage() {
 
   const [{ data: strumenti }, { data: contenitori }, { data: movimentiLiquiditaStoricoRaw }] = await Promise.all([
     supabase.from('strumenti').select('id, nome, categoria').order('nome'),
-    supabase.from('contenitori').select('id, nome').order('nome'),
+    leggiGruppiDestinazione(supabase),
     supabase
       .from('movimenti_liquidita')
       .select('id, data, tipo_movimento, contenitore_id, importo, tassa_trattenuta, strumento_id')

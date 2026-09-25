@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { leggiGruppiDestinazione } from '@/lib/contenitori'
 import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
 import { NuovaTransazioneFinanziaria, NuovaTransazioneLiquidita } from './nuova-transazione'
@@ -26,10 +27,7 @@ export default async function TransazioniPage({
     .order('categoria')
     .order('nome')
 
-  const { data: contenitori } = await supabase
-    .from('contenitori')
-    .select('id, nome, tipo')
-    .order('nome')
+  const { data: contenitori } = await leggiGruppiDestinazione(supabase)
 
   // I conti di liquidità hanno il loro form (movimenti di liquidità): nel form
   // delle transazioni finanziarie vanno esclusi.

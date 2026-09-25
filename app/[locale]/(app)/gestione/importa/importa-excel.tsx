@@ -125,6 +125,10 @@ function elabora(
     else if (commissione === null) errore = t('erroreCommissioneNonValida', { valore: testoCella(cella('Commissione')) })
     else if (tassaTrattenuta === null) errore = t('erroreTassaNonValida', { valore: testoCella(cella('Tassa trattenuta')) })
     else if (contenitoreNonTrovato) errore = t('erroreContenitoreNonTrovato', { valore: contenitoreNonTrovato })
+    // Stesso vincolo del database (vincola_contenitore_no_personalizzato): un
+    // gruppo Personalizzato non contiene transazioni.
+    else if (contenitoreId !== null && tipoContenitore.get(contenitoreId) === 'Personalizzato')
+      errore = t('erroreGruppoPersonalizzato', { valore: contenitoreRaw })
     // Stesso vincolo del database (vincola_scambio_solo_polizza), controllato qui
     // per dare un errore di riga leggibile invece del messaggio grezzo all'inserimento.
     else if (

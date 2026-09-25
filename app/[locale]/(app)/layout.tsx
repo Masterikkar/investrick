@@ -149,6 +149,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     <RippleLink href="/polizze" className="menu-row link-interattivo">
                       {t('polizze')}
                     </RippleLink>
+                    <RippleLink href="/personalizzati" className="menu-row link-interattivo">
+                      {t('personalizzati')}
+                    </RippleLink>
                   </div>
                 </details>
               </div>

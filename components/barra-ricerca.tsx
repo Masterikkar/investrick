@@ -15,10 +15,13 @@ type Risultato = {
   href: string
 }
 
-const ROUTE_PER_TIPO_CONTENITORE: Record<string, string> = {
-  PAC: '/pac',
-  Polizza: '/polizze',
-  Liquidita: '/liquidita',
+// Dove porta un gruppo trovato: la pagina elenco del suo tipo, o per un
+// Personalizzato la gestione dei suoi membri (che non ha ancora un dettaglio).
+function hrefGruppo(c: { id: string; tipo: string }): string {
+  if (c.tipo === 'PAC') return '/pac'
+  if (c.tipo === 'Polizza') return '/polizze'
+  if (c.tipo === 'Personalizzato') return `/personalizzati/${c.id}/membri`
+  return '/'
 }
 
 export function BarraRicerca({
@@ -73,7 +76,7 @@ export function BarraRicerca({
             key: `contenitore-${c.id}`,
             label: c.nome,
             sottotitolo: t('sottotitoloGruppo', { tipo: etichettaTipo(c.tipo) }),
-            href: ROUTE_PER_TIPO_CONTENITORE[c.tipo] ?? '/',
+            href: hrefGruppo(c),
           })),
       ].slice(0, 8)
     : []

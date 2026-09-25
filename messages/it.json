@@ -41,6 +41,7 @@
     "liquidita": "Liquidità"
   },
   "Menu": {
+    "personalizzati": "Personalizzati",
     "portafoglio": "Portafoglio",
     "analisi": "Analisi",
     "account": "Account",
@@ -482,6 +483,7 @@
     "bottoneCreaContenitore": "Crea gruppo"
   },
   "PaginaGestioneTransazioni": {
+    "erroreGruppoPersonalizzato": "un gruppo Personalizzato serve solo al monitoraggio e non può contenere transazioni né movimenti: \"{valore}\"",
     "linkStoricoTransazioniFinanziarie": "→ Storico transazioni finanziarie",
     "linkStoricoTransazioniLiquidita": "→ Storico transazioni di liquidità",
     "linkImportaDaFile": "→ Importa da file",

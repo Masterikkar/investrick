@@ -16,7 +16,7 @@ import {
 import { tipoMovimentoLiquiditaDaEtichettaExcel } from '@/lib/i18n-tipi-movimento-liquidita'
 
 type StrumentoLiquidita = { id: string; nome: string }
-type ContenitoreBase = { id: string; nome: string }
+type ContenitoreBase = { id: string; nome: string; tipo: string }
 
 function testoCella(v: unknown): string {
   return String(v ?? '').trim()
@@ -73,6 +73,7 @@ function elabora(
   intestazionePerColonna: Map<ColonnaExcelLiquidita, string>,
   mappaStrumenti: Map<string, string>,
   mappaContenitori: Map<string, string>,
+  tipoContenitore: Map<string, string>,
   t: Traduttore
 ): RigaParsata[] {
   return righeExcel.map((riga, idx) => {
@@ -111,6 +112,11 @@ function elabora(
     else if (importo === null) errore = t('erroreImportoNonValido', { valore: testoCella(cella('Importo')) })
     else if (tassaTrattenuta === null) errore = t('erroreTassaNonValida', { valore: testoCella(cella('Tassa trattenuta')) })
     else if (contenitoreNonTrovato) errore = t('erroreContenitoreNonTrovato', { valore: contenitoreNonTrovato })
+    // Stesso vincolo del database (vincola_contenitore_no_personalizzato),
+    // controllato qui per un errore di riga leggibile: un gruppo Personalizzato
+    // non contiene movimenti.
+    else if (contenitoreId !== null && tipoContenitore.get(contenitoreId) === 'Personalizzato')
+      errore = t('erroreGruppoPersonalizzato', { valore: contenitoreRaw })
 
     return {
       numeroRiga,
@@ -156,6 +162,7 @@ export function ImportaExcelLiquidita({
 
   const mappaStrumenti = new Map(strumenti.map((s) => [s.nome.toLowerCase(), s.id]))
   const mappaContenitori = new Map(contenitori.map((c) => [c.nome.toLowerCase(), c.id]))
+  const tipoContenitore = new Map(contenitori.map((c) => [c.id, c.tipo]))
 
   function gestisciFile(file: File) {
     setRisultato(null)
@@ -174,7 +181,7 @@ export function ImportaExcelLiquidita({
         if (sconosciute.length > 0) throw new Error(t('erroreIntestazioniSconosciute', { elenco: sconosciute.join(', ') }))
         if (duplicate.length > 0) throw new Error(t('erroreIntestazioniDuplicate', { elenco: duplicate.join(', ') }))
         const righeGrezze = XLSX.utils.sheet_to_json<Record<string, unknown>>(foglio, { defval: '' })
-        setRighe(elabora(righeGrezze, intestazionePerColonna, mappaStrumenti, mappaContenitori, t))
+        setRighe(elabora(righeGrezze, intestazionePerColonna, mappaStrumenti, mappaContenitori, tipoContenitore, t))
       } catch (err) {
         setErroreFile(err instanceof Error ? err.message : t('erroreLetturaFile'))
       }
