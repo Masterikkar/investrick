@@ -78,7 +78,7 @@ genera({
     `- ${intestazione('Tipo movimento')}: one of ${tipiMovimento.join(', ')}.`,
     `- ${intestazione('Importo')}: number, gross.`,
     `- ${intestazione('Tassa trattenuta')}: number, optional (default 0). Only relevant for ${traduciTipoMovimentoLiquidita(tTipoMovimento, 'Interesse')}.`,
-    `- ${intestazione('Contenitore')}: name of an existing container, or leave empty.`,
+    `- ${intestazione('Contenitore')}: name of an existing group, or leave empty.`,
     '- Delete this example row (row 2) and these notes before importing the file.',
   ],
 })

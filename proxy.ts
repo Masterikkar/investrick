@@ -58,6 +58,8 @@ export async function proxy(request: NextRequest) {
   return response
 }
 
+// Esclusi i file statici di public/ (immagini e template .xlsx): passando per
+// next-intl riceverebbero il prefisso di lingua (/it/…) e non esisterebbero più.
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|xlsx)$).*)'],
 }
