@@ -100,7 +100,7 @@
     "alertScostamento": "{categoria}: {pesoAttuale}% current vs {target}% target ({segnoScostamento}{scostamento} pp)"
   },
   "PaginaContenitore": {
-    "colonnaStrumento": "Instrument",
+    "colonnaStrumento": "Name",
     "colonnaTipo": "Type",
     "colonnaCategoria": "Category",
     "colonnaRendimento": "Return",
@@ -122,7 +122,7 @@
     "titoloAnalisiRendimento": "Return analysis",
     "titoloAnalisiComposizione": "Composition analysis",
     "linkModificaTarget": "→ Edit target",
-    "titoloStrumenti": "Instruments",
+    "titoloStrumenti": "Positions",
     "contenitoreNonTrovato": "Container not found.",
     "alertNessunGuadagnoPerdita": "No gain or loss accrued yet.",
     "alertTargetDisattivato": "Target disabled for this container.",
@@ -145,7 +145,7 @@
   },
   "PaginaLiquidita": {
     "etichettaContenitore": "Container",
-    "colonnaStrumento": "Instrument",
+    "colonnaStrumento": "Name",
     "colonnaTipo": "Type",
     "colonnaProvider": "Provider",
     "colonnaValore": "Value",
@@ -160,7 +160,7 @@
     "labelNettoDaInizioAnno": "Net, year to date",
     "titoloStoricoInteressi": "Interest history",
     "alertNessunInteresse": "No interest recorded yet.",
-    "titoloStrumenti": "Instruments",
+    "titoloStrumenti": "Positions",
     "strumentoNonTrovato": "Instrument not found.",
     "labelInteresseLordo": "Gross interest",
     "labelInteresseNetto": "Net interest",

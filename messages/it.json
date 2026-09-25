@@ -100,7 +100,7 @@
     "alertScostamento": "{categoria}: {pesoAttuale}% attuale vs {target}% target ({segnoScostamento}{scostamento} pp)"
   },
   "PaginaContenitore": {
-    "colonnaStrumento": "Strumento",
+    "colonnaStrumento": "Nome",
     "colonnaTipo": "Tipo",
     "colonnaCategoria": "Categoria",
     "colonnaRendimento": "Rendimento",
@@ -122,7 +122,7 @@
     "titoloAnalisiRendimento": "Analisi rendimento",
     "titoloAnalisiComposizione": "Analisi composizione",
     "linkModificaTarget": "→ Modifica target",
-    "titoloStrumenti": "Strumenti",
+    "titoloStrumenti": "Posizioni",
     "contenitoreNonTrovato": "Contenitore non trovato.",
     "alertNessunGuadagnoPerdita": "Nessun guadagno o perdita maturata ancora.",
     "alertTargetDisattivato": "Target disattivato per questo contenitore.",
@@ -145,7 +145,7 @@
   },
   "PaginaLiquidita": {
     "etichettaContenitore": "Contenitore",
-    "colonnaStrumento": "Strumento",
+    "colonnaStrumento": "Nome",
     "colonnaTipo": "Tipo",
     "colonnaProvider": "Provider",
     "colonnaValore": "Valore",
@@ -160,7 +160,7 @@
     "labelNettoDaInizioAnno": "Netto, da inizio anno",
     "titoloStoricoInteressi": "Storico interessi",
     "alertNessunInteresse": "Nessun interesse registrato finora.",
-    "titoloStrumenti": "Strumenti",
+    "titoloStrumenti": "Posizioni",
     "strumentoNonTrovato": "Strumento non trovato.",
     "labelInteresseLordo": "Interesse lordo",
     "labelInteresseNetto": "Interesse netto",
