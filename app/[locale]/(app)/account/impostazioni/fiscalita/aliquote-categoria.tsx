@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { aggiornaAliquotaDefaultCategoria, reimpostaAliquotaCategoria } from './actions-aliquote'
 import { traduciCategoria } from '@/lib/i18n-categorie'
+import { useConferma } from '@/components/conferma'
 
 export type CategoriaAliquota = {
   categoria: string
@@ -27,6 +28,7 @@ export function AliquoteCategoria({ categorie }: { categorie: CategoriaAliquota[
   const tContenitori = useTranslations('Contenitori')
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const router = useRouter()
+  const conferma = useConferma()
 
   function etichettaCategoria(categoria: string): string {
     if (categoria === 'Liquidita') return tContenitori('liquidita')
@@ -60,17 +62,18 @@ export function AliquoteCategoria({ categorie }: { categorie: CategoriaAliquota[
     })
   }
 
-  function handleReimposta(categoria: string, aliquotaDefault: number, numeroStrumenti: number) {
-    if (
-      !window.confirm(
-        t('confermaReimposta', {
-          numeroStrumenti: t('numeroStrumenti', { numero: numeroStrumenti }),
-          categoria: etichettaCategoria(categoria),
-          aliquota: aliquotaDefault,
-        })
-      )
-    )
-      return
+  async function handleReimposta(categoria: string, aliquotaDefault: number, numeroStrumenti: number) {
+    const confermato = await conferma({
+      titolo: t('titoloReimposta'),
+      messaggio: t('confermaReimposta', {
+        numeroStrumenti: t('numeroStrumenti', { numero: numeroStrumenti }),
+        categoria: etichettaCategoria(categoria),
+        aliquota: aliquotaDefault,
+      }),
+      etichettaConferma: t('bottoneReimpostaTutti'),
+      pericoloso: true,
+    })
+    if (!confermato) return
 
     setErroreCategoria(null)
     setMessaggioErrore(null)

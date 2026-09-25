@@ -396,6 +396,7 @@
     "paragrafoAliquotePerCategoria": "L'aliquota di default si applica ai nuovi asset creati in quella categoria. \"{bottone}\" sovrascrive l'aliquota di ogni asset già esistente in quella categoria con il valore di default corrente.",
     "bottoneReimpostaTutti": "Reimposta tutti gli strumenti",
     "numeroStrumenti": "{numero, plural, one {# strumento} other {# strumenti}}",
+    "titoloReimposta": "Reimposta aliquota",
     "confermaReimposta": "Reimpostare l'aliquota di TUTTI gli strumenti in \"{categoria}\" ({numeroStrumenti}) a {aliquota}%?\n\nQuesto sovrascrive qualunque personalizzazione fatta sui singoli strumenti di questa categoria.\n\nL'operazione non è reversibile.",
     "successoReimposta": "Aggiornamento completato per {numeroStrumenti} in \"{categoria}\".",
     "titoloAliquotePerStrumento": "Aliquote per strumento",

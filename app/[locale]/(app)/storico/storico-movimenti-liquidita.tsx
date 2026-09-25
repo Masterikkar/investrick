@@ -293,7 +293,7 @@ export function StoricoMovimentiLiquidita({
                           type="button"
                           onClick={() => handleElimina(m)}
                           disabled={inCorso}
-                          title={t('titleEliminaTransazione')}
+                          title={t('titoloEliminaMovimento')}
                           style={{
                             border: 'none',
                             background: 'none',
