@@ -76,6 +76,7 @@
     }
   },
   "Contenitori": {
+    "personalizzati": "Personalizzati",
     "colonnaNome": "Nome",
     "nessunGruppo": "Nessun gruppo",
     "pac": "PAC",
@@ -102,6 +103,10 @@
     "alertScostamento": "{categoria}: {pesoAttuale}% attuale vs {target}% target ({segnoScostamento}{scostamento} pp)"
   },
   "PaginaContenitore": {
+    "etichettaPersonalizzato": "Personalizzato",
+    "titoloITuoiPersonalizzati": "I tuoi gruppi personalizzati",
+    "alertNessunPersonalizzatoRegistrato": "Nessun gruppo personalizzato registrato.",
+    "alertNessunPersonalizzatoConTarget": "Nessun gruppo personalizzato ha un target attivo.",
     "colonnaStrumento": "Nome",
     "colonnaTipo": "Tipo",
     "colonnaCategoria": "Categoria",
@@ -576,6 +581,17 @@
     "notaNessunTarget": " — nessun target sul portafoglio",
     "erroreSomma": " — deve fare 100% (o 0 per nessun target)",
     "erroreSommaServer": "Le percentuali delle categorie devono sommare a 100, oppure essere tutte 0. Controlla i valori e riprova.",
+    "erroreGenerico": "Qualcosa è andato storto, riprova."
+  },
+  "PaginaMembriGruppo": {
+    "intro": "Un gruppo personalizzato raccoglie strumenti interi, per seguirli insieme: il valore di ogni strumento è la somma di tutte le sue posizioni, in qualunque PAC, Polizza o posizione diretta. Il gruppo non contiene transazioni: aggiungere o togliere uno strumento non cambia nulla nel portafoglio.",
+    "titoloMembri": "Strumenti nel gruppo ({numero})",
+    "titoloDisponibili": "Strumenti da aggiungere",
+    "alertNessunMembro": "Nessuno strumento nel gruppo: aggiungine dall'elenco qui sotto.",
+    "alertNessunDisponibile": "Tutti gli strumenti sono già nel gruppo.",
+    "placeholderCerca": "Cerca per nome o ticker",
+    "bottoneAggiungi": "Aggiungi",
+    "bottoneRimuovi": "Rimuovi",
     "erroreGenerico": "Qualcosa è andato storto, riprova."
   }
 }

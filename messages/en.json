@@ -76,6 +76,7 @@
     }
   },
   "Contenitori": {
+    "personalizzati": "Custom groups",
     "colonnaNome": "Name",
     "nessunGruppo": "No group",
     "pac": "Investment Plans",
@@ -102,6 +103,10 @@
     "alertScostamento": "{categoria}: {pesoAttuale}% current vs {target}% target ({segnoScostamento}{scostamento} pp)"
   },
   "PaginaContenitore": {
+    "etichettaPersonalizzato": "Custom group",
+    "titoloITuoiPersonalizzati": "Your custom groups",
+    "alertNessunPersonalizzatoRegistrato": "No custom groups registered.",
+    "alertNessunPersonalizzatoConTarget": "No custom groups have an active target.",
     "colonnaStrumento": "Name",
     "colonnaTipo": "Type",
     "colonnaCategoria": "Category",
@@ -576,6 +581,17 @@
     "notaNessunTarget": " — no portfolio target",
     "erroreSomma": " — must be 100% (or 0 for no target)",
     "erroreSommaServer": "The category percentages must add up to 100, or all be 0. Check the values and try again.",
+    "erroreGenerico": "Something went wrong, please try again."
+  },
+  "PaginaMembriGruppo": {
+    "intro": "A custom group collects whole instruments so you can follow them together: the value of each instrument is the sum of all its positions, in any Investment Plan, Insurance Policy or direct position. The group holds no transactions: adding or removing an instrument changes nothing in the portfolio.",
+    "titoloMembri": "Instruments in the group ({numero})",
+    "titoloDisponibili": "Instruments to add",
+    "alertNessunMembro": "No instruments in the group yet: add some from the list below.",
+    "alertNessunDisponibile": "All instruments are already in the group.",
+    "placeholderCerca": "Search by name or ticker",
+    "bottoneAggiungi": "Add",
+    "bottoneRimuovi": "Remove",
     "erroreGenerico": "Something went wrong, please try again."
   }
 }

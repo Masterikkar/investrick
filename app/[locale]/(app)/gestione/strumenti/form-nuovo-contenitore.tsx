@@ -32,6 +32,7 @@ export function FormNuovoContenitore() {
   const tipiContenitore = [
     { value: 'PAC', label: 'PAC' },
     { value: 'Polizza', label: tPaginaContenitore('etichettaPolizza') },
+    { value: 'Personalizzato', label: tPaginaContenitore('etichettaPersonalizzato') },
   ]
 
   const opzioniTipo = [{ value: '', label: tPaginaRibilanciamento('optionSeleziona') }, ...tipiContenitore]

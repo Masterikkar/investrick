@@ -82,6 +82,52 @@ export type Database = {
           },
         ]
       }
+      gruppi_personalizzati_strumenti: {
+        Row: {
+          contenitore_id: string
+          created_at: string
+          strumento_id: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          contenitore_id: string
+          created_at?: string
+          strumento_id: string
+          tipo?: string
+          user_id?: string
+        }
+        Update: {
+          contenitore_id?: string
+          created_at?: string
+          strumento_id?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gruppi_personalizzati_strumenti_contenitore_id_tipo_fkey"
+            columns: ["contenitore_id", "tipo"]
+            isOneToOne: false
+            referencedRelation: "contenitori"
+            referencedColumns: ["id", "tipo"]
+          },
+          {
+            foreignKeyName: "gruppi_personalizzati_strumenti_contenitore_id_tipo_fkey"
+            columns: ["contenitore_id", "tipo"]
+            isOneToOne: false
+            referencedRelation: "v_valore_per_contenitore"
+            referencedColumns: ["contenitore_id", "tipo"]
+          },
+          {
+            foreignKeyName: "gruppi_personalizzati_strumenti_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       importazioni: {
         Row: {
           categoria: string
@@ -1340,22 +1386,7 @@ export type Database = {
           user_id: string | null
           valore_categoria: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "transazioni_contenitore_id_fkey"
-            columns: ["contenitore_id"]
-            isOneToOne: false
-            referencedRelation: "contenitori"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transazioni_contenitore_id_fkey"
-            columns: ["contenitore_id"]
-            isOneToOne: false
-            referencedRelation: "v_valore_per_contenitore"
-            referencedColumns: ["contenitore_id"]
-          },
-        ]
+        Relationships: []
       }
       v_valore_per_categoria: {
         Row: {

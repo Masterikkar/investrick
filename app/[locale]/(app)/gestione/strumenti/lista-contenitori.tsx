@@ -19,6 +19,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
 
   function etichettaTipo(tipo: string): string {
     if (tipo === 'Polizza') return tPaginaContenitore('etichettaPolizza')
+    if (tipo === 'Personalizzato') return tPaginaContenitore('etichettaPersonalizzato')
     return tipo
   }
   const [nomi, setNomi] = useState<Record<string, string>>(() =>

@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from '@/i18n/navigation'
 import { getLocale } from 'next-intl/server'
 
-const TIPI_VALIDI = ['PAC', 'Polizza']
+const TIPI_VALIDI = ['PAC', 'Polizza', 'Personalizzato']
 
 export async function creaContenitore(formData: FormData) {
   const supabase = await createClient()
