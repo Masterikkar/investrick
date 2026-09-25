@@ -60,6 +60,14 @@ export function IconaAsset() {
   )
 }
 
+export function IconaGruppi() {
+  return (
+    <IconaBase>
+      <path d="M3 7h14v10H3zM5 4.5h10M7 2h6" />
+    </IconaBase>
+  )
+}
+
 export function IconaLiquidita() {
   return (
     <IconaBase>

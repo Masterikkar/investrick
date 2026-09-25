@@ -20,7 +20,7 @@ export default async function ImportaPage() {
 
   const [{ data: strumenti }, { data: contenitori }, { data: tipiRaw }] = await Promise.all([
     supabase.from('strumenti').select('id, nome, ticker, categoria, isin').order('categoria').order('nome'),
-    supabase.from('contenitori').select('id, nome').order('nome'),
+    supabase.from('contenitori').select('id, nome, tipo').order('nome'),
     supabase.from('tipi_strumento').select('categoria, tipo').neq('categoria', 'Liquidita').order('categoria').order('tipo'),
   ])
 

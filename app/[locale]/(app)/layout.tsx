@@ -12,9 +12,7 @@ import {
   IconaAnalisi,
   IconaAccount,
   IconaAsset,
-  IconaLiquidita,
-  IconaPac,
-  IconaPolizze,
+  IconaGruppi,
   IconaCosti,
   IconaFiscalita,
   IconaRendimenti,
@@ -26,7 +24,7 @@ import {
 } from '@/components/icone'
 
 // Voci del sottomenu Portafoglio → Asset: categoria del database, pagina,
-// chiave nel namespace "Categorie".
+// chiave nel namespace "Categorie". La Liquidità ha la sua pagina dedicata.
 const VOCI_ASSET = [
   { categoria: 'Azioni', href: '/azioni', chiave: 'azioni' },
   { categoria: 'Obbligazioni', href: '/obbligazioni', chiave: 'obbligazioni' },
@@ -34,6 +32,7 @@ const VOCI_ASSET = [
   { categoria: 'Monetario', href: '/monetario', chiave: 'monetario' },
   { categoria: 'Multiasset', href: '/multiasset', chiave: 'multiasset' },
   { categoria: 'Crypto', href: '/crypto', chiave: 'crypto' },
+  { categoria: 'Liquidita', href: '/liquidita', chiave: 'liquidita' },
 ]
 
 // top: 100% = bordo inferiore reale dell'header. +1px bordo header, +5px distacco richiesto.
@@ -51,7 +50,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const locale = await getLocale()
   const supabase = await createClient()
 
-  const [{ data: strumenti }, { data: contenitori }, { data: posizioniAperte }] = await Promise.all([
+  const [{ data: strumenti }, { data: contenitori }, { data: posizioniAperte }, { count: numeroContiLiquidita }] = await Promise.all([
     supabase
       .from('strumenti')
       .select('id, nome, categoria, ticker')
@@ -59,6 +58,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       .order('nome'),
     supabase.from('contenitori').select('id, nome, tipo').order('nome'),
     supabase.from('v_riepilogo_posizione').select('strumento_id').gt('quantita_posseduta', 0),
+    // Per la liquidità "ha posizioni" vuol dire che esiste almeno un conto,
+    // anche a saldo zero, come nella pagina /liquidita.
+    supabase.from('strumenti').select('id', { count: 'exact', head: true }).eq('categoria', 'Liquidita'),
   ])
 
   // Categorie con almeno una posizione aperta, ricavate dagli strumenti già
@@ -66,6 +68,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // in ordine alfabetico sul nome tradotto (quindi diverso tra it ed en).
   const categoriaPerStrumento = new Map((strumenti ?? []).map((s) => [s.id, s.categoria]))
   const categorieConPosizioni = new Set((posizioniAperte ?? []).map((p) => (p.strumento_id ? categoriaPerStrumento.get(p.strumento_id) : undefined)))
+  if ((numeroContiLiquidita ?? 0) > 0) categorieConPosizioni.add('Liquidita')
   const vociAsset = VOCI_ASSET.filter((v) => categorieConPosizioni.has(v.categoria))
     .map((v) => ({ href: v.href, etichetta: tCategorie(v.chiave) }))
     .sort((a, b) => a.etichetta.localeCompare(b.etichetta, locale))
@@ -128,27 +131,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     </div>
                   </details>
                 )}
-                <RippleLink
-                  href="/liquidita"
-                  className="menu-row link-interattivo"
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
-                >
-                  <IconaLiquidita /> {t('liquidita')}
-                </RippleLink>
-                <RippleLink
-                  href="/pac"
-                  className="menu-row link-interattivo"
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
-                >
-                  <IconaPac /> {t('pianiDiAccumulo')}
-                </RippleLink>
-                <RippleLink
-                  href="/polizze"
-                  className="menu-row link-interattivo"
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
-                >
-                  <IconaPolizze /> {t('polizze')}
-                </RippleLink>
+                {/* "Gruppi" nel menu; nel codice e nel database restano i contenitori. */}
+                <details>
+                  <summary className="menu-toggle" style={{ padding: '9px 10px' }}>
+                    <span className="menu-row-left">
+                      <IconaGruppi /> {t('gruppi')}
+                    </span>
+                    <span className="menu-chevron">
+                      <IconaChevron />
+                    </span>
+                  </summary>
+                  <div className="menu-submenu-items">
+                    <RippleLink href="/pac" className="menu-row link-interattivo">
+                      {t('pianiDiAccumulo')}
+                    </RippleLink>
+                    <RippleLink href="/polizze" className="menu-row link-interattivo">
+                      {t('polizze')}
+                    </RippleLink>
+                  </div>
+                </details>
               </div>
             </details>
 

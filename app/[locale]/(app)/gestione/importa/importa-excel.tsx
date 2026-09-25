@@ -19,7 +19,7 @@ import type { LocaleFormato } from '@/lib/format'
 type Traduttore = (key: string, values?: Record<string, string | number>) => string
 
 type StrumentoBase = { id: string; isin: string | null; ticker: string | null; nome: string }
-type ContenitoreBase = { id: string; nome: string }
+type ContenitoreBase = { id: string; nome: string; tipo: string }
 
 function testoCella(v: unknown): string {
   return String(v ?? '').trim()
@@ -77,6 +77,7 @@ function elabora(
   righeExcel: Record<string, unknown>[],
   intestazionePerColonna: Map<ColonnaExcelFinanziaria, string>,
   mappaContenitori: Map<string, string>,
+  tipoContenitore: Map<string, string>,
   t: Traduttore
 ): RigaParsata[] {
   return righeExcel.map((riga, idx) => {
@@ -124,6 +125,13 @@ function elabora(
     else if (commissione === null) errore = t('erroreCommissioneNonValida', { valore: testoCella(cella('Commissione')) })
     else if (tassaTrattenuta === null) errore = t('erroreTassaNonValida', { valore: testoCella(cella('Tassa trattenuta')) })
     else if (contenitoreNonTrovato) errore = t('erroreContenitoreNonTrovato', { valore: contenitoreNonTrovato })
+    // Stesso vincolo del database (vincola_scambio_solo_polizza), controllato qui
+    // per dare un errore di riga leggibile invece del messaggio grezzo all'inserimento.
+    else if (
+      (operazioneDb === 'Scambio_cessione' || operazioneDb === 'Scambio_acquisizione') &&
+      (contenitoreId === null || tipoContenitore.get(contenitoreId) !== 'Polizza')
+    )
+      errore = t('erroreScambioSenzaPolizza', { valore: contenitoreRaw || '—' })
 
     return {
       numeroRiga,
@@ -292,6 +300,7 @@ export function ImportaExcel({
     () => new Map(contenitori.map((c) => [c.nome.toLowerCase(), c.id])),
     [contenitori]
   )
+  const tipoContenitore = useMemo(() => new Map(contenitori.map((c) => [c.id, c.tipo])), [contenitori])
 
   function gestisciFile(file: File) {
     setRisultato(null)
@@ -310,7 +319,7 @@ export function ImportaExcel({
         if (sconosciute.length > 0) throw new Error(t('erroreIntestazioniSconosciute', { elenco: sconosciute.join(', ') }))
         if (duplicate.length > 0) throw new Error(t('erroreIntestazioniDuplicate', { elenco: duplicate.join(', ') }))
         const righeGrezze = XLSX.utils.sheet_to_json<Record<string, unknown>>(foglio, { defval: '' })
-        setRighe(elabora(righeGrezze, intestazionePerColonna, mappaContenitori, t))
+        setRighe(elabora(righeGrezze, intestazionePerColonna, mappaContenitori, tipoContenitore, t))
       } catch (err) {
         setErroreFile(err instanceof Error ? err.message : t('erroreLetturaFile'))
       }
