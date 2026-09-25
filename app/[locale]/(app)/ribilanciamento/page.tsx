@@ -5,15 +5,23 @@ import { Sezione } from '@/components/sezione'
 import { RippleLink } from '@/components/ripple-link'
 import { SogliaRibilanciamento } from '@/components/soglia-ribilanciamento'
 import { FormSimulazione } from './form-simulazione'
+import { FormSimulazionePortafoglio } from './form-simulazione-portafoglio'
+import { RisultatoPortafoglioVista } from './risultato-portafoglio'
+import { tutteLeRighe } from '@/lib/supabase-tutte-le-righe'
+import { CATEGORIE } from '@/lib/categorie'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import {
   calcolaRibilanciamentoConVersamento,
+  calcolaRibilanciamentoPortafoglio,
   distribuisciAcquisto,
   simulaVenditaStrumento,
   aliquotaPerStrumento,
   type CompartoTarget,
   type RigaAllocazione,
   type EsitoVenditaStrumento,
+  type BloccoPac,
+  type CategoriaPortafoglio,
+  type RisultatoPortafoglio,
 } from '@/lib/ribilanciamento'
 
 type Scostamento = {
@@ -71,6 +79,8 @@ export default async function RibilanciamentoPage({
     versamento?: string
     forza?: string
     commissione_vendita?: string
+    portafoglio?: string
+    versamento_portafoglio?: string
   }>
 }) {
   const locale = (await getLocale()) as LocaleFormato
@@ -109,6 +119,76 @@ export default async function RibilanciamentoPage({
   const fuoriSogliaPortafoglio = (scostamentiPortafoglio ?? [])
     .filter((s) => Math.abs(s.scostamento_pp) >= soglia)
     .sort((a, b) => Math.abs(b.scostamento_pp) - Math.abs(a.scostamento_pp))
+
+  // Simulazione sul portafoglio intero (percorso a parte da quella per gruppo).
+  const versamentoPortafoglioNumero = params.versamento_portafoglio ? Number(params.versamento_portafoglio) : NaN
+  const versamentoPortafoglio =
+    Number.isFinite(versamentoPortafoglioNumero) && versamentoPortafoglioNumero >= 0 ? versamentoPortafoglioNumero : null
+  let risultatoPortafoglio: RisultatoPortafoglio | null = null
+
+  if (params.portafoglio === '1' && (scostamentiPortafoglio ?? []).length > 0) {
+    const [{ data: valoriCategoria }, { data: contenitori }, { data: posizioni }, { data: saldi }, { data: targetGruppi }] =
+      await Promise.all([
+        supabase.from('v_valore_per_categoria').select('categoria, valore_totale'),
+        supabase.from('contenitori').select('id, nome, tipo, target_attivo'),
+        tutteLeRighe((da, a) =>
+          supabase
+            .from('v_valore_posizioni_attuale')
+            .select('strumento_id, contenitore_id, categoria, quantita_corrente')
+            .order('strumento_id')
+            .order('contenitore_id', { nullsFirst: true })
+            .range(da, a)
+        ),
+        supabase.from('v_saldo_liquidita').select('contenitore_id'),
+        supabase
+          .from('target_allocazioni')
+          .select('contenitore_id, categoria, target_percentuale')
+          .not('contenitore_id', 'is', null)
+          .eq('attivo', true),
+      ])
+
+    const tipoContenitore = new Map((contenitori ?? []).map((c) => [c.id, c.tipo]))
+    const direttaOPolizza = (contenitoreId: string | null) =>
+      contenitoreId === null || tipoContenitore.get(contenitoreId) === 'Polizza'
+
+    // Libera = esiste già una posizione diretta o in una Polizza in quella
+    // categoria; per la Liquidità, un conto diretto o in una Polizza.
+    const categorieLibere = new Set(
+      (posizioni ?? [])
+        .filter((p) => Number(p.quantita_corrente) > 0 && p.categoria && direttaOPolizza(p.contenitore_id))
+        .map((p) => p.categoria as string)
+    )
+    if ((saldi ?? []).some((s) => direttaOPolizza(s.contenitore_id))) categorieLibere.add('Liquidita')
+
+    const targetPortafoglio = new Map(
+      (scostamentiPortafoglio ?? []).map((s) => [s.categoria, Number(s.target_percentuale) / 100])
+    )
+    const valorePerCategoria = new Map(
+      (valoriCategoria ?? []).map((v) => [v.categoria, Number(v.valore_totale ?? 0)])
+    )
+    const categoriePortafoglio: CategoriaPortafoglio[] = CATEGORIE.map((categoria) => ({
+      categoria,
+      valoreAttuale: valorePerCategoria.get(categoria) ?? 0,
+      targetPct: targetPortafoglio.get(categoria) ?? null,
+      libera: categorieLibere.has(categoria),
+    }))
+
+    // Un PAC è un blocco solo con il target attivo e completo (somma 100).
+    const blocchiPac: BloccoPac[] = []
+    for (const c of contenitori ?? []) {
+      if (c.tipo !== 'PAC' || !c.target_attivo) continue
+      const righe = (targetGruppi ?? []).filter((r) => r.contenitore_id === c.id)
+      const somma = righe.reduce((acc, r) => acc + Number(r.target_percentuale), 0)
+      if (Math.abs(somma - 100) > 0.01) continue
+      blocchiPac.push({
+        id: c.id,
+        nome: c.nome,
+        forma: Object.fromEntries(righe.map((r) => [r.categoria, Number(r.target_percentuale) / 100])),
+      })
+    }
+
+    risultatoPortafoglio = calcolaRibilanciamentoPortafoglio(categoriePortafoglio, blocchiPac, soglia, versamentoPortafoglio)
+  }
 
   const contenitoriMap = new Map<string, string>()
   for (const s of scostamenti ?? []) contenitoriMap.set(s.contenitore_id, s.contenitore_nome)
@@ -380,6 +460,22 @@ export default async function RibilanciamentoPage({
             </tbody>
           </table>
         </Sezione>
+      )}
+
+      {(scostamentiPortafoglio ?? []).length > 0 && (
+        <>
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 24, marginBottom: 12 }}>{t('titoloSimulazione')}</h3>
+          <Sezione>
+            <FormSimulazionePortafoglio versamentoIniziale={params.versamento_portafoglio} />
+          </Sezione>
+          {risultatoPortafoglio && (
+            <div style={{ marginTop: 16 }}>
+              <Sezione>
+                <RisultatoPortafoglioVista risultato={risultatoPortafoglio} versamentoMassimo={versamentoPortafoglio} />
+              </Sezione>
+            </div>
+          )}
+        </>
       )}
 
       <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginTop: 40, marginBottom: 12 }}>{tMenu('gruppi')}</h2>
