@@ -44,7 +44,7 @@ export const INTESTAZIONI_EXCEL: Record<ColonnaExcel, Record<LocaleFormato, stri
   'Prezzo unitario': { it: 'Prezzo unitario', en: 'Unit price' },
   Commissione: { it: 'Commissione', en: 'Fee' },
   'Tassa trattenuta': { it: 'Tassa trattenuta', en: 'Withheld tax' },
-  Contenitore: { it: 'Contenitore', en: 'Container' },
+  Contenitore: { it: 'Gruppo', en: 'Group' },
   'Tipo movimento': { it: 'Tipo movimento', en: 'Movement type' },
   Importo: { it: 'Importo', en: 'Amount' },
 }
@@ -54,12 +54,21 @@ export function intestazioneExcel(colonna: ColonnaExcel, locale: LocaleFormato):
   return INTESTAZIONI_EXCEL[colonna][locale]
 }
 
+// Intestazioni scritte da versioni precedenti dell'export, che l'import
+// riconosce ancora per i file già esportati. La colonna canonica Contenitore
+// si intitolava "Contenitore"/"Container" prima di diventare "Gruppo"/"Group".
+const INTESTAZIONI_EXCEL_PRECEDENTI: Partial<Record<ColonnaExcel, string[]>> = {
+  Contenitore: ['Contenitore', 'Container'],
+}
+
 // Direzione inversa: intestazione letta da un file (in qualunque lingua,
-// senza distinzione di maiuscole e spazi ai bordi) → colonna canonica, o null
-// se non corrisponde a nessuna colonna nota.
+// senza distinzione di maiuscole e spazi ai bordi, attuale o precedente) →
+// colonna canonica, o null se non corrisponde a nessuna colonna nota.
 const COLONNA_DA_INTESTAZIONE = new Map<string, ColonnaExcel>(
   (Object.entries(INTESTAZIONI_EXCEL) as [ColonnaExcel, Record<LocaleFormato, string>][]).flatMap(([colonna, traduzioni]) =>
-    Object.values(traduzioni).map((intestazione) => [intestazione.toLowerCase(), colonna] as const),
+    [...Object.values(traduzioni), ...(INTESTAZIONI_EXCEL_PRECEDENTI[colonna] ?? [])].map(
+      (intestazione) => [intestazione.toLowerCase(), colonna] as const,
+    ),
   ),
 )
 

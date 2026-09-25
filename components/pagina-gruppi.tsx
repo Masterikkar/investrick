@@ -45,6 +45,7 @@ export async function PaginaGruppi({
 }) {
   const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaContenitore')
+  const tContenitori = await getTranslations('Contenitori')
   const tCategorie = await getTranslations('Categorie')
 
   const COLONNE: ColonnaTabella[] = [
@@ -58,7 +59,7 @@ export async function PaginaGruppi({
     { key: 'nav', label: t('colonnaNav'), kind: 'euro' },
     { key: 'prezzoMedioUnitario', label: t('colonnaPrezzoMedio'), kind: 'euro' },
     { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
-    { key: 'provenienza', label: t('colonnaProvenienza'), kind: 'text' },
+    { key: 'provenienza', label: tContenitori('colonnaGruppo'), kind: 'text' },
   ]
 
   const supabase = await createClient()

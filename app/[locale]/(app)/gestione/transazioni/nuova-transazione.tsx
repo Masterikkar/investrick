@@ -202,7 +202,7 @@ export function NuovaTransazioneFinanziaria({
           </label>
 
           <label style={stileEtichetta}>
-            {tPaginaFiscalita('colonnaContenitore')}
+            {tContenitori('colonnaGruppo')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect
                 name="contenitore_id"
@@ -378,7 +378,7 @@ export function NuovaTransazioneLiquidita({
           </label>
 
           <label style={stileEtichetta}>
-            {tPaginaFiscalita('colonnaContenitore')}
+            {tContenitori('colonnaGruppo')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect
                 name="contenitore_id"

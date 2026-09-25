@@ -16,6 +16,7 @@ import { tutteLeRighe } from '@/lib/supabase-tutte-le-righe'
 export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categoria: string; chiaveTraduzione: string }) {
   const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaCategoria')
+  const tContenitori = await getTranslations('Contenitori')
   const tCategorie = await getTranslations('Categorie')
   const tDashboard = await getTranslations('Dashboard')
   const tTipiStrumento = await getTranslations('TipiStrumento')
@@ -30,7 +31,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
     { key: 'nav', label: t('colonnaNav'), kind: 'euro' },
     { key: 'prezzoMedioUnitario', label: t('colonnaPrezzoMedio'), kind: 'euro' },
     { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
-    { key: 'provenienza', label: t('colonnaProvenienza'), kind: 'text' },
+    { key: 'provenienza', label: tContenitori('colonnaGruppo'), kind: 'text' },
   ]
 
   const supabase = await createClient()

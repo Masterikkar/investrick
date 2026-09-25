@@ -19,7 +19,6 @@
     "colonnaNav": "NAV",
     "colonnaPrezzoMedio": "Average price",
     "colonnaCosto": "Cost",
-    "colonnaProvenienza": "Source",
     "linkRendimenti": "View return details →",
     "labelPlusMinusNonRealizzata": "Unrealized gain/loss",
     "linkFiscalita": "View tax details →",
@@ -76,6 +75,7 @@
     }
   },
   "Contenitori": {
+    "colonnaGruppo": "Group",
     "personalizzati": "Custom groups",
     "colonnaNome": "Name",
     "nessunGruppo": "No group",
@@ -97,7 +97,7 @@
     "labelCapitaleInvestitoNetto": "Net capital invested",
     "linkTransazioni": "→ Transactions",
     "titoloAllocazioneAsset": "Asset allocation",
-    "titoloAllocazioneContenitori": "Container allocation",
+    "titoloAllocazioneContenitori": "Group allocation",
     "titoloRibilanciamento": "Rebalancing",
     "alertNessunoScostamento": "Everything in line with targets.",
     "alertScostamento": "{categoria}: {pesoAttuale}% current vs {target}% target ({segnoScostamento}{scostamento} pp)"
@@ -117,7 +117,6 @@
     "colonnaNav": "NAV",
     "colonnaPrezzoMedio": "Average price",
     "colonnaCosto": "Cost",
-    "colonnaProvenienza": "Source",
     "labelRendimento": "Return",
     "linkRendimenti": "→ Returns",
     "labelPlusMinusNonRealizzata": "Unrealized gain/loss",
@@ -130,9 +129,9 @@
     "titoloAnalisiComposizione": "Composition analysis",
     "linkModificaTarget": "→ Edit target",
     "titoloStrumenti": "Positions",
-    "contenitoreNonTrovato": "Container not found.",
+    "contenitoreNonTrovato": "Group not found.",
     "alertNessunGuadagnoPerdita": "No gain or loss accrued yet.",
-    "alertTargetDisattivato": "Target disabled for this container.",
+    "alertTargetDisattivato": "Target disabled for this group.",
     "alertNessunTarget": "No target set.",
     "etichettaPolizza": "Insurance Policy",
     "linkTuttiPac": "← All Investment Plans",
@@ -151,7 +150,6 @@
     "barraComposizione": "{pesoAttuale} current · {target} target ({scostamento} pp)"
   },
   "PaginaLiquidita": {
-    "etichettaContenitore": "Container",
     "colonnaStrumento": "Name",
     "colonnaTipo": "Type",
     "colonnaProvider": "Provider",
@@ -243,9 +241,8 @@
   },
   "PaginaCosti": {
     "titoloTotaleCosti": "Total costs",
-    "titoloPerContenitore": "By container",
+    "titoloPerContenitore": "By group",
     "titoloTuttiGliAsset": "All assets",
-    "colonnaContenitore": "Container",
     "colonnaCosto": "Cost",
     "colonnaCostoPerEuro": "Cost / € gained",
     "colonnaStrumento": "Instrument",
@@ -275,7 +272,7 @@
     "linkMostraDettagli": "→ Show details",
     "linkNascondiDettagli": "→ Hide details",
     "labelPerCategoria": "By category",
-    "labelPerContenitore": "By container",
+    "labelPerContenitore": "By group",
     "titoloPlusMinusvalenzeNonRealizzate": "Unrealized capital gains/losses",
     "paragrafoNonRealizzateYtd": "Change in unrealized capital gain/loss year to date.",
     "tooltipMovimentoNonRealizzato": "A negative value doesn't necessarily mean a loss: it can mean an unrealized capital gain decreased during the year — for example due to partial sales of the position — while still remaining positive.",
@@ -301,7 +298,6 @@
     "colonnaAliquotaAttesa": "Expected tax rate",
     "colonnaTassaAttesa": "Expected tax",
     "colonnaDifferenza": "Difference",
-    "colonnaContenitore": "Container",
     "colonnaRendimento": "Return"
   },
   "PaginaStorico": {
@@ -316,7 +312,7 @@
     "colonnaAzioni": "Actions",
     "colonnaTipoMovimento": "Movement type",
     "colonnaImporto": "Amount",
-    "titleSpostaContenitore": "Move to another container",
+    "titleSpostaContenitore": "Move to another group",
     "optionSpostaIn": "Move to...",
     "titleEliminaTransazione": "Delete transaction",
     "descrizioneOperazioneData": "{operazione} on {data}",
@@ -354,7 +350,7 @@
     "bottoneSalva": "Save",
     "bottoneAnnulla": "Cancel",
     "titoloSimulazione": "Simulation",
-    "erroreSelezionaContenitore": "Select a container.",
+    "erroreSelezionaContenitore": "Select a group.",
     "optionSeleziona": "Select...",
     "labelVersamento": "How much are you willing to deposit (€)",
     "labelCommissioneVendita": "Estimated commission per sale (€)",
@@ -363,7 +359,7 @@
     "messaggioBudgetNecessario": "To rebalance by buying only, you would need about <strong>{importo}</strong>.",
     "messaggioVersamentoSufficiente": "The {importo} deposit is enough.",
     "messaggioVersamentoInsufficiente": "The {importo} deposit is not enough. Sale proposal to cover the difference:",
-    "alertNessunCompartoSovrappesato": "No overweight segment to sell from in this container.",
+    "alertNessunCompartoSovrappesato": "No overweight segment to sell from in this group.",
     "colonnaPlusMinusLorda": "Gross gain/loss",
     "colonnaAliquota": "Tax rate",
     "colonnaTassa": "Tax",
@@ -403,7 +399,7 @@
     "labelNavConData": "NAV ({data})",
     "labelPrezzoMedioUnitario": "Average unit price",
     "capitaleInvestito": "Capital invested",
-    "titoloPosizioniPerContenitore": "Positions by container",
+    "titoloPosizioniPerContenitore": "Positions by group",
     "titoloRicaviDaVendite": "Proceeds from sales",
     "labelQuantitaVenduta": "Quantity sold",
     "labelRicavoTotale": "Total proceeds",
@@ -537,9 +533,9 @@
     "errorePrezzoNonValido": "invalid unit price: \"{valore}\"",
     "erroreCommissioneNonValida": "invalid commission: \"{valore}\"",
     "erroreTassaNonValida": "invalid tax withheld: \"{valore}\"",
-    "erroreContenitoreNonTrovato": "container not found: \"{valore}\"",
-    "erroreScambioSenzaPolizza": "an exchange can only happen inside an insurance policy (container: \"{valore}\")",
-    "erroreScambioSoloPolizza": "An exchange can only happen inside an insurance policy: choose a policy as the container.",
+    "erroreContenitoreNonTrovato": "group not found: \"{valore}\"",
+    "erroreScambioSenzaPolizza": "an exchange can only happen inside an insurance policy (group: \"{valore}\")",
+    "erroreScambioSoloPolizza": "An exchange can only happen inside an insurance policy: choose a policy as the group.",
     "erroreFileVuoto": "Empty file",
     "erroreNessunFoglio": "No sheet found in the file",
     "erroreIntestazioniSconosciute": "Unrecognized column headers: {elenco}",
@@ -569,8 +565,8 @@
     "alertNessunRibasso": "No losers."
   },
   "FormTarget": {
-    "checkboxTargetAttivo": "Target active for this container",
-    "hintTargetDisattivato": "With the target disabled, this container won't appear in rebalancing alerts or in the composition bar, regardless of the values below.",
+    "checkboxTargetAttivo": "Target active for this group",
+    "hintTargetDisattivato": "With the target disabled, this group won't appear in rebalancing alerts or in the composition bar, regardless of the values below.",
     "bottoneTargetPerStrumento": "Per-instrument target in {categoria}",
     "labelSommaStrumenti": "Total: {somma}",
     "erroreSommaStrumenti": " — must be 0 (not set) or 100",
@@ -596,5 +592,10 @@
     "bottoneAggiungi": "Add",
     "bottoneRimuovi": "Remove",
     "erroreGenerico": "Something went wrong, please try again."
+  },
+  "BarraRicerca": {
+    "placeholder": "Search assets or groups...",
+    "sottotitoloAsset": "Asset · {categoria}",
+    "sottotitoloGruppo": "Group · {tipo}"
   }
 }

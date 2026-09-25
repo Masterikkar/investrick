@@ -42,7 +42,7 @@ export default async function CostiPage() {
   const COLONNE_ASSET: ColonnaTabella[] = [
     { key: 'nome', label: t('colonnaStrumento'), kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
     { key: 'categoria', label: t('colonnaCategoria'), kind: 'text' },
-    { key: 'contenitore', label: t('colonnaContenitore'), kind: 'text' },
+    { key: 'contenitore', label: tContenitori('colonnaGruppo'), kind: 'text' },
     { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
     { key: 'costoPerEuro', label: t('colonnaCostoPerEuro'), kind: 'numero' },
   ]

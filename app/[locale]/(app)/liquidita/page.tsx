@@ -16,6 +16,7 @@ type MovimentoInteresse = {
 export default async function LiquiditaPage() {
   const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaLiquidita')
+  const tPaginaCategoria = await getTranslations('PaginaCategoria')
   const tTipi = await getTranslations('TipiLiquidita')
 
   // Solo i tipi mappati hanno una traduzione; un tipo non mappato resta
@@ -136,7 +137,7 @@ export default async function LiquiditaPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('etichettaContenitore')}</div>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{tPaginaCategoria('etichettaAsset')}</div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>
         {tCategorie('liquidita')}
       </h1>

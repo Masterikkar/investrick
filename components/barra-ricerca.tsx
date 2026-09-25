@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { RippleLink } from '@/components/ripple-link'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 
 type Strumento = { id: string; nome: string; categoria: string; ticker: string | null }
 type Contenitore = { id: string; nome: string; tipo: string }
@@ -26,6 +28,9 @@ export function BarraRicerca({
   strumenti: Strumento[]
   contenitori: Contenitore[]
 }) {
+  const t = useTranslations('BarraRicerca')
+  const tCategorie = useTranslations('Categorie')
+  const tPaginaContenitore = useTranslations('PaginaContenitore')
   const [query, setQuery] = useState('')
   const [aperto, setAperto] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -40,6 +45,13 @@ export function BarraRicerca({
     return () => document.removeEventListener('click', handleClick)
   }, [])
 
+  // Stesse etichette del tipo di gruppo usate in Gestione strumenti.
+  function etichettaTipo(tipo: string): string {
+    if (tipo === 'Polizza') return tPaginaContenitore('etichettaPolizza')
+    if (tipo === 'Personalizzato') return tPaginaContenitore('etichettaPersonalizzato')
+    return tipo
+  }
+
   const testo = query.trim().toLowerCase()
 
   const risultati: Risultato[] = testo
@@ -52,7 +64,7 @@ export function BarraRicerca({
           .map((s) => ({
             key: `asset-${s.id}`,
             label: s.nome,
-            sottotitolo: `Asset · ${s.categoria}`,
+            sottotitolo: t('sottotitoloAsset', { categoria: traduciCategoria(tCategorie, s.categoria) }),
             href: `/asset/${s.id}`,
           })),
         ...contenitori
@@ -60,7 +72,7 @@ export function BarraRicerca({
           .map((c) => ({
             key: `contenitore-${c.id}`,
             label: c.nome,
-            sottotitolo: `Contenitore · ${c.tipo}`,
+            sottotitolo: t('sottotitoloGruppo', { tipo: etichettaTipo(c.tipo) }),
             href: ROUTE_PER_TIPO_CONTENITORE[c.tipo] ?? '/',
           })),
       ].slice(0, 8)
@@ -70,7 +82,7 @@ export function BarraRicerca({
     <div ref={containerRef} style={{ position: 'relative' }}>
       <input
         type="text"
-        placeholder="Cerca asset o contenitori..."
+        placeholder={t('placeholder')}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value)

@@ -85,6 +85,7 @@ export default async function AssetPage({
   const { strumentoId } = await params
   const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaAsset')
+  const tContenitori = await getTranslations('Contenitori')
   const tCategorie = await getTranslations('Categorie')
   const tTipiOperazione = await getTranslations('TipiOperazione')
   const tPaginaCategoria = await getTranslations('PaginaCategoria')
@@ -277,7 +278,7 @@ export default async function AssetPage({
             <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCategoria('colonnaProvenienza')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tContenitori('colonnaGruppo')}</th>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCategoria('colonnaPeso')}</th>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaQuantita')}</th>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCategoria('colonnaRendimento')}</th>
@@ -341,7 +342,7 @@ export default async function AssetPage({
                 <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
                   <thead>
                     <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaContenitore')}</th>
+                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tContenitori('colonnaGruppo')}</th>
                       <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaQuantita')}</th>
                       <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaRicavo')}</th>
                       <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('labelPlusvalenza')}</th>
@@ -377,7 +378,7 @@ export default async function AssetPage({
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaData')}</th>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaOperazione')}</th>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaContenitore')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tContenitori('colonnaGruppo')}</th>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaQuantita')}</th>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaPrezzoUnitario')}</th>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaCommissione')}</th>

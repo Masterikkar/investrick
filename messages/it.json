@@ -19,7 +19,6 @@
     "colonnaNav": "NAV",
     "colonnaPrezzoMedio": "Prezzo medio",
     "colonnaCosto": "Costo",
-    "colonnaProvenienza": "Provenienza",
     "linkRendimenti": "Vedi dettaglio rendimenti →",
     "labelPlusMinusNonRealizzata": "Plus/minusvalenza non realizzata",
     "linkFiscalita": "Vedi dettaglio fiscalità →",
@@ -76,6 +75,7 @@
     }
   },
   "Contenitori": {
+    "colonnaGruppo": "Gruppo",
     "personalizzati": "Personalizzati",
     "colonnaNome": "Nome",
     "nessunGruppo": "Nessun gruppo",
@@ -97,7 +97,7 @@
     "labelCapitaleInvestitoNetto": "Capitale investito netto",
     "linkTransazioni": "→ Transazioni",
     "titoloAllocazioneAsset": "Allocazione asset",
-    "titoloAllocazioneContenitori": "Allocazione contenitori",
+    "titoloAllocazioneContenitori": "Allocazione gruppi",
     "titoloRibilanciamento": "Ribilanciamento",
     "alertNessunoScostamento": "Tutto in linea con i target.",
     "alertScostamento": "{categoria}: {pesoAttuale}% attuale vs {target}% target ({segnoScostamento}{scostamento} pp)"
@@ -117,7 +117,6 @@
     "colonnaNav": "NAV",
     "colonnaPrezzoMedio": "Prezzo medio",
     "colonnaCosto": "Costo",
-    "colonnaProvenienza": "Provenienza",
     "labelRendimento": "Rendimento",
     "linkRendimenti": "→ Rendimenti",
     "labelPlusMinusNonRealizzata": "Plus/minusvalenza non realizzata",
@@ -130,9 +129,9 @@
     "titoloAnalisiComposizione": "Analisi composizione",
     "linkModificaTarget": "→ Modifica target",
     "titoloStrumenti": "Posizioni",
-    "contenitoreNonTrovato": "Contenitore non trovato.",
+    "contenitoreNonTrovato": "Gruppo non trovato.",
     "alertNessunGuadagnoPerdita": "Nessun guadagno o perdita maturata ancora.",
-    "alertTargetDisattivato": "Target disattivato per questo contenitore.",
+    "alertTargetDisattivato": "Target disattivato per questo gruppo.",
     "alertNessunTarget": "Nessun target impostato.",
     "etichettaPolizza": "Polizza",
     "linkTuttiPac": "← Tutti i PAC",
@@ -151,7 +150,6 @@
     "barraComposizione": "{pesoAttuale} attuale · {target} target ({scostamento} pp)"
   },
   "PaginaLiquidita": {
-    "etichettaContenitore": "Contenitore",
     "colonnaStrumento": "Nome",
     "colonnaTipo": "Tipo",
     "colonnaProvider": "Provider",
@@ -243,9 +241,8 @@
   },
   "PaginaCosti": {
     "titoloTotaleCosti": "Totale costi",
-    "titoloPerContenitore": "Per contenitore",
+    "titoloPerContenitore": "Per gruppo",
     "titoloTuttiGliAsset": "Tutti gli asset",
-    "colonnaContenitore": "Contenitore",
     "colonnaCosto": "Costo",
     "colonnaCostoPerEuro": "Costo / € guadagnato",
     "colonnaStrumento": "Strumento",
@@ -275,7 +272,7 @@
     "linkMostraDettagli": "→ Mostra dettagli",
     "linkNascondiDettagli": "→ Nascondi dettagli",
     "labelPerCategoria": "Per categoria",
-    "labelPerContenitore": "Per contenitore",
+    "labelPerContenitore": "Per gruppo",
     "titoloPlusMinusvalenzeNonRealizzate": "Plus/minusvalenze non realizzate",
     "paragrafoNonRealizzateYtd": "Variazione della plus/minusvalenza non realizzata da inizio anno a oggi.",
     "tooltipMovimentoNonRealizzato": "Un valore negativo non indica per forza una perdita: può significare che una plusvalenza non realizzata si è ridotta durante l'anno — ad esempio per vendite parziali della posizione — pur restando positiva.",
@@ -301,7 +298,6 @@
     "colonnaAliquotaAttesa": "Aliquota attesa",
     "colonnaTassaAttesa": "Tassa attesa",
     "colonnaDifferenza": "Differenza",
-    "colonnaContenitore": "Contenitore",
     "colonnaRendimento": "Rendimento"
   },
   "PaginaStorico": {
@@ -316,7 +312,7 @@
     "colonnaAzioni": "Azioni",
     "colonnaTipoMovimento": "Tipo movimento",
     "colonnaImporto": "Importo",
-    "titleSpostaContenitore": "Sposta in un altro contenitore",
+    "titleSpostaContenitore": "Sposta in un altro gruppo",
     "optionSpostaIn": "Sposta in...",
     "titleEliminaTransazione": "Elimina transazione",
     "descrizioneOperazioneData": "{operazione} del {data}",
@@ -354,7 +350,7 @@
     "bottoneSalva": "Salva",
     "bottoneAnnulla": "Annulla",
     "titoloSimulazione": "Simulazione",
-    "erroreSelezionaContenitore": "Seleziona un contenitore.",
+    "erroreSelezionaContenitore": "Seleziona un gruppo.",
     "optionSeleziona": "Seleziona...",
     "labelVersamento": "Quanto sei disposto a versare (€)",
     "labelCommissioneVendita": "Commissione stimata per vendita (€)",
@@ -363,7 +359,7 @@
     "messaggioBudgetNecessario": "Per bilanciare comprando soltanto servirebbero circa <strong>{importo}</strong>.",
     "messaggioVersamentoSufficiente": "Il versamento di {importo} basta.",
     "messaggioVersamentoInsufficiente": "Il versamento di {importo} non basta. Proposta di vendita per coprire la differenza:",
-    "alertNessunCompartoSovrappesato": "Nessun comparto sovrappesato da cui vendere in questo contenitore.",
+    "alertNessunCompartoSovrappesato": "Nessun comparto sovrappesato da cui vendere in questo gruppo.",
     "colonnaPlusMinusLorda": "Plus/minus lorda",
     "colonnaAliquota": "Aliquota",
     "colonnaTassa": "Tassa",
@@ -403,7 +399,7 @@
     "labelNavConData": "NAV ({data})",
     "labelPrezzoMedioUnitario": "Prezzo medio unitario",
     "capitaleInvestito": "Capitale investito",
-    "titoloPosizioniPerContenitore": "Posizioni per contenitore",
+    "titoloPosizioniPerContenitore": "Posizioni per gruppo",
     "titoloRicaviDaVendite": "Ricavi da vendite",
     "labelQuantitaVenduta": "Quantità venduta",
     "labelRicavoTotale": "Ricavo totale",
@@ -537,9 +533,9 @@
     "errorePrezzoNonValido": "prezzo unitario non valido: \"{valore}\"",
     "erroreCommissioneNonValida": "commissione non valida: \"{valore}\"",
     "erroreTassaNonValida": "tassa trattenuta non valida: \"{valore}\"",
-    "erroreContenitoreNonTrovato": "contenitore non trovato: \"{valore}\"",
-    "erroreScambioSenzaPolizza": "uno scambio può avvenire solo dentro una polizza (contenitore: \"{valore}\")",
-    "erroreScambioSoloPolizza": "Uno scambio può avvenire solo dentro una polizza: scegli una polizza come contenitore.",
+    "erroreContenitoreNonTrovato": "gruppo non trovato: \"{valore}\"",
+    "erroreScambioSenzaPolizza": "uno scambio può avvenire solo dentro una polizza (gruppo: \"{valore}\")",
+    "erroreScambioSoloPolizza": "Uno scambio può avvenire solo dentro una polizza: scegli una polizza come gruppo.",
     "erroreFileVuoto": "File vuoto",
     "erroreNessunFoglio": "Nessun foglio trovato nel file",
     "erroreIntestazioniSconosciute": "Intestazioni di colonna non riconosciute: {elenco}",
@@ -569,8 +565,8 @@
     "alertNessunRibasso": "Nessun titolo in ribasso."
   },
   "FormTarget": {
-    "checkboxTargetAttivo": "Target attivo per questo contenitore",
-    "hintTargetDisattivato": "Con il target disattivato, questo contenitore non comparirà negli alert di ribilanciamento né nella barra di composizione, indipendentemente dai valori sotto.",
+    "checkboxTargetAttivo": "Target attivo per questo gruppo",
+    "hintTargetDisattivato": "Con il target disattivato, questo gruppo non comparirà negli alert di ribilanciamento né nella barra di composizione, indipendentemente dai valori sotto.",
     "bottoneTargetPerStrumento": "Target per singolo strumento in {categoria}",
     "labelSommaStrumenti": "Somma: {somma}",
     "erroreSommaStrumenti": " — deve fare 0 (non impostato) o 100",
@@ -596,5 +592,10 @@
     "bottoneAggiungi": "Aggiungi",
     "bottoneRimuovi": "Rimuovi",
     "erroreGenerico": "Qualcosa è andato storto, riprova."
+  },
+  "BarraRicerca": {
+    "placeholder": "Cerca asset o gruppi...",
+    "sottotitoloAsset": "Asset · {categoria}",
+    "sottotitoloGruppo": "Gruppo · {tipo}"
   }
 }

@@ -39,6 +39,7 @@ export function StoricoPlusMinus({
   righeNonRealizzate: RigaNonRealizzata[]
 }) {
   const t = useTranslations('PaginaFiscalita')
+  const tContenitori = useTranslations('Contenitori')
   const locale = useLocale() as LocaleFormato
   const tFiltroTabellaStorico = useTranslations('FiltroTabellaStorico')
   const [modalita, setModalita] = useState<Modalita>('realizzate')
@@ -281,7 +282,7 @@ export function StoricoPlusMinus({
             <thead>
               <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaStrumento')}</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaContenitore')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tContenitori('colonnaGruppo')}</th>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPlusMinus')}</th>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaRendimento')}</th>
               </tr>

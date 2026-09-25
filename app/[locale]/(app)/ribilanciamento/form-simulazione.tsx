@@ -38,7 +38,7 @@ export function FormSimulazione({
   forzaIniziale: boolean
 }) {
   const t = useTranslations('PaginaRibilanciamento')
-  const tPaginaCosti = useTranslations('PaginaCosti')
+  const tContenitori = useTranslations('Contenitori')
   const [contenitoreId, setContenitoreId] = useState(contenitoreSelezionato ?? '')
   const [erroreContenitore, setErroreContenitore] = useState(false)
 
@@ -65,7 +65,7 @@ export function FormSimulazione({
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ minWidth: 200 }}>
           <label style={{ fontSize: 'var(--fs-form-label)' }}>
-            {tPaginaCosti('colonnaContenitore')}
+            {tContenitori('colonnaGruppo')}
             <div style={{ marginTop: 4 }}>
               <MenuSelect
                 name="contenitore_id"

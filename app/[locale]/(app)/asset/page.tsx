@@ -20,6 +20,7 @@ import { saldoRiportatoAllaData, serieSaldiPerConto } from '@/lib/saldi-riportat
 export default async function TuttiAssetPage() {
   const locale = (await getLocale()) as LocaleFormato
   const tMenu = await getTranslations('Menu')
+  const tContenitori = await getTranslations('Contenitori')
   const tDashboard = await getTranslations('Dashboard')
   const t = await getTranslations('PaginaCategoria')
   const tTuttiAsset = await getTranslations('PaginaTuttiAsset')
@@ -39,7 +40,7 @@ export default async function TuttiAssetPage() {
     { key: 'nav', label: t('colonnaNav'), kind: 'euro' },
     { key: 'prezzoMedioUnitario', label: t('colonnaPrezzoMedio'), kind: 'euro' },
     { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
-    { key: 'provenienza', label: t('colonnaProvenienza'), kind: 'text' },
+    { key: 'provenienza', label: tContenitori('colonnaGruppo'), kind: 'text' },
   ]
 
   const supabase = await createClient()
