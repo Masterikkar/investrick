@@ -130,7 +130,7 @@ export type Database = {
       }
       importazioni: {
         Row: {
-          categoria: string
+          categoria: string | null
           created_at: string
           data_caricamento: string
           dettaglio_errori: Json | null
@@ -144,7 +144,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          categoria: string
+          categoria?: string | null
           created_at?: string
           data_caricamento?: string
           dettaglio_errori?: Json | null
@@ -158,7 +158,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
-          categoria?: string
+          categoria?: string | null
           created_at?: string
           data_caricamento?: string
           dettaglio_errori?: Json | null

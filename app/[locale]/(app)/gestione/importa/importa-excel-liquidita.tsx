@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
+import { dataIsoDaCellaExcel } from '@/lib/data-excel'
 import { importaMovimentiLiquiditaBulk, type RigaImportLiquidita } from '../transazioni/actions'
 import { IconaDownload } from '@/components/icone'
 import type { LocaleFormato } from '@/lib/format'
@@ -31,30 +32,6 @@ function parseNumeroCella(v: unknown, permettiVuoto: boolean): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-const EPOCA_EXCEL_UTC = Date.UTC(1899, 11, 30)
-
-function parseDataCella(v: unknown): string | null {
-  if (v instanceof Date) {
-    const anno = v.getUTCFullYear()
-    const mese = v.getUTCMonth() + 1
-    const giorno = v.getUTCDate()
-    return `${anno}-${String(mese).padStart(2, '0')}-${String(giorno).padStart(2, '0')}`
-  }
-  if (typeof v === 'number') {
-    const d = new Date(EPOCA_EXCEL_UTC + v * 86400000)
-    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
-  }
-  const s = String(v ?? '').trim()
-  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-  if (!m) return null
-  const giorno = Number(m[1])
-  const mese = Number(m[2])
-  const anno = Number(m[3])
-  const d = new Date(anno, mese - 1, giorno)
-  if (d.getFullYear() !== anno || d.getMonth() !== mese - 1 || d.getDate() !== giorno) return null
-  return `${anno}-${String(mese).padStart(2, '0')}-${String(giorno).padStart(2, '0')}`
-}
-
 type RigaParsata = {
   numeroRiga: number
   errore: string | null
@@ -74,6 +51,8 @@ function elabora(
   mappaStrumenti: Map<string, string>,
   mappaContenitori: Map<string, string>,
   tipoContenitore: Map<string, string>,
+  // Il file usa il sistema di date 1904 (vecchi Excel per Mac).
+  date1904: boolean,
   t: Traduttore
 ): RigaParsata[] {
   return righeExcel.map((riga, idx) => {
@@ -89,7 +68,7 @@ function elabora(
     const contenitoreRaw = testoCella(cella('Contenitore'))
 
     const strumentoId = strumentoRaw ? mappaStrumenti.get(strumentoRaw.toLowerCase()) ?? null : null
-    const data = parseDataCella(cella('Data'))
+    const data = dataIsoDaCellaExcel(cella('Data'), date1904)
     const tipoMovimento = tipoMovimentoLiquiditaDaEtichettaExcel(tipoMovimentoRaw) ?? null
     const importo = parseNumeroCella(cella('Importo'), false)
     const tassaTrattenuta = parseNumeroCella(cella('Tassa trattenuta'), true)
@@ -159,12 +138,15 @@ export function ImportaExcelLiquidita({
   } | null>(null)
   const [importando, setImportando] = useState(false)
   const [erroreFile, setErroreFile] = useState<string | null>(null)
+  // Nome del file letto, per il registro dell'import (importazioni.nome_file).
+  const [nomeFile, setNomeFile] = useState('')
 
   const mappaStrumenti = new Map(strumenti.map((s) => [s.nome.toLowerCase(), s.id]))
   const mappaContenitori = new Map(contenitori.map((c) => [c.nome.toLowerCase(), c.id]))
   const tipoContenitore = new Map(contenitori.map((c) => [c.id, c.tipo]))
 
   function gestisciFile(file: File) {
+    setNomeFile(file.name)
     setRisultato(null)
     setErroreFile(null)
     const reader = new FileReader()
@@ -172,7 +154,12 @@ export function ImportaExcelLiquidita({
       try {
         const dati = e.target?.result
         if (!dati) throw new Error(t('erroreFileVuoto'))
-        const workbook = XLSX.read(dati, { type: 'array', cellDates: true })
+        // Senza cellDates le celle data arrivano come numero seriale Excel, da
+        // convertire senza passare da un fuso orario (lib/data-excel.ts). Con
+        // cellDates SheetJS crea un Date a mezzanotte locale, e in Italia il
+        // giorno letto in UTC era quello prima.
+        const workbook = XLSX.read(dati, { type: 'array' })
+        const date1904 = Boolean(workbook.Workbook?.WBProps?.date1904)
         const primoFoglio = workbook.SheetNames[0]
         if (!primoFoglio) throw new Error(t('erroreNessunFoglio'))
         const foglio = workbook.Sheets[primoFoglio]
@@ -181,7 +168,7 @@ export function ImportaExcelLiquidita({
         if (sconosciute.length > 0) throw new Error(t('erroreIntestazioniSconosciute', { elenco: sconosciute.join(', ') }))
         if (duplicate.length > 0) throw new Error(t('erroreIntestazioniDuplicate', { elenco: duplicate.join(', ') }))
         const righeGrezze = XLSX.utils.sheet_to_json<Record<string, unknown>>(foglio, { defval: '' })
-        setRighe(elabora(righeGrezze, intestazionePerColonna, mappaStrumenti, mappaContenitori, tipoContenitore, t))
+        setRighe(elabora(righeGrezze, intestazionePerColonna, mappaStrumenti, mappaContenitori, tipoContenitore, date1904, t))
       } catch (err) {
         setErroreFile(err instanceof Error ? err.message : t('erroreLetturaFile'))
       }
@@ -204,7 +191,9 @@ export function ImportaExcelLiquidita({
       tassaTrattenuta: r.tassaTrattenuta,
       contenitoreId: r.contenitoreId,
     }))
-    const esito = await importaMovimentiLiquiditaBulk(daInviare)
+    // Nel registro dell'import contano anche le righe scartate in lettura.
+    const scartate = righeConErrore.map((r) => ({ riga: r.numeroRiga, messaggio: r.errore! }))
+    const esito = await importaMovimentiLiquiditaBulk(daInviare, { nomeFile, righeTotali: righe.length, scartate })
     setImportando(false)
     setRisultato(esito)
     setRighe(null)

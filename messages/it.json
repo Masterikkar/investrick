@@ -491,6 +491,8 @@
     "bottoneCreaContenitore": "Crea gruppo"
   },
   "PaginaGestioneTransazioni": {
+    "erroreStrumentoNonTrovatoImport": "strumento non trovato: \"{valore}\" — crea l'asset prima di importare questa riga",
+    "erroreRegistroImport": "impossibile registrare l'import, nessuna riga inserita: {errore}",
     "erroreGruppoPersonalizzato": "un gruppo Personalizzato serve solo al monitoraggio e non può contenere transazioni né movimenti: \"{valore}\"",
     "linkStoricoTransazioniFinanziarie": "→ Storico transazioni finanziarie",
     "linkStoricoTransazioniLiquidita": "→ Storico transazioni di liquidità",

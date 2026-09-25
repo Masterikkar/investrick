@@ -491,6 +491,8 @@
     "bottoneCreaContenitore": "Create group"
   },
   "PaginaGestioneTransazioni": {
+    "erroreStrumentoNonTrovatoImport": "instrument not found: \"{valore}\" — create the asset before importing this row",
+    "erroreRegistroImport": "could not record the import, no row inserted: {errore}",
     "erroreGruppoPersonalizzato": "a custom group is for monitoring only and cannot hold transactions or movements: \"{valore}\"",
     "linkStoricoTransazioniFinanziarie": "→ Investment transaction history",
     "linkStoricoTransazioniLiquidita": "→ Cash transaction history",

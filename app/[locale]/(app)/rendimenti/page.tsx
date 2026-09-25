@@ -15,8 +15,11 @@ function calcolaSerieAnnuale(punti: Snapshot[]): { cumulato: number | null; annu
   const cumulato =
     ultimo.capitaleInvestito > 0 ? ((ultimo.valore - ultimo.capitaleInvestito) / ultimo.capitaleInvestito) * 100 : null
 
-  const primoAnno = new Date(ordinati[0].data).getFullYear()
-  const ultimoAnno = new Date(ultimo.data).getFullYear()
+  // L'anno è nei primi quattro caratteri di YYYY-MM-DD: new Date() lo
+  // leggerebbe come mezzanotte UTC, e il 1° gennaio a ovest di Greenwich
+  // cadrebbe nell'anno prima.
+  const primoAnno = Number(ordinati[0].data.slice(0, 4))
+  const ultimoAnno = Number(ultimo.data.slice(0, 4))
 
   const annuali: RendimentoAnnuale[] = []
   let puntoAnnoPrecedente: Snapshot | null = null

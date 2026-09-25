@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
+import { scriviColonnaDateExcel } from '@/lib/data-excel'
+import { dataIsoOggi } from '@/lib/data-calendario'
 import { esportaTransazioniFinanziarie, esportaTransazioniLiquidita } from '../transazioni/actions'
 import type { LocaleFormato } from '@/lib/format'
 import { COLONNE_EXCEL_FINANZIARIE, COLONNE_EXCEL_LIQUIDITA, intestazioneExcel, type ColonnaExcel } from '@/lib/i18n-intestazioni-excel'
@@ -52,8 +54,9 @@ export function EsportaTransazioniFinanziarie() {
       const righe = righeLocalizzate(await esportaTransazioniFinanziarie(), COLONNE_EXCEL_FINANZIARIE, locale, (colonna, valore) =>
         colonna === 'Operazione' ? traduciOperazione(tTipiOperazione, valore as string) : valore,
       )
-      const oggi = new Date().toISOString().slice(0, 10)
+      const oggi = dataIsoOggi()
       const ws = XLSX.utils.json_to_sheet(righe, { header: COLONNE_EXCEL_FINANZIARIE.map((c) => intestazioneExcel(c, locale)) })
+      scriviColonnaDateExcel(ws, intestazioneExcel('Data', locale))
       ws['!cols'] = LARGHEZZE_FINANZIARIE
       const wb = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(wb, ws, t('nomeFoglioExportFinanziarie'))
@@ -95,8 +98,9 @@ export function EsportaTransazioniLiquidita() {
       const righe = righeLocalizzate(await esportaTransazioniLiquidita(), COLONNE_EXCEL_LIQUIDITA, locale, (colonna, valore) =>
         colonna === 'Tipo movimento' ? traduciTipoMovimentoLiquidita(tTipiMovimento, valore as string) : valore,
       )
-      const oggi = new Date().toISOString().slice(0, 10)
+      const oggi = dataIsoOggi()
       const ws = XLSX.utils.json_to_sheet(righe, { header: COLONNE_EXCEL_LIQUIDITA.map((c) => intestazioneExcel(c, locale)) })
+      scriviColonnaDateExcel(ws, intestazioneExcel('Data', locale))
       ws['!cols'] = LARGHEZZE_LIQUIDITA
       const wb = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(wb, ws, t('nomeFoglioExportLiquidita'))

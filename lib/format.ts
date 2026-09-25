@@ -1,3 +1,5 @@
+import { dataLocaleDaIso } from '@/lib/data-calendario'
+
 export type LocaleFormato = 'it' | 'en'
 
 // 'en' usa en-GB (mai en-US) per mantenere l'ordine giorno/mese nelle date,
@@ -45,6 +47,8 @@ export function formatPercent(valore: number, decimali = 2, conSegno = false, lo
 }
 
 export function formatData(data: Date | string, locale: LocaleFormato = 'it', opzioni?: Intl.DateTimeFormatOptions) {
-  const date = typeof data === 'string' ? new Date(data) : data
+  // Una data YYYY-MM-DD è un giorno di calendario: si mostra così com'è,
+  // non come la mezzanotte UTC che new Date() ne ricaverebbe.
+  const date = typeof data === 'string' ? dataLocaleDaIso(data) ?? new Date(data) : data
   return date.toLocaleDateString(tagLocale(locale), opzioni)
 }

@@ -33,7 +33,7 @@ type Strumento = { id: string; nome: string; isin: string | null }
 type Contenitore = { id: string; nome: string }
 
 export type RigaEsportazioneRealizzata = {
-  Data: Date
+  Data: string // YYYY-MM-DD: la cella data la scrive il client (scriviColonnaDateExcel)
   ISIN: string
   Strumento: string
   Valore: number
@@ -66,7 +66,7 @@ export async function esportaPlusMinusRealizzate(): Promise<RigaEsportazioneReal
   return (verifica ?? []).map((v) => {
     const strumento = strumentoMap.get(v.strumento_id)
     return {
-      Data: new Date(v.data_vendita),
+      Data: v.data_vendita,
       ISIN: strumento?.isin ?? '',
       Strumento: strumento?.nome ?? '',
       Valore: valoreVenditaMap.get(v.vendita_id) ?? 0,

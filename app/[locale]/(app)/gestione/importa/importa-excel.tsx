@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
+import { dataIsoDaCellaExcel } from '@/lib/data-excel'
 import { creaAssetPerImport, importaTransazioniBulk, type RigaImport } from '../transazioni/actions'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE, operazioneDaEtichettaExcel } from '@/lib/i18n-tipi-operazione'
@@ -34,30 +35,6 @@ function parseNumeroCella(v: unknown, permettiVuoto: boolean): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-const EPOCA_EXCEL_UTC = Date.UTC(1899, 11, 30)
-
-function parseDataCella(v: unknown): string | null {
-  if (v instanceof Date) {
-    const anno = v.getUTCFullYear()
-    const mese = v.getUTCMonth() + 1
-    const giorno = v.getUTCDate()
-    return `${anno}-${String(mese).padStart(2, '0')}-${String(giorno).padStart(2, '0')}`
-  }
-  if (typeof v === 'number') {
-    const d = new Date(EPOCA_EXCEL_UTC + v * 86400000)
-    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
-  }
-  const s = String(v ?? '').trim()
-  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-  if (!m) return null
-  const giorno = Number(m[1])
-  const mese = Number(m[2])
-  const anno = Number(m[3])
-  const d = new Date(anno, mese - 1, giorno)
-  if (d.getFullYear() !== anno || d.getMonth() !== mese - 1 || d.getDate() !== giorno) return null
-  return `${anno}-${String(mese).padStart(2, '0')}-${String(giorno).padStart(2, '0')}`
-}
-
 type Identificatore = { tipo: 'isin' | 'ticker'; valore: string }
 
 type RigaParsata = {
@@ -78,6 +55,8 @@ function elabora(
   intestazionePerColonna: Map<ColonnaExcelFinanziaria, string>,
   mappaContenitori: Map<string, string>,
   tipoContenitore: Map<string, string>,
+  // Il file usa il sistema di date 1904 (vecchi Excel per Mac).
+  date1904: boolean,
   t: Traduttore
 ): RigaParsata[] {
   return righeExcel.map((riga, idx) => {
@@ -99,7 +78,7 @@ function elabora(
       ? { tipo: 'ticker', valore: tickerRaw }
       : null
 
-    const data = parseDataCella(cella('Data'))
+    const data = dataIsoDaCellaExcel(cella('Data'), date1904)
     const operazioneDb = operazioneDaEtichettaExcel(operazioneRaw)
     const quantita = parseNumeroCella(cella('Quantità'), false)
     const prezzoUnitario = parseNumeroCella(cella('Prezzo unitario'), false)
@@ -299,6 +278,8 @@ export function ImportaExcel({
   const [risultato, setRisultato] = useState<{ inserite: number; errori: { riga: number; messaggio: string }[]; avvisoRicostruzione?: string } | null>(null)
   const [importando, setImportando] = useState(false)
   const [erroreFile, setErroreFile] = useState<string | null>(null)
+  // Nome del file letto, per il registro dell'import (importazioni.nome_file).
+  const [nomeFile, setNomeFile] = useState('')
 
   const mappaContenitori = useMemo(
     () => new Map(contenitori.map((c) => [c.nome.toLowerCase(), c.id])),
@@ -307,6 +288,7 @@ export function ImportaExcel({
   const tipoContenitore = useMemo(() => new Map(contenitori.map((c) => [c.id, c.tipo])), [contenitori])
 
   function gestisciFile(file: File) {
+    setNomeFile(file.name)
     setRisultato(null)
     setErroreFile(null)
     const reader = new FileReader()
@@ -314,7 +296,12 @@ export function ImportaExcel({
       try {
         const dati = e.target?.result
         if (!dati) throw new Error(t('erroreFileVuoto'))
-        const workbook = XLSX.read(dati, { type: 'array', cellDates: true })
+        // Senza cellDates le celle data arrivano come numero seriale Excel, da
+        // convertire senza passare da un fuso orario (lib/data-excel.ts). Con
+        // cellDates SheetJS crea un Date a mezzanotte locale, e in Italia il
+        // giorno letto in UTC era quello prima.
+        const workbook = XLSX.read(dati, { type: 'array' })
+        const date1904 = Boolean(workbook.Workbook?.WBProps?.date1904)
         const primoFoglio = workbook.SheetNames[0]
         if (!primoFoglio) throw new Error(t('erroreNessunFoglio'))
         const foglio = workbook.Sheets[primoFoglio]
@@ -323,7 +310,7 @@ export function ImportaExcel({
         if (sconosciute.length > 0) throw new Error(t('erroreIntestazioniSconosciute', { elenco: sconosciute.join(', ') }))
         if (duplicate.length > 0) throw new Error(t('erroreIntestazioniDuplicate', { elenco: duplicate.join(', ') }))
         const righeGrezze = XLSX.utils.sheet_to_json<Record<string, unknown>>(foglio, { defval: '' })
-        setRighe(elabora(righeGrezze, intestazionePerColonna, mappaContenitori, tipoContenitore, t))
+        setRighe(elabora(righeGrezze, intestazionePerColonna, mappaContenitori, tipoContenitore, date1904, t))
       } catch (err) {
         setErroreFile(err instanceof Error ? err.message : t('erroreLetturaFile'))
       }
@@ -373,7 +360,16 @@ export function ImportaExcel({
       tassaTrattenuta: r.tassaTrattenuta,
       contenitoreId: r.contenitoreId,
     }))
-    const esito = await importaTransazioniBulk(daInviare)
+    // Nel registro dell'import contano anche le righe mai inviate: formato
+    // non valido, o strumento non ancora creato.
+    const idPronte = new Set(righePronte.map((r) => r.numeroRiga))
+    const scartate = [
+      ...righeConErrore.map((r) => ({ riga: r.numeroRiga, messaggio: r.errore! })),
+      ...righeValideFormato
+        .filter((r) => !idPronte.has(r.numeroRiga))
+        .map((r) => ({ riga: r.numeroRiga, messaggio: t('erroreStrumentoNonTrovatoImport', { valore: r.identificatore?.valore ?? '' }) })),
+    ]
+    const esito = await importaTransazioniBulk(daInviare, { nomeFile, righeTotali: righe.length, scartate })
     setImportando(false)
     setRisultato(esito)
     setRighe(null)

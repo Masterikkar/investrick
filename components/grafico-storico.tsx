@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { formatData, formatEuro, formatEuroCompatto, formatPercent, type LocaleFormato } from '@/lib/format'
+import { dataLocaleDaIso } from '@/lib/data-calendario'
 
 export type PuntoStorico = { data: string; valore: number }
 
@@ -44,7 +45,7 @@ function filtraPerPeriodo(punti: PuntoStorico[], periodo: Periodo): PuntoStorico
   }
   const soglia = dataMinimaTeorica(periodo, new Date())
   if (!soglia) return punti
-  return punti.filter((p) => new Date(p.data) >= soglia)
+  return punti.filter((p) => (dataLocaleDaIso(p.data) ?? new Date(p.data)) >= soglia)
 }
 
 export function GraficoStorico({
@@ -78,7 +79,7 @@ export function GraficoStorico({
     if (formato !== 'percent' || punti.length === 0) return null
     const soglia = dataMinimaTeorica(periodo, new Date())
     if (!soglia) return null
-    const primoDatoReale = new Date(punti[0].data)
+    const primoDatoReale = dataLocaleDaIso(punti[0].data) ?? new Date(punti[0].data)
     if (primoDatoReale > soglia) {
       return t('notaDatiParziali', {
         data: formatData(primoDatoReale, locale),

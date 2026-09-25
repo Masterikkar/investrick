@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
+import { scriviColonnaDateExcel } from '@/lib/data-excel'
+import { dataIsoOggi } from '@/lib/data-calendario'
 import { esportaPlusMinusRealizzate, esportaPlusMinusNonRealizzate } from './actions'
 
 const stileBottonePrimario: React.CSSProperties = {
@@ -24,10 +26,11 @@ export function EsportaFiscalita() {
     setErrore(null)
     setCaricamento(tipo)
     try {
-      const oggi = new Date().toISOString().slice(0, 10)
+      const oggi = dataIsoOggi()
       if (tipo === 'realizzate') {
         const righe = await esportaPlusMinusRealizzate()
         const ws = XLSX.utils.json_to_sheet(righe)
+        scriviColonnaDateExcel(ws, 'Data')
         const wb = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(wb, ws, 'Realizzate')
         XLSX.writeFile(wb, `plus-minus-realizzate-${oggi}.xlsx`)

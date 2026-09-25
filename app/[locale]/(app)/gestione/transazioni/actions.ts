@@ -7,6 +7,7 @@ import { getLocale, getTranslations } from 'next-intl/server'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import type { Database } from '@/types/database.types'
 import { CATEGORIE_MERCATO } from '@/lib/categorie'
+import { eseguiImportazione, type FileImport } from '@/lib/importazioni'
 
 // Stessa ragione di app/(app)/gestione/strumenti/actions.ts: aliquota_tassazione
 // la riempie il trigger, mai l'app.
@@ -289,7 +290,8 @@ export type RigaImport = {
 }
 
 export async function importaTransazioniBulk(
-  righe: RigaImport[]
+  righe: RigaImport[],
+  file: FileImport
 ): Promise<{ inserite: number; errori: { riga: number; messaggio: string }[]; avvisoRicostruzione?: string }> {
   const supabase = await createClient()
   const locale = await getLocale()
@@ -314,38 +316,68 @@ export async function importaTransazioniBulk(
 
   const categoriaMap = new Map(strumentiInfo.map((s) => [s.id, s.categoria]))
 
-  let inserite = 0
-  const errori: { riga: number; messaggio: string }[] = []
+  // Nel registro dell'import: la categoria se il file ne contiene una sola,
+  // altrimenti nessuna.
+  const categorieFile = new Set(righe.map((r) => categoriaMap.get(r.strumentoId)).filter(Boolean))
+  const categoriaFile = categorieFile.size === 1 ? [...categorieFile][0]! : null
 
-  for (const r of righe) {
-    const categoria = categoriaMap.get(r.strumentoId)
+  const esito = await eseguiImportazione(supabase, file, categoriaFile, async (importazioneId) => {
+    let inserite = 0
+    const errori: { riga: number; messaggio: string }[] = []
 
-    if (!categoria) {
-      errori.push({ riga: r.rigaOriginale, messaggio: t('erroreCategoriaSconosciuta') })
-      continue
+    for (const r of righe) {
+      const categoria = categoriaMap.get(r.strumentoId)
+
+      if (!categoria) {
+        errori.push({ riga: r.rigaOriginale, messaggio: t('erroreCategoriaSconosciuta') })
+        continue
+      }
+
+      const { error } = await supabase.from('transazioni').insert({
+        importazione_id: importazioneId,
+        strumento_id: r.strumentoId,
+        contenitore_id: r.contenitoreId,
+        categoria,
+        operazione: r.operazione,
+        data: r.data,
+        valuta: 'EUR',
+        quantita: r.quantita,
+        prezzo_unitario: r.prezzoUnitario,
+        commissione: r.commissione,
+        tassa_trattenuta: r.tassaTrattenuta,
+      })
+
+      if (error) {
+        errori.push({ riga: r.rigaOriginale, messaggio: error.message })
+      } else {
+        inserite++
+      }
     }
+    return { inserite, errori }
+  })
 
-    const { error } = await supabase.from('transazioni').insert({
-      strumento_id: r.strumentoId,
-      contenitore_id: r.contenitoreId,
-      categoria,
-      operazione: r.operazione,
-      data: r.data,
-      valuta: 'EUR',
-      quantita: r.quantita,
-      prezzo_unitario: r.prezzoUnitario,
-      commissione: r.commissione,
-      tassa_trattenuta: r.tassaTrattenuta,
-    })
+  return concludiImport(esito, righe, locale, t)
+}
 
-    if (error) {
-      errori.push({ riga: r.rigaOriginale, messaggio: error.message })
-    } else {
-      inserite++
+// Dopo l'inserimento, comune ai due import: ricostruisce lo storico se è
+// entrata almeno una riga e aggiorna le pagine. Se il registro dell'import non
+// si è potuto creare, non è stato inserito nulla: errore su tutte le righe.
+async function concludiImport(
+  esito: Awaited<ReturnType<typeof eseguiImportazione>>,
+  righe: { rigaOriginale: number }[],
+  locale: string,
+  t: Awaited<ReturnType<typeof getTranslations<'PaginaGestioneTransazioni'>>>
+): Promise<{ inserite: number; errori: { riga: number; messaggio: string }[]; avvisoRicostruzione?: string }> {
+  if ('erroreRegistro' in esito) {
+    return {
+      inserite: 0,
+      errori: righe.map((r) => ({ riga: r.rigaOriginale, messaggio: t('erroreRegistroImport', { errore: esito.erroreRegistro }) })),
     }
   }
 
+  const { inserite, errori } = esito
   if (inserite > 0) {
+    const supabase = await createClient()
     const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
     if (erroreRicostruzione) {
       revalidatePath(`/${locale}`)
@@ -379,7 +411,8 @@ export type RigaImportLiquidita = {
 }
 
 export async function importaMovimentiLiquiditaBulk(
-  righe: RigaImportLiquidita[]
+  righe: RigaImportLiquidita[],
+  file: FileImport
 ): Promise<{ inserite: number; errori: { riga: number; messaggio: string }[]; avvisoRicostruzione?: string }> {
   const supabase = await createClient()
   const locale = await getLocale()
@@ -389,43 +422,31 @@ export async function importaMovimentiLiquiditaBulk(
     return { inserite: 0, errori: [] }
   }
 
-  let inserite = 0
-  const errori: { riga: number; messaggio: string }[] = []
+  const esito = await eseguiImportazione(supabase, file, 'Liquidita', async (importazioneId) => {
+    let inserite = 0
+    const errori: { riga: number; messaggio: string }[] = []
 
-  for (const r of righe) {
-    const { error } = await supabase.from('movimenti_liquidita').insert({
-      strumento_id: r.strumentoId,
-      contenitore_id: r.contenitoreId,
-      tipo_movimento: r.tipoMovimento,
-      data: r.data,
-      importo: r.importo,
-      tassa_trattenuta: r.tassaTrattenuta,
-    })
+    for (const r of righe) {
+      const { error } = await supabase.from('movimenti_liquidita').insert({
+        importazione_id: importazioneId,
+        strumento_id: r.strumentoId,
+        contenitore_id: r.contenitoreId,
+        tipo_movimento: r.tipoMovimento,
+        data: r.data,
+        importo: r.importo,
+        tassa_trattenuta: r.tassaTrattenuta,
+      })
 
-    if (error) {
-      errori.push({ riga: r.rigaOriginale, messaggio: error.message })
-    } else {
-      inserite++
-    }
-  }
-
-  if (inserite > 0) {
-    const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
-    if (erroreRicostruzione) {
-      revalidatePath(`/${locale}`)
-      revalidatePath(`/${locale}/gestione/transazioni`)
-      return {
-        inserite,
-        errori,
-        avvisoRicostruzione: t('avvisoRicostruzioneFallita', { errore: erroreRicostruzione.message }),
+      if (error) {
+        errori.push({ riga: r.rigaOriginale, messaggio: error.message })
+      } else {
+        inserite++
       }
     }
-  }
+    return { inserite, errori }
+  })
 
-  revalidatePath(`/${locale}`)
-  revalidatePath(`/${locale}/gestione/transazioni`)
-
-  return { inserite, errori }
+  return concludiImport(esito, righe, locale, t)
 }
 
 // --- Esportazione storico ---
@@ -435,7 +456,9 @@ export async function importaMovimentiLiquiditaBulk(
 // mai state supportate dall'import Excel).
 
 export type RigaEsportazioneTransazione = {
-  Data: Date
+  // YYYY-MM-DD così com'è nel database: la cella data la scrive il client
+  // (scriviColonnaDateExcel), senza passare da un Date e da un fuso.
+  Data: string
   ISIN: string
   Ticker: string
   Strumento: string
@@ -465,7 +488,7 @@ export async function esportaTransazioniFinanziarie(): Promise<RigaEsportazioneT
   return (transazioni ?? []).map((t) => {
     const strumento = t.strumento_id ? strumentoMap.get(t.strumento_id) : undefined
     return {
-      Data: new Date(t.data),
+      Data: t.data,
       ISIN: strumento?.isin ?? '',
       Ticker: strumento?.ticker ?? '',
       Strumento: strumento?.nome ?? '',
@@ -480,7 +503,7 @@ export async function esportaTransazioniFinanziarie(): Promise<RigaEsportazioneT
 }
 
 export type RigaEsportazioneLiquidita = {
-  Data: Date
+  Data: string // YYYY-MM-DD, vedi RigaEsportazioneTransazione
   Strumento: string
   'Tipo movimento': string
   Importo: number
@@ -504,7 +527,7 @@ export async function esportaTransazioniLiquidita(): Promise<RigaEsportazioneLiq
   const contenitoreMap = new Map((contenitori ?? []).map((c) => [c.id, c.nome]))
 
   return (movimenti ?? []).map((m) => ({
-    Data: new Date(m.data),
+    Data: m.data,
     Strumento: strumentoMap.get(m.strumento_id) ?? '',
     'Tipo movimento': m.tipo_movimento,
     Importo: Number(m.importo),
