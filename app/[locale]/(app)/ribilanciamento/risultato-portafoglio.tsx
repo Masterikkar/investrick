@@ -55,7 +55,6 @@ function stileScheda(attiva: boolean): React.CSSProperties {
 function TabellaSoluzione({ soluzione }: { soluzione: SoluzionePortafoglio }) {
   const t = useTranslations('PaginaRibilanciamento')
   const tCategorie = useTranslations('Categorie')
-  const tPaginaCosti = useTranslations('PaginaCosti')
   const locale = useLocale() as LocaleFormato
 
   const totaleAttuale = soluzione.righe.reduce((acc, r) => acc + r.valoreAttuale, 0)
@@ -88,7 +87,7 @@ function TabellaSoluzione({ soluzione }: { soluzione: SoluzionePortafoglio }) {
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16, color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
         <thead>
           <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-            <th style={stileTh}>{tPaginaCosti('colonnaCategoria')}</th>
+            <th style={stileTh}>{t('colonnaAsset')}</th>
             <th style={stileTh}>{t('colonnaTarget')}</th>
             <th style={stileTh}>{t('colonnaAttuale')}</th>
             <th style={stileTh}>{t('colonnaDaVersare')}</th>

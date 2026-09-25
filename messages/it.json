@@ -8,6 +8,8 @@
     "bottoneAccedi": "Accedi"
   },
   "PaginaCategoria": {
+    "tooltipRendimentoLive": "Rendimento delle posizioni ancora aperte in questa categoria: valore attuale rispetto al capitale investito, cioè il costo delle quote ancora possedute (i lotti rimasti dopo le vendite, metodo FIFO), commissioni e tasse d'acquisto comprese. Conta da quando hai comprato quelle quote, non dall'inizio dell'anno, e non include vendite né dividendi già incassati. Tra parentesi, la variazione rispetto all'ultima valorizzazione salvata, che si registra a ogni aggiornamento dei prezzi.",
+    "tooltipPlusMinusNonRealizzata": "Guadagno o perdita non ancora incassati sulle posizioni aperte di questa categoria: valore attuale meno il costo delle quote ancora possedute (metodo FIFO, commissioni e tasse d'acquisto comprese). È al lordo delle tasse che pagheresti vendendo e non include le plusvalenze già realizzate con le vendite.",
     "etichettaAsset": "Asset",
     "colonnaStrumento": "Nome",
     "colonnaTipo": "Tipo",
@@ -29,6 +31,8 @@
     "titoloAsset": "Posizioni"
   },
   "PaginaTuttiAsset": {
+    "tooltipRendimentoLive": "Rendimento di tutte le posizioni ancora aperte: valore attuale rispetto al capitale investito, cioè il costo delle quote ancora possedute (i lotti rimasti dopo le vendite, metodo FIFO), commissioni e tasse d'acquisto comprese. La liquidità è compresa con capitale investito uguale al saldo, quindi rendimento zero. Conta da quando hai comprato le quote, non dall'inizio dell'anno, e non include vendite né dividendi già incassati. Tra parentesi, la variazione rispetto all'ultima valorizzazione salvata, che si registra a ogni aggiornamento dei prezzi.",
+    "tooltipPlusMinusNonRealizzata": "Guadagno o perdita non ancora incassati su tutte le posizioni aperte: valore attuale meno il costo delle quote ancora possedute (metodo FIFO, commissioni e tasse d'acquisto comprese). La liquidità non contribuisce. È al lordo delle tasse che pagheresti vendendo e non include le plusvalenze già realizzate con le vendite.",
     "tooltipPeso": "Peso calcolato sul totale degli asset posseduti in questa tabella, liquidità compresa."
   },
   "Categorie": {
@@ -241,12 +245,13 @@
     "tooltipRendimento": "Rendimento"
   },
   "PaginaCosti": {
+    "notaTotaleCosti": "Da sempre, su tutto lo storico: le commissioni di ogni transazione, anche su posizioni già chiuse, più i costi addebitati in quote o in contanti e i costi dei conti di liquidità.",
     "titoloTotaleCosti": "Totale costi",
-    "titoloPerContenitore": "Per gruppo",
-    "titoloTuttiGliAsset": "Tutti gli asset",
+    "titoloPerContenitore": "Gruppi",
+    "titoloTuttiGliAsset": "Asset",
     "colonnaCosto": "Costo",
     "colonnaCostoPerEuro": "Costo / € guadagnato",
-    "colonnaStrumento": "Strumento",
+    "colonnaStrumento": "Posizione",
     "colonnaCategoria": "Categoria"
   },
   "FiltroTabellaStorico": {
@@ -259,6 +264,8 @@
     "paginazioneMostraTutte": "Mostra tutte"
   },
   "PaginaFiscalita": {
+    "colonnaPosizione": "Posizione",
+    "placeholderFiltraPosizione": "Filtra per posizione...",
     "titoloAnnoCorrente": "Anno corrente — {anno}",
     "titoloStorico": "Storico",
     "titoloPlusMinusvalenze": "Plus/minusvalenze",
@@ -272,7 +279,7 @@
     "labelTasseTrattenute": "Tasse trattenute",
     "linkMostraDettagli": "→ Mostra dettagli",
     "linkNascondiDettagli": "→ Nascondi dettagli",
-    "labelPerCategoria": "Per categoria",
+    "labelPerCategoria": "Per asset",
     "labelPerContenitore": "Per gruppo",
     "titoloPlusMinusvalenzeNonRealizzate": "Plus/minusvalenze non realizzate",
     "paragrafoNonRealizzateYtd": "Variazione della plus/minusvalenza non realizzata da inizio anno a oggi.",
@@ -338,6 +345,7 @@
     "costo": "Costo"
   },
   "PaginaRibilanciamento": {
+    "colonnaAsset": "Asset",
     "alertNessunoScostamentoSoglia": "Tutto in linea con i target. Nessuno scostamento fuori soglia.",
     "colonnaTarget": "Target",
     "colonnaAttuale": "Attuale",

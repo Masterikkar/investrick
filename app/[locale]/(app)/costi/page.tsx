@@ -169,12 +169,12 @@ export default async function CostiPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{tMenu('analisi')}</div>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{tMenu('analisi')}</div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{tMenu('costi')}</h1>
 
       <section>
         <Sezione>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('titoloTotaleCosti')}</div>
+          <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{t('titoloTotaleCosti')}</div>
           <div
             style={{
               fontFamily: 'var(--font-zilla-slab)',
@@ -186,18 +186,21 @@ export default async function CostiPage() {
           >
             {formatEuro(totaleCosti, locale)}
           </div>
+          <p style={{ fontSize: 'var(--fs-form-hint)', color: 'var(--text-secondary)', margin: '8px 0 0', maxWidth: 560 }}>
+            {t('notaTotaleCosti')}
+          </p>
         </Sezione>
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloPerContenitore')}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloPerContenitore')}</h2>
         <Sezione>
           <TabellaOrdinabile colonne={COLONNE_CONTENITORE} righe={righeContenitore} />
         </Sezione>
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloTuttiGliAsset')}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloTuttiGliAsset')}</h2>
         <Sezione>
           <TabellaOrdinabile colonne={COLONNE_ASSET} righe={tuttiGliAsset} />
         </Sezione>

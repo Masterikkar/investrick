@@ -252,9 +252,15 @@ export default async function TuttiAssetPage() {
               etichettaOggi={tDashboard('etichettaOggi')}
               href="/rendimenti"
               linkLabel={t('linkRendimenti')}
+              info={tTuttiAsset('tooltipRendimentoLive')}
             />
 
-            <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/fiscalita" linkLabel={t('linkFiscalita')}>
+            <CardMetrica
+              label={t('labelPlusMinusNonRealizzata')}
+              href="/fiscalita"
+              linkLabel={t('linkFiscalita')}
+              info={tTuttiAsset('tooltipPlusMinusNonRealizzata')}
+            >
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(plusMinusNonRealizzata, locale)}
               </span>

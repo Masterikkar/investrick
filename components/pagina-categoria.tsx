@@ -174,9 +174,15 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
               etichettaOggi={tDashboard('etichettaOggi')}
               href="/rendimenti"
               linkLabel={t('linkRendimenti')}
+              info={t('tooltipRendimentoLive')}
             />
 
-            <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/fiscalita" linkLabel={t('linkFiscalita')}>
+            <CardMetrica
+              label={t('labelPlusMinusNonRealizzata')}
+              href="/fiscalita"
+              linkLabel={t('linkFiscalita')}
+              info={t('tooltipPlusMinusNonRealizzata')}
+            >
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(plusMinusNonRealizzata, locale)}
               </span>

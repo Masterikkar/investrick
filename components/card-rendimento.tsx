@@ -9,6 +9,7 @@ export function CardRendimento({
   etichettaOggi = 'Oggi',
   href,
   linkLabel,
+  info,
 }: {
   rendimentoPct: number | null
   variazioneOggi?: number | null
@@ -16,11 +17,12 @@ export function CardRendimento({
   etichettaOggi?: string
   href?: string
   linkLabel?: string
+  info?: string
 }) {
   const locale = useLocale() as LocaleFormato
 
   return (
-    <CardMetrica label={label} href={href} linkLabel={linkLabel}>
+    <CardMetrica label={label} href={href} linkLabel={linkLabel} info={info}>
       <span style={{ color: (rendimentoPct ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
         {rendimentoPct != null ? formatPercent(rendimentoPct, 2, true, locale) : '—'}
       </span>

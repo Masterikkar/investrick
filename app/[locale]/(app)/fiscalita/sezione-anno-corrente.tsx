@@ -167,7 +167,7 @@ export function SezioneAnnoCorrente({
         >
           <thead>
             <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaStrumento')}</th>
+              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPosizione')}</th>
               <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaInteresseLordo')}</th>
               <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTassaTrattenuta')}</th>
               <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaInteresseNetto')}</th>

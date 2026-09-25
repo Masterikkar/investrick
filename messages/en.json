@@ -8,6 +8,8 @@
     "bottoneAccedi": "Sign in"
   },
   "PaginaCategoria": {
+    "tooltipRendimentoLive": "Return on the positions still open in this category: current value against invested capital, meaning the cost of the units you still hold (the lots left after sales, FIFO method), purchase fees and taxes included. It runs from when you bought those units, not from the start of the year, and excludes sales and dividends already received. In brackets, the change since the last saved valuation, which is recorded at every price update.",
+    "tooltipPlusMinusNonRealizzata": "Gain or loss not yet realized on the open positions in this category: current value minus the cost of the units you still hold (FIFO method, purchase fees and taxes included). It is before the taxes you would pay on selling and excludes gains already realized through sales.",
     "etichettaAsset": "Asset",
     "colonnaStrumento": "Name",
     "colonnaTipo": "Type",
@@ -29,6 +31,8 @@
     "titoloAsset": "Positions"
   },
   "PaginaTuttiAsset": {
+    "tooltipRendimentoLive": "Return on all positions still open: current value against invested capital, meaning the cost of the units you still hold (the lots left after sales, FIFO method), purchase fees and taxes included. Cash is included with invested capital equal to its balance, so a zero return. It runs from when you bought the units, not from the start of the year, and excludes sales and dividends already received. In brackets, the change since the last saved valuation, which is recorded at every price update.",
+    "tooltipPlusMinusNonRealizzata": "Gain or loss not yet realized on all open positions: current value minus the cost of the units you still hold (FIFO method, purchase fees and taxes included). Cash does not contribute. It is before the taxes you would pay on selling and excludes gains already realized through sales.",
     "tooltipPeso": "Weight calculated on the total of assets held in this table, cash included."
   },
   "Categorie": {
@@ -241,12 +245,13 @@
     "tooltipRendimento": "Return"
   },
   "PaginaCosti": {
+    "notaTotaleCosti": "All time, across the whole history: fees on every transaction, including positions already closed, plus costs charged in units or in cash and costs on cash accounts.",
     "titoloTotaleCosti": "Total costs",
-    "titoloPerContenitore": "By group",
-    "titoloTuttiGliAsset": "All assets",
+    "titoloPerContenitore": "Groups",
+    "titoloTuttiGliAsset": "Assets",
     "colonnaCosto": "Cost",
     "colonnaCostoPerEuro": "Cost / € gained",
-    "colonnaStrumento": "Instrument",
+    "colonnaStrumento": "Position",
     "colonnaCategoria": "Category"
   },
   "FiltroTabellaStorico": {
@@ -259,6 +264,8 @@
     "paginazioneMostraTutte": "Show all"
   },
   "PaginaFiscalita": {
+    "colonnaPosizione": "Position",
+    "placeholderFiltraPosizione": "Filter by position...",
     "titoloAnnoCorrente": "Current year — {anno}",
     "titoloStorico": "History",
     "titoloPlusMinusvalenze": "Capital gains/losses",
@@ -272,7 +279,7 @@
     "labelTasseTrattenute": "Tax withheld",
     "linkMostraDettagli": "→ Show details",
     "linkNascondiDettagli": "→ Hide details",
-    "labelPerCategoria": "By category",
+    "labelPerCategoria": "By asset",
     "labelPerContenitore": "By group",
     "titoloPlusMinusvalenzeNonRealizzate": "Unrealized capital gains/losses",
     "paragrafoNonRealizzateYtd": "Change in unrealized capital gain/loss year to date.",
@@ -338,6 +345,7 @@
     "costo": "Cost"
   },
   "PaginaRibilanciamento": {
+    "colonnaAsset": "Asset",
     "alertNessunoScostamentoSoglia": "Everything in line with targets. No drift outside the threshold.",
     "colonnaTarget": "Target",
     "colonnaAttuale": "Current",
