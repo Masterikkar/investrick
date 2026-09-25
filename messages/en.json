@@ -312,6 +312,7 @@
     "titleEliminaTransazione": "Delete transaction",
     "descrizioneOperazioneData": "{operazione} on {data}",
     "confermaEliminazione": "Delete this transaction?\n\n{descrizione}\n\nThis action cannot be undone.",
+    "titoloEliminaMovimento": "Delete cash movement",
     "confermaEliminazioneMovimento": "Delete this cash movement?\n\n{descrizione}\n\nThis action cannot be undone."
   },
   "TipiOperazione": {
@@ -447,6 +448,7 @@
     "erroreSelezionaTipo": "Select a type.",
     "alertNessunContenitoreCreato": "No container created.",
     "bottoneElimina": "Delete",
+    "titoloEliminaContenitore": "Delete container",
     "confermaEliminaContenitore": "Delete the container \"{nome}\"?\n\nLinked transactions and movements will be moved to the '{diretto}' container; any targets set on this container will be deleted.\n\nThis action cannot be undone.",
     "labelDataAttivazione": "Activation date",
     "hintDataAttivazione": "Optional activation date, mainly useful for insurance policies.",

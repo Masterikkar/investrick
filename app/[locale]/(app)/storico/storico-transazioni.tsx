@@ -8,6 +8,7 @@ import { RippleLink } from '@/components/ripple-link'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
 import { aggiornaContenitoreTransazione, eliminaTransazione } from '../gestione/transazioni/actions'
+import { useConferma } from '@/components/conferma'
 
 export type RigaStoricoTransazione = {
   id: string
@@ -40,6 +41,8 @@ export function StoricoTransazioni({
   const tTipiOperazione = useTranslations('TipiOperazione')
   const tPaginaCategoria = useTranslations('PaginaCategoria')
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
+  const tGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
+  const conferma = useConferma()
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -109,16 +112,20 @@ export function StoricoTransazioni({
     })
   }
 
-  function handleElimina(riga: RigaStoricoTransazione) {
+  async function handleElimina(riga: RigaStoricoTransazione) {
     const base = t('descrizioneOperazioneData', {
       operazione: etichettaOperazione(riga.operazione),
       data: formatData(riga.data, locale),
     })
     const descrizione = riga.strumento_nome !== '—' ? `${base} — ${riga.strumento_nome}` : base
 
-    if (!window.confirm(t('confermaEliminazione', { descrizione }))) {
-      return
-    }
+    const confermato = await conferma({
+      titolo: t('titleEliminaTransazione'),
+      messaggio: t('confermaEliminazione', { descrizione }),
+      etichettaConferma: tGestioneStrumenti('bottoneElimina'),
+      pericoloso: true,
+    })
+    if (!confermato) return
 
     setErroreId(null)
     setPendingId(riga.id)

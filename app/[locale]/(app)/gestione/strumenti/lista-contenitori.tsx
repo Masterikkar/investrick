@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { rinominaContenitore, eliminaContenitore } from './actions-contenitore'
 import { LARGHEZZA_STANDARD, LARGHEZZA_RIGA_QUATTRO_CAMPI, STILE_BOTTONE_ICONA } from './layout-campi'
 import { IconaElimina, IconaSalva } from '@/components/icone'
+import { useConferma } from '@/components/conferma'
 
 type Contenitore = { id: string; nome: string; tipo: string }
 
@@ -16,6 +17,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
   const tPaginaCategoria = useTranslations('PaginaCategoria')
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const router = useRouter()
+  const conferma = useConferma()
 
   function etichettaTipo(tipo: string): string {
     if (tipo === 'Polizza') return tPaginaContenitore('etichettaPolizza')
@@ -50,13 +52,14 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
     })
   }
 
-  function handleElimina(id: string, nome: string) {
-    if (
-      !window.confirm(
-        t('confermaEliminaContenitore', { nome, diretto: tPaginaCategoria('provenienzaDiretto') })
-      )
-    )
-      return
+  async function handleElimina(id: string, nome: string) {
+    const confermato = await conferma({
+      titolo: t('titoloEliminaContenitore'),
+      messaggio: t('confermaEliminaContenitore', { nome, diretto: tPaginaCategoria('provenienzaDiretto') }),
+      etichettaConferma: t('bottoneElimina'),
+      pericoloso: true,
+    })
+    if (!confermato) return
     setErroreId(null)
     setMessaggioErrore(null)
     setPendingId(id)

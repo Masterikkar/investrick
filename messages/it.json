@@ -312,6 +312,7 @@
     "titleEliminaTransazione": "Elimina transazione",
     "descrizioneOperazioneData": "{operazione} del {data}",
     "confermaEliminazione": "Eliminare questa transazione?\n\n{descrizione}\n\nL'operazione non è reversibile.",
+    "titoloEliminaMovimento": "Elimina movimento",
     "confermaEliminazioneMovimento": "Eliminare questo movimento?\n\n{descrizione}\n\nL'operazione non è reversibile."
   },
   "TipiOperazione": {
@@ -447,6 +448,7 @@
     "erroreSelezionaTipo": "Seleziona un tipo.",
     "alertNessunContenitoreCreato": "Nessun contenitore creato.",
     "bottoneElimina": "Elimina",
+    "titoloEliminaContenitore": "Elimina contenitore",
     "confermaEliminaContenitore": "Eliminare il contenitore \"{nome}\"?\n\nLe transazioni e i movimenti collegati verranno spostati nel contenitore '{diretto}'; eventuali target impostati su questo contenitore verranno cancellati.\n\nL'operazione non è reversibile.",
     "labelDataAttivazione": "Data di attivazione",
     "hintDataAttivazione": "Data di attivazione facoltativa, utile soprattutto per le polizze.",

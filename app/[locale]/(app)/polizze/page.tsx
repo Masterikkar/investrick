@@ -1,5 +1,6 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { tutteLeRighe } from '@/lib/supabase-tutte-le-righe'
 import { formatData, formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
@@ -61,12 +62,18 @@ export default async function PolizzePage() {
   )
   const valoreTotalePolizze = (valoriContenitore ?? []).reduce((acc, v) => acc + (v.valore_totale ?? 0), 0)
 
+  // Una riga per polizza e per giorno: letta a blocchi per non fermarsi a 1000
+  // righe, con un ordinamento univoco (data, contenitore).
   const { data: storicoRaw } = polizzeIds.length
-    ? await supabase
-        .from('v_storico_valorizzazioni_per_contenitore')
-        .select('data, valore_totale, capitale_investito_totale')
-        .in('contenitore_id', polizzeIds)
-        .order('data', { ascending: true })
+    ? await tutteLeRighe((da, a) =>
+        supabase
+          .from('v_storico_valorizzazioni_per_contenitore')
+          .select('data, valore_totale, capitale_investito_totale')
+          .in('contenitore_id', polizzeIds)
+          .order('data', { ascending: true })
+          .order('contenitore_id', { ascending: true })
+          .range(da, a)
+      )
     : { data: null }
 
   const storicoValoreMap = new Map<string, number>()

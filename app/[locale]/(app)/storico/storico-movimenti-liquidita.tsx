@@ -7,6 +7,7 @@ import { formatData, formatEuro, type LocaleFormato } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
 import { CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA } from '@/lib/i18n-tipi-movimento-liquidita'
 import { aggiornaContenitoreMovimentoLiquidita, eliminaMovimentoLiquidita } from '../gestione/transazioni/actions'
+import { useConferma } from '@/components/conferma'
 
 export type RigaStoricoMovimentoLiquidita = {
   id: string
@@ -36,6 +37,8 @@ export function StoricoMovimentiLiquidita({
   const tTipiMovimento = useTranslations('TipiMovimentoLiquidita')
   const tPaginaCategoria = useTranslations('PaginaCategoria')
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
+  const tGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
+  const conferma = useConferma()
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -101,16 +104,20 @@ export function StoricoMovimentiLiquidita({
     })
   }
 
-  function handleElimina(riga: RigaStoricoMovimentoLiquidita) {
+  async function handleElimina(riga: RigaStoricoMovimentoLiquidita) {
     const base = t('descrizioneOperazioneData', {
       operazione: etichettaTipoMovimento(riga.tipo_movimento),
       data: formatData(riga.data, locale),
     })
     const descrizione = `${base} — ${riga.strumento_nome}`
 
-    if (!window.confirm(t('confermaEliminazioneMovimento', { descrizione }))) {
-      return
-    }
+    const confermato = await conferma({
+      titolo: t('titoloEliminaMovimento'),
+      messaggio: t('confermaEliminazioneMovimento', { descrizione }),
+      etichettaConferma: tGestioneStrumenti('bottoneElimina'),
+      pericoloso: true,
+    })
+    if (!confermato) return
 
     setErroreId(null)
     setPendingId(riga.id)
