@@ -230,6 +230,25 @@ export async function aggregaStrumenti(
   return aggregati
 }
 
+// Membri dei gruppi Personalizzati indicati, con i dati dei loro strumenti.
+export async function leggiMembriPersonalizzati(
+  supabase: ClientSupabase,
+  contenitoreIds: string[]
+): Promise<{ membri: { contenitore_id: string; strumento_id: string }[]; strumenti: StrumentoGruppo[] }> {
+  if (contenitoreIds.length === 0) return { membri: [], strumenti: [] }
+  const { data: membri } = await supabase
+    .from('gruppi_personalizzati_strumenti')
+    .select('contenitore_id, strumento_id')
+    .in('contenitore_id', contenitoreIds)
+
+  const strumentoIds = Array.from(new Set((membri ?? []).map((m) => m.strumento_id)))
+  const { data: strumenti } = strumentoIds.length
+    ? await supabase.from('strumenti').select('id, nome, ticker, tipo, categoria').in('id', strumentoIds)
+    : { data: null }
+
+  return { membri: membri ?? [], strumenti: strumenti ?? [] }
+}
+
 export async function caricaGruppiPersonalizzati(supabase: ClientSupabase): Promise<DatiGruppi> {
   const { data: contenitori } = await supabase
     .from('contenitori')
@@ -240,16 +259,8 @@ export async function caricaGruppiPersonalizzati(supabase: ClientSupabase): Prom
   const ids = (contenitori ?? []).map((c) => c.id)
   if (ids.length === 0) return { gruppi: [], posizioni: [], strumenti: [], storico: [] }
 
-  const { data: membri } = await supabase
-    .from('gruppi_personalizzati_strumenti')
-    .select('contenitore_id, strumento_id')
-    .in('contenitore_id', ids)
-
-  const strumentoIds = Array.from(new Set((membri ?? []).map((m) => m.strumento_id)))
-  const { data: strumentiRaw } = strumentoIds.length
-    ? await supabase.from('strumenti').select('id, nome, ticker, tipo, categoria').in('id', strumentoIds)
-    : { data: null }
-  const strumenti = strumentiRaw ?? []
+  const { membri, strumenti } = await leggiMembriPersonalizzati(supabase, ids)
+  const strumentoIds = strumenti.map((s) => s.id)
   const liquidita = new Set(strumenti.filter((s) => s.categoria === 'Liquidita').map((s) => s.id))
 
   const [aggregati, { data: storicoRaw }] = await Promise.all([
@@ -267,7 +278,7 @@ export async function caricaGruppiPersonalizzati(supabase: ClientSupabase): Prom
       : Promise.resolve({ data: null }),
   ])
 
-  const posizioni: PosizioneGruppo[] = (membri ?? []).map((m) => {
+  const posizioni: PosizioneGruppo[] = membri.map((m) => {
     const a = aggregati.get(m.strumento_id)
     const valore = a?.valore ?? 0
     const capitale = a?.capitaleInvestito ?? 0
@@ -303,7 +314,7 @@ export async function caricaGruppiPersonalizzati(supabase: ClientSupabase): Prom
 
   const perData = new Map<string, { valore: number; capitale: number | null }>()
   for (const id of ids) {
-    const membriGruppo = (membri ?? []).filter((m) => m.contenitore_id === id).map((m) => m.strumento_id)
+    const membriGruppo = membri.filter((m) => m.contenitore_id === id).map((m) => m.strumento_id)
     const contiGruppo = new Map(
       membriGruppo.filter((s) => saldiPerConto.has(s)).map((s) => [s, saldiPerConto.get(s)!])
     )

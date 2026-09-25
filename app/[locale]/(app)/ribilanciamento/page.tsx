@@ -190,8 +190,11 @@ export default async function RibilanciamentoPage({
     risultatoPortafoglio = calcolaRibilanciamentoPortafoglio(categoriePortafoglio, blocchiPac, soglia, versamentoPortafoglio)
   }
 
+  // I gruppi Personalizzati compaiono negli scostamenti ma non si simulano:
+  // non contengono posizioni proprie da comprare o vendere.
+  const scostamentiSimulabili = (scostamenti ?? []).filter((s) => s.contenitore_tipo !== 'Personalizzato')
   const contenitoriMap = new Map<string, string>()
-  for (const s of scostamenti ?? []) contenitoriMap.set(s.contenitore_id, s.contenitore_nome)
+  for (const s of scostamentiSimulabili) contenitoriMap.set(s.contenitore_id, s.contenitore_nome)
   const contenitoriDisponibili = Array.from(contenitoriMap.entries())
 
   const contenitoreSelezionato = params.contenitore_id
@@ -211,7 +214,7 @@ export default async function RibilanciamentoPage({
   }[] = []
 
   if (contenitoreSelezionato) {
-    const comparti = (scostamenti ?? []).filter((s) => s.contenitore_id === contenitoreSelezionato)
+    const comparti = scostamentiSimulabili.filter((s) => s.contenitore_id === contenitoreSelezionato)
 
     if (comparti.length > 0) {
       const contenitoreTipo = comparti[0].contenitore_tipo

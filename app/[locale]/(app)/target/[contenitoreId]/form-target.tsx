@@ -6,8 +6,6 @@ import { formatPercent, type LocaleFormato } from '@/lib/format'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { salvaTarget } from './actions'
 
-const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Crypto', 'Multiasset'] as const
-
 type StrumentoConPeso = { id: string; nome: string; ticker: string | null; percentualeIniziale: number }
 
 const stileCampoNumero: React.CSSProperties = {
@@ -32,11 +30,13 @@ const stileBottoneEspandi: React.CSSProperties = {
 
 export function FormTarget({
   contenitoreId,
+  categorie,
   targetAttivoIniziale,
   percentualiIniziali,
   strumentiPerCategoria,
 }: {
   contenitoreId: string
+  categorie: readonly string[]
   targetAttivoIniziale: boolean
   percentualiIniziali: Record<string, number>
   strumentiPerCategoria: Record<string, StrumentoConPeso[]>
@@ -58,8 +58,8 @@ export function FormTarget({
   const [categorieAperte, setCategorieAperte] = useState<Record<string, boolean>>({})
 
   const somma = useMemo(
-    () => CATEGORIE.reduce((acc, cat) => acc + (percentuali[cat] ?? 0), 0),
-    [percentuali]
+    () => categorie.reduce((acc, cat) => acc + (percentuali[cat] ?? 0), 0),
+    [categorie, percentuali]
   )
 
   const sommaOk = Math.abs(somma - 100) < 0.01
@@ -105,7 +105,7 @@ export function FormTarget({
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        {CATEGORIE.map((cat) => {
+        {categorie.map((cat) => {
           const strumentiCategoria = strumentiPerCategoria[cat]
           const haSottotarget = strumentiCategoria && strumentiCategoria.length > 1
           const sommaStrumenti = haSottotarget ? sommaCategoria(cat) : 0

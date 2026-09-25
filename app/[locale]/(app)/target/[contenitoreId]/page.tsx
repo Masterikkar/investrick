@@ -3,8 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { FormTarget } from './form-target'
 import { Sezione } from '@/components/sezione'
 import { Breadcrumb } from '@/components/breadcrumb'
-
-const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Crypto', 'Multiasset'] as const
+import { categorieTarget, strumentiDelGruppo } from './gruppo-target'
 
 type StrumentoConPeso = { id: string; nome: string; ticker: string | null; percentualeIniziale: number }
 
@@ -34,28 +33,14 @@ export default async function TargetPage({
     .select('categoria, target_percentuale, attivo')
     .eq('contenitore_id', contenitoreId)
 
+  const categorie = categorieTarget(contenitore.tipo)
   const percentualiIniziali: Record<string, number> = {}
-  for (const cat of CATEGORIE) {
+  for (const cat of categorie) {
     const riga = targetRaw?.find((t) => t.categoria === cat)
     percentualiIniziali[cat] = riga?.attivo ? Number(riga.target_percentuale) : 0
   }
 
-  const { data: posizioni } = await supabase
-    .from('v_riepilogo_posizione')
-    .select('strumento_id, quantita_posseduta')
-    .eq('contenitore_id', contenitoreId)
-
-  const strumentoIdsPosseduti = (posizioni ?? [])
-    .filter((p) => Number(p.quantita_posseduta) > 0)
-    .map((p) => p.strumento_id)
-    .filter((id): id is string => id !== null)
-
-  const { data: strumentiInfo } = strumentoIdsPosseduti.length
-    ? await supabase
-        .from('strumenti')
-        .select('id, nome, ticker, categoria')
-        .in('id', strumentoIdsPosseduti)
-    : { data: null }
+  const strumentiInfo = await strumentiDelGruppo(supabase, contenitore.id, contenitore.tipo)
 
   const { data: subTargetRaw } = await supabase
     .from('target_allocazioni_strumento')
@@ -67,7 +52,7 @@ export default async function TargetPage({
   )
 
   const strumentiPerCategoria: Record<string, StrumentoConPeso[]> = {}
-  for (const s of strumentiInfo ?? []) {
+  for (const s of strumentiInfo) {
     if (!strumentiPerCategoria[s.categoria]) strumentiPerCategoria[s.categoria] = []
     strumentiPerCategoria[s.categoria].push({
       id: s.id,
@@ -113,6 +98,7 @@ export default async function TargetPage({
         <FormTarget
           contenitoreId={contenitore.id}
           targetAttivoIniziale={contenitore.target_attivo ?? false}
+          categorie={categorie}
           percentualiIniziali={percentualiIniziali}
           strumentiPerCategoria={strumentiPerCategoria}
         />

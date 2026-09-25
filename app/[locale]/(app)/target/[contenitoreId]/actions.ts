@@ -3,8 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from '@/i18n/navigation'
 import { getLocale } from 'next-intl/server'
-
-const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Crypto', 'Multiasset'] as const
+import { categorieTarget, strumentiDelGruppo } from './gruppo-target'
 
 // Converte un valore percentuale ricevuto dal form: vuoto = 0 (nessun target
 // per quella categoria/strumento), qualunque altra cosa deve essere un
@@ -45,8 +44,9 @@ export async function salvaTarget(formData: FormData) {
     return
   }
 
+  const categorie = categorieTarget(contenitoreEsistente.tipo)
   const percentuali: Record<string, number> = {}
-  for (const cat of CATEGORIE) {
+  for (const cat of categorie) {
     const valore = parsePercentuale(formData.get(`percentuale_${cat}`) as string | null)
     if (valore === null) {
       redirect({ href: `/target/${contenitoreId}?errore=1`, locale })
@@ -55,28 +55,16 @@ export async function salvaTarget(formData: FormData) {
     percentuali[cat] = valore
   }
 
-  const somma = CATEGORIE.reduce((acc, cat) => acc + percentuali[cat], 0)
+  const somma = categorie.reduce((acc, cat) => acc + percentuali[cat], 0)
 
   if (targetAttivo && Math.abs(somma - 100) > 0.01) {
     redirect({ href: `/target/${contenitoreId}?errore=somma`, locale })
   }
 
-  const { data: posizioni } = await supabase
-    .from('v_riepilogo_posizione')
-    .select('strumento_id, quantita_posseduta')
-    .eq('contenitore_id', contenitoreId)
-
-  const strumentoIdsPosseduti = (posizioni ?? [])
-    .filter((p) => Number(p.quantita_posseduta) > 0)
-    .map((p) => p.strumento_id)
-    .filter((id): id is string => id !== null)
-
-  const { data: strumentiInfo } = strumentoIdsPosseduti.length
-    ? await supabase.from('strumenti').select('id, categoria').in('id', strumentoIdsPosseduti)
-    : { data: null }
+  const strumentiInfo = await strumentiDelGruppo(supabase, contenitoreId, contenitoreEsistente.tipo)
 
   const strumentiPerCategoria: Record<string, string[]> = {}
-  for (const s of strumentiInfo ?? []) {
+  for (const s of strumentiInfo) {
     if (!strumentiPerCategoria[s.categoria]) strumentiPerCategoria[s.categoria] = []
     strumentiPerCategoria[s.categoria].push(s.id)
   }
@@ -125,7 +113,7 @@ export async function salvaTarget(formData: FormData) {
     redirect({ href: `/target/${contenitoreId}?errore=1`, locale })
   }
 
-  for (const cat of CATEGORIE) {
+  for (const cat of categorie) {
     const valore = percentuali[cat]
     const { error } = await supabase.from('target_allocazioni').upsert(
       {
@@ -166,6 +154,11 @@ export async function salvaTarget(formData: FormData) {
     }
   }
 
-  const destinazione = contenitoreEsistente.tipo === 'Polizza' ? '/polizze' : '/pac'
+  const destinazione =
+    contenitoreEsistente.tipo === 'Polizza'
+      ? '/polizze'
+      : contenitoreEsistente.tipo === 'Personalizzato'
+        ? '/personalizzati'
+        : '/pac'
   redirect({ href: destinazione, locale })
 }
