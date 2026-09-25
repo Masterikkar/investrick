@@ -24,7 +24,7 @@ export default async function LiquiditaPage() {
     const chiave = CHIAVE_TRADUZIONE_TIPO_LIQUIDITA[ti]
     return chiave ? tTipi(chiave) : ti
   }
-  const tContenitori = await getTranslations('Contenitori')
+  const tCategorie = await getTranslations('Categorie')
   const supabase = await createClient()
   const annoCorrente = new Date().getFullYear()
 
@@ -47,77 +47,53 @@ export default async function LiquiditaPage() {
 
   const NOMI_MESI = Array.from({ length: 12 }, (_, i) => t(`mese${i + 1}`))
 
-  const { data: liquidita } = await supabase
-    .from('v_valore_per_contenitore')
-    .select('contenitore_id, nome, valore_totale')
-    .eq('tipo', 'Liquidita')
-    .maybeSingle()
+  // I conti sono gli strumenti di categoria Liquidita (non esiste più un
+  // contenitore "Liquidità"). Le viste di saldo, costi e interessi hanno una
+  // riga per strumento e contenitore: si sommano per strumento.
+  const { data: strumenti } = await supabase
+    .from('strumenti')
+    .select('id, nome, tipo, provider')
+    .eq('categoria', 'Liquidita')
 
-  const contenitoreId = liquidita?.contenitore_id
-  const valoreTotale = liquidita?.valore_totale ?? 0
+  const strumentoIds = (strumenti ?? []).map((s) => s.id)
 
-  const { data: saldi } = contenitoreId
-    ? await supabase
-        .from('v_saldo_liquidita')
-        .select('strumento_id, saldo_corrente')
-        .eq('contenitore_id', contenitoreId)
-    : { data: null }
+  const [{ data: saldi }, { data: costi }, { data: interessiAggregati }, { data: interessiRaw }] = strumentoIds.length
+    ? await Promise.all([
+        supabase.from('v_saldo_liquidita').select('strumento_id, saldo_corrente').in('strumento_id', strumentoIds),
+        supabase.from('v_costo_liquidita').select('strumento_id, costo_totale').in('strumento_id', strumentoIds),
+        supabase
+          .from('v_interessi_liquidita')
+          .select('strumento_id, interessi_lordi, tasse_trattenute, interessi_totali')
+          .in('strumento_id', strumentoIds),
+        supabase
+          .from('movimenti_liquidita')
+          .select('data, importo, tassa_trattenuta')
+          .in('strumento_id', strumentoIds)
+          .eq('tipo_movimento', 'Interesse')
+          .order('data', { ascending: true })
+          .returns<MovimentoInteresse[]>(),
+      ])
+    : [{ data: null }, { data: null }, { data: null }, { data: null }]
 
-  const strumentoIds = (saldi ?? [])
-    .map((s) => s.strumento_id)
-    .filter((id): id is string => id !== null)
+  const somma = <R extends { strumento_id: string | null }>(righe: R[] | null, strumentoId: string, campo: (r: R) => number | null) =>
+    (righe ?? []).filter((r) => r.strumento_id === strumentoId).reduce((acc, r) => acc + Number(campo(r) ?? 0), 0)
 
-  const { data: strumenti } = strumentoIds.length
-    ? await supabase
-        .from('strumenti')
-        .select('id, nome, tipo, provider')
-        .in('id', strumentoIds)
-    : { data: null }
-
-  const { data: costi } = contenitoreId
-    ? await supabase
-        .from('v_costo_liquidita')
-        .select('strumento_id, costo_totale')
-        .eq('contenitore_id', contenitoreId)
-    : { data: null }
-
-  const { data: interessiAggregati } = contenitoreId
-    ? await supabase
-        .from('v_interessi_liquidita')
-        .select('strumento_id, interessi_lordi, tasse_trattenute, interessi_totali')
-        .eq('contenitore_id', contenitoreId)
-    : { data: null }
-
-  const { data: interessiRaw } = contenitoreId
-    ? await supabase
-        .from('movimenti_liquidita')
-        .select('data, importo, tassa_trattenuta')
-        .eq('contenitore_id', contenitoreId)
-        .eq('tipo_movimento', 'Interesse')
-        .order('data', { ascending: true })
-        .returns<MovimentoInteresse[]>()
-    : { data: null }
-
-  const righe: RigaTabella[] = (saldi ?? [])
-    .map((s) => {
-      const strumento = strumenti?.find((str) => str.id === s.strumento_id)
-      const costo = costi?.find((c) => c.strumento_id === s.strumento_id)
-      const interesse = interessiAggregati?.find((i) => i.strumento_id === s.strumento_id)
-      const tipo = strumento?.tipo ?? '—'
-      return {
-        key: s.strumento_id ?? '—',
-        strumentoId: s.strumento_id,
-        nome: strumento?.nome ?? '—',
-        tipo: strumento ? etichettaTipo(tipo) : '—',
-        provider: strumento?.provider ?? '',
-        valore: s.saldo_corrente ?? 0,
-        interesseLordo: interesse?.interessi_lordi ?? 0,
-        interesseNetto: interesse?.interessi_totali ?? 0,
-        tassaTrattenuta: interesse?.tasse_trattenute ?? 0,
-        costo: costo?.costo_totale ?? 0,
-      }
-    })
+  const righe: RigaTabella[] = (strumenti ?? [])
+    .map((s) => ({
+      key: s.id,
+      strumentoId: s.id,
+      nome: s.nome,
+      tipo: etichettaTipo(s.tipo),
+      provider: s.provider ?? '',
+      valore: somma(saldi, s.id, (r) => r.saldo_corrente),
+      interesseLordo: somma(interessiAggregati, s.id, (r) => r.interessi_lordi),
+      interesseNetto: somma(interessiAggregati, s.id, (r) => r.interessi_totali),
+      tassaTrattenuta: somma(interessiAggregati, s.id, (r) => r.tasse_trattenute),
+      costo: somma(costi, s.id, (r) => r.costo_totale),
+    }))
     .sort((a, b) => (b.valore as number) - (a.valore as number))
+
+  const valoreTotale = righe.reduce((acc, r) => acc + (r.valore as number), 0)
 
   // --- Interessi: YTD, cumulato anno corrente, mensile anno corrente, storico per anno ---
   const interessi = (interessiRaw ?? []).map((r) => ({
@@ -162,7 +138,7 @@ export default async function LiquiditaPage() {
     <div>
       <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('etichettaContenitore')}</div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>
-        {liquidita?.nome ?? tContenitori('liquidita')}
+        {tCategorie('liquidita')}
       </h1>
 
       <section>

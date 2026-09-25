@@ -53,15 +53,18 @@ export default async function RendimentiPage() {
     Polizza: tPaginaContenitore('etichettaPolizza'),
   }
 
-  const [{ data: contenitori }, { data: liquidita }] = await Promise.all([
+  const [{ data: contenitori }, { data: contiLiquidita }] = await Promise.all([
     supabase
       .from('contenitori')
       .select('id, nome, tipo')
       .in('tipo', ['PAC', 'Polizza'])
       .order('tipo')
       .order('nome'),
-    supabase.from('contenitori').select('id').eq('tipo', 'Liquidita').maybeSingle(),
+    // I conti di liquidità sono gli strumenti di categoria Liquidita (non
+    // esiste più un contenitore "Liquidità").
+    supabase.from('strumenti').select('id').eq('categoria', 'Liquidita'),
   ])
+  const idContiLiquidita = (contiLiquidita ?? []).map((s) => s.id)
 
   const ids = (contenitori ?? []).map((c) => c.id)
 
@@ -92,11 +95,11 @@ export default async function RendimentiPage() {
 
   // --- Liquidità: interessi netti per anno (nessun "capitale investito" per un conto,
   // quindi qui il rendimento è mostrato come importo assoluto, non come percentuale) ---
-  const { data: interessiRaw } = liquidita?.id
+  const { data: interessiRaw } = idContiLiquidita.length
     ? await supabase
         .from('movimenti_liquidita')
         .select('data, importo, tassa_trattenuta')
-        .eq('contenitore_id', liquidita.id)
+        .in('strumento_id', idContiLiquidita)
         .eq('tipo_movimento', 'Interesse')
         .order('data', { ascending: true })
     : { data: null }

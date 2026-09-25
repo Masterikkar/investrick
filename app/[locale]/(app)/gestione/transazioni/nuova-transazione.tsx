@@ -9,6 +9,7 @@ import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA } from '@/lib/i18n-tipi-movimento-liquidita'
+import { CATEGORIE_MERCATO } from '@/lib/categorie'
 
 type Strumento = { id: string; nome: string; ticker: string | null; categoria: string }
 type StrumentoLiquidita = { id: string; nome: string }
@@ -25,7 +26,6 @@ const CODICI_OPERAZIONE = [
   'Scambio_acquisizione',
 ]
 
-const CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
 const CODICI_TIPO_MOVIMENTO_LIQUIDITA = ['Versamento', 'Prelievo', 'Interesse', 'Costo']
 
@@ -110,7 +110,7 @@ export function NuovaTransazioneFinanziaria({
 
   const opzioniCategoria = [
     { value: '', label: '—' },
-    ...CATEGORIE.map((c) => ({ value: c, label: traduciCategoria(tCategorie, c) })),
+    ...CATEGORIE_MERCATO.map((c) => ({ value: c, label: traduciCategoria(tCategorie, c) })),
   ]
 
   const opzioniContenitore = [

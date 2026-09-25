@@ -8,6 +8,7 @@ import { Sezione } from '@/components/sezione'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { SezioneAnnoCorrente } from './sezione-anno-corrente'
 import { StoricoPlusMinus, type RigaNonRealizzata, type RigaRealizzata } from './storico-plus-minus'
+import { CATEGORIE_MERCATO } from '@/lib/categorie'
 
 const CHIAVE_TRADUZIONE_CONTENITORE_MOVIMENTO: Record<string, string> = {
   PAC: 'pac',
@@ -70,8 +71,9 @@ type TransazioneVendita = {
 type Strumento = { id: string; nome: string; categoria: string }
 type Contenitore = { id: string; nome: string; tipo: string }
 
-const BUCKET_NON_REALIZZATO = ['Totali', 'PAC', 'Polizze', 'Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto'] as const
-const CATEGORIE_MOVIMENTO = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto'] as const
+// Plus/minusvalenze: esistono solo per gli strumenti di mercato, non per la liquidità.
+const BUCKET_NON_REALIZZATO = ['Totali', 'PAC', 'Polizze', ...CATEGORIE_MERCATO]
+const CATEGORIE_MOVIMENTO = CATEGORIE_MERCATO
 const CONTENITORI_MOVIMENTO = ['PAC', 'Polizze'] as const
 
 const chiaveRiga = (strumentoId: string, contenitoreId: string | null) => `${strumentoId}|${contenitoreId ?? ''}`

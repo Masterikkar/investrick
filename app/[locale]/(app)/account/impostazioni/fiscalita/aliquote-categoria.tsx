@@ -25,13 +25,11 @@ const stileBottoneOutline: React.CSSProperties = {
 export function AliquoteCategoria({ categorie }: { categorie: CategoriaAliquota[] }) {
   const t = useTranslations('PaginaGestioneFiscalita')
   const tCategorie = useTranslations('Categorie')
-  const tContenitori = useTranslations('Contenitori')
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const router = useRouter()
   const conferma = useConferma()
 
   function etichettaCategoria(categoria: string): string {
-    if (categoria === 'Liquidita') return tContenitori('liquidita')
     return traduciCategoria(tCategorie, categoria)
   }
   const [valori, setValori] = useState<Record<string, string>>(() =>

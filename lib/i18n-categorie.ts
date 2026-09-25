@@ -9,6 +9,7 @@ export const CHIAVE_TRADUZIONE_CATEGORIA: Record<string, string> = {
   Monetario: 'monetario',
   Multiasset: 'multiasset',
   Crypto: 'crypto',
+  Liquidita: 'liquidita',
 }
 
 // Traduce una categoria solo se è nella mappa: un valore non mappato resta

@@ -31,7 +31,7 @@
     "titoloAsset": "Positions"
   },
   "PaginaTuttiAsset": {
-    "tooltipPeso": "Weight calculated on the total of financial assets held. Cash is excluded."
+    "tooltipPeso": "Weight calculated on the total of assets held in this table, cash included."
   },
   "Categorie": {
     "azioni": "Shares",
@@ -39,7 +39,8 @@
     "materiePrime": "Commodities",
     "monetario": "Money market",
     "multiasset": "Multi-asset",
-    "crypto": "Crypto"
+    "crypto": "Crypto",
+    "liquidita": "Cash"
   },
   "Menu": {
     "portafoglio": "Portfolio",

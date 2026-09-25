@@ -9,6 +9,7 @@ import { CardMetrica } from '@/components/card-metrica'
 import { CardRendimento } from '@/components/card-rendimento'
 import { Sezione } from '@/components/sezione'
 import { ValoriChiusura } from '@/components/valori-chiusura'
+import { CATEGORIE } from '@/lib/categorie'
 
 type Posizione = {
   strumento_id: string
@@ -35,7 +36,6 @@ type StoricoTotale = {
 }
 type RealizzatoAnno = { anno: number; realizzato_netto_totale: number }
 
-const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
 export default async function DashboardPage() {
   const locale = (await getLocale()) as LocaleFormato
@@ -55,7 +55,6 @@ export default async function DashboardPage() {
     { data: storicoRaw },
     { data: realizzatoAnnoRaw },
     { data: contenitori },
-    { data: categorieData },
     { data: scostamenti },
     { data: impostazioni },
     { data: nonRealizzatoRaw },
@@ -79,7 +78,6 @@ export default async function DashboardPage() {
     ),
     supabase.from('v_realizzato_per_anno').select('anno, realizzato_netto_totale').eq('anno', annoCorrente).maybeSingle().returns<RealizzatoAnno>(),
     supabase.from('v_valore_per_contenitore').select('contenitore_id, tipo, nome, valore_totale').order('tipo'),
-    supabase.from('v_valore_per_categoria').select('categoria, valore_totale'),
     supabase.from('v_scostamento_target').select('*'),
     supabase.from('impostazioni_utente').select('soglia_ribilanciamento_pp').maybeSingle(),
     supabase
@@ -143,24 +141,18 @@ export default async function DashboardPage() {
     .filter((s) => Math.abs(s.scostamento_pp ?? 0) >= soglia)
     .sort((a, b) => Math.abs(b.scostamento_pp ?? 0) - Math.abs(a.scostamento_pp ?? 0))
 
-  const categorie = ORDINE_CATEGORIE.map((nome) => ({
-    categoria: nome,
-    valore_totale: categorieData?.find((c) => c.categoria === nome)?.valore_totale ?? 0,
-  }))
-
   const valorePerCategoria = new Map<string, number>()
   for (const r of nonRealizzatoRaw ?? []) {
     if (r.valore == null) continue
     valorePerCategoria.set(r.categoria, (valorePerCategoria.get(r.categoria) ?? 0) + Number(r.valore))
   }
-  const fetteCategorie: FettaAnello[] = [
-    ...ORDINE_CATEGORIE.map((cat) => ({
-      nome: cat,
-      valore: valorePerCategoria.get(cat) ?? 0,
-      nomeVisualizzato: traduciCategoria(tCategorie, cat),
-    })),
-    { nome: 'Liquidità', valore: valoreTotaleLiquidita, nomeVisualizzato: tContenitori('liquidita') },
-  ]
+  // La liquidità non ha posizioni di mercato: il suo valore è la somma dei saldi.
+  valorePerCategoria.set('Liquidita', valoreTotaleLiquidita)
+  const fetteCategorie: FettaAnello[] = CATEGORIE.map((cat) => ({
+    nome: cat,
+    valore: valorePerCategoria.get(cat) ?? 0,
+    nomeVisualizzato: traduciCategoria(tCategorie, cat),
+  }))
 
   let valorePac = 0
   let valorePolizze = 0
@@ -175,7 +167,6 @@ export default async function DashboardPage() {
     { nome: 'PAC', valore: valorePac, nomeVisualizzato: tContenitori('pac') },
     { nome: 'Polizze', valore: valorePolizze, nomeVisualizzato: tContenitori('polizze') },
     { nome: 'Diretto', valore: valoreDiretto, nomeVisualizzato: tPaginaCategoria('provenienzaDiretto') },
-    { nome: 'Liquidità', valore: valoreTotaleLiquidita, nomeVisualizzato: tContenitori('liquidita') },
   ]
 
   return (

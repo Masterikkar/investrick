@@ -12,8 +12,8 @@ import type { SottoTarget } from '@/components/barre-sottocategoria'
 import type { ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
 import { AnalisiRendimento, type ContributoCategoria } from '@/components/analisi-rendimento'
 import { AnalisiComposizione, type ScostamentoCategoria } from '@/components/analisi-composizione'
+import { CATEGORIE } from '@/lib/categorie'
 
-const ORDINE_CATEGORIE_PAC = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
 export default async function PacDettaglioPage({
   params,
@@ -123,7 +123,7 @@ export default async function PacDettaglioPage({
     .slice()
     .sort(
       (a, b) =>
-        ORDINE_CATEGORIE_PAC.indexOf(a.categoria ?? '') - ORDINE_CATEGORIE_PAC.indexOf(b.categoria ?? '')
+        CATEGORIE.indexOf(a.categoria ?? '') - CATEGORIE.indexOf(b.categoria ?? '')
     )
 
   const righe: RigaTabella[] = (posizioni ?? [])
@@ -195,7 +195,7 @@ export default async function PacDettaglioPage({
     guadagnoPerCategoria[cat] = (guadagnoPerCategoria[cat] ?? 0) + (r.rendimentoAssoluto as number)
   }
   const maxAbsGuadagno = Math.max(0, ...Object.values(guadagnoPerCategoria).map((g) => Math.abs(g)))
-  const contributoPerCategoria: ContributoCategoria[] = ORDINE_CATEGORIE_PAC.filter(
+  const contributoPerCategoria: ContributoCategoria[] = CATEGORIE.filter(
     (cat) => guadagnoPerCategoria[cat] !== undefined
   ).map((cat) => {
     const guadagno = guadagnoPerCategoria[cat]

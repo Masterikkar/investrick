@@ -9,11 +9,14 @@ import { Sezione } from '@/components/sezione'
 import { tutteLeRighe } from '@/lib/supabase-tutte-le-righe'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { traduciTipoStrumento } from '@/lib/i18n-tipi-strumento'
+import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
+import { saldoRiportatoAllaData, serieSaldiPerConto } from '@/lib/saldi-riportati'
 
-// Tutte le posizioni aperte delle sei categorie di investimento insieme (la
-// Liquidità ha la sua pagina), con la stessa struttura di PaginaCategoria:
-// grafico del rendimento, card e tabella. Stesse colonne più la Categoria; il
-// Peso è sul totale di questa tabella, non della categoria.
+// Tutte le posizioni aperte di tutte e 7 le categorie insieme, Liquidità
+// compresa, con la stessa struttura di PaginaCategoria: grafico del
+// rendimento, card e tabella. Stesse colonne più la Categoria; il Peso è sul
+// totale di questa tabella, non della categoria. Per la liquidità il capitale
+// investito è il saldo stesso (rendimento 0), e NAV e prezzo medio non esistono.
 export default async function TuttiAssetPage() {
   const locale = (await getLocale()) as LocaleFormato
   const tMenu = await getTranslations('Menu')
@@ -23,6 +26,7 @@ export default async function TuttiAssetPage() {
   const tContenitore = await getTranslations('PaginaContenitore')
   const tCategorie = await getTranslations('Categorie')
   const tTipiStrumento = await getTranslations('TipiStrumento')
+  const tTipiLiquidita = await getTranslations('TipiLiquidita')
 
   const COLONNE: ColonnaTabella[] = [
     { key: 'nome', label: t('colonnaStrumento'), kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
@@ -40,18 +44,17 @@ export default async function TuttiAssetPage() {
 
   const supabase = await createClient()
 
-  const { data: strumenti } = await supabase
-    .from('strumenti')
-    .select('id, nome, tipo, categoria')
-    .neq('categoria', 'Liquidita')
+  const { data: strumenti } = await supabase.from('strumenti').select('id, nome, tipo, categoria')
 
-  const strumentoIds = strumenti?.map((s) => s.id) ?? []
+  const strumentoIds = (strumenti ?? []).filter((s) => s.categoria !== 'Liquidita').map((s) => s.id)
+  const idContiLiquidita = (strumenti ?? []).filter((s) => s.categoria === 'Liquidita').map((s) => s.id)
 
   // Oltre 1000 righe (una per categoria e per giorno): va letta a blocchi.
   const { data: storicoRaw } = await tutteLeRighe((da, a) =>
     supabase
       .from('v_storico_valorizzazioni_per_categoria')
       .select('categoria, data, valore_totale, capitale_investito_totale')
+      // La Liquidità è aggiunta sotto, conto per conto, con il riporto del saldo.
       .neq('categoria', 'Liquidita')
       .order('data', { ascending: true })
       .order('categoria', { ascending: true })
@@ -79,6 +82,22 @@ export default async function TuttiAssetPage() {
     storicoPerData.set(r.data, giorno)
   }
 
+  // Liquidità: per ogni data del grafico, l'ultimo saldo noto di ciascun conto
+  // (riporto in avanti, vedi lib/saldi-riportati.ts). Capitale investito =
+  // saldo, quindi la liquidità contribuisce 0% al rendimento.
+  const { data: storicoLiquiditaRaw } = idContiLiquidita.length
+    ? await tutteLeRighe((da, a) =>
+        supabase
+          .from('v_storico_valorizzazioni_per_strumento')
+          .select('strumento_id, data, valore_totale')
+          .in('strumento_id', idContiLiquidita)
+          .order('data', { ascending: true })
+          .order('strumento_id', { ascending: true })
+          .range(da, a)
+      )
+    : { data: null }
+  const saldiPerConto = serieSaldiPerConto(storicoLiquiditaRaw ?? [])
+
   const puntiRendimento: PuntoStorico[] = Array.from(storicoPerData.entries())
     .filter(([data, giorno]) =>
       Array.from(intervalloCategoria.entries()).every(
@@ -86,8 +105,12 @@ export default async function TuttiAssetPage() {
       )
     )
     .map(([data, { valore, capitale, capitaleMancante }]) => {
-      if (capitaleMancante || capitale <= 0) return null
-      return { data, valore: ((valore - capitale) / capitale) * 100 }
+      if (capitaleMancante) return null
+      const liquidita = saldoRiportatoAllaData(saldiPerConto, data)
+      const valoreTotale = valore + liquidita
+      const capitaleTotale = capitale + liquidita
+      if (capitaleTotale <= 0) return null
+      return { data, valore: ((valoreTotale - capitaleTotale) / capitaleTotale) * 100 }
     })
     .filter((p): p is PuntoStorico => p !== null)
     .sort((a, b) => a.data.localeCompare(b.data))
@@ -107,8 +130,19 @@ export default async function TuttiAssetPage() {
         .in('strumento_id', strumentoIds)
     : { data: null }
 
+  // Conti di liquidità: una riga per conto e contenitore con saldo diverso da 0.
+  const [{ data: saldiLiquidita }, { data: costiLiquidita }] = idContiLiquidita.length
+    ? await Promise.all([
+        supabase.from('v_saldo_liquidita').select('strumento_id, contenitore_id, saldo_corrente').in('strumento_id', idContiLiquidita),
+        supabase.from('v_costo_liquidita').select('strumento_id, contenitore_id, costo_totale').in('strumento_id', idContiLiquidita),
+      ])
+    : [{ data: null }, { data: null }]
+  const saldiAperti = (saldiLiquidita ?? []).filter((s) => s.strumento_id && Number(s.saldo_corrente ?? 0) !== 0)
+
   const contenitoreIds = Array.from(
-    new Set((posizioni ?? []).map((p) => p.contenitore_id).filter((id): id is string => id !== null))
+    new Set(
+      [...(posizioni ?? []), ...saldiAperti].map((p) => p.contenitore_id).filter((id): id is string => id !== null)
+    )
   )
 
   const { data: contenitori } = contenitoreIds.length
@@ -118,10 +152,44 @@ export default async function TuttiAssetPage() {
   // Il Peso si calcola sulla somma dei valori delle righe mostrate qui, non
   // su v_valore_per_categoria (che è per singola categoria): così i pesi della
   // tabella sommano sempre a 100%.
-  const valoreTotaleTabella = (posizioni ?? []).reduce((acc, p) => acc + (p.valore ?? 0), 0)
+  const valoreTotaleTabella =
+    (posizioni ?? []).reduce((acc, p) => acc + (p.valore ?? 0), 0) +
+    saldiAperti.reduce((acc, s) => acc + Number(s.saldo_corrente ?? 0), 0)
+
+  function etichettaTipo(categoria: string, tipo: string): string {
+    if (categoria === 'Liquidita') {
+      const chiave = CHIAVE_TRADUZIONE_TIPO_LIQUIDITA[tipo]
+      return chiave ? tTipiLiquidita(chiave) : tipo
+    }
+    return traduciTipoStrumento(tTipiStrumento, tipo)
+  }
+
+  const righeLiquidita: RigaTabella[] = saldiAperti.map((s) => {
+    const strumento = strumenti?.find((x) => x.id === s.strumento_id)
+    const saldo = Number(s.saldo_corrente ?? 0)
+    const costo = (costiLiquidita ?? []).find((c) => c.strumento_id === s.strumento_id && c.contenitore_id === s.contenitore_id)
+    const contenitore = s.contenitore_id ? contenitori?.find((c) => c.id === s.contenitore_id) : null
+    return {
+      key: `${s.strumento_id}-${s.contenitore_id ?? 'diretto'}`,
+      strumentoId: s.strumento_id,
+      nome: strumento?.nome ?? '—',
+      categoria: traduciCategoria(tCategorie, 'Liquidita'),
+      tipo: strumento ? etichettaTipo('Liquidita', strumento.tipo) : '—',
+      rendimentoPct: 0,
+      rendimentoAssoluto: 0,
+      valore: saldo,
+      capitaleInvestito: saldo,
+      capitaleInvestitoNetto: saldo,
+      peso: valoreTotaleTabella > 0 ? (saldo / valoreTotaleTabella) * 100 : 0,
+      nav: null,
+      prezzoMedioUnitario: null,
+      costo: Number(costo?.costo_totale ?? 0),
+      provenienza: contenitore?.nome ?? t('provenienzaDiretto'),
+    }
+  })
 
   const righe: RigaTabella[] = (posizioni ?? [])
-    .map((p) => {
+    .map((p): RigaTabella => {
       const strumento = strumenti?.find((s) => s.id === p.strumento_id)
       const costo = costi?.find((c) => c.strumento_id === p.strumento_id && c.contenitore_id === p.contenitore_id)
       const contenitore = p.contenitore_id ? contenitori?.find((c) => c.id === p.contenitore_id) : null
@@ -130,7 +198,7 @@ export default async function TuttiAssetPage() {
         strumentoId: p.strumento_id,
         nome: strumento?.nome ?? '—',
         categoria: strumento?.categoria != null ? traduciCategoria(tCategorie, strumento.categoria) : '—',
-        tipo: strumento?.tipo != null ? traduciTipoStrumento(tTipiStrumento, strumento.tipo) : '—',
+        tipo: strumento?.tipo != null ? etichettaTipo(strumento.categoria, strumento.tipo) : '—',
         rendimentoPct: p.rendimento_pct ?? 0,
         rendimentoAssoluto: (p.valore ?? 0) - (p.capitale_investito ?? 0),
         valore: p.valore ?? 0,
@@ -143,6 +211,7 @@ export default async function TuttiAssetPage() {
         provenienza: contenitore?.nome ?? t('provenienzaDiretto'),
       }
     })
+    .concat(righeLiquidita)
     .sort((a, b) => (b.valore as number) - (a.valore as number))
 
   // Card: stessi calcoli di PaginaCategoria, sulle righe della tabella.

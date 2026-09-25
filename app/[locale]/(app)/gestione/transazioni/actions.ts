@@ -6,12 +6,12 @@ import { redirect } from '@/i18n/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import type { Database } from '@/types/database.types'
+import { CATEGORIE_MERCATO } from '@/lib/categorie'
 
 // Stessa ragione di app/(app)/gestione/strumenti/actions.ts: aliquota_tassazione
 // la riempie il trigger, mai l'app.
 type InsertStrumento = Omit<Database['public']['Tables']['strumenti']['Insert'], 'aliquota_tassazione'>
 
-const CATEGORIE_VALIDE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
 export async function aggiungiTransazione(formData: FormData) {
   const supabase = await createClient()
@@ -34,7 +34,7 @@ export async function aggiungiTransazione(formData: FormData) {
     if (strumentoId) {
       redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
     }
-    if (!CATEGORIE_VALIDE.includes(categoriaManuale)) {
+    if (!CATEGORIE_MERCATO.includes(categoriaManuale)) {
       redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
     }
     categoria = categoriaManuale

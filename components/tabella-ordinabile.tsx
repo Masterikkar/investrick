@@ -64,6 +64,8 @@ export function TabellaOrdinabile({
 
   function renderCella(colonna: ColonnaTabella, riga: RigaTabella) {
     const valore = riga[colonna.key]
+    // Un valore mancante (null) si mostra sempre come "—", mai come un finto 0.
+    const mancante = valore === null || valore === undefined
 
     switch (colonna.kind) {
       case 'link': {
@@ -78,16 +80,18 @@ export function TabellaOrdinabile({
         )
       }
       case 'euro':
-        return formatEuro(Number(valore) || 0, locale)
+        return mancante ? '—' : formatEuro(Number(valore) || 0, locale)
       case 'euro-signed': {
+        if (mancante) return '—'
         const n = Number(valore) || 0
         return (
           <span style={{ color: n >= 0 ? 'var(--success)' : 'var(--danger)' }}>{formatEuroSigned(n, locale)}</span>
         )
       }
       case 'percent':
-        return formatPercent(Number(valore) || 0, 2, false, locale)
+        return mancante ? '—' : formatPercent(Number(valore) || 0, 2, false, locale)
       case 'percent-signed': {
+        if (mancante) return '—'
         const n = Number(valore) || 0
         return (
           <span style={{ color: n >= 0 ? 'var(--success)' : 'var(--danger)' }}>{formatPercent(n, 2, true, locale)}</span>
@@ -96,7 +100,7 @@ export function TabellaOrdinabile({
       case 'date':
         return valore ? formatData(String(valore), locale) : '—'
       case 'numero':
-        return valore === null || valore === undefined ? '—' : formatNumero(Number(valore), 2, false, locale)
+        return mancante ? '—' : formatNumero(Number(valore), 2, false, locale)
       default:
         return valore ?? '—'
     }

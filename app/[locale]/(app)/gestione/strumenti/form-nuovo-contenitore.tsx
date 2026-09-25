@@ -25,7 +25,6 @@ const stileErroreCampo: React.CSSProperties = {
 export function FormNuovoContenitore() {
   const t = useTranslations('PaginaGestioneStrumenti')
   const tPaginaContenitore = useTranslations('PaginaContenitore')
-  const tContenitori = useTranslations('Contenitori')
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const [tipo, setTipo] = useState('')
   const [erroreTipo, setErroreTipo] = useState<string | null>(null)
@@ -33,7 +32,6 @@ export function FormNuovoContenitore() {
   const tipiContenitore = [
     { value: 'PAC', label: 'PAC' },
     { value: 'Polizza', label: tPaginaContenitore('etichettaPolizza') },
-    { value: 'Liquidita', label: tContenitori('liquidita') },
   ]
 
   const opzioniTipo = [{ value: '', label: tPaginaRibilanciamento('optionSeleziona') }, ...tipiContenitore]

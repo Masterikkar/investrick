@@ -31,7 +31,7 @@
     "titoloAsset": "Posizioni"
   },
   "PaginaTuttiAsset": {
-    "tooltipPeso": "Peso calcolato sul totale degli asset finanziari posseduti. È esclusa la liquidità."
+    "tooltipPeso": "Peso calcolato sul totale degli asset posseduti in questa tabella, liquidità compresa."
   },
   "Categorie": {
     "azioni": "Azioni",
@@ -39,7 +39,8 @@
     "materiePrime": "Materie prime",
     "monetario": "Monetario",
     "multiasset": "Multiasset",
-    "crypto": "Crypto"
+    "crypto": "Crypto",
+    "liquidita": "Liquidità"
   },
   "Menu": {
     "portafoglio": "Portafoglio",

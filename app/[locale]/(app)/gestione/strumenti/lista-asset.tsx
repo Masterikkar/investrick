@@ -29,7 +29,6 @@ export function ListaAsset({
 }) {
   const t = useTranslations('PaginaGestioneStrumenti')
   const tCategorie = useTranslations('Categorie')
-  const tContenitori = useTranslations('Contenitori')
   const tTipiLiquidita = useTranslations('TipiLiquidita')
   const tTipiStrumento = useTranslations('TipiStrumento')
   const tMenu = useTranslations('Menu')
@@ -42,7 +41,7 @@ export function ListaAsset({
   const [inModifica, setInModifica] = useState<AssetElenco | null>(null)
 
   function etichettaCategoria(categoria: string): string {
-    return categoria === 'Liquidita' ? tContenitori('liquidita') : traduciCategoria(tCategorie, categoria)
+    return traduciCategoria(tCategorie, categoria)
   }
 
   function etichettaTipo(categoria: string, tipo: string): string {

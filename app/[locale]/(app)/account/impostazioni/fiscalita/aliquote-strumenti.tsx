@@ -25,7 +25,6 @@ const stileBottoneOutline: React.CSSProperties = {
 export function AliquoteStrumenti({ righe }: { righe: RigaAliquotaStrumento[] }) {
   const t = useTranslations('PaginaGestioneFiscalita')
   const tCategorie = useTranslations('Categorie')
-  const tContenitori = useTranslations('Contenitori')
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
   const tFiltroTabellaStorico = useTranslations('FiltroTabellaStorico')
   const tPaginaCosti = useTranslations('PaginaCosti')
@@ -33,7 +32,6 @@ export function AliquoteStrumenti({ righe }: { righe: RigaAliquotaStrumento[] })
   const router = useRouter()
 
   function etichettaCategoria(categoria: string): string {
-    if (categoria === 'Liquidita') return tContenitori('liquidita')
     return traduciCategoria(tCategorie, categoria)
   }
   const [valori, setValori] = useState<Record<string, string>>(() =>

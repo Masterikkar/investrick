@@ -13,7 +13,6 @@ type Contenitore = { id: string; nome: string; tipo: string }
 export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }) {
   const t = useTranslations('PaginaGestioneStrumenti')
   const tPaginaContenitore = useTranslations('PaginaContenitore')
-  const tContenitori = useTranslations('Contenitori')
   const tPaginaCategoria = useTranslations('PaginaCategoria')
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const router = useRouter()
@@ -21,7 +20,6 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
 
   function etichettaTipo(tipo: string): string {
     if (tipo === 'Polizza') return tPaginaContenitore('etichettaPolizza')
-    if (tipo === 'Liquidita') return tContenitori('liquidita')
     return tipo
   }
   const [nomi, setNomi] = useState<Record<string, string>>(() =>

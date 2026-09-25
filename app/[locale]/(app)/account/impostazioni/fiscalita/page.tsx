@@ -3,11 +3,11 @@ import { createClient } from '@/lib/supabase/server'
 import { AliquoteCategoria, type CategoriaAliquota } from './aliquote-categoria'
 import { AliquoteStrumenti, type RigaAliquotaStrumento } from './aliquote-strumenti'
 import { SezioneImpostazioni } from '../sezione-impostazioni'
+import { CATEGORIE } from '@/lib/categorie'
 
 type ImpostazioneCategoria = { categoria: string; aliquota_default: number }
 type Strumento = { id: string; nome: string; categoria: string; aliquota_tassazione: number }
 
-const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto', 'Liquidita']
 
 export default async function ImpostazioniFiscalitaPage() {
   const t = await getTranslations('PaginaGestioneFiscalita')
@@ -27,7 +27,7 @@ export default async function ImpostazioniFiscalitaPage() {
     conteggioMap.set(s.categoria, (conteggioMap.get(s.categoria) ?? 0) + 1)
   }
 
-  const categorie: CategoriaAliquota[] = ORDINE_CATEGORIE.map((categoria) => ({
+  const categorie: CategoriaAliquota[] = CATEGORIE.map((categoria) => ({
     categoria,
     aliquotaDefault: defaultMap.get(categoria) ?? 26,
     numeroStrumenti: conteggioMap.get(categoria) ?? 0,

@@ -93,7 +93,6 @@ export function FormAsset({
 }) {
   const t = useTranslations('PaginaGestioneStrumenti')
   const tCategorie = useTranslations('Categorie')
-  const tContenitori = useTranslations('Contenitori')
   const tTipiLiquidita = useTranslations('TipiLiquidita')
   const tPaginaImpostazioni = useTranslations('PaginaImpostazioni')
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
@@ -113,7 +112,6 @@ export function FormAsset({
   const isMultiasset = categoria === 'Multiasset'
 
   function etichettaCategoria(cat: string): string {
-    if (cat === 'Liquidita') return tContenitori('liquidita')
     return traduciCategoria(tCategorie, cat)
   }
 

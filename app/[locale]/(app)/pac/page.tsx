@@ -13,8 +13,8 @@ import type { SottoTarget } from '@/components/barre-sottocategoria'
 import type { ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
 import { AnalisiRendimento, type ContributoCategoria } from '@/components/analisi-rendimento'
 import { AnalisiComposizione, type ScostamentoCategoria } from '@/components/analisi-composizione'
+import { CATEGORIE } from '@/lib/categorie'
 
-const ORDINE_CATEGORIE = ['Azioni', 'Obbligazioni', 'Materie prime', 'Monetario', 'Multiasset', 'Crypto']
 
 export default async function PacPage() {
   const locale = (await getLocale()) as LocaleFormato
@@ -215,7 +215,7 @@ export default async function PacPage() {
     targetPerCategoriaEContenitore[ta.categoria][ta.contenitore_id] = Number(ta.target_percentuale)
   }
 
-  const categorieConTarget = ORDINE_CATEGORIE.filter((cat) =>
+  const categorieConTarget = CATEGORIE.filter((cat) =>
     idsConTargetAttivo.some((id) => targetPerCategoriaEContenitore[cat]?.[id] !== undefined)
   )
 
@@ -289,7 +289,7 @@ export default async function PacPage() {
     guadagnoPerCategoria[cat] = (guadagnoPerCategoria[cat] ?? 0) + (r.rendimentoAssoluto as number)
   }
   const maxAbsGuadagno = Math.max(0, ...Object.values(guadagnoPerCategoria).map((g) => Math.abs(g)))
-  const contributoPerCategoria: ContributoCategoria[] = ORDINE_CATEGORIE.filter(
+  const contributoPerCategoria: ContributoCategoria[] = CATEGORIE.filter(
     (cat) => guadagnoPerCategoria[cat] !== undefined
   ).map((cat) => {
     const guadagno = guadagnoPerCategoria[cat]
