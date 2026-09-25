@@ -1771,6 +1771,27 @@ export type Database = {
           strumento_id: string
         }[]
       }
+      motore_fifo_posizione: {
+        Args: {
+          p_contenitore_id: string
+          p_data_limite?: string
+          p_strumento_id: string
+        }
+        Returns: {
+          acquisto_id: string
+          commissione_acquisto_quota: number
+          commissione_vendita_quota: number
+          data_acquisto: string
+          data_vendita: string
+          plusvalenza: number
+          prezzo_acquisto: number
+          prezzo_vendita: number
+          quantita: number
+          tassa_quota: number
+          tipo_riga: string
+          vendita_id: string
+        }[]
+      }
       non_realizzato_fiscale_a_data: {
         Args: { p_data: string }
         Returns: {
