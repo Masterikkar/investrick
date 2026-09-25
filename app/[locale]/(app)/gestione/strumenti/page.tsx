@@ -5,6 +5,7 @@ import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
 import { FormAsset } from './form-asset'
 import { FormNuovoContenitore } from './form-nuovo-contenitore'
+import { NotificaDaParametro } from './notifica-da-parametro'
 import { ListaContenitori } from './lista-contenitori'
 import { ListaAsset, type AssetElenco } from './lista-asset'
 
@@ -144,9 +145,7 @@ export default async function GestioneStrumentiPage({
             {t('titoloCreaNuovoContenitore')}
           </h3>
 
-          {params.successo_contenitore === '1' && (
-            <p style={{ color: 'var(--success)', fontSize: 'var(--fs-body)', marginBottom: 12 }}>{t('successoContenitoreCreato')}</p>
-          )}
+          {params.successo_contenitore === '1' && <NotificaDaParametro messaggio={t('successoContenitoreCreato')} />}
           {params.errore_contenitore === '1' && (
             <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginBottom: 12 }}>
               {t('erroreGenerico')}

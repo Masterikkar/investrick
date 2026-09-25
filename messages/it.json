@@ -209,6 +209,7 @@
     "token": "Token"
   },
   "DialogoConferma": {
+    "bottoneOk": "OK",
     "bottoneAnnulla": "Annulla",
     "bottoneConferma": "Conferma"
   },
@@ -429,6 +430,8 @@
     "alertNessunoStrumentoTrovato": "Nessuno strumento trovato."
   },
   "PaginaGestioneStrumenti": {
+    "successoContenitoreSalvato": "Gruppo salvato.",
+    "successoContenitoreEliminato": "Gruppo eliminato.",
     "titoloGestioneStrumenti": "Gestione strumenti",
     "titoloAsset": "Asset",
     "titoloCreaNuovoAsset": "Crea nuovo asset",
@@ -446,10 +449,10 @@
     "successoEliminaAsset": "\"{nome}\" eliminato, insieme a {transazioni, plural, =0 {nessuna transazione} one {# transazione} other {# transazioni}} e {movimenti, plural, =0 {nessun movimento di liquidità} one {# movimento di liquidità} other {# movimenti di liquidità}}.",
     "erroreIsinDuplicato": "Esiste già uno strumento con questo ISIN: <strong>{nome}</strong>. <link>Vai alla sua scheda</link> invece di crearne uno nuovo.",
     "erroreGenerico": "Qualcosa è andato storto, controlla i campi e riprova.",
-    "titoloContenitori": "Contenitori",
-    "titoloModificaContenitori": "Modifica contenitori",
-    "titoloCreaNuovoContenitore": "Crea nuovo contenitore",
-    "successoContenitoreCreato": "Contenitore creato.",
+    "titoloContenitori": "Gruppi",
+    "titoloModificaContenitori": "Modifica gruppi",
+    "titoloCreaNuovoContenitore": "Crea nuovo gruppo",
+    "successoContenitoreCreato": "Gruppo creato.",
     "labelCategoria": "Categoria",
     "labelTipo": "Tipo",
     "labelNome": "Nome",
@@ -473,14 +476,14 @@
     "bottoneCreaAsset": "Crea asset",
     "erroreSelezionaCategoria": "Seleziona una categoria.",
     "erroreSelezionaTipo": "Seleziona un tipo.",
-    "alertNessunContenitoreCreato": "Nessun contenitore creato.",
+    "alertNessunContenitoreCreato": "Nessun gruppo creato.",
     "bottoneElimina": "Elimina",
-    "titoloEliminaContenitore": "Elimina contenitore",
-    "confermaEliminaContenitore": "Eliminare il contenitore \"{nome}\"?\n\nLe transazioni e i movimenti collegati resteranno senza gruppo; eventuali target impostati su questo contenitore verranno cancellati.\n\nL'operazione non è reversibile.",
+    "titoloEliminaContenitore": "Elimina gruppo",
+    "confermaEliminaContenitore": "Eliminare il gruppo \"{nome}\"?\n\nLe transazioni e i movimenti collegati resteranno senza gruppo; eventuali target impostati su questo gruppo verranno cancellati.\n\nL'operazione non è reversibile.",
     "labelDataAttivazione": "Data di attivazione",
     "hintDataAttivazione": "Data di attivazione facoltativa, utile soprattutto per le polizze.",
     "checkboxTargetAttivo": "Target attivo",
-    "bottoneCreaContenitore": "Crea contenitore"
+    "bottoneCreaContenitore": "Crea gruppo"
   },
   "PaginaGestioneTransazioni": {
     "linkStoricoTransazioniFinanziarie": "→ Storico transazioni finanziarie",

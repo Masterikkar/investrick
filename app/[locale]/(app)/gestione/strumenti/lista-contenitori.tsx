@@ -7,6 +7,7 @@ import { rinominaContenitore, eliminaContenitore } from './actions-contenitore'
 import { LARGHEZZA_STANDARD, LARGHEZZA_RIGA_QUATTRO_CAMPI, STILE_BOTTONE_ICONA } from './layout-campi'
 import { IconaElimina, IconaSalva } from '@/components/icone'
 import { useConferma } from '@/components/conferma'
+import { useNotifica } from '@/components/notifica'
 
 type Contenitore = { id: string; nome: string; tipo: string }
 
@@ -16,6 +17,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const router = useRouter()
   const conferma = useConferma()
+  const notifica = useNotifica()
 
   function etichettaTipo(tipo: string): string {
     if (tipo === 'Polizza') return tPaginaContenitore('etichettaPolizza')
@@ -46,6 +48,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
       } else {
         setNomi((stato) => ({ ...stato, [id]: nuovoNome }))
         router.refresh()
+        notifica({ messaggio: t('successoContenitoreSalvato') })
       }
     })
   }
@@ -70,6 +73,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
         setMessaggioErrore(risultato.errore)
       } else {
         router.refresh()
+        notifica({ messaggio: t('successoContenitoreEliminato') })
       }
     })
   }

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/[locale]/login/actions'
 import { ChiudiTendineAutomaticamente } from '@/components/chiudi-tendine-automaticamente'
 import { ConfermaProvider } from '@/components/conferma'
+import { NotificaProvider } from '@/components/notifica'
 import { BarraRicerca } from '@/components/barra-ricerca'
 import { RippleLink } from '@/components/ripple-link'
 import {
@@ -74,7 +75,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .sort((a, b) => a.etichetta.localeCompare(b.etichetta, locale))
 
   return (
-    <ConfermaProvider>
+    <ConfermaProvider><NotificaProvider>
       <div>
         <ChiudiTendineAutomaticamente />
         <header
@@ -282,6 +283,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div style={{ maxWidth: 1600, margin: '0 auto' }}>{children}</div>
         </main>
       </div>
-    </ConfermaProvider>
+    </NotificaProvider></ConfermaProvider>
   )
 }

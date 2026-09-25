@@ -209,6 +209,7 @@
     "token": "Token"
   },
   "DialogoConferma": {
+    "bottoneOk": "OK",
     "bottoneAnnulla": "Cancel",
     "bottoneConferma": "Confirm"
   },
@@ -429,6 +430,8 @@
     "alertNessunoStrumentoTrovato": "No instrument found."
   },
   "PaginaGestioneStrumenti": {
+    "successoContenitoreSalvato": "Group saved.",
+    "successoContenitoreEliminato": "Group deleted.",
     "titoloGestioneStrumenti": "Instrument management",
     "titoloAsset": "Asset",
     "titoloCreaNuovoAsset": "Create new asset",
@@ -446,10 +449,10 @@
     "successoEliminaAsset": "\"{nome}\" deleted, together with {transazioni, plural, =0 {no transactions} one {# transaction} other {# transactions}} and {movimenti, plural, =0 {no cash movements} one {# cash movement} other {# cash movements}}.",
     "erroreIsinDuplicato": "An instrument with this ISIN already exists: <strong>{nome}</strong>. <link>Go to its page</link> instead of creating a new one.",
     "erroreGenerico": "Something went wrong, check the fields and try again.",
-    "titoloContenitori": "Containers",
-    "titoloModificaContenitori": "Edit containers",
-    "titoloCreaNuovoContenitore": "Create new container",
-    "successoContenitoreCreato": "Container created.",
+    "titoloContenitori": "Groups",
+    "titoloModificaContenitori": "Edit groups",
+    "titoloCreaNuovoContenitore": "Create new group",
+    "successoContenitoreCreato": "Group created.",
     "labelCategoria": "Category",
     "labelTipo": "Type",
     "labelNome": "Name",
@@ -473,14 +476,14 @@
     "bottoneCreaAsset": "Create asset",
     "erroreSelezionaCategoria": "Select a category.",
     "erroreSelezionaTipo": "Select a type.",
-    "alertNessunContenitoreCreato": "No container created.",
+    "alertNessunContenitoreCreato": "No group created.",
     "bottoneElimina": "Delete",
-    "titoloEliminaContenitore": "Delete container",
-    "confermaEliminaContenitore": "Delete the container \"{nome}\"?\n\nLinked transactions and movements will no longer belong to any group; any targets set on this container will be deleted.\n\nThis action cannot be undone.",
+    "titoloEliminaContenitore": "Delete group",
+    "confermaEliminaContenitore": "Delete the group \"{nome}\"?\n\nLinked transactions and movements will no longer belong to any group; any targets set on this group will be deleted.\n\nThis action cannot be undone.",
     "labelDataAttivazione": "Activation date",
     "hintDataAttivazione": "Optional activation date, mainly useful for insurance policies.",
     "checkboxTargetAttivo": "Target active",
-    "bottoneCreaContenitore": "Create container"
+    "bottoneCreaContenitore": "Create group"
   },
   "PaginaGestioneTransazioni": {
     "linkStoricoTransazioniFinanziarie": "→ Investment transaction history",
