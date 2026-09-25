@@ -603,6 +603,7 @@
     "erroreGenerico": "Something went wrong, please try again."
   },
   "BarraRicerca": {
+    "nessunRisultato": "No results.",
     "placeholder": "Search assets or groups...",
     "sottotitoloAsset": "Asset · {categoria}",
     "sottotitoloGruppo": "Group · {tipo}"

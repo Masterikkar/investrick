@@ -603,6 +603,7 @@
     "erroreGenerico": "Qualcosa è andato storto, riprova."
   },
   "BarraRicerca": {
+    "nessunRisultato": "Nessun risultato.",
     "placeholder": "Cerca asset o gruppi...",
     "sottotitoloAsset": "Asset · {categoria}",
     "sottotitoloGruppo": "Gruppo · {tipo}"

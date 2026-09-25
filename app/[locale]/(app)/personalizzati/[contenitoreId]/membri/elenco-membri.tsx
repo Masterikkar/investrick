@@ -72,7 +72,7 @@ function Tabella({
               {/* RippleLink è un inline-block con overflow nascosto: da solo si
                   allinea al ticker col bordo inferiore, non con il testo. */}
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <RippleLink href={`/asset/${s.id}`} className="link-dettaglio">
+                <RippleLink href={`/asset/${s.id}`} className="link-interattivo">
                   {s.nome}
                 </RippleLink>
                 {s.ticker && <span style={{ color: 'var(--text-secondary)' }}>({s.ticker})</span>}

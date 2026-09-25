@@ -106,41 +106,37 @@ export function BarraRicerca({
         }}
       />
 
+      {/* Stesso pannello e stesse righe dei menu a tendina della navigazione
+          (.menu-panel e .menu-row in globals.css). */}
       {aperto && testo && (
         <div
+          className="menu-panel"
           style={{
             position: 'absolute',
-            top: 'calc(100% + 4px)',
+            top: 'calc(100% + 6px)',
             left: 0,
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border-default)',
-            borderRadius: 0,
-            minWidth: 260,
+            zIndex: 10,
             maxHeight: 320,
             overflowY: 'auto',
-            zIndex: 20,
-            color: 'var(--text-primary)',
           }}
         >
           {risultati.length === 0 ? (
-            <div style={{ padding: 12, color: 'var(--text-secondary)', fontSize: 'var(--fs-search)' }}>Nessun risultato.</div>
+            <div className="menu-row" style={{ color: 'var(--text-secondary)' }}>
+              {t('nessunRisultato')}
+            </div>
           ) : (
             risultati.map((r) => (
               <RippleLink
                 key={r.key}
                 href={r.href}
-                className="riga-interattiva"
+                className="menu-row link-interattivo"
                 onClick={() => {
                   setAperto(false)
                   setQuery('')
                 }}
-                style={{
-                  display: 'block',
-                  padding: '8px 12px',
-                  borderBottom: '1px solid var(--border-default)',
-                }}
+                style={{ display: 'block' }}
               >
-                <div style={{ fontSize: 'var(--fs-search)' }}>{r.label}</div>
+                <div>{r.label}</div>
                 <div style={{ fontSize: 'var(--fs-search-sub)', color: 'var(--text-secondary)' }}>{r.sottotitolo}</div>
               </RippleLink>
             ))
