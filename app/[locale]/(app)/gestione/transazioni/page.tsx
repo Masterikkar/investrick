@@ -28,7 +28,7 @@ export default async function TransazioniPage({
 
   const { data: contenitori } = await supabase
     .from('contenitori')
-    .select('id, nome')
+    .select('id, nome, tipo')
     .order('nome')
 
   // I conti di liquidità hanno il loro form (movimenti di liquidità): nel form

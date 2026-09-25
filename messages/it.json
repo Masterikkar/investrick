@@ -20,7 +20,6 @@
     "colonnaPrezzoMedio": "Prezzo medio",
     "colonnaCosto": "Costo",
     "colonnaProvenienza": "Provenienza",
-    "provenienzaDiretto": "Diretto",
     "linkRendimenti": "Vedi dettaglio rendimenti →",
     "labelPlusMinusNonRealizzata": "Plus/minusvalenza non realizzata",
     "linkFiscalita": "Vedi dettaglio fiscalità →",
@@ -77,6 +76,7 @@
     }
   },
   "Contenitori": {
+    "nessunGruppo": "Nessun gruppo",
     "pac": "PAC",
     "polizze": "Polizze",
     "liquidita": "Liquidità"
@@ -452,7 +452,7 @@
     "alertNessunContenitoreCreato": "Nessun contenitore creato.",
     "bottoneElimina": "Elimina",
     "titoloEliminaContenitore": "Elimina contenitore",
-    "confermaEliminaContenitore": "Eliminare il contenitore \"{nome}\"?\n\nLe transazioni e i movimenti collegati verranno spostati nel contenitore '{diretto}'; eventuali target impostati su questo contenitore verranno cancellati.\n\nL'operazione non è reversibile.",
+    "confermaEliminaContenitore": "Eliminare il contenitore \"{nome}\"?\n\nLe transazioni e i movimenti collegati resteranno senza gruppo; eventuali target impostati su questo contenitore verranno cancellati.\n\nL'operazione non è reversibile.",
     "labelDataAttivazione": "Data di attivazione",
     "hintDataAttivazione": "Data di attivazione facoltativa, utile soprattutto per le polizze.",
     "checkboxTargetAttivo": "Target attivo",
@@ -512,6 +512,7 @@
     "erroreTassaNonValida": "tassa trattenuta non valida: \"{valore}\"",
     "erroreContenitoreNonTrovato": "contenitore non trovato: \"{valore}\"",
     "erroreScambioSenzaPolizza": "uno scambio può avvenire solo dentro una polizza (contenitore: \"{valore}\")",
+    "erroreScambioSoloPolizza": "Uno scambio può avvenire solo dentro una polizza: scegli una polizza come contenitore.",
     "erroreFileVuoto": "File vuoto",
     "erroreNessunFoglio": "Nessun foglio trovato nel file",
     "erroreIntestazioniSconosciute": "Intestazioni di colonna non riconosciute: {elenco}",

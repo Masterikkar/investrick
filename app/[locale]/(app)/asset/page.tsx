@@ -184,7 +184,7 @@ export default async function TuttiAssetPage() {
       nav: null,
       prezzoMedioUnitario: null,
       costo: Number(costo?.costo_totale ?? 0),
-      provenienza: contenitore?.nome ?? t('provenienzaDiretto'),
+      provenienza: contenitore?.nome ?? '—',
     }
   })
 
@@ -208,7 +208,7 @@ export default async function TuttiAssetPage() {
         nav: p.prezzo_attuale ?? 0,
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
         costo: costo?.costo_totale ?? 0,
-        provenienza: contenitore?.nome ?? t('provenienzaDiretto'),
+        provenienza: contenitore?.nome ?? '—',
       }
     })
     .concat(righeLiquidita)

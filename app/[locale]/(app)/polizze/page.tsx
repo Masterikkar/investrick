@@ -20,7 +20,6 @@ export default async function PolizzePage() {
   const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaContenitore')
   const tCategorie = await getTranslations('Categorie')
-  const tPaginaCategoria = await getTranslations('PaginaCategoria')
   const tContenitori = await getTranslations('Contenitori')
 
   const COLONNE: ColonnaTabella[] = [
@@ -171,7 +170,7 @@ export default async function PolizzePage() {
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
         peso: valoreTotalePolizze > 0 ? ((p.valore ?? 0) / valoreTotalePolizze) * 100 : 0,
         costo: costo?.costo_totale ?? 0,
-        provenienza: p.contenitore_id ? nomePolizza.get(p.contenitore_id) ?? '—' : tPaginaCategoria('provenienzaDiretto'),
+        provenienza: p.contenitore_id ? nomePolizza.get(p.contenitore_id) ?? '—' : '—',
       }
     })
     .sort((a, b) => (b.valore as number) - (a.valore as number))

@@ -35,7 +35,7 @@ export function StoricoMovimentiLiquidita({
   const locale = useLocale() as LocaleFormato
   const tFiltroTabellaStorico = useTranslations('FiltroTabellaStorico')
   const tTipiMovimento = useTranslations('TipiMovimentoLiquidita')
-  const tPaginaCategoria = useTranslations('PaginaCategoria')
+  const tContenitori = useTranslations('Contenitori')
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
   const tGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
   const conferma = useConferma()
@@ -54,7 +54,7 @@ export function StoricoMovimentiLiquidita({
   const [anniSelezionati, setAnniSelezionati] = useState<Set<number>>(() => new Set(anniDisponibili))
 
   function nomeContenitore(id: string | null) {
-    if (id === null) return tPaginaCategoria('provenienzaDiretto')
+    if (id === null) return '—'
     return contenitori.find((c) => c.id === id)?.nome ?? '—'
   }
 
@@ -278,7 +278,7 @@ export function StoricoMovimentiLiquidita({
                             }}
                           >
                             <option value="">{t('optionSpostaIn')}</option>
-                            {m.contenitore_id !== null && <option value="diretto">{tPaginaCategoria('provenienzaDiretto')}</option>}
+                            {m.contenitore_id !== null && <option value="diretto">{tContenitori('nessunGruppo')}</option>}
                             {contenitori
                               .filter((c) => c.id !== m.contenitore_id)
                               .map((c) => (

@@ -14,7 +14,7 @@ const radice = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const jiti = createJiti(import.meta.url, { alias: { '@': radice } })
 // Build CommonJS di xlsx: quella ESM non legge né scrive file senza set_fs.
 const XLSX = createRequire(import.meta.url)('xlsx')
-const { COLONNE_EXCEL_FINANZIARIE, COLONNE_EXCEL_LIQUIDITA, CONTENITORE_DIRETTO_EXCEL, TEMPLATE_EXCEL, colonnaDaIntestazioneExcel, intestazioneExcel } =
+const { COLONNE_EXCEL_FINANZIARIE, COLONNE_EXCEL_LIQUIDITA, TEMPLATE_EXCEL, colonnaDaIntestazioneExcel, intestazioneExcel } =
   await jiti.import('@/lib/i18n-intestazioni-excel')
 const { traduciOperazione } = await jiti.import('@/lib/i18n-tipi-operazione')
 const { CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA, traduciTipoMovimentoLiquidita } = await jiti.import('@/lib/i18n-tipi-movimento-liquidita')
@@ -78,7 +78,7 @@ genera({
     `- ${intestazione('Tipo movimento')}: one of ${tipiMovimento.join(', ')}.`,
     `- ${intestazione('Importo')}: number, gross.`,
     `- ${intestazione('Tassa trattenuta')}: number, optional (default 0). Only relevant for ${traduciTipoMovimentoLiquidita(tTipoMovimento, 'Interesse')}.`,
-    `- ${intestazione('Contenitore')}: name of an existing container, or leave empty for "${CONTENITORE_DIRETTO_EXCEL[LOCALE]}".`,
+    `- ${intestazione('Contenitore')}: name of an existing container, or leave empty.`,
     '- Delete this example row (row 2) and these notes before importing the file.',
   ],
 })

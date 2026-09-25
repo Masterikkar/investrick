@@ -39,7 +39,7 @@ export function StoricoTransazioni({
   const locale = useLocale() as LocaleFormato
   const tFiltroTabellaStorico = useTranslations('FiltroTabellaStorico')
   const tTipiOperazione = useTranslations('TipiOperazione')
-  const tPaginaCategoria = useTranslations('PaginaCategoria')
+  const tContenitori = useTranslations('Contenitori')
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
   const tGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
   const conferma = useConferma()
@@ -58,7 +58,7 @@ export function StoricoTransazioni({
   const [anniSelezionati, setAnniSelezionati] = useState<Set<number>>(() => new Set(anniDisponibili))
 
   function nomeContenitore(id: string | null) {
-    if (id === null) return tPaginaCategoria('provenienzaDiretto')
+    if (id === null) return '—'
     return contenitori.find((c) => c.id === id)?.nome ?? '—'
   }
 
@@ -294,7 +294,7 @@ export function StoricoTransazioni({
                             }}
                           >
                             <option value="">{t('optionSpostaIn')}</option>
-                            {riga.contenitore_id !== null && <option value="diretto">{tPaginaCategoria('provenienzaDiretto')}</option>}
+                            {riga.contenitore_id !== null && <option value="diretto">{tContenitori('nessunGruppo')}</option>}
                             {contenitori
                               .filter((c) => c.id !== riga.contenitore_id)
                               .map((c) => (

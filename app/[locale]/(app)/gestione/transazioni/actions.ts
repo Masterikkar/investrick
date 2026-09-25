@@ -61,7 +61,7 @@ export async function aggiungiTransazione(formData: FormData) {
 
   const { error } = await supabase.from('transazioni').insert({
     strumento_id: strumentoIdFinale,
-    contenitore_id: contenitoreId === 'diretto' ? null : contenitoreId,
+    contenitore_id: contenitoreId || null,
     categoria,
     operazione,
     data,
@@ -104,7 +104,7 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
 
   const { error } = await supabase.from('movimenti_liquidita').insert({
     strumento_id: strumentoId,
-    contenitore_id: contenitoreId === 'diretto' ? null : contenitoreId,
+    contenitore_id: contenitoreId || null,
     tipo_movimento: tipoMovimento,
     data,
     importo,
@@ -474,7 +474,7 @@ export async function esportaTransazioniFinanziarie(): Promise<RigaEsportazioneT
       'Prezzo unitario': Number(t.prezzo_unitario),
       Commissione: Number(t.commissione),
       'Tassa trattenuta': Number(t.tassa_trattenuta),
-      Contenitore: t.contenitore_id ? contenitoreMap.get(t.contenitore_id) ?? '' : 'Diretto',
+      Contenitore: t.contenitore_id ? contenitoreMap.get(t.contenitore_id) ?? '' : '',
     }
   })
 }
@@ -509,6 +509,6 @@ export async function esportaTransazioniLiquidita(): Promise<RigaEsportazioneLiq
     'Tipo movimento': m.tipo_movimento,
     Importo: Number(m.importo),
     'Tassa trattenuta': Number(m.tassa_trattenuta),
-    Contenitore: m.contenitore_id ? contenitoreMap.get(m.contenitore_id) ?? '' : 'Diretto',
+    Contenitore: m.contenitore_id ? contenitoreMap.get(m.contenitore_id) ?? '' : '',
   }))
 }

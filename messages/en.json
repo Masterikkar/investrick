@@ -20,7 +20,6 @@
     "colonnaPrezzoMedio": "Average price",
     "colonnaCosto": "Cost",
     "colonnaProvenienza": "Source",
-    "provenienzaDiretto": "Direct",
     "linkRendimenti": "View return details →",
     "labelPlusMinusNonRealizzata": "Unrealized gain/loss",
     "linkFiscalita": "View tax details →",
@@ -77,6 +76,7 @@
     }
   },
   "Contenitori": {
+    "nessunGruppo": "No group",
     "pac": "Investment Plans",
     "polizze": "Insurance Policies",
     "liquidita": "Cash"
@@ -452,7 +452,7 @@
     "alertNessunContenitoreCreato": "No container created.",
     "bottoneElimina": "Delete",
     "titoloEliminaContenitore": "Delete container",
-    "confermaEliminaContenitore": "Delete the container \"{nome}\"?\n\nLinked transactions and movements will be moved to the '{diretto}' container; any targets set on this container will be deleted.\n\nThis action cannot be undone.",
+    "confermaEliminaContenitore": "Delete the container \"{nome}\"?\n\nLinked transactions and movements will no longer belong to any group; any targets set on this container will be deleted.\n\nThis action cannot be undone.",
     "labelDataAttivazione": "Activation date",
     "hintDataAttivazione": "Optional activation date, mainly useful for insurance policies.",
     "checkboxTargetAttivo": "Target active",
@@ -512,6 +512,7 @@
     "erroreTassaNonValida": "invalid tax withheld: \"{valore}\"",
     "erroreContenitoreNonTrovato": "container not found: \"{valore}\"",
     "erroreScambioSenzaPolizza": "an exchange can only happen inside an insurance policy (container: \"{valore}\")",
+    "erroreScambioSoloPolizza": "An exchange can only happen inside an insurance policy: choose a policy as the container.",
     "erroreFileVuoto": "Empty file",
     "erroreNessunFoglio": "No sheet found in the file",
     "erroreIntestazioniSconosciute": "Unrecognized column headers: {elenco}",

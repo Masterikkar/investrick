@@ -98,7 +98,6 @@ export default async function FiscalitaPage() {
   const tMenu = await getTranslations('Menu')
   const tCategorie = await getTranslations('Categorie')
   const tContenitori = await getTranslations('Contenitori')
-  const tPaginaCategoria = await getTranslations('PaginaCategoria')
   const supabase = await createClient()
   const annoCorrente = new Date().getFullYear()
 
@@ -280,7 +279,7 @@ export default async function FiscalitaPage() {
       key: chiaveRiga(x.strumento_id, x.contenitore_id),
       strumento_id: x.strumento_id,
       strumento_nome: strumentoMap.get(x.strumento_id) ?? '—',
-      contenitore_nome: x.contenitore_id ? contenitoreMap.get(x.contenitore_id) ?? '—' : tPaginaCategoria('provenienzaDiretto'),
+      contenitore_nome: x.contenitore_id ? contenitoreMap.get(x.contenitore_id) ?? '—' : '—',
       plus_minus: Number(x.valore) - Number(x.capitale_investito),
       rendimento_pct: x.rendimento_pct ?? 0,
     }))

@@ -13,7 +13,6 @@ type Contenitore = { id: string; nome: string; tipo: string }
 export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }) {
   const t = useTranslations('PaginaGestioneStrumenti')
   const tPaginaContenitore = useTranslations('PaginaContenitore')
-  const tPaginaCategoria = useTranslations('PaginaCategoria')
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const router = useRouter()
   const conferma = useConferma()
@@ -53,7 +52,7 @@ export function ListaContenitori({ contenitori }: { contenitori: Contenitore[] }
   async function handleElimina(id: string, nome: string) {
     const confermato = await conferma({
       titolo: t('titoloEliminaContenitore'),
-      messaggio: t('confermaEliminaContenitore', { nome, diretto: tPaginaCategoria('provenienzaDiretto') }),
+      messaggio: t('confermaEliminaContenitore', { nome }),
       etichettaConferma: t('bottoneElimina'),
       pericoloso: true,
     })

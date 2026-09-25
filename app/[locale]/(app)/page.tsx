@@ -42,7 +42,6 @@ export default async function DashboardPage() {
   const t = await getTranslations('Dashboard')
   const tCategorie = await getTranslations('Categorie')
   const tContenitori = await getTranslations('Contenitori')
-  const tPaginaCategoria = await getTranslations('PaginaCategoria')
   const supabase = await createClient()
   const annoCorrente = new Date().getFullYear()
 
@@ -166,7 +165,7 @@ export default async function DashboardPage() {
   const fetteContenitori: FettaAnello[] = [
     { nome: 'PAC', valore: valorePac, nomeVisualizzato: tContenitori('pac') },
     { nome: 'Polizze', valore: valorePolizze, nomeVisualizzato: tContenitori('polizze') },
-    { nome: 'Diretto', valore: valoreDiretto, nomeVisualizzato: tPaginaCategoria('provenienzaDiretto') },
+    { nome: 'NessunGruppo', valore: valoreDiretto, nomeVisualizzato: tContenitori('nessunGruppo') },
   ]
 
   return (

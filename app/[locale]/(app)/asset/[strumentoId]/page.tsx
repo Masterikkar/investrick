@@ -57,7 +57,6 @@ type Transazione = {
 }
 
 type Contenitore = { id: string; nome: string }
-type ValorePerContenitore = { contenitore_id: string; valore_totale: number }
 type CostoPerStrumento = { contenitore_id: string | null; costo_totale: number }
 type StoricoValorizzazione = {
   data: string | null
@@ -144,7 +143,7 @@ export default async function AssetPage({
   }
 
   const contenitoreMap = new Map((contenitoriRaw ?? []).map((c) => [c.id, c.nome]))
-  const nomeContenitore = (id: string | null) => (id ? contenitoreMap.get(id) ?? '—' : tPaginaCategoria('provenienzaDiretto'))
+  const nomeContenitore = (id: string | null) => (id ? contenitoreMap.get(id) ?? '—' : '—')
 
   const riepilogo = riepilogoRaw ?? []
   const posizioniAttuali = riepilogo.filter((r) => Number(r.quantita_posseduta) > 0)
@@ -173,30 +172,15 @@ export default async function AssetPage({
     .filter((p): p is PuntoStorico => p !== null)
     .sort((a, b) => a.data.localeCompare(b.data))
 
-  const idsContenitoriReali = [...new Set(posizioniAttuali.map((r) => r.contenitore_id).filter((id): id is string => id !== null))]
-  const haDiretto = posizioniAttuali.some((r) => r.contenitore_id === null)
-
-  const totaleContenitoreMap = new Map<string, number>()
-
-  if (idsContenitoriReali.length > 0) {
-    const { data: valorePerContenitoreRaw } = await supabase
-      .from('v_valore_per_contenitore')
-      .select('contenitore_id, valore_totale')
-      .in('contenitore_id', idsContenitoriReali)
-      .returns<ValorePerContenitore[]>()
-
-    for (const v of valorePerContenitoreRaw ?? []) totaleContenitoreMap.set(v.contenitore_id, Number(v.valore_totale))
-  }
-
-  if (haDiretto) {
-    const [{ data: mercatoDirettoRaw }, { data: liquiditaDirettaRaw }] = await Promise.all([
-      supabase.from('v_valore_posizioni_attuale').select('valore_attuale').is('contenitore_id', null),
-      supabase.from('v_saldo_liquidita').select('saldo_corrente').is('contenitore_id', null),
-    ])
-    const totaleMercatoDiretto = (mercatoDirettoRaw ?? []).reduce((s, r) => s + Number(r.valore_attuale), 0)
-    const totaleLiquiditaDiretta = (liquiditaDirettaRaw ?? []).reduce((s, r) => s + Number(r.saldo_corrente), 0)
-    totaleContenitoreMap.set('diretto', totaleMercatoDiretto + totaleLiquiditaDiretta)
-  }
+  // Peso di ogni posizione sul totale della categoria dello strumento, lo
+  // stesso denominatore della sua pagina categoria (non il contenitore, non
+  // l'intero portafoglio).
+  const { data: valoreCategoriaRaw } = await supabase
+    .from('v_valore_per_categoria')
+    .select('valore_totale')
+    .eq('categoria', strumento.categoria)
+    .maybeSingle()
+  const totaleCategoria = Number(valoreCategoriaRaw?.valore_totale ?? 0)
 
   const quantitaTotale = posizioniAttuali.reduce((s, r) => s + Number(r.quantita_posseduta), 0)
   const capitaleInvestitoTotale = posizioniAttuali.reduce((s, r) => s + Number(r.capitale_investito), 0)
@@ -225,9 +209,10 @@ export default async function AssetPage({
         {` · ${strumento.valuta}`}
       </p>
 
-      {posizioniAttuali.length > 0 && (
+      {/* Etichette dei contenitori che contengono lo strumento; nessuna per le posizioni senza contenitore. */}
+      {posizioniAttuali.some((r) => r.contenitore_id !== null) && (
         <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-          {posizioniAttuali.map((r) => (
+          {posizioniAttuali.filter((r) => r.contenitore_id !== null).map((r) => (
             <span
               key={chiaveContenitore(r.contenitore_id)}
               style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', padding: '2px 10px', fontSize: 13 }}
@@ -307,8 +292,7 @@ export default async function AssetPage({
               <tbody>
                 {posizioniAttuali.map((r) => {
                   const chiave = chiaveContenitore(r.contenitore_id)
-                  const totaleContenitore = totaleContenitoreMap.get(chiave) ?? 0
-                  const peso = r.valore != null && totaleContenitore > 0 ? (Number(r.valore) / totaleContenitore) * 100 : null
+                  const peso = r.valore != null && totaleCategoria > 0 ? (Number(r.valore) / totaleCategoria) * 100 : null
                   const rendimentoEuro = r.valore != null ? Number(r.valore) - Number(r.capitale_investito) : null
                   const costo = costoMap.get(chiave) ?? 0
 

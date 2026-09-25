@@ -131,7 +131,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
         nav: p.prezzo_attuale ?? 0,
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
         costo: costo?.costo_totale ?? 0,
-        provenienza: contenitore?.nome ?? t('provenienzaDiretto'),
+        provenienza: contenitore?.nome ?? '—',
       }
     })
     .sort((a, b) => (b.valore as number) - (a.valore as number))

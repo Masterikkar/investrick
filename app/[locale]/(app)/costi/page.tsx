@@ -31,7 +31,6 @@ export default async function CostiPage() {
   const tMenu = await getTranslations('Menu')
   const tCategorie = await getTranslations('Categorie')
   const tContenitori = await getTranslations('Contenitori')
-  const tPaginaCategoria = await getTranslations('PaginaCategoria')
   const supabase = await createClient()
 
   const COLONNE_CONTENITORE: ColonnaTabella[] = [
@@ -89,7 +88,8 @@ export default async function CostiPage() {
   const getRiga = (id: string | null) => {
     const chiave = id ?? 'diretto'
     if (!perContenitore.has(chiave)) {
-      perContenitore.set(chiave, { nome: id ? contenitoreMap.get(id) ?? '—' : tPaginaCategoria('provenienzaDiretto'), costo: 0, guadagno: 0 })
+      // Senza contenitore: una riga reale col suo totale, così la tabella somma al totale.
+      perContenitore.set(chiave, { nome: id ? contenitoreMap.get(id) ?? '—' : tContenitori('nessunGruppo'), costo: 0, guadagno: 0 })
     }
     return perContenitore.get(chiave)!
   }
@@ -129,7 +129,7 @@ export default async function CostiPage() {
         strumentoId: r.strumento_id,
         nome: info?.nome ?? '—',
         categoria: categoria ? traduciCategoria(tCategorie, categoria) : '—',
-        contenitore: r.contenitore_id ? contenitoreMap.get(r.contenitore_id) ?? '—' : tPaginaCategoria('provenienzaDiretto'),
+        contenitore: r.contenitore_id ? contenitoreMap.get(r.contenitore_id) ?? '—' : '—',
         costo,
         costoPerEuro: costoPerEuro(costo, guadagno),
       }
@@ -157,7 +157,7 @@ export default async function CostiPage() {
       key: chiave,
       nome: info?.provider ? `${info.nome} (${info.provider})` : info?.nome ?? '—',
       categoria: tContenitori('liquidita'),
-      contenitore: contenitoreId ? contenitoreMap.get(contenitoreId) ?? '—' : tPaginaCategoria('provenienzaDiretto'),
+      contenitore: contenitoreId ? contenitoreMap.get(contenitoreId) ?? '—' : '—',
       costo,
       costoPerEuro: costoPerEuro(costo, guadagno),
     }

@@ -13,7 +13,7 @@ import { CATEGORIE_MERCATO } from '@/lib/categorie'
 
 type Strumento = { id: string; nome: string; ticker: string | null; categoria: string }
 type StrumentoLiquidita = { id: string; nome: string }
-type Contenitore = { id: string; nome: string }
+type Contenitore = { id: string; nome: string; tipo: string }
 
 const CODICI_OPERAZIONE = [
   'Acquisto',
@@ -76,7 +76,6 @@ export function NuovaTransazioneFinanziaria({
   const tCategorie = useTranslations('Categorie')
   const tContenitori = useTranslations('Contenitori')
   const tTipiOperazione = useTranslations('TipiOperazione')
-  const tPaginaCategoria = useTranslations('PaginaCategoria')
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
   const tPaginaStorico = useTranslations('PaginaStorico')
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
@@ -113,9 +112,9 @@ export function NuovaTransazioneFinanziaria({
     ...CATEGORIE_MERCATO.map((c) => ({ value: c, label: traduciCategoria(tCategorie, c) })),
   ]
 
+  // Contenitore facoltativo: nessuna selezione = nessun contenitore.
   const opzioniContenitore = [
     { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
-    { value: 'diretto', label: tPaginaCategoria('provenienzaDiretto') },
     ...contenitori.map((c) => ({ value: c.id, label: c.nome })),
   ]
 
@@ -125,8 +124,13 @@ export function NuovaTransazioneFinanziaria({
     if (!operazione) {
       nuoviErrori.operazione = t('erroreSelezionaOperazione')
     }
-    if (!contenitoreId) {
-      nuoviErrori.contenitore_id = tPaginaRibilanciamento('erroreSelezionaContenitore')
+    // Stesso vincolo del database (vincola_scambio_solo_polizza), per un errore
+    // chiaro sul campo invece di quello generico dopo l'invio.
+    if (
+      (operazione === 'Scambio_cessione' || operazione === 'Scambio_acquisizione') &&
+      contenitori.find((c) => c.id === contenitoreId)?.tipo !== 'Polizza'
+    ) {
+      nuoviErrori.contenitore_id = t('erroreScambioSoloPolizza')
     }
     if (operazione === 'Costo_contanti') {
       if (!categoriaManuale) {
@@ -283,7 +287,6 @@ export function NuovaTransazioneLiquidita({
   const t = useTranslations('PaginaGestioneTransazioni')
   const tContenitori = useTranslations('Contenitori')
   const tTipiMovimentoLiquidita = useTranslations('TipiMovimentoLiquidita')
-  const tPaginaCategoria = useTranslations('PaginaCategoria')
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
   const tPaginaStorico = useTranslations('PaginaStorico')
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
@@ -310,9 +313,9 @@ export function NuovaTransazioneLiquidita({
     ...strumentiLiquidita.map((s) => ({ value: s.id, label: s.nome })),
   ]
 
+  // Contenitore facoltativo: nessuna selezione = nessun contenitore.
   const opzioniContenitore = [
     { value: '', label: tPaginaRibilanciamento('optionSeleziona') },
-    { value: 'diretto', label: tPaginaCategoria('provenienzaDiretto') },
     ...contenitori.map((c) => ({ value: c.id, label: c.nome })),
   ]
 
@@ -321,9 +324,6 @@ export function NuovaTransazioneLiquidita({
 
     if (!strumentoId) {
       nuoviErrori.strumento_id = t('erroreSelezionaStrumento')
-    }
-    if (!contenitoreId) {
-      nuoviErrori.contenitore_id = tPaginaRibilanciamento('erroreSelezionaContenitore')
     }
     if (!tipoMovimento) {
       nuoviErrori.tipo_movimento = t('erroreSelezionaTipoMovimento')

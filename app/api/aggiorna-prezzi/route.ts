@@ -90,7 +90,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // --- Snapshot giornaliero di valorizzazione: mercato + liquidità, incluso "Diretto" ---
+  // --- Snapshot giornaliero di valorizzazione: mercato + liquidità, anche senza contenitore ---
   // "valore" è colonna GENERATED, non va scritta. "contenitore_chiave" è colonna generata per
   // l'unicità, non va scritta. "capitale_investito" alimenta il grafico di rendimento nel tempo.
   const risultatiSnapshot: { tipo: string; esito: string }[] = []

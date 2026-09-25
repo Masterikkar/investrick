@@ -75,7 +75,7 @@ export async function esportaPlusMinusRealizzate(): Promise<RigaEsportazioneReal
       'Tassa attesa': Number(v.tassa_attesa),
       'Tassa trattenuta': Number(v.tassa_trattenuta_effettiva),
       Differenza: Number(v.differenza),
-      Contenitore: v.contenitore_id ? contenitoreMap.get(v.contenitore_id) ?? '' : 'Diretto',
+      Contenitore: v.contenitore_id ? contenitoreMap.get(v.contenitore_id) ?? '' : '',
     }
   })
 }
@@ -110,7 +110,7 @@ export async function esportaPlusMinusNonRealizzate(): Promise<RigaEsportazioneN
       return {
         ISIN: strumento?.isin ?? '',
         Strumento: strumento?.nome ?? '',
-        Contenitore: r.contenitore_id ? contenitoreMap.get(r.contenitore_id) ?? '' : 'Diretto',
+        Contenitore: r.contenitore_id ? contenitoreMap.get(r.contenitore_id) ?? '' : '',
         'Plus/minus': Number(r.valore) - Number(r.capitale_investito),
         'Rendimento %': r.rendimento_pct ?? 0,
       }
