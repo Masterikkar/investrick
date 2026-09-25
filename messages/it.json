@@ -370,7 +370,9 @@
     "colonnaScostamentoFinale": "Scostamento finale",
     "notaSecondoTargetStrumento": "secondo target per strumento",
     "notaSecondoPesiAttuali": "secondo pesi attuali — nessun target per strumento impostato",
-    "alertNessunoStrumentoPosseduto": "Nessuno strumento posseduto qui: scegli manualmente cosa comprare."
+    "alertNessunoStrumentoPosseduto": "Nessuno strumento posseduto qui: scegli manualmente cosa comprare.",
+    "alertNessunTargetPortafoglio": "Nessun target impostato sul portafoglio intero.",
+    "alertPortafoglioInLinea": "Portafoglio in linea con i target. Nessuno scostamento fuori soglia."
   },
   "PaginaAsset": {
     "eyebrowAsset": "Asset",
@@ -550,5 +552,13 @@
     "labelSommaCategorie": "Somma categorie: {somma}",
     "erroreSommaCategorie": " — deve fare 100%",
     "bottoneSalvaTarget": "Salva target"
+  },
+  "PaginaTargetPortafoglio": {
+    "titolo": "Target sul portafoglio",
+    "hintSomma": "Pesi di ogni categoria sul portafoglio intero, Liquidità compresa. Le percentuali devono sommare a 100; lasciale tutte a 0 per non avere nessun target sul portafoglio. Una categoria a 0 non ha vincoli.",
+    "notaNessunTarget": " — nessun target sul portafoglio",
+    "erroreSomma": " — deve fare 100% (o 0 per nessun target)",
+    "erroreSommaServer": "Le percentuali delle categorie devono sommare a 100, oppure essere tutte 0. Controlla i valori e riprova.",
+    "erroreGenerico": "Qualcosa è andato storto, riprova."
   }
 }

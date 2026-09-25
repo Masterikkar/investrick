@@ -1221,6 +1221,19 @@ export type Database = {
           },
         ]
       }
+      v_scostamento_target_portafoglio: {
+        Row: {
+          categoria: string | null
+          peso_attuale_pct: number | null
+          scostamento_pp: number | null
+          target_id: string | null
+          target_percentuale: number | null
+          user_id: string | null
+          valore_categoria: number | null
+          valore_portafoglio_totale: number | null
+        }
+        Relationships: []
+      }
       v_storico_valorizzazioni_dettaglio: {
         Row: {
           capitale_investito: number | null

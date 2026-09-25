@@ -370,7 +370,9 @@
     "colonnaScostamentoFinale": "Final drift",
     "notaSecondoTargetStrumento": "based on per-instrument target",
     "notaSecondoPesiAttuali": "based on current weights — no per-instrument target set",
-    "alertNessunoStrumentoPosseduto": "No instrument held here: choose manually what to buy."
+    "alertNessunoStrumentoPosseduto": "No instrument held here: choose manually what to buy.",
+    "alertNessunTargetPortafoglio": "No target set on the whole portfolio.",
+    "alertPortafoglioInLinea": "Portfolio in line with its targets. No deviation beyond the threshold."
   },
   "PaginaAsset": {
     "eyebrowAsset": "Asset",
@@ -550,5 +552,13 @@
     "labelSommaCategorie": "Category total: {somma}",
     "erroreSommaCategorie": " — must be 100%",
     "bottoneSalvaTarget": "Save target"
+  },
+  "PaginaTargetPortafoglio": {
+    "titolo": "Portfolio target",
+    "hintSomma": "Weight of each category on the whole portfolio, cash included. The percentages must add up to 100; leave them all at 0 for no portfolio target. A category at 0 has no constraint.",
+    "notaNessunTarget": " — no portfolio target",
+    "erroreSomma": " — must be 100% (or 0 for no target)",
+    "erroreSommaServer": "The category percentages must add up to 100, or all be 0. Check the values and try again.",
+    "erroreGenerico": "Something went wrong, please try again."
   }
 }
