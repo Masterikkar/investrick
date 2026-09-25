@@ -156,8 +156,19 @@ export default async function PolizzaDettaglioPage({
   const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
   const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
   const capitaleInvestitoNettoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestitoNetto as number), 0)
-  const plusMinusNonRealizzata = valoreTotalePosizioni - capitaleInvestitoTotale
-  const rendimentoPctTotale = capitaleInvestitoTotale > 0 ? (plusMinusNonRealizzata / capitaleInvestitoTotale) * 100 : null
+  // Performance sui lotti, fondo per fondo (analisi del rendimento, tabella).
+  const plusMinusLotti = valoreTotalePosizioni - capitaleInvestitoTotale
+
+  // La polizza si tassa come contratto unico: plus/minus e rendimento % della
+  // polizza sono valore − premi residui e (valore − premi) / premi.
+  const { data: premiPolizza } = await supabase
+    .from('v_premi_residui_polizza')
+    .select('premi_residui')
+    .eq('contenitore_id', contenitoreId)
+    .maybeSingle()
+  const premiResidui = Number(premiPolizza?.premi_residui ?? 0)
+  const plusMinusNonRealizzata = valoreTotalePosizioni - premiResidui
+  const rendimentoPctTotale = premiResidui > 0 ? (plusMinusNonRealizzata / premiResidui) * 100 : null
 
   const valorePerCategoria: Record<string, number> = {}
   for (const r of righe) {
@@ -200,7 +211,7 @@ export default async function PolizzaDettaglioPage({
     (cat) => guadagnoPerCategoria[cat] !== undefined
   ).map((cat) => {
     const guadagno = guadagnoPerCategoria[cat]
-    const contributoPct = plusMinusNonRealizzata !== 0 ? (guadagno / plusMinusNonRealizzata) * 100 : null
+    const contributoPct = plusMinusLotti !== 0 ? (guadagno / plusMinusLotti) * 100 : null
     const larghezzaPct = maxAbsGuadagno > 0 ? (Math.abs(guadagno) / maxAbsGuadagno) * 50 : 0
     return { categoria: cat, guadagno, contributoPct, larghezzaPct }
   })
@@ -274,7 +285,7 @@ export default async function PolizzaDettaglioPage({
             <AnalisiRendimento
               contributoPerCategoria={contributoPerCategoria}
               contributoStrumentoPerCategoria={contributoStrumentoPerCategoria}
-              plusMinusNonRealizzata={plusMinusNonRealizzata}
+              plusMinusNonRealizzata={plusMinusLotti}
             />
           </Sezione>
         </div>

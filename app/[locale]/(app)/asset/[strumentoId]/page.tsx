@@ -56,7 +56,7 @@ type Transazione = {
   tassa_trattenuta: number
 }
 
-type Contenitore = { id: string; nome: string }
+type Contenitore = { id: string; nome: string; tipo: string }
 type CostoPerStrumento = { contenitore_id: string | null; costo_totale: number }
 type StoricoValorizzazione = {
   data: string | null
@@ -121,7 +121,7 @@ export default async function AssetPage({
       .eq('strumento_id', strumentoId)
       .order('data', { ascending: false })
       .returns<Transazione[]>(),
-    supabase.from('contenitori').select('id, nome').returns<Contenitore[]>(),
+    supabase.from('contenitori').select('id, nome, tipo').returns<Contenitore[]>(),
     supabase.from('v_costo_per_strumento').select('contenitore_id, costo_totale').eq('strumento_id', strumentoId).returns<CostoPerStrumento[]>(),
     supabase
       .from('v_storico_valorizzazioni_per_strumento')
@@ -190,11 +190,18 @@ export default async function AssetPage({
   const rendimentoTotalePct =
     capitaleInvestitoTotale > 0 ? ((valoreTotale - capitaleInvestitoTotale) / capitaleInvestitoTotale) * 100 : null
 
+  const polizzeIds = new Set((contenitoriRaw ?? []).filter((c) => c.tipo === 'Polizza').map((c) => c.id))
+  const inPolizza = (contenitoreId: string | null) => contenitoreId !== null && polizzeIds.has(contenitoreId)
+  const ricaviSoloInPolizza = ricavi.length > 0 && ricavi.every((r) => inPolizza(r.contenitore_id))
+  const ricaviAncheInPolizza = ricavi.some((r) => inPolizza(r.contenitore_id))
+
   const ricaviTotali = {
     quantita: ricavi.reduce((s, r) => s + Number(r.quantita_venduta), 0),
     ricavo: ricavi.reduce((s, r) => s + Number(r.ricavo_totale), 0),
     plusvalenza: ricavi.reduce((s, r) => s + Number(r.plusvalenza_totale), 0),
-    netto: ricavi.reduce((s, r) => s + Number(r.netto_dopo_tasse_stimato), 0),
+    // Le vendite dentro una polizza non si tassano per fondo ma al riscatto del
+    // contratto: il netto stimato conta solo le vendite fuori polizza.
+    netto: ricavi.filter((r) => !inPolizza(r.contenitore_id)).reduce((s, r) => s + Number(r.netto_dopo_tasse_stimato), 0),
   }
 
   return (
@@ -334,7 +341,22 @@ export default async function AssetPage({
                   {formatEuroSigned(ricaviTotali.plusvalenza, locale)}
                 </span>
               </CardMetrica>
-              <CardMetrica label={t('labelNettoDopoTasse')}>{formatEuro(ricaviTotali.netto, locale)}</CardMetrica>
+              <CardMetrica label={t('labelNettoDopoTasse')}>
+                {ricaviSoloInPolizza ? (
+                  <span style={{ fontSize: 'var(--fs-body)', fontWeight: 400, color: 'var(--text-secondary)' }}>
+                    {t('notaTassatoAlRiscatto')}
+                  </span>
+                ) : (
+                  <>
+                    {formatEuro(ricaviTotali.netto, locale)}
+                    {ricaviAncheInPolizza && (
+                      <div style={{ fontSize: 'var(--fs-card-link)', fontWeight: 400, color: 'var(--text-secondary)', marginTop: 4 }}>
+                        {t('notaNettoSoloFuoriPolizza')}
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardMetrica>
             </div>
 
             {ricavi.length > 1 && (
@@ -356,7 +378,11 @@ export default async function AssetPage({
                         <td style={{ padding: 8 }}>{formatNumero(Number(r.quantita_venduta), 6, false, locale)}</td>
                         <td style={{ padding: 8 }}>{formatEuro(Number(r.ricavo_totale), locale)}</td>
                         <td style={{ padding: 8 }}>{formatEuro(Number(r.plusvalenza_totale), locale)}</td>
-                        <td style={{ padding: 8 }}>{formatEuro(Number(r.netto_dopo_tasse_stimato), locale)}</td>
+                        <td style={{ padding: 8, color: inPolizza(r.contenitore_id) ? 'var(--text-secondary)' : undefined }}>
+                          {inPolizza(r.contenitore_id)
+                            ? t('notaTassatoAlRiscatto')
+                            : formatEuro(Number(r.netto_dopo_tasse_stimato), locale)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

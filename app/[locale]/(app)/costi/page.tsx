@@ -56,6 +56,7 @@ export default async function CostiPage() {
     { data: riepilogoRaw },
     { data: strumentiRaw },
     { data: contenitoriRaw },
+    { data: premiPolizzeRaw },
   ] = await Promise.all([
     supabase.from('v_costo_per_contenitore').select('contenitore_id, costo_totale').returns<CostoPerContenitore[]>(),
     supabase.from('v_costo_per_strumento').select('strumento_id, contenitore_id, categoria, costo_totale').returns<CostoPerStrumento[]>(),
@@ -65,6 +66,7 @@ export default async function CostiPage() {
     supabase.from('v_riepilogo_posizione').select('strumento_id, contenitore_id, quantita_posseduta, capitale_investito, valore').returns<RiepilogoPosizione[]>(),
     supabase.from('strumenti').select('id, nome, categoria, tipo, provider').returns<Strumento[]>(),
     supabase.from('contenitori').select('id, nome').returns<Contenitore[]>(),
+    supabase.from('v_premi_residui_polizza').select('contenitore_id, non_realizzato_fiscale'),
   ])
 
   const costoContenitore = costoContenitoreRaw ?? []
@@ -98,10 +100,18 @@ export default async function CostiPage() {
   for (const c of costoStrumento.filter((c) => c.contenitore_id === null)) getRiga(null).costo += Number(c.costo_totale)
   for (const c of costoLiquidita) getRiga(c.contenitore_id).costo += Number(c.costo_totale)
 
+  // Guadagno di un gruppo: per una polizza il non realizzato fiscale del
+  // contratto (valore − premi residui), per gli altri valore − costo dei lotti.
+  const nonRealizzatoPolizza = new Map(
+    (premiPolizzeRaw ?? [])
+      .filter((p) => p.contenitore_id !== null)
+      .map((p) => [p.contenitore_id as string, Number(p.non_realizzato_fiscale ?? 0)])
+  )
   for (const r of riepilogo) {
-    if (r.valore == null) continue
+    if (r.valore == null || (r.contenitore_id && nonRealizzatoPolizza.has(r.contenitore_id))) continue
     getRiga(r.contenitore_id).guadagno += Number(r.valore) - Number(r.capitale_investito)
   }
+  for (const [id, guadagno] of nonRealizzatoPolizza) getRiga(id).guadagno += guadagno
   for (const i of interessiLiquidita) getRiga(i.contenitore_id).guadagno += Number(i.interessi_totali)
 
   const righeContenitore: RigaTabella[] = Array.from(perContenitore.values())

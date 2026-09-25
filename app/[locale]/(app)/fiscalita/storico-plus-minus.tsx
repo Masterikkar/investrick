@@ -5,11 +5,17 @@ import { useLocale, useTranslations } from 'next-intl'
 import { formatData, formatEuro, formatEuroSigned, formatPercent, type LocaleFormato } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
 
+// Una vendita fuori polizza (plusvalenza FIFO del singolo strumento) o un
+// riscatto di polizza (imponibile del contratto, aliquota fissa 26%).
 export type RigaRealizzata = {
-  vendita_id: string
+  key: string
+  tipo_riga: 'vendita' | 'riscatto_polizza'
   data_vendita: string
-  strumento_id: string
+  strumento_id: string | null
+  contenitore_id: string | null
   strumento_nome: string
+  prezzo_stimato: boolean
+  ritenuta_eccessiva: boolean
   valore: number
   plusvalenza_totale_vendita: number
   aliquota_attesa_pct: number
@@ -221,14 +227,32 @@ export function StoricoPlusMinus({
             </thead>
             <tbody>
               {(righeMostrate as RigaRealizzata[]).map((v) => {
-                const scostamentoRilevante = Math.abs(Number(v.differenza)) > 0.01
+                const riscatto = v.tipo_riga === 'riscatto_polizza'
+                // In un riscatto una ritenuta minore dell'attesa è normale (titoli di
+                // Stato "white list", calcolata dalla compagnia): si evidenzia solo
+                // quella maggiore. Per le vendite resta ogni scostamento.
+                const scostamentoRilevante = riscatto ? v.ritenuta_eccessiva : Math.abs(Number(v.differenza)) > 0.01
                 return (
-                  <tr key={v.vendita_id} className="tabella-riga">
+                  <tr key={v.key} className="tabella-riga">
                     <td style={{ padding: 8 }}>{formatData(v.data_vendita, locale)}</td>
                     <td style={{ padding: 8 }}>
-                      <RippleLink href={`/asset/${v.strumento_id}`} className="link-interattivo">
+                      <RippleLink
+                        href={riscatto ? `/polizze/${v.contenitore_id}` : `/asset/${v.strumento_id}`}
+                        className="link-interattivo"
+                      >
                         {v.strumento_nome}
                       </RippleLink>
+                      {riscatto && (
+                        <div style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', marginTop: 2 }}>
+                          {t('etichettaRiscattoPolizza')}
+                          {v.prezzo_stimato && (
+                            <span title={t('tooltipPrezzoStimato')} style={{ color: 'var(--warning)' }}>
+                              {' · '}
+                              {t('etichettaPrezzoStimato')}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: 8 }}>{formatEuro(Number(v.valore), locale)}</td>
                     <td style={{ padding: 8 }}>{formatEuro(Number(v.plusvalenza_totale_vendita), locale)}</td>
@@ -236,9 +260,10 @@ export function StoricoPlusMinus({
                     <td style={{ padding: 8 }}>{formatEuro(Number(v.tassa_attesa), locale)}</td>
                     <td style={{ padding: 8 }}>{formatEuro(Number(v.tassa_trattenuta_effettiva), locale)}</td>
                     <td
+                      title={riscatto && v.ritenuta_eccessiva ? t('tooltipRitenutaEccessiva') : undefined}
                       style={{
                         padding: 8,
-                        color: scostamentoRilevante ? 'var(--warning)' : undefined,
+                        color: scostamentoRilevante ? (riscatto ? 'var(--danger)' : 'var(--warning)') : undefined,
                         fontWeight: scostamentoRilevante ? 500 : undefined,
                       }}
                     >

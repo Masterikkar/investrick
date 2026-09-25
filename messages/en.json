@@ -9,7 +9,7 @@
   },
   "PaginaCategoria": {
     "tooltipRendimentoLive": "Return on the positions still open in this category: current value against invested capital, meaning the cost of the units you still hold (the lots left after sales, FIFO method), purchase fees and taxes included. It runs from when you bought those units, not from the start of the year, and excludes sales and dividends already received. In brackets, the change since the last saved valuation, which is recorded at every price update.",
-    "tooltipPlusMinusNonRealizzata": "Gain or loss not yet realized on the open positions in this category: current value minus the cost of the units you still hold (FIFO method, purchase fees and taxes included). It is before the taxes you would pay on selling and excludes gains already realized through sales.",
+    "tooltipPlusMinusNonRealizzata": "Gain or loss not yet realized on the open positions in this category: current value minus the cost of the units you still hold (FIFO method, purchase fees and taxes included). It is before the taxes you would pay on selling and excludes gains already realized through sales. For funds inside a policy this is the single fund's performance: for tax purposes the policy is taxed as one contract, on value minus remaining premiums (see Tax).",
     "etichettaAsset": "Asset",
     "colonnaStrumento": "Name",
     "colonnaTipo": "Type",
@@ -32,7 +32,7 @@
   },
   "PaginaTuttiAsset": {
     "tooltipRendimentoLive": "Return on all positions still open: current value against invested capital, meaning the cost of the units you still hold (the lots left after sales, FIFO method), purchase fees and taxes included. Cash is included with invested capital equal to its balance, so a zero return. It runs from when you bought the units, not from the start of the year, and excludes sales and dividends already received. In brackets, the change since the last saved valuation, which is recorded at every price update.",
-    "tooltipPlusMinusNonRealizzata": "Gain or loss not yet realized on all open positions: current value minus the cost of the units you still hold (FIFO method, purchase fees and taxes included). Cash does not contribute. It is before the taxes you would pay on selling and excludes gains already realized through sales.",
+    "tooltipPlusMinusNonRealizzata": "Gain or loss not yet realized on all open positions: current value minus the cost of the units you still hold (FIFO method, purchase fees and taxes included). Cash does not contribute. It is before the taxes you would pay on selling and excludes gains already realized through sales. For funds inside a policy this is the single fund's performance: for tax purposes the policy is taxed as one contract, on value minus remaining premiums (see Tax).",
     "tooltipPeso": "Weight calculated on the total of assets held in this table, cash included."
   },
   "Categorie": {
@@ -91,7 +91,7 @@
   "Dashboard": {
     "etichettaDashboard": "Dashboard",
     "titolo": "Your portfolio",
-    "titoloRendimentoLive": "Live Return",
+    "titoloRendimentoLive": "Total return",
     "etichettaOggi": "Today",
     "linkRendimenti": "→ Returns",
     "labelPlusMinusNonRealizzata": "Unrealized gain/loss",
@@ -122,7 +122,7 @@
     "colonnaNav": "NAV",
     "colonnaPrezzoMedio": "Average price",
     "colonnaCosto": "Cost",
-    "labelRendimento": "Return",
+    "labelRendimento": "Total return",
     "linkRendimenti": "→ Returns",
     "labelPlusMinusNonRealizzata": "Unrealized gain/loss",
     "linkFiscalita": "→ Tax",
@@ -265,6 +265,12 @@
     "paginazioneMostraTutte": "Show all"
   },
   "PaginaFiscalita": {
+    "etichettaRiscattoPolizza": "Policy redemption",
+    "etichettaPrezzoStimato": "estimated price",
+    "tooltipPrezzoStimato": "To value the policy before the redemption, at least one fund had no price on that date: the last earlier price available was used.",
+    "tooltipRitenutaEccessiva": "The insurer withheld more than 26% of the taxable redemption amount: worth checking. A lower withholding is normal, for the share held in government bonds.",
+    "avvisoPolizzeIncompleteInizioAnno": "Left out of the comparison because at the start of the year some of their funds have no price at all: {elenco}.",
+    "avvisoPolizzeIncompleteGrafico": "The chart leaves out policies with funds that have no price at all at year end — {elenco}.",
     "colonnaPosizione": "Position",
     "titoloAnnoCorrente": "Current year — {anno}",
     "titoloStorico": "History",
@@ -403,8 +409,10 @@
     "alertNessunAcquisto": "Nothing to buy."
   },
   "PaginaAsset": {
+    "notaTassatoAlRiscatto": "Taxed when the policy is redeemed",
+    "notaNettoSoloFuoriPolizza": "Only sales outside policies: those inside a policy are taxed when the policy is redeemed.",
     "eyebrowAsset": "Asset",
-    "labelRendimento": "Return",
+    "labelRendimento": "Total return",
     "labelNavConData": "NAV ({data})",
     "labelPrezzoMedioUnitario": "Average unit price",
     "capitaleInvestito": "Capital invested",

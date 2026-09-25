@@ -19,6 +19,9 @@ export type GruppoRiepilogo = {
   targetAttivo: boolean
   dataAttivazione: string | null
   valore: number
+  // Solo per le polizze: premi residui del contratto, la base fiscale del
+  // plus/minus e del rendimento della polizza intera. null per gli altri gruppi.
+  baseFiscale: number | null
 }
 
 // Una riga per strumento dentro un gruppo. I campi a null (conti di
@@ -89,7 +92,7 @@ export async function caricaGruppiReali(
   const ids = (contenitori ?? []).map((c) => c.id)
   if (ids.length === 0) return { gruppi: [], posizioni: [], strumenti: [], storico: [] }
 
-  const [{ data: valori }, { data: storicoRaw }, { data: riepilogo }, { data: costi }] = await Promise.all([
+  const [{ data: valori }, { data: storicoRaw }, { data: riepilogo }, { data: costi }, { data: premi }] = await Promise.all([
     supabase.from('v_valore_per_contenitore').select('contenitore_id, valore_totale').in('contenitore_id', ids),
     // Una riga per gruppo e per giorno: letta a blocchi per non fermarsi a 1000
     // righe, con un ordinamento univoco (data, contenitore).
@@ -109,7 +112,13 @@ export async function caricaGruppiReali(
       )
       .in('contenitore_id', ids),
     supabase.from('v_costo_per_strumento').select('strumento_id, contenitore_id, costo_totale').in('contenitore_id', ids),
+    tipo === 'Polizza'
+      ? supabase.from('v_premi_residui_polizza').select('contenitore_id, premi_residui').in('contenitore_id', ids)
+      : Promise.resolve({ data: null }),
   ])
+  const premiResidui = new Map(
+    (premi ?? []).filter((p) => p.contenitore_id !== null).map((p) => [p.contenitore_id as string, Number(p.premi_residui ?? 0)])
+  )
 
   const valorePerGruppo = new Map(
     (valori ?? []).filter((v) => v.contenitore_id !== null).map((v) => [v.contenitore_id as string, v.valore_totale ?? 0])
@@ -157,6 +166,7 @@ export async function caricaGruppiReali(
       targetAttivo: c.target_attivo,
       dataAttivazione: c.data_attivazione,
       valore: valorePerGruppo.get(c.id) ?? 0,
+      baseFiscale: tipo === 'Polizza' ? premiResidui.get(c.id) ?? 0 : null,
     })),
     posizioni,
     strumenti: strumenti ?? [],
@@ -353,6 +363,7 @@ export async function caricaGruppiPersonalizzati(supabase: ClientSupabase): Prom
       targetAttivo: c.target_attivo,
       dataAttivazione: c.data_attivazione,
       valore: valorePerGruppo.get(c.id) ?? 0,
+      baseFiscale: null,
     })),
     posizioni,
     strumenti,

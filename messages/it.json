@@ -9,7 +9,7 @@
   },
   "PaginaCategoria": {
     "tooltipRendimentoLive": "Rendimento delle posizioni ancora aperte in questa categoria: valore attuale rispetto al capitale investito, cioè il costo delle quote ancora possedute (i lotti rimasti dopo le vendite, metodo FIFO), commissioni e tasse d'acquisto comprese. Conta da quando hai comprato quelle quote, non dall'inizio dell'anno, e non include vendite né dividendi già incassati. Tra parentesi, la variazione rispetto all'ultima valorizzazione salvata, che si registra a ogni aggiornamento dei prezzi.",
-    "tooltipPlusMinusNonRealizzata": "Guadagno o perdita non ancora incassati sulle posizioni aperte di questa categoria: valore attuale meno il costo delle quote ancora possedute (metodo FIFO, commissioni e tasse d'acquisto comprese). È al lordo delle tasse che pagheresti vendendo e non include le plusvalenze già realizzate con le vendite.",
+    "tooltipPlusMinusNonRealizzata": "Guadagno o perdita non ancora incassati sulle posizioni aperte di questa categoria: valore attuale meno il costo delle quote ancora possedute (metodo FIFO, commissioni e tasse d'acquisto comprese). È al lordo delle tasse che pagheresti vendendo e non include le plusvalenze già realizzate con le vendite. Per i fondi in polizza è la performance del singolo fondo: fiscalmente la polizza si tassa come contratto unico, su valore meno premi residui (vedi Fiscalità).",
     "etichettaAsset": "Asset",
     "colonnaStrumento": "Nome",
     "colonnaTipo": "Tipo",
@@ -32,7 +32,7 @@
   },
   "PaginaTuttiAsset": {
     "tooltipRendimentoLive": "Rendimento di tutte le posizioni ancora aperte: valore attuale rispetto al capitale investito, cioè il costo delle quote ancora possedute (i lotti rimasti dopo le vendite, metodo FIFO), commissioni e tasse d'acquisto comprese. La liquidità è compresa con capitale investito uguale al saldo, quindi rendimento zero. Conta da quando hai comprato le quote, non dall'inizio dell'anno, e non include vendite né dividendi già incassati. Tra parentesi, la variazione rispetto all'ultima valorizzazione salvata, che si registra a ogni aggiornamento dei prezzi.",
-    "tooltipPlusMinusNonRealizzata": "Guadagno o perdita non ancora incassati su tutte le posizioni aperte: valore attuale meno il costo delle quote ancora possedute (metodo FIFO, commissioni e tasse d'acquisto comprese). La liquidità non contribuisce. È al lordo delle tasse che pagheresti vendendo e non include le plusvalenze già realizzate con le vendite.",
+    "tooltipPlusMinusNonRealizzata": "Guadagno o perdita non ancora incassati su tutte le posizioni aperte: valore attuale meno il costo delle quote ancora possedute (metodo FIFO, commissioni e tasse d'acquisto comprese). La liquidità non contribuisce. È al lordo delle tasse che pagheresti vendendo e non include le plusvalenze già realizzate con le vendite. Per i fondi in polizza è la performance del singolo fondo: fiscalmente la polizza si tassa come contratto unico, su valore meno premi residui (vedi Fiscalità).",
     "tooltipPeso": "Peso calcolato sul totale degli asset posseduti in questa tabella, liquidità compresa."
   },
   "Categorie": {
@@ -91,7 +91,7 @@
   "Dashboard": {
     "etichettaDashboard": "Dashboard",
     "titolo": "Il tuo portafoglio",
-    "titoloRendimentoLive": "Rendimento Live",
+    "titoloRendimentoLive": "Rendimento complessivo",
     "etichettaOggi": "Oggi",
     "linkRendimenti": "→ Rendimenti",
     "labelPlusMinusNonRealizzata": "Plus/minus non realizzata",
@@ -122,7 +122,7 @@
     "colonnaNav": "NAV",
     "colonnaPrezzoMedio": "Prezzo medio",
     "colonnaCosto": "Costo",
-    "labelRendimento": "Rendimento",
+    "labelRendimento": "Rendimento complessivo",
     "linkRendimenti": "→ Rendimenti",
     "labelPlusMinusNonRealizzata": "Plus/minusvalenza non realizzata",
     "linkFiscalita": "→ Fiscalità",
@@ -265,6 +265,12 @@
     "paginazioneMostraTutte": "Mostra tutte"
   },
   "PaginaFiscalita": {
+    "etichettaRiscattoPolizza": "Riscatto polizza",
+    "etichettaPrezzoStimato": "prezzo stimato",
+    "tooltipPrezzoStimato": "Per valutare la polizza prima del riscatto, almeno un fondo non aveva un prezzo in quella data: è stato usato l'ultimo prezzo disponibile precedente.",
+    "tooltipRitenutaEccessiva": "La compagnia ha trattenuto più del 26% dell'imponibile del riscatto: da verificare. Una ritenuta minore è normale, per la quota in titoli di Stato.",
+    "avvisoPolizzeIncompleteInizioAnno": "Escluse dal confronto perché a inizio anno alcuni loro fondi non hanno nessun prezzo: {elenco}.",
+    "avvisoPolizzeIncompleteGrafico": "Nel grafico sono escluse le polizze con fondi senza nessun prezzo a fine anno — {elenco}.",
     "colonnaPosizione": "Posizione",
     "titoloAnnoCorrente": "Anno corrente — {anno}",
     "titoloStorico": "Storico",
@@ -403,8 +409,10 @@
     "alertNessunAcquisto": "Nessun acquisto da fare."
   },
   "PaginaAsset": {
+    "notaTassatoAlRiscatto": "Tassato al riscatto del contratto",
+    "notaNettoSoloFuoriPolizza": "Solo le vendite fuori polizza: quelle in polizza si tassano al riscatto del contratto.",
     "eyebrowAsset": "Asset",
-    "labelRendimento": "Rendimento",
+    "labelRendimento": "Rendimento complessivo",
     "labelNavConData": "NAV ({data})",
     "labelPrezzoMedioUnitario": "Prezzo medio unitario",
     "capitaleInvestito": "Capitale investito",

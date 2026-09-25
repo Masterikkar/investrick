@@ -15,14 +15,6 @@ const CHIAVE_TRADUZIONE_CONTENITORE_MOVIMENTO: Record<string, string> = {
   Polizze: 'polizze',
 }
 
-type RiepilogoPosizione = {
-  strumento_id: string
-  contenitore_id: string | null
-  quantita_posseduta: number
-  capitale_investito: number
-  valore: number | null
-  rendimento_pct: number | null
-}
 type RealizzatoAnno = {
   anno: number
   netto_vendite: number
@@ -32,41 +24,45 @@ type RealizzatoAnnoStorico = {
   anno: number
   netto_vendite: number
 }
+// Una riga per vendita fuori polizza o per riscatto di polizza (tipo_riga).
 type VerificaTrattenuta = {
-  vendita_id: string
+  vendita_id: string | null
   data_vendita: string
-  strumento_id: string
+  strumento_id: string | null
   contenitore_id: string | null
-  titolo_di_stato: boolean
+  tipo_riga: 'vendita' | 'riscatto_polizza'
   aliquota_attesa_pct: number
   plusvalenza_totale_vendita: number
   tassa_attesa: number
   tassa_trattenuta_effettiva: number
   differenza: number
+  valore_lordo: number
+  prezzo_stimato: boolean
+  ritenuta_eccessiva: boolean | null
 }
+// base_fiscale: fuori polizza il costo dei lotti, in polizza la quota dei
+// premi residui del contratto. incompleta (solo a inizio anno): la polizza
+// ha fondi senza nessun prezzo a quella data.
 type NonRealizzatoDettaglio = {
   strumento_id: string
   contenitore_id: string | null
   categoria: string
   contenitore_tipo: string | null
   valore: number | null
-  capitale_investito: number
+  base_fiscale: number | null
+  incompleta?: boolean | null
 }
-type StoricoTotale = {
-  data: string | null
-  valore_totale: number | null
-  capitale_investito_totale: number | null
+type NonRealizzatoPerAnno = {
+  anno: number
+  valore: number | null
+  base_fiscale: number | null
+  polizze_incomplete: string[] | null
 }
 type MovimentoInteresse = {
   strumento_id: string
   data: string
   importo: number
   tassa_trattenuta: number
-}
-type TransazioneVendita = {
-  id: string
-  quantita: number
-  prezzo_unitario: number
 }
 type Strumento = { id: string; nome: string; categoria: string }
 type Contenitore = { id: string; nome: string; tipo: string }
@@ -102,7 +98,6 @@ export default async function FiscalitaPage() {
   const annoCorrente = new Date().getFullYear()
 
   const [
-    { data: riepilogoRaw },
     { data: realizzatoRaw },
     { data: verificaRaw },
     { data: strumentiRaw },
@@ -110,36 +105,29 @@ export default async function FiscalitaPage() {
     { data: nonRealizzatoRaw },
     { data: inizioAnnoRaw },
     { data: realizzatoTuttiAnniRaw },
-    { data: storicoTotaleRaw },
+    { data: nonRealizzatoPerAnnoRaw },
     { data: interessiRaw },
-    { data: venditeGrezzeRaw },
   ] = await Promise.all([
-    supabase.from('v_riepilogo_posizione').select('strumento_id, contenitore_id, quantita_posseduta, capitale_investito, valore, rendimento_pct').returns<RiepilogoPosizione[]>(),
     supabase.from('v_realizzato_per_anno').select('anno, netto_vendite, tasse_vendite').eq('anno', annoCorrente).maybeSingle().returns<RealizzatoAnno>(),
     supabase.from('v_verifica_trattenute').select('*').order('data_vendita', { ascending: false }).returns<VerificaTrattenuta[]>(),
     supabase.from('strumenti').select('id, nome, categoria').returns<Strumento[]>(),
     supabase.from('contenitori').select('id, nome, tipo').returns<Contenitore[]>(),
-    supabase.from('v_non_realizzato_dettaglio').select('strumento_id, contenitore_id, categoria, contenitore_tipo, valore, capitale_investito').returns<NonRealizzatoDettaglio[]>(),
-    supabase.from('v_non_realizzato_inizio_anno').select('strumento_id, contenitore_id, categoria, contenitore_tipo, valore, capitale_investito').returns<NonRealizzatoDettaglio[]>(),
+    supabase.from('v_non_realizzato_dettaglio').select('strumento_id, contenitore_id, categoria, contenitore_tipo, valore, base_fiscale').returns<NonRealizzatoDettaglio[]>(),
+    supabase.from('v_non_realizzato_inizio_anno').select('strumento_id, contenitore_id, categoria, contenitore_tipo, valore, base_fiscale, incompleta').returns<NonRealizzatoDettaglio[]>(),
     supabase.from('v_realizzato_per_anno').select('anno, netto_vendite').order('anno', { ascending: true }).returns<RealizzatoAnnoStorico[]>(),
-    supabase.from('v_storico_valorizzazioni_totale').select('data, valore_totale, capitale_investito_totale').order('data', { ascending: true }).returns<StoricoTotale[]>(),
+    supabase.from('v_non_realizzato_fiscale_per_anno').select('anno, valore, base_fiscale, polizze_incomplete').order('anno', { ascending: true }).returns<NonRealizzatoPerAnno[]>(),
     supabase.from('movimenti_liquidita').select('strumento_id, data, importo, tassa_trattenuta').eq('tipo_movimento', 'Interesse').returns<MovimentoInteresse[]>(),
-    // v_verifica_trattenute.vendita_id coincide con l'id della transazione
-    // di vendita in "transazioni" — recuperiamo qui quantità e prezzo per
-    // calcolare il "Valore" (ricavo lordo) di ogni vendita, dato assente
-    // dalla vista.
-    supabase.from('transazioni').select('id, quantita, prezzo_unitario').in('operazione', ['Vendita', 'Scambio_cessione']).returns<TransazioneVendita[]>(),
   ])
 
-  const riepilogo = (riepilogoRaw ?? []).filter((r) => r.quantita_posseduta > 0)
+  // Non realizzato fiscale: valore − base fiscale. Per un fondo in polizza la
+  // base è la sua quota dei premi residui del contratto, non il costo dei lotti.
+  const nonRealizzatoFiscale = (x: NonRealizzatoDettaglio) => Number(x.valore) - Number(x.base_fiscale ?? 0)
+  const posizioniAperte = (nonRealizzatoRaw ?? []).filter((x) => x.valore != null)
   const verifica = verificaRaw ?? []
   const strumentoMap = new Map((strumentiRaw ?? []).map((s) => [s.id, s.nome]))
   const strumentoCategoriaMap = new Map((strumentiRaw ?? []).map((s) => [s.id, s.categoria]))
   const contenitoreMap = new Map((contenitoriRaw ?? []).map((c) => [c.id, c.nome]))
   const contenitoreTipoMap = new Map((contenitoriRaw ?? []).map((c) => [c.id, c.tipo]))
-  const valoreVenditaMap = new Map(
-    (venditeGrezzeRaw ?? []).map((t) => [t.id, Number(t.quantita) * Number(t.prezzo_unitario)])
-  )
 
   const r: RealizzatoAnno = realizzatoRaw ?? {
     anno: annoCorrente,
@@ -147,27 +135,35 @@ export default async function FiscalitaPage() {
     tasse_vendite: 0,
   }
 
-  const totaleNonRealizzato = riepilogo.reduce(
-    (sum, x) => sum + (x.valore != null ? Number(x.valore) - Number(x.capitale_investito) : 0),
-    0
-  )
+  const totaleNonRealizzato = posizioniAperte.reduce((sum, x) => sum + nonRealizzatoFiscale(x), 0)
 
-  const inizioAnnoMap = new Map(
-    (inizioAnnoRaw ?? []).map((x) => [chiaveRiga(x.strumento_id, x.contenitore_id), x])
+  // Polizze incomplete a inizio anno (fondi senza nessun prezzo a quella
+  // data): fuori dal confronto da inizio anno, su entrambi i lati.
+  const polizzeIncompleteInizioAnno = new Set(
+    (inizioAnnoRaw ?? []).filter((x) => x.incompleta && x.contenitore_id).map((x) => x.contenitore_id as string)
   )
+  const nelConfronto = (x: NonRealizzatoDettaglio) => !x.contenitore_id || !polizzeIncompleteInizioAnno.has(x.contenitore_id)
 
-  const righeMovimento = (nonRealizzatoRaw ?? [])
-    .filter((x) => x.valore != null)
-    .map((x) => {
-      const oggi = Number(x.valore) - Number(x.capitale_investito)
+  const inizioAnno = (inizioAnnoRaw ?? []).filter(nelConfronto)
+  const inizioAnnoMap = new Map(inizioAnno.map((x) => [chiaveRiga(x.strumento_id, x.contenitore_id), x]))
+  const oggiMap = new Map(posizioniAperte.map((x) => [chiaveRiga(x.strumento_id, x.contenitore_id), x]))
+
+  const righeMovimento = [
+    ...posizioniAperte.filter(nelConfronto).map((x) => {
       const baseline = inizioAnnoMap.get(chiaveRiga(x.strumento_id, x.contenitore_id))
-      const nettoInizioAnno = baseline ? Number(baseline.valore) - Number(baseline.capitale_investito) : 0
       return {
         categoria: x.categoria,
         contenitore_tipo: x.contenitore_tipo,
-        netto: oggi - nettoInizioAnno,
+        netto: nonRealizzatoFiscale(x) - (baseline ? nonRealizzatoFiscale(baseline) : 0),
       }
-    })
+    }),
+    // In una polizza un fondo uscito con uno switch durante l'anno conta con la
+    // sua baseline: così il totale del contratto è oggi − inizio anno. Fuori
+    // polizza una posizione chiusa è già nel realizzato.
+    ...inizioAnno
+      .filter((x) => x.contenitore_tipo === 'Polizza' && !oggiMap.has(chiaveRiga(x.strumento_id, x.contenitore_id)))
+      .map((x) => ({ categoria: x.categoria, contenitore_tipo: x.contenitore_tipo, netto: -nonRealizzatoFiscale(x) })),
+  ]
 
   const bucketMovimento = aggregaNonRealizzato(righeMovimento)
 
@@ -188,8 +184,10 @@ export default async function FiscalitaPage() {
 
   const venditeAnnoCorrente = verifica.filter((v) => Number(v.data_vendita.slice(0, 4)) === annoCorrente)
 
+  // Un riscatto riguarda il contratto intero: conta nel totale e nelle
+  // polizze, non in una categoria.
   const righeRealizzatoMovimento = venditeAnnoCorrente.map((v) => ({
-    categoria: strumentoCategoriaMap.get(v.strumento_id) ?? '',
+    categoria: v.strumento_id ? strumentoCategoriaMap.get(v.strumento_id) ?? '' : '',
     contenitore_tipo: v.contenitore_id ? contenitoreTipoMap.get(v.contenitore_id) ?? null : null,
     netto: Number(v.plusvalenza_totale_vendita) - Number(v.tassa_trattenuta_effettiva),
   }))
@@ -230,59 +228,78 @@ export default async function FiscalitaPage() {
     0
   )
 
-  const ultimoPerAnno = new Map<number, { data: string; valore: number; capitale: number }>()
-  for (const s of storicoTotaleRaw ?? []) {
-    if (!s.data) continue
-    const anno = Number(s.data.slice(0, 4))
-    const esistente = ultimoPerAnno.get(anno)
-    if (!esistente || s.data > esistente.data) {
-      ultimoPerAnno.set(anno, {
-        data: s.data,
-        valore: Number(s.valore_totale ?? 0),
-        capitale: Number(s.capitale_investito_totale ?? 0),
-      })
-    }
-  }
+  // Grafico: non realizzato fiscale a fine anno (v_non_realizzato_fiscale_per_anno).
+  // Le polizze incomplete a quella data sono già escluse dalla vista.
+  const nonRealizzatoPerAnno = new Map((nonRealizzatoPerAnnoRaw ?? []).map((x) => [x.anno, x]))
 
   const anniStorico = new Set<number>()
   for (const rr of realizzatoTuttiAnniRaw ?? []) anniStorico.add(rr.anno)
-  for (const anno of ultimoPerAnno.keys()) anniStorico.add(anno)
+  for (const anno of nonRealizzatoPerAnno.keys()) anniStorico.add(anno)
 
   const puntiStorico: PuntoStoricoFiscale[] = Array.from(anniStorico)
     .sort((a, b) => a - b)
     .map((anno) => {
       const realizzatoAnno = (realizzatoTuttiAnniRaw ?? []).find((rr) => rr.anno === anno)
-      const snapshot = ultimoPerAnno.get(anno)
+      const fineAnno = nonRealizzatoPerAnno.get(anno)
       return {
         anno,
         realizzato: realizzatoAnno ? Number(realizzatoAnno.netto_vendite) : 0,
-        nonRealizzato: snapshot ? snapshot.valore - snapshot.capitale : 0,
+        nonRealizzato: fineAnno ? Number(fineAnno.valore ?? 0) - Number(fineAnno.base_fiscale ?? 0) : 0,
       }
     })
 
-  const righeVerifica: RigaRealizzata[] = verifica.map((v) => ({
-    vendita_id: v.vendita_id,
-    data_vendita: v.data_vendita,
-    strumento_id: v.strumento_id,
-    strumento_nome: strumentoMap.get(v.strumento_id) ?? '—',
-    valore: valoreVenditaMap.get(v.vendita_id) ?? 0,
-    plusvalenza_totale_vendita: Number(v.plusvalenza_totale_vendita),
-    aliquota_attesa_pct: Number(v.aliquota_attesa_pct),
-    tassa_attesa: Number(v.tassa_attesa),
-    tassa_trattenuta_effettiva: Number(v.tassa_trattenuta_effettiva),
-    differenza: Number(v.differenza),
-  }))
+  const nomiPolizze = (ids: Iterable<string>) =>
+    Array.from(ids)
+      .map((id) => contenitoreMap.get(id) ?? '—')
+      .join(', ')
 
-  const righeStoricoNonRealizzate: RigaNonRealizzata[] = riepilogo
-    .filter((x) => x.valore != null)
-    .map((x) => ({
+  const avvisoNonRealizzatoAnno =
+    polizzeIncompleteInizioAnno.size > 0
+      ? t('avvisoPolizzeIncompleteInizioAnno', { elenco: nomiPolizze(polizzeIncompleteInizioAnno) })
+      : null
+
+  const anniConPolizzeIncomplete = (nonRealizzatoPerAnnoRaw ?? []).filter((x) => (x.polizze_incomplete ?? []).length > 0)
+  const avvisoGrafico =
+    anniConPolizzeIncomplete.length > 0
+      ? t('avvisoPolizzeIncompleteGrafico', {
+          elenco: anniConPolizzeIncomplete.map((x) => `${x.anno}: ${nomiPolizze(x.polizze_incomplete ?? [])}`).join('; '),
+        })
+      : null
+
+  const righeVerifica: RigaRealizzata[] = verifica.map((v) => {
+    const riscatto = v.tipo_riga === 'riscatto_polizza'
+    return {
+      key: v.vendita_id ?? `${v.contenitore_id}|${v.data_vendita}`,
+      tipo_riga: v.tipo_riga,
+      data_vendita: v.data_vendita,
+      strumento_id: v.strumento_id,
+      contenitore_id: v.contenitore_id,
+      // Un riscatto riguarda la polizza intera: al posto del fondo, il suo nome.
+      strumento_nome: riscatto
+        ? (v.contenitore_id ? contenitoreMap.get(v.contenitore_id) : null) ?? '—'
+        : (v.strumento_id ? strumentoMap.get(v.strumento_id) : null) ?? '—',
+      valore: Number(v.valore_lordo),
+      plusvalenza_totale_vendita: Number(v.plusvalenza_totale_vendita),
+      aliquota_attesa_pct: Number(v.aliquota_attesa_pct),
+      tassa_attesa: Number(v.tassa_attesa),
+      tassa_trattenuta_effettiva: Number(v.tassa_trattenuta_effettiva),
+      differenza: Number(v.differenza),
+      prezzo_stimato: Boolean(v.prezzo_stimato),
+      ritenuta_eccessiva: Boolean(v.ritenuta_eccessiva),
+    }
+  })
+
+  const righeStoricoNonRealizzate: RigaNonRealizzata[] = posizioniAperte.map((x) => {
+    const base = Number(x.base_fiscale ?? 0)
+    return {
       key: chiaveRiga(x.strumento_id, x.contenitore_id),
       strumento_id: x.strumento_id,
       strumento_nome: strumentoMap.get(x.strumento_id) ?? '—',
       contenitore_nome: x.contenitore_id ? contenitoreMap.get(x.contenitore_id) ?? '—' : '—',
-      plus_minus: Number(x.valore) - Number(x.capitale_investito),
-      rendimento_pct: x.rendimento_pct ?? 0,
-    }))
+      plus_minus: nonRealizzatoFiscale(x),
+      rendimento_pct: base > 0 ? Math.round((nonRealizzatoFiscale(x) / base) * 10000) / 100 : 0,
+    }
+  })
 
   return (
     <div>
@@ -301,6 +318,7 @@ export default async function FiscalitaPage() {
           vociContenitore={vociContenitore}
           totaleInteressiNetti={totaleInteressiNetti}
           righeInteressi={righeInteressi}
+          avvisoNonRealizzato={avvisoNonRealizzatoAnno}
         />
       </section>
 
@@ -326,6 +344,9 @@ export default async function FiscalitaPage() {
 
           <p style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginTop: 24, marginBottom: 4 }}>{t('labelAndamento')}</p>
           <GraficoStoricoFiscale punti={puntiStorico} />
+          {avvisoGrafico && (
+            <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)', marginTop: 8, marginBottom: 0 }}>{avvisoGrafico}</p>
+          )}
 
           <div style={{ marginTop: 24 }}>
             <StoricoPlusMinus righeRealizzate={righeVerifica} righeNonRealizzate={righeStoricoNonRealizzate} />

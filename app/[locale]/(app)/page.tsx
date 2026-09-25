@@ -26,6 +26,8 @@ type NonRealizzatoDettaglio = {
   contenitore_tipo: string | null
   valore: number | null
   capitale_investito: number
+  // Fuori polizza il costo dei lotti, in polizza la quota dei premi residui.
+  base_fiscale: number | null
 }
 type SaldoLiquidita = { strumento_id: string; contenitore_id: string | null; saldo_corrente: number }
 type CostoRiga = { strumento_id: string; contenitore_id: string | null; costo_totale: number }
@@ -81,7 +83,7 @@ export default async function DashboardPage() {
     supabase.from('impostazioni_utente').select('soglia_ribilanciamento_pp').maybeSingle(),
     supabase
       .from('v_non_realizzato_dettaglio')
-      .select('strumento_id, contenitore_id, categoria, contenitore_tipo, valore, capitale_investito')
+      .select('strumento_id, contenitore_id, categoria, contenitore_tipo, valore, capitale_investito, base_fiscale')
       .returns<NonRealizzatoDettaglio[]>(),
   ])
 
@@ -92,9 +94,20 @@ export default async function DashboardPage() {
   const valoreTotaleMercato = posizioni.reduce((s, p) => s + (p.valore ?? 0), 0)
   const valoreTotaleLiquidita = saldiLiquidita.reduce((s, x) => s + Number(x.saldo_corrente ?? 0), 0)
 
+  // Plus/minus e rendimento complessivo sulla stessa base: per le polizze i
+  // premi residui del contratto (v_premi_residui_polizza), per il resto il
+  // costo dei lotti. È base_fiscale di v_non_realizzato_dettaglio.
+  const righeNonRealizzate = (nonRealizzatoRaw ?? []).filter((r) => r.valore != null)
+  const valoreNonRealizzato = righeNonRealizzate.reduce((s, r) => s + Number(r.valore), 0)
+  const baseTotale = righeNonRealizzate.reduce((s, r) => s + Number(r.base_fiscale ?? 0), 0)
+  const plusMinusNonRealizzata = valoreNonRealizzato - baseTotale
+  const rendimentoPctTotale = baseTotale > 0 ? (plusMinusNonRealizzata / baseTotale) * 100 : null
+
+  // La variazione "Oggi" resta quella di sempre: rendimento sui lotti di oggi
+  // contro l'ultima valorizzazione salvata, che è sui lotti.
   const capitaleInvestitoLordo = posizioni.reduce((s, p) => s + (p.capitale_investito ?? 0), 0)
-  const plusMinusNonRealizzata = valoreTotaleMercato - capitaleInvestitoLordo
-  const rendimentoPctTotale = capitaleInvestitoLordo > 0 ? (plusMinusNonRealizzata / capitaleInvestitoLordo) * 100 : null
+  const rendimentoLottiPct =
+    capitaleInvestitoLordo > 0 ? ((valoreTotaleMercato - capitaleInvestitoLordo) / capitaleInvestitoLordo) * 100 : null
 
   const capitaleInvestitoNetto = posizioni.reduce(
     (s, p) => s + (p.quantita_posseduta ?? 0) * (p.prezzo_medio_unitario ?? 0),
@@ -130,8 +143,8 @@ export default async function DashboardPage() {
     puntiRendimento.length > 0 ? puntiRendimento[puntiRendimento.length - 1].valore : null
 
   const variazioneDaUltimoSnapshot =
-    rendimentoPctTotale != null && rendimentoUltimoSnapshot != null
-      ? rendimentoPctTotale - rendimentoUltimoSnapshot
+    rendimentoLottiPct != null && rendimentoUltimoSnapshot != null
+      ? rendimentoLottiPct - rendimentoUltimoSnapshot
       : null
 
   const soglia = impostazioni?.soglia_ribilanciamento_pp ?? 3

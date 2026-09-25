@@ -52,6 +52,7 @@ export function SezioneAnnoCorrente({
   vociContenitore,
   totaleInteressiNetti,
   righeInteressi,
+  avvisoNonRealizzato,
 }: {
   annoCorrente: number
   realizzato: RealizzatoAnno
@@ -62,6 +63,8 @@ export function SezioneAnnoCorrente({
   vociContenitore: VoceBarra[]
   totaleInteressiNetti: number
   righeInteressi: RigaInteresse[]
+  // Polizze escluse dal confronto da inizio anno, già formulate come testo.
+  avvisoNonRealizzato?: string | null
 }) {
   const t = useTranslations('PaginaFiscalita')
   const locale = useLocale() as LocaleFormato
@@ -117,6 +120,10 @@ export function SezioneAnnoCorrente({
           </span>
         </CardMetrica>
       </div>
+
+      {avvisoNonRealizzato && (
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)', marginTop: 12, marginBottom: 0 }}>{avvisoNonRealizzato}</p>
+      )}
 
       <div style={{ marginTop: 12 }}>
         <LinkDettagli

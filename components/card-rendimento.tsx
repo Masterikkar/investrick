@@ -5,15 +5,15 @@ import { CardMetrica } from '@/components/card-metrica'
 export function CardRendimento({
   rendimentoPct,
   variazioneOggi,
-  label = 'Rendimento Live',
-  etichettaOggi = 'Oggi',
+  label,
+  etichettaOggi,
   href,
   linkLabel,
   info,
 }: {
   rendimentoPct: number | null
   variazioneOggi?: number | null
-  label?: string
+  label: string
   etichettaOggi?: string
   href?: string
   linkLabel?: string
@@ -28,7 +28,7 @@ export function CardRendimento({
       </span>
       {variazioneOggi != null && (
         <span style={{ fontSize: 'var(--fs-card-link)', marginLeft: 6, color: 'var(--text-secondary)' }}>
-          ({etichettaOggi}{' '}
+          ({etichettaOggi ? `${etichettaOggi} ` : ''}
           <span style={{ color: variazioneOggi >= 0 ? 'var(--success)' : 'var(--danger)' }}>
             {formatPercent(variazioneOggi, 2, true, locale)}
           </span>

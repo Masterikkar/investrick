@@ -45,6 +45,7 @@ export async function PaginaGruppi({
 }) {
   const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaContenitore')
+  const tDashboard = await getTranslations('Dashboard')
   const tContenitori = await getTranslations('Contenitori')
   const tCategorie = await getTranslations('Categorie')
 
@@ -134,12 +135,22 @@ export async function PaginaGruppi({
   const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
   const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
   const capitaleInvestitoNettoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestitoNetto as number), 0)
-  const plusMinusNonRealizzata = valoreTotalePosizioni - capitaleInvestitoTotale
-  const rendimentoPctTotale =
-    capitaleInvestitoTotale > 0 ? (plusMinusNonRealizzata / capitaleInvestitoTotale) * 100 : null
+  // Performance sui lotti, fondo per fondo (analisi del rendimento, tabella).
+  const plusMinusLotti = valoreTotalePosizioni - capitaleInvestitoTotale
 
+  // Polizze: il contratto si tassa intero, quindi plus/minus e rendimento %
+  // della pagina sono valore − premi residui e (valore − premi) / premi.
+  const baseFiscaleTotale = gruppi.length > 0 && gruppi.every((g) => g.baseFiscale !== null)
+    ? gruppi.reduce((acc, g) => acc + (g.baseFiscale ?? 0), 0)
+    : null
+  const plusMinusNonRealizzata = baseFiscaleTotale !== null ? valoreTotalePosizioni - baseFiscaleTotale : plusMinusLotti
+  const baseRendimento = baseFiscaleTotale ?? capitaleInvestitoTotale
+  const rendimentoPctTotale = baseRendimento > 0 ? (plusMinusNonRealizzata / baseRendimento) * 100 : null
+
+  // Lo storico è sui lotti: il confronto con l'ultima valorizzazione non ha
+  // senso per il rendimento fiscale delle polizze.
   const variazioneDaUltimoSnapshot =
-    rendimentoPctTotale != null && rendimentoUltimoSnapshot != null
+    baseFiscaleTotale === null && rendimentoPctTotale != null && rendimentoUltimoSnapshot != null
       ? rendimentoPctTotale - rendimentoUltimoSnapshot
       : null
 
@@ -241,7 +252,7 @@ export async function PaginaGruppi({
     (cat) => guadagnoPerCategoria[cat] !== undefined
   ).map((cat) => {
     const guadagno = guadagnoPerCategoria[cat]
-    const contributoPct = plusMinusNonRealizzata !== 0 ? (guadagno / plusMinusNonRealizzata) * 100 : null
+    const contributoPct = plusMinusLotti !== 0 ? (guadagno / plusMinusLotti) * 100 : null
     const larghezzaPct = maxAbsGuadagno > 0 ? (Math.abs(guadagno) / maxAbsGuadagno) * 50 : 0
     return { categoria: cat, guadagno, contributoPct, larghezzaPct }
   })
@@ -276,7 +287,7 @@ export async function PaginaGruppi({
       nome: g.nome,
       valore: g.valore,
       costo,
-      plusMinus: valorePosizioni - capitaleInvestito,
+      plusMinus: valorePosizioni - (g.baseFiscale ?? capitaleInvestito),
       dataAttivazione: g.dataAttivazione,
     }
   })
@@ -300,6 +311,8 @@ export async function PaginaGruppi({
                 <CardRendimento
                   rendimentoPct={rendimentoPctTotale}
                   variazioneOggi={variazioneDaUltimoSnapshot}
+                  label={t('labelRendimento')}
+                  etichettaOggi={tDashboard('etichettaOggi')}
                   href="/rendimenti"
                   linkLabel={t('linkRendimenti')}
                 />
@@ -328,7 +341,7 @@ export async function PaginaGruppi({
                 <AnalisiRendimento
                   contributoPerCategoria={contributoPerCategoria}
                   contributoStrumentoPerCategoria={contributoStrumentoPerCategoria}
-                  plusMinusNonRealizzata={plusMinusNonRealizzata}
+                  plusMinusNonRealizzata={plusMinusLotti}
                 />
               </Sezione>
             </div>
