@@ -34,7 +34,7 @@ export default async function CostiPage() {
   const supabase = await createClient()
 
   const COLONNE_CONTENITORE: ColonnaTabella[] = [
-    { key: 'nome', label: t('colonnaContenitore'), kind: 'text' },
+    { key: 'nome', label: tContenitori('colonnaNome'), kind: 'text' },
     { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
     { key: 'costoPerEuro', label: t('colonnaCostoPerEuro'), kind: 'numero' },
   ]

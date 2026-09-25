@@ -76,6 +76,7 @@
     }
   },
   "Contenitori": {
+    "colonnaNome": "Nome",
     "nessunGruppo": "Nessun gruppo",
     "pac": "PAC",
     "polizze": "Polizze",

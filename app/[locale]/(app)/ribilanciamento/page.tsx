@@ -76,6 +76,7 @@ export default async function RibilanciamentoPage({
   const locale = (await getLocale()) as LocaleFormato
   const t = await getTranslations('PaginaRibilanciamento')
   const tMenu = await getTranslations('Menu')
+  const tContenitori = await getTranslations('Contenitori')
   const tCategorie = await getTranslations('Categorie')
   const tPaginaCosti = await getTranslations('PaginaCosti')
   const tPaginaFiscalita = await getTranslations('PaginaFiscalita')
@@ -393,7 +394,7 @@ export default async function RibilanciamentoPage({
             <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCosti('colonnaContenitore')}</th>
+                  <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tContenitori('colonnaNome')}</th>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaCosti('colonnaCategoria')}</th>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTarget')}</th>
                   <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaAttuale')}</th>

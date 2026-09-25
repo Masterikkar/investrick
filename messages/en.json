@@ -76,6 +76,7 @@
     }
   },
   "Contenitori": {
+    "colonnaNome": "Name",
     "nessunGruppo": "No group",
     "pac": "Investment Plans",
     "polizze": "Insurance Policies",
