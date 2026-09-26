@@ -320,7 +320,7 @@ export async function PaginaGruppi({
                   linkLabel={t('linkRendimenti')}
                 />
 
-                <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/fiscalita" linkLabel={t('linkFiscalita')}>
+                <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/tax" linkLabel={t('linkFiscalita')}>
                   <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                     {formatEuroSigned(plusMinusNonRealizzata, locale)}
                   </span>
@@ -330,7 +330,7 @@ export async function PaginaGruppi({
                   <CapitaleInvestito capitale={capitaleInvestitoNettoTotale} ricompense={ricompenseTotale} />
                 </CardMetrica>
 
-                <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>
+                <CardMetrica label={t('labelCostoTotale')} href="/costs" linkLabel={t('linkCosti')}>
                   {formatEuro(costoTotale, locale)}
                 </CardMetrica>
               </div>

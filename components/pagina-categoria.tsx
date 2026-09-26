@@ -186,7 +186,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
 
             <CardMetrica
               label={t('labelPlusMinusNonRealizzata')}
-              href="/fiscalita"
+              href="/tax"
               linkLabel={t('linkFiscalita')}
               info={t('tooltipPlusMinusNonRealizzata')}
             >
@@ -199,7 +199,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
               <CapitaleInvestito capitale={capitaleInvestitoNettoTotale} ricompense={ricompenseTotale} />
             </CardMetrica>
 
-            <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>
+            <CardMetrica label={t('labelCostoTotale')} href="/costs" linkLabel={t('linkCosti')}>
               {formatEuro(costoTotaleCategoria, locale)}
             </CardMetrica>
           </div>

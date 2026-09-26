@@ -24,7 +24,7 @@ export async function aggiornaAliquotaDefaultCategoria(
     return { errore: error.message }
   }
 
-  revalidatePath(`/${locale}/account/impostazioni/fiscalita`)
+  revalidatePath(`/${locale}/account/settings/tax`)
   return { successo: true }
 }
 
@@ -54,7 +54,7 @@ export async function reimpostaAliquotaCategoria(
     return { errore: error.message }
   }
 
-  revalidatePath(`/${locale}/account/impostazioni/fiscalita`)
+  revalidatePath(`/${locale}/account/settings/tax`)
   return { successo: true, aggiornati: aggiornati?.length ?? 0 }
 }
 
@@ -78,6 +78,6 @@ export async function aggiornaAliquotaStrumento(
     return { errore: error.message }
   }
 
-  revalidatePath(`/${locale}/account/impostazioni/fiscalita`)
+  revalidatePath(`/${locale}/account/settings/tax`)
   return { successo: true }
 }

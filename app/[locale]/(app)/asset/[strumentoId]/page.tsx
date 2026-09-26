@@ -144,7 +144,7 @@ export default async function AssetPage({
 
   // Un conto di liquidità ha la sua pagina di dettaglio: copre link diretti o salvati.
   if (strumento.categoria === 'Liquidita') {
-    redirect({ href: `/liquidita/${strumento.id}`, locale })
+    redirect({ href: `/cash/${strumento.id}`, locale })
   }
 
   const contenitoreMap = new Map((contenitoriRaw ?? []).map((c) => [c.id, c.nome]))

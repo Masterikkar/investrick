@@ -27,13 +27,13 @@ import {
 // Voci del sottomenu Portafoglio → Asset: categoria del database, pagina,
 // chiave nel namespace "Categorie". La Liquidità ha la sua pagina dedicata.
 const VOCI_ASSET = [
-  { categoria: 'Azioni', href: '/azioni', chiave: 'azioni' },
-  { categoria: 'Obbligazioni', href: '/obbligazioni', chiave: 'obbligazioni' },
-  { categoria: 'Materie prime', href: '/materie-prime', chiave: 'materiePrime' },
-  { categoria: 'Monetario', href: '/monetario', chiave: 'monetario' },
+  { categoria: 'Azioni', href: '/shares', chiave: 'azioni' },
+  { categoria: 'Obbligazioni', href: '/bonds', chiave: 'obbligazioni' },
+  { categoria: 'Materie prime', href: '/commodities', chiave: 'materiePrime' },
+  { categoria: 'Monetario', href: '/money-market', chiave: 'monetario' },
   { categoria: 'Multiasset', href: '/multiasset', chiave: 'multiasset' },
   { categoria: 'Crypto', href: '/crypto', chiave: 'crypto' },
-  { categoria: 'Liquidita', href: '/liquidita', chiave: 'liquidita' },
+  { categoria: 'Liquidita', href: '/cash', chiave: 'liquidita' },
 ]
 
 // top: 100% = bordo inferiore reale dell'header. +1px bordo header, +5px distacco richiesto.
@@ -149,7 +149,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     <RippleLink href="/insurance-policies" className="menu-row link-interattivo">
                       {t('polizze')}
                     </RippleLink>
-                    <RippleLink href="/personalizzati" className="menu-row link-interattivo">
+                    <RippleLink href="/custom-groups" className="menu-row link-interattivo">
                       {t('personalizzati')}
                     </RippleLink>
                   </div>
@@ -167,14 +167,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </summary>
               <div className="menu-panel" style={stilePannello}>
                 <RippleLink
-                  href="/costi"
+                  href="/costs"
                   className="menu-row link-interattivo"
                   style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
                 >
                   <IconaCosti /> {t('costi')}
                 </RippleLink>
                 <RippleLink
-                  href="/fiscalita"
+                  href="/tax"
                   className="menu-row link-interattivo"
                   style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
                 >
@@ -189,7 +189,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 </RippleLink>
                 <hr className="menu-divider" />
                 <RippleLink
-                  href="/ribilanciamento"
+                  href="/tools/rebalancing"
                   className="menu-row link-interattivo"
                   style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
                 >
@@ -206,10 +206,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     </span>
                   </summary>
                   <div className="menu-submenu-items">
-                    <RippleLink href="/storico/liquidita" className="menu-row link-interattivo">
+                    <RippleLink href="/history/cash" className="menu-row link-interattivo">
                       {t('transazioniLiquidita')}
                     </RippleLink>
-                    <RippleLink href="/storico/asset" className="menu-row link-interattivo">
+                    <RippleLink href="/history/asset" className="menu-row link-interattivo">
                       {t('transazioniFinanziarie')}
                     </RippleLink>
                   </div>
@@ -252,7 +252,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 </details>
                 <hr className="menu-divider" />
                 <RippleLink
-                  href="/account/impostazioni"
+                  href="/account/settings"
                   className="menu-row link-interattivo"
                   style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
                 >

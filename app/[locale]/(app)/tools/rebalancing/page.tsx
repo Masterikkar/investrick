@@ -580,7 +580,7 @@ export default async function RibilanciamentoPage({
           gli scostamenti non si confrontano tra loro in un unico ordinamento. */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 12 }}>
         <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, margin: 0 }}>{tMenu('portafoglio')}</h2>
-        <RippleLink href="/target/portafoglio" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
+        <RippleLink href="/target/portfolio" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
           {tPaginaContenitore('linkModificaTarget')}
         </RippleLink>
       </div>

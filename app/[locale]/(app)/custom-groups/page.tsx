@@ -19,7 +19,7 @@ export default async function PersonalizzatiPage() {
       titoloElenco={t('titoloITuoiPersonalizzati')}
       alertNessunGruppo={t('alertNessunPersonalizzatoRegistrato')}
       alertNessunGruppoConTarget={t('alertNessunPersonalizzatoConTarget')}
-      hrefGruppo={(id) => `/personalizzati/${id}/membri`}
+      hrefGruppo={(id) => `/custom-groups/${id}/members`}
       mostraTotaleAggregato={false}
     />
   )

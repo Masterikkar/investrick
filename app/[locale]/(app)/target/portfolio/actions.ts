@@ -30,7 +30,7 @@ export async function salvaTargetPortafoglio(formData: FormData) {
   for (const cat of CATEGORIE) {
     const valore = parsePercentuale(formData.get(`percentuale_${cat}`) as string | null)
     if (valore === null) {
-      redirect({ href: '/target/portafoglio?errore=1', locale })
+      redirect({ href: '/target/portfolio?errore=1', locale })
       return
     }
     percentuali[cat] = valore
@@ -38,7 +38,7 @@ export async function salvaTargetPortafoglio(formData: FormData) {
 
   const somma = CATEGORIE.reduce((acc, cat) => acc + percentuali[cat], 0)
   if (somma !== 0 && Math.abs(somma - 100) > 0.01) {
-    redirect({ href: '/target/portafoglio?errore=somma', locale })
+    redirect({ href: '/target/portfolio?errore=somma', locale })
   }
 
   // Niente upsert: l'unicità delle righe di portafoglio è un indice parziale
@@ -51,7 +51,7 @@ export async function salvaTargetPortafoglio(formData: FormData) {
     .is('contenitore_id', null)
 
   if (erroreLettura) {
-    redirect({ href: '/target/portafoglio?errore=1', locale })
+    redirect({ href: '/target/portfolio?errore=1', locale })
   }
 
   const idPerCategoria = new Map((esistenti ?? []).map((r) => [r.categoria, r.id]))
@@ -65,15 +65,15 @@ export async function salvaTargetPortafoglio(formData: FormData) {
         .from('target_allocazioni')
         .update({ target_percentuale: valore, attivo: valore > 0 })
         .eq('id', id)
-      if (error) redirect({ href: '/target/portafoglio?errore=1', locale })
+      if (error) redirect({ href: '/target/portfolio?errore=1', locale })
     } else if (valore > 0) {
       const { error } = await supabase
         .from('target_allocazioni')
         .insert({ contenitore_id: null, categoria: cat, target_percentuale: valore, attivo: true })
-      if (error) redirect({ href: '/target/portafoglio?errore=1', locale })
+      if (error) redirect({ href: '/target/portfolio?errore=1', locale })
     }
   }
 
   revalidatePath('/', 'layout')
-  redirect({ href: '/ribilanciamento', locale })
+  redirect({ href: '/tools/rebalancing', locale })
 }

@@ -90,7 +90,7 @@ export async function creaAsset(formData: FormData) {
   }
 
   // I conti di liquidità hanno la loro pagina di dettaglio, non quella Asset.
-  redirect({ href: categoria === 'Liquidita' ? `/liquidita/${nuovo.id}` : `/asset/${nuovo.id}`, locale })
+  redirect({ href: categoria === 'Liquidita' ? `/cash/${nuovo.id}` : `/asset/${nuovo.id}`, locale })
 }
 // Modifica di uno strumento esistente dal modale di Gestione strumenti: stessi
 // campi di creaAsset, ma niente redirect (il client chiude il modale e

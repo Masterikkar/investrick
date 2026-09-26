@@ -21,7 +21,7 @@ export async function aggiungiMembro(formData: FormData) {
 
   // 23505: lo strumento è già nel gruppo (es. doppio clic), niente da fare.
   if (error && error.code !== '23505') {
-    redirect({ href: `/personalizzati/${contenitoreId}/membri?errore=1`, locale })
+    redirect({ href: `/custom-groups/${contenitoreId}/members?errore=1`, locale })
   }
 
   revalidatePath('/', 'layout')
@@ -40,7 +40,7 @@ export async function rimuoviMembro(formData: FormData) {
     .eq('strumento_id', strumentoId)
 
   if (error) {
-    redirect({ href: `/personalizzati/${contenitoreId}/membri?errore=1`, locale })
+    redirect({ href: `/custom-groups/${contenitoreId}/members?errore=1`, locale })
   }
 
   revalidatePath('/', 'layout')

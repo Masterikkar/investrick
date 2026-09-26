@@ -267,7 +267,7 @@ export default async function TuttiAssetPage() {
 
             <CardMetrica
               label={t('labelPlusMinusNonRealizzata')}
-              href="/fiscalita"
+              href="/tax"
               linkLabel={t('linkFiscalita')}
               info={tTuttiAsset('tooltipPlusMinusNonRealizzata')}
             >
@@ -280,7 +280,7 @@ export default async function TuttiAssetPage() {
               <CapitaleInvestito capitale={capitaleInvestitoNettoTotale} ricompense={ricompenseTotale} />
             </CardMetrica>
 
-            <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>
+            <CardMetrica label={t('labelCostoTotale')} href="/costs" linkLabel={t('linkCosti')}>
               {formatEuro(costoTotale, locale)}
             </CardMetrica>
           </div>

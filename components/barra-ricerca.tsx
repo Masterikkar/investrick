@@ -20,7 +20,7 @@ type Risultato = {
 function hrefGruppo(c: { id: string; tipo: string }): string {
   if (c.tipo === 'PAC') return '/investment-plans'
   if (c.tipo === 'Polizza') return '/insurance-policies'
-  if (c.tipo === 'Personalizzato') return `/personalizzati/${c.id}/membri`
+  if (c.tipo === 'Personalizzato') return `/custom-groups/${c.id}/members`
   return '/'
 }
 

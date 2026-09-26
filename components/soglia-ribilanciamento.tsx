@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatNumero, type LocaleFormato } from '@/lib/format'
-import { aggiornaSogliaRibilanciamento } from '@/app/[locale]/(app)/ribilanciamento/actions'
+import { aggiornaSogliaRibilanciamento } from '@/app/[locale]/(app)/tools/rebalancing/actions'
 
 export function SogliaRibilanciamento({ sogliaIniziale }: { sogliaIniziale: number }) {
   const t = useTranslations('PaginaRibilanciamento')

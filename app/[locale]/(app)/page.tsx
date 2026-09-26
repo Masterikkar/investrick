@@ -210,7 +210,7 @@ export default async function DashboardPage() {
               linkLabel={t('linkRendimenti')}
             />
 
-            <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/fiscalita" linkLabel={t('linkFiscalita')}>
+            <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/tax" linkLabel={t('linkFiscalita')}>
               <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatEuroSigned(plusMinusNonRealizzata, locale)}
               </span>
@@ -218,7 +218,7 @@ export default async function DashboardPage() {
 
             <CardMetrica
               label={t('labelPlusMinusRealizzata', { anno: annoCorrente })}
-              href="/fiscalita"
+              href="/tax"
               linkLabel={t('linkFiscalita')}
             >
               <span style={{ color: realizzatoNettoAnno >= 0 ? 'var(--success)' : 'var(--danger)' }}>
@@ -226,7 +226,7 @@ export default async function DashboardPage() {
               </span>
             </CardMetrica>
 
-            <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>
+            <CardMetrica label={t('labelCostoTotale')} href="/costs" linkLabel={t('linkCosti')}>
               {formatEuro(costoTotale, locale)}
             </CardMetrica>
 

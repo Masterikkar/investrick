@@ -239,7 +239,7 @@ export function StoricoMovimentiLiquidita({
                   <tr key={m.id} className="tabella-riga">
                     <td style={{ padding: 8 }}>{formatData(m.data, locale)}</td>
                     <td style={{ padding: 8 }}>
-                      <RippleLink href={`/liquidita/${m.strumento_id}`} className="link-interattivo">
+                      <RippleLink href={`/cash/${m.strumento_id}`} className="link-interattivo">
                         {m.strumento_nome}
                       </RippleLink>
                     </td>

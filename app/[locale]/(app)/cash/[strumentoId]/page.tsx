@@ -9,7 +9,7 @@ import { CardMetrica } from '@/components/card-metrica'
 import { Sezione } from '@/components/sezione'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
-import { StoricoMovimentiLiquidita, type RigaStoricoMovimentoLiquidita } from '../../storico/storico-movimenti-liquidita'
+import { StoricoMovimentiLiquidita, type RigaStoricoMovimentoLiquidita } from '../../history/storico-movimenti-liquidita'
 
 type SaldoRiga = { contenitore_id: string | null; saldo_corrente: number }
 type CostoRiga = { contenitore_id: string | null; costo_totale: number }
@@ -176,7 +176,7 @@ export default async function LiquiditaStrumentoPage({
 
   return (
     <div>
-      <RippleLink href="/liquidita" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
+      <RippleLink href="/cash" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
         ← {tContenitori('liquidita')}
       </RippleLink>
 
@@ -202,7 +202,7 @@ export default async function LiquiditaStrumentoPage({
             <CardMetrica label={t('labelInteresseLordo')}>{formatEuro(interessiLordi, locale)}</CardMetrica>
             <CardMetrica label={t('labelInteresseNetto')}>{formatEuro(interessiNetti, locale)}</CardMetrica>
             <CardMetrica label={t('labelTassaTrattenuta')}>{formatEuro(tasseTrattenute, locale)}</CardMetrica>
-            <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkDettaglioCosti')}>
+            <CardMetrica label={t('labelCostoTotale')} href="/costs" linkLabel={t('linkDettaglioCosti')}>
               {formatEuro(costoTotale, locale)}
             </CardMetrica>
           </div>
