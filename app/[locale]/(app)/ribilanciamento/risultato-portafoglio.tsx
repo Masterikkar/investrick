@@ -119,14 +119,26 @@ function TabellaSoluzione({ soluzione }: { soluzione: SoluzionePortafoglio }) {
 export function RisultatoPortafoglioVista({
   risultato,
   versamentoMassimo,
+  avvisoStrutturale,
 }: {
   risultato: RisultatoPortafoglio
   versamentoMassimo: number | null
+  avvisoStrutturale?: { floorPp: number; categorie: string[] } | null
 }) {
   const t = useTranslations('PaginaRibilanciamento')
   const tCategorie = useTranslations('Categorie')
   const locale = useLocale() as LocaleFormato
   const [quotaPac, setQuotaPac] = useState(100)
+
+  const avvisoScostamentoStrutturale =
+    avvisoStrutturale && avvisoStrutturale.categorie.length > 0 ? (
+      <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)' }}>
+        {t('avvisoScostamentoStrutturale', {
+          floor: formatNumero(avvisoStrutturale.floorPp, 2, false, locale),
+          categorie: avvisoStrutturale.categorie.map((c) => traduciCategoria(tCategorie, c)).join(', '),
+        })}
+      </p>
+    ) : null
 
   const avvisoSenzaVeicolo =
     risultato.senzaVeicolo.length > 0 ? (
@@ -157,6 +169,7 @@ export function RisultatoPortafoglioVista({
             scostamento: formatNumero(risultato.soluzione.scostamentoMassimoPp, 2, false, locale),
           })}
         </p>
+        {avvisoScostamentoStrutturale}
         {avvisoSenzaVeicolo}
         <TabellaSoluzione soluzione={risultato.soluzione} />
       </>

@@ -136,6 +136,13 @@ export default async function RibilanciamentoPage({
   let risultatoPortafoglio: RisultatoPortafoglio | null = null
   const venditePortafoglioProposte: EsitoVenditaStrumento[] = []
   let poolPortafoglioTotale: number | null = null
+  // Categorie effettivamente usate per il risultato finale (dopo un'eventuale
+  // vendita): base per capire se un versamento più alto aiuterebbe ancora.
+  let categoriePortafoglioFinali: CategoriaPortafoglio[] | null = null
+  // Popolato solo se lo scostamento residuo è un limite strutturale: nemmeno
+  // un versamento enorme lo eliminerebbe (forma fissa di un PAC che lega due
+  // categorie in un rapporto incompatibile col target di portafoglio).
+  let avvisoStrutturale: { floorPp: number; categorie: string[] } | null = null
 
   if (params.portafoglio === '1' && (scostamentiPortafoglio ?? []).length > 0) {
     const [{ data: valoriCategoria }, { data: contenitori }, { data: posizioni }, { data: saldi }, { data: targetGruppi }] =
@@ -188,6 +195,7 @@ export default async function RibilanciamentoPage({
       targetPct: targetPortafoglio.get(categoria) ?? null,
       libera: categorieLibere.has(categoria),
     }))
+    categoriePortafoglioFinali = categoriePortafoglio
 
     // Un PAC è un blocco solo con il target attivo e completo (somma 100).
     const blocchiPac: BloccoPac[] = []
@@ -305,6 +313,7 @@ export default async function RibilanciamentoPage({
             ...c,
             valoreAttuale: c.valoreAttuale - (vendutoPerCategoriaPortafoglio.get(c.categoria) ?? 0),
           }))
+          categoriePortafoglioFinali = categoriePortafoglioPostVendita
 
           risultatoPortafoglio = calcolaRibilanciamentoPortafoglio(
             categoriePortafoglioPostVendita,
@@ -313,6 +322,30 @@ export default async function RibilanciamentoPage({
             poolPortafoglioTotale
           )
         }
+      }
+    }
+
+    // Se resta un residuo anche dopo un'eventuale vendita, capiamo se è per
+    // via del tetto al versamento o se è un limite strutturale: rifacciamo lo
+    // stesso calcolo con un versamento enorme (praticamente illimitato). Se
+    // anche così resta 'residuo', nessuna cifra risolverebbe la situazione.
+    if (risultatoPortafoglio && risultatoPortafoglio.esito === 'residuo' && categoriePortafoglioFinali) {
+      const totalePortafoglioFinale = categoriePortafoglioFinali.reduce((acc, c) => acc + c.valoreAttuale, 0)
+      // "Praticamente illimitato": molto più di quanto chiunque verserebbe,
+      // e scalato sul portafoglio così resta valido anche se cresce parecchio.
+      const versamentoIllimitato = Math.max(1e10, totalePortafoglioFinale * 1e6)
+      const risultatoIllimitato = calcolaRibilanciamentoPortafoglio(
+        categoriePortafoglioFinali,
+        blocchiPac,
+        soglia,
+        versamentoIllimitato
+      )
+      if (risultatoIllimitato.esito === 'residuo') {
+        const floorPp = risultatoIllimitato.soluzione.scostamentoMassimoPp
+        const categorieAlFloor = risultatoIllimitato.soluzione.righe
+          .filter((r) => r.scostamentoFinalePp !== null && Math.abs(Math.abs(r.scostamentoFinalePp) - floorPp) <= 0.05)
+          .map((r) => r.categoria)
+        avvisoStrutturale = { floorPp, categorie: categorieAlFloor }
       }
     }
   }
@@ -662,6 +695,7 @@ export default async function RibilanciamentoPage({
                 <RisultatoPortafoglioVista
                   risultato={risultatoPortafoglio}
                   versamentoMassimo={poolPortafoglioTotale !== null ? null : versamentoPortafoglio}
+                  avvisoStrutturale={avvisoStrutturale}
                 />
               </Sezione>
             </div>

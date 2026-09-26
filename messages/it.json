@@ -396,6 +396,7 @@
     "messaggioPortafoglioGiaInSoglia": "Il portafoglio è già entro soglia: non serve nessun versamento.",
     "messaggioPortafoglioIrraggiungibile": "Con i soli versamenti il portafoglio non torna entro soglia: i PAC comprano solo nelle loro proporzioni e alcune categorie non hanno un altro modo di essere comprate. Indica un versamento massimo per vedere il risultato migliore possibile con quella cifra.",
     "messaggioPortafoglioResiduo": "Con {importo} il portafoglio non torna entro soglia. Questa è la divisione migliore possibile: lo scostamento massimo resta di {scostamento} pp.",
+    "avvisoScostamentoStrutturale": "Anche con un versamento molto più alto il portafoglio non tornerebbe comunque entro soglia: lo scostamento minimo ottenibile resta di circa {floor} pp. {categorie} sono legate da un vincolo che nessun versamento può sciogliere — ad esempio la forma fissa di un PAC — quindi per risolverlo davvero serve rivedere quella forma o i target, non versare di più.",
     "alertSenzaVeicolo": "Senza un modo di comprarle, escluse dal calcolo (cambiano solo perché il totale cresce): {categorie}.",
     "notaSoloTramitePac": "Senza PAC la soglia non si raggiunge con questo versamento: alcune categorie si comprano solo tramite un PAC.",
     "schedaSoloLibere": "Solo acquisti liberi",

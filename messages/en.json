@@ -396,6 +396,7 @@
     "messaggioPortafoglioGiaInSoglia": "The portfolio is already within the threshold: no contribution is needed.",
     "messaggioPortafoglioIrraggiungibile": "Contributions alone cannot bring the portfolio back within the threshold: the investment plans only buy in their own proportions and some categories have no other way to be bought. Enter a maximum contribution to see the best possible result with that amount.",
     "messaggioPortafoglioResiduo": "With {importo} the portfolio does not get back within the threshold. This is the best possible split: the largest deviation remains {scostamento} pp.",
+    "avvisoScostamentoStrutturale": "Even a much larger contribution would not bring the portfolio back within the threshold: the lowest deviation reachable stays at about {floor} pp. {categorie} are tied together by a constraint that no contribution can undo — for example a plan's fixed internal shape — so actually fixing it means revisiting that shape or the targets, not contributing more.",
     "alertSenzaVeicolo": "No way to buy them, left out of the calculation (they only change because the total grows): {categorie}.",
     "notaSoloTramitePac": "Without investment plans the threshold cannot be reached with this contribution: some categories can only be bought through a plan.",
     "schedaSoloLibere": "Free purchases only",
