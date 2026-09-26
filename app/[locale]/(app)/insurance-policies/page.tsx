@@ -16,7 +16,7 @@ export default async function PolizzePage() {
       titoloElenco={t('titoloLeTuePolizze')}
       alertNessunGruppo={t('alertNessunaPolizzaRegistrata')}
       alertNessunGruppoConTarget={t('alertNessunaPolizzaConTarget')}
-      hrefGruppo={(id) => `/polizze/${id}`}
+      hrefGruppo={(id) => `/insurance-policies/${id}`}
       mostraDataAttivazione
     />
   )

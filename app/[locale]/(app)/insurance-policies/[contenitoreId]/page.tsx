@@ -243,7 +243,7 @@ export default async function PolizzaDettaglioPage({
 
   return (
     <div>
-      <RippleLink href="/polizze" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
+      <RippleLink href="/insurance-policies" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
         {t('linkTuttePolizze')}
       </RippleLink>
 

@@ -18,8 +18,8 @@ type Risultato = {
 // Dove porta un gruppo trovato: la pagina elenco del suo tipo, o per un
 // Personalizzato la gestione dei suoi membri (che non ha ancora un dettaglio).
 function hrefGruppo(c: { id: string; tipo: string }): string {
-  if (c.tipo === 'PAC') return '/pac'
-  if (c.tipo === 'Polizza') return '/polizze'
+  if (c.tipo === 'PAC') return '/investment-plans'
+  if (c.tipo === 'Polizza') return '/insurance-policies'
   if (c.tipo === 'Personalizzato') return `/personalizzati/${c.id}/membri`
   return '/'
 }

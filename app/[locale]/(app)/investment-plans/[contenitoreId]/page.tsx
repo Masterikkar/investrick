@@ -233,7 +233,7 @@ export default async function PacDettaglioPage({
 
   return (
     <div>
-      <RippleLink href="/pac" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
+      <RippleLink href="/investment-plans" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
         {t('linkTuttiPac')}
       </RippleLink>
 

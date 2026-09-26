@@ -16,7 +16,7 @@ export default async function PacPage() {
       titoloElenco={t('titoloITuoiPac')}
       alertNessunGruppo={t('alertNessunPacRegistrato')}
       alertNessunGruppoConTarget={t('alertNessunPacConTarget')}
-      hrefGruppo={(id) => `/pac/${id}`}
+      hrefGruppo={(id) => `/investment-plans/${id}`}
     />
   )
 }

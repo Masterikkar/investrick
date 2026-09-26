@@ -237,7 +237,7 @@ export function StoricoPlusMinus({
                     <td style={{ padding: 8 }}>{formatData(v.data_vendita, locale)}</td>
                     <td style={{ padding: 8 }}>
                       <RippleLink
-                        href={riscatto ? `/polizze/${v.contenitore_id}` : `/asset/${v.strumento_id}`}
+                        href={riscatto ? `/insurance-policies/${v.contenitore_id}` : `/asset/${v.strumento_id}`}
                         className="link-interattivo"
                       >
                         {v.strumento_nome}

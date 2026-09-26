@@ -26,7 +26,7 @@ export async function salvaTarget(formData: FormData) {
   const targetAttivo = formData.get('target_attivo') === 'on'
 
   if (!contenitoreId) {
-    redirect({ href: '/pac', locale })
+    redirect({ href: '/investment-plans', locale })
   }
 
   // Verifica che il contenitore esista davvero (invece di affidarsi
@@ -40,7 +40,7 @@ export async function salvaTarget(formData: FormData) {
     .single()
 
   if (erroreVerificaContenitore || !contenitoreEsistente) {
-    redirect({ href: '/pac', locale })
+    redirect({ href: '/investment-plans', locale })
     return
   }
 
@@ -156,9 +156,9 @@ export async function salvaTarget(formData: FormData) {
 
   const destinazione =
     contenitoreEsistente.tipo === 'Polizza'
-      ? '/polizze'
+      ? '/insurance-policies'
       : contenitoreEsistente.tipo === 'Personalizzato'
         ? '/personalizzati'
-        : '/pac'
+        : '/investment-plans'
   redirect({ href: destinazione, locale })
 }
