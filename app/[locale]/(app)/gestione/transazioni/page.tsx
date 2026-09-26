@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { leggiGruppiDestinazione } from '@/lib/contenitori'
 import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
+import { NotificaDaParametro } from '@/components/notifica-da-parametro'
 import { NuovaTransazioneFinanziaria, NuovaTransazioneLiquidita } from './nuova-transazione'
 
 export default async function TransazioniPage({
@@ -57,10 +58,10 @@ export default async function TransazioniPage({
       <section>
         <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{tMenu('transazioniFinanziarie')}</h2>
         <Sezione>
+          {params.successo_finanziaria === '1' && <NotificaDaParametro messaggio={t('successoTransazioneSalvata')} />}
           <NuovaTransazioneFinanziaria
             strumenti={strumentiFinanziari}
             contenitori={contenitori ?? []}
-            successo={params.successo_finanziaria === '1'}
             errore={params.errore_finanziaria === '1'}
           />
         </Sezione>
@@ -69,10 +70,10 @@ export default async function TransazioniPage({
       <section style={{ marginTop: 40 }}>
         <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{tPaginaStorico('titoloTransazioniLiquidita')}</h2>
         <Sezione>
+          {params.successo_liquidita === '1' && <NotificaDaParametro messaggio={t('successoTransazioneSalvata')} />}
           <NuovaTransazioneLiquidita
             strumentiLiquidita={strumentiLiquidita.map((s) => ({ id: s.id, nome: s.nome }))}
             contenitori={contenitori ?? []}
-            successo={params.successo_liquidita === '1'}
             errore={params.errore_liquidita === '1'}
           />
         </Sezione>

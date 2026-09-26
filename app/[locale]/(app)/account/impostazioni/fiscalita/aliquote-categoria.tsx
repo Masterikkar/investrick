@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { aggiornaAliquotaDefaultCategoria, reimpostaAliquotaCategoria } from './actions-aliquote'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { useConferma } from '@/components/conferma'
+import { useNotifica } from '@/components/notifica'
 
 export type CategoriaAliquota = {
   categoria: string
@@ -28,6 +29,7 @@ export function AliquoteCategoria({ categorie }: { categorie: CategoriaAliquota[
   const tPaginaRibilanciamento = useTranslations('PaginaRibilanciamento')
   const router = useRouter()
   const conferma = useConferma()
+  const notifica = useNotifica()
 
   function etichettaCategoria(categoria: string): string {
     return traduciCategoria(tCategorie, categoria)
@@ -38,14 +40,12 @@ export function AliquoteCategoria({ categorie }: { categorie: CategoriaAliquota[
   const [pendingCategoria, setPendingCategoria] = useState<string | null>(null)
   const [erroreCategoria, setErroreCategoria] = useState<string | null>(null)
   const [messaggioErrore, setMessaggioErrore] = useState<string | null>(null)
-  const [messaggioSuccesso, setMessaggioSuccesso] = useState<string | null>(null)
   const [, startTransition] = useTransition()
 
   function handleSalvaDefault(categoria: string) {
     const nuovoValore = Number(valori[categoria])
     setErroreCategoria(null)
     setMessaggioErrore(null)
-    setMessaggioSuccesso(null)
     setPendingCategoria(categoria)
 
     startTransition(async () => {
@@ -75,7 +75,6 @@ export function AliquoteCategoria({ categorie }: { categorie: CategoriaAliquota[
 
     setErroreCategoria(null)
     setMessaggioErrore(null)
-    setMessaggioSuccesso(null)
     setPendingCategoria(categoria)
 
     startTransition(async () => {
@@ -85,13 +84,13 @@ export function AliquoteCategoria({ categorie }: { categorie: CategoriaAliquota[
         setErroreCategoria(categoria)
         setMessaggioErrore(risultato.errore)
       } else {
-        setMessaggioSuccesso(
-          t('successoReimposta', {
+        router.refresh()
+        notifica({
+          messaggio: t('successoReimposta', {
             numeroStrumenti: t('numeroStrumenti', { numero: risultato.aggiornati }),
             categoria: etichettaCategoria(categoria),
-          })
-        )
-        router.refresh()
+          }),
+        })
       }
     })
   }
@@ -158,8 +157,6 @@ export function AliquoteCategoria({ categorie }: { categorie: CategoriaAliquota[
           )
         })}
       </div>
-
-      {messaggioSuccesso && <p style={{ color: 'var(--success)', fontSize: 'var(--fs-body)', marginTop: 12 }}>{messaggioSuccesso}</p>}
     </div>
   )
 }

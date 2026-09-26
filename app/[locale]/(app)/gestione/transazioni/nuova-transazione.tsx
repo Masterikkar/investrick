@@ -64,12 +64,10 @@ const stileErroreCampo: React.CSSProperties = {
 export function NuovaTransazioneFinanziaria({
   strumenti,
   contenitori,
-  successo,
   errore,
 }: {
   strumenti: Strumento[]
   contenitori: Contenitore[]
-  successo?: boolean
   errore?: boolean
 }) {
   const t = useTranslations('PaginaGestioneTransazioni')
@@ -154,7 +152,6 @@ export function NuovaTransazioneFinanziaria({
         {t('bottoneNuovaTransazione')}
       </button>
 
-      {successo && <p style={{ color: 'var(--success)', marginTop: 12 }}>{t('successoTransazioneSalvata')}</p>}
       {errore && <p style={{ color: 'var(--danger)', marginTop: 12 }}>{t('erroreRiprova')}</p>}
 
       <Modale aperto={aperto} onChiudi={() => setAperto(false)} titolo={t('modaleTitoloNuovaTransazioneFinanziaria')}>
@@ -276,12 +273,10 @@ export function NuovaTransazioneFinanziaria({
 export function NuovaTransazioneLiquidita({
   strumentiLiquidita,
   contenitori,
-  successo,
   errore,
 }: {
   strumentiLiquidita: StrumentoLiquidita[]
   contenitori: Contenitore[]
-  successo?: boolean
   errore?: boolean
 }) {
   const t = useTranslations('PaginaGestioneTransazioni')
@@ -352,7 +347,6 @@ export function NuovaTransazioneLiquidita({
         </button>
       )}
 
-      {successo && <p style={{ color: 'var(--success)', marginTop: 12 }}>{t('successoTransazioneSalvata')}</p>}
       {errore && <p style={{ color: 'var(--danger)', marginTop: 12 }}>{t('erroreRiprova')}</p>}
 
       <Modale aperto={aperto} onChiudi={() => setAperto(false)} titolo={t('modaleTitoloNuovaTransazioneLiquidita')}>

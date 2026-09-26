@@ -5,7 +5,7 @@ import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
 import { FormAsset } from './form-asset'
 import { FormNuovoContenitore } from './form-nuovo-contenitore'
-import { NotificaDaParametro } from './notifica-da-parametro'
+import { NotificaDaParametro } from '@/components/notifica-da-parametro'
 import { ListaContenitori } from './lista-contenitori'
 import { ListaAsset, type AssetElenco } from './lista-asset'
 

@@ -7,6 +7,7 @@ import { eliminaAsset } from './actions'
 import { IconaElimina, IconaModifica } from '@/components/icone'
 import { Modale } from '@/components/modale'
 import { useConferma } from '@/components/conferma'
+import { useNotifica } from '@/components/notifica'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { traduciTipoStrumento } from '@/lib/i18n-tipi-strumento'
 import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
@@ -35,8 +36,9 @@ export function ListaAsset({
   const tGestioneTransazioni = useTranslations('PaginaGestioneTransazioni')
   const router = useRouter()
   const conferma = useConferma()
+  const notifica = useNotifica()
   const [pendingId, setPendingId] = useState<string | null>(null)
-  const [messaggio, setMessaggio] = useState<{ tipo: 'successo' | 'errore'; testo: string } | null>(null)
+  const [errore, setErrore] = useState<string | null>(null)
   const [, startTransition] = useTransition()
   const [inModifica, setInModifica] = useState<AssetElenco | null>(null)
 
@@ -89,23 +91,22 @@ export function ListaAsset({
       if (!confermatoConDati) return
     }
 
-    setMessaggio(null)
+    setErrore(null)
     setPendingId(a.id)
     startTransition(async () => {
       const risultato = await eliminaAsset(a.id)
       setPendingId(null)
       if ('errore' in risultato) {
-        setMessaggio({ tipo: 'errore', testo: risultato.errore })
+        setErrore(risultato.errore)
       } else {
-        setMessaggio({
-          tipo: 'successo',
-          testo: t('successoEliminaAsset', {
+        router.refresh()
+        notifica({
+          messaggio: t('successoEliminaAsset', {
             nome: a.nome,
             transazioni: risultato.transazioniEliminate,
             movimenti: risultato.movimentiEliminati,
           }),
         })
-        router.refresh()
       }
     })
   }
@@ -116,16 +117,16 @@ export function ListaAsset({
 
   return (
     <div>
-      {messaggio && (
+      {errore && (
         <p
           style={{
-            color: messaggio.tipo === 'successo' ? 'var(--success)' : 'var(--danger)',
+            color: 'var(--danger)',
             fontSize: 'var(--fs-body)',
             marginTop: 0,
             marginBottom: 12,
           }}
         >
-          {messaggio.testo}
+          {errore}
         </p>
       )}
 
@@ -150,7 +151,7 @@ export function ListaAsset({
             <button
               type="button"
               onClick={() => {
-                setMessaggio(null)
+                setErrore(null)
                 setInModifica(a)
               }}
               disabled={pendingId !== null}
@@ -191,9 +192,9 @@ export function ListaAsset({
             haCollegamenti={inModifica.transazioni > 0 || inModifica.movimenti > 0}
             onAnnulla={() => setInModifica(null)}
             onSalvato={() => {
-              setMessaggio({ tipo: 'successo', testo: t('successoModificaAsset', { nome: inModifica.nome }) })
               setInModifica(null)
               router.refresh()
+              notifica({ messaggio: t('successoModificaAsset', { nome: inModifica.nome }) })
             }}
           />
         )}
