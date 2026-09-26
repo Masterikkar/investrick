@@ -406,7 +406,8 @@
     "titoloDoveVersare": "Dove versare",
     "notaBloccoPac": "PAC, nelle proporzioni del suo target",
     "notaAcquistoLibero": "acquisto libero, diretto o in Polizza",
-    "alertNessunAcquisto": "Nessun acquisto da fare."
+    "alertNessunAcquisto": "Nessun acquisto da fare.",
+    "notaPolizzaEsclusaDalleVendite": "Le posizioni in Polizza non vengono mai vendute per questo ribilanciamento: restano un compartimento separato dal resto del portafoglio, ribilanciabile solo al suo interno con lo strumento per singolo gruppo qui sotto."
   },
   "CapitaleInvestito": {
     "daRicompense": "di cui da ricompense: {valore}",

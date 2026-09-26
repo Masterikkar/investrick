@@ -52,6 +52,11 @@ type PosizioneVendibile = {
   prezzo_attuale: number
 }
 
+// Come PosizioneVendibile, ma con il contenitore: a livello di portafoglio
+// intero le posizioni vendibili vengono da gruppi diversi (diretti o PAC),
+// mai da una Polizza.
+type PosizionePortafoglioVendibile = PosizioneVendibile & { contenitore_id: string | null }
+
 type StrumentoInfo = {
   id: string
   nome: string
@@ -95,6 +100,10 @@ export default async function RibilanciamentoPage({
   const params = await searchParams
   const supabase = await createClient()
 
+  // Condivisi fra la simulazione per gruppo e quella sul portafoglio intero.
+  const forzaVendita = params.forza === '1'
+  const commissioneVenditaStimata = params.commissione_vendita ? Number(params.commissione_vendita) : 0
+
   const { data: scostamenti } = await supabase
     .from('v_scostamento_target')
     .select('*')
@@ -125,6 +134,8 @@ export default async function RibilanciamentoPage({
   const versamentoPortafoglio =
     Number.isFinite(versamentoPortafoglioNumero) && versamentoPortafoglioNumero >= 0 ? versamentoPortafoglioNumero : null
   let risultatoPortafoglio: RisultatoPortafoglio | null = null
+  const venditePortafoglioProposte: EsitoVenditaStrumento[] = []
+  let poolPortafoglioTotale: number | null = null
 
   if (params.portafoglio === '1' && (scostamentiPortafoglio ?? []).length > 0) {
     const [{ data: valoriCategoria }, { data: contenitori }, { data: posizioni }, { data: saldi }, { data: targetGruppi }] =
@@ -150,6 +161,11 @@ export default async function RibilanciamentoPage({
     const tipoContenitore = new Map((contenitori ?? []).map((c) => [c.id, c.tipo]))
     const direttaOPolizza = (contenitoreId: string | null) =>
       contenitoreId === null || tipoContenitore.get(contenitoreId) === 'Polizza'
+    // Vendibile a livello di portafoglio: diretta o in un PAC. Mai in Polizza —
+    // resta un compartimento separato, ribilanciabile solo al suo interno
+    // (switch fiscalmente neutri) con lo strumento per singolo gruppo.
+    const direttaOPac = (contenitoreId: string | null) =>
+      contenitoreId === null || tipoContenitore.get(contenitoreId) === 'PAC'
 
     // Libera = esiste già una posizione diretta o in una Polizza in quella
     // categoria; per la Liquidità, un conto diretto o in una Polizza.
@@ -187,7 +203,118 @@ export default async function RibilanciamentoPage({
       })
     }
 
-    risultatoPortafoglio = calcolaRibilanciamentoPortafoglio(categoriePortafoglio, blocchiPac, soglia, versamentoPortafoglio)
+    const risultatoSoloDeposito = calcolaRibilanciamentoPortafoglio(categoriePortafoglio, blocchiPac, soglia, versamentoPortafoglio)
+    risultatoPortafoglio = risultatoSoloDeposito
+
+    // Se il versamento indicato non basta a comprare soltanto, prima di
+    // accontentarsi si prova a vendere dalle categorie oggi sovrappesate
+    // (solo posizioni dirette o in un PAC — vedi direttaOPac) e a reinvestire
+    // il ricavato netto insieme al versamento, con lo stesso motore usato per
+    // il versamento puro.
+    const necessitaVendita =
+      versamentoPortafoglio !== null &&
+      (risultatoSoloDeposito.esito === 'residuo' || risultatoSoloDeposito.esito === 'irraggiungibile')
+
+    if (necessitaVendita) {
+      const totaleAttualePortafoglio = categoriePortafoglio.reduce((acc, c) => acc + c.valoreAttuale, 0)
+      const categorieSovrappesate = categoriePortafoglio.filter(
+        (c) => c.targetPct !== null && c.valoreAttuale > (c.targetPct + soglia / 100) * totaleAttualePortafoglio
+      )
+
+      if (categorieSovrappesate.length > 0) {
+        const { data: posizioniVendibiliRaw } = await supabase
+          .from('v_valore_posizioni_attuale')
+          .select('strumento_id, contenitore_id, categoria, valore_attuale, prezzo_attuale')
+          .in('categoria', categorieSovrappesate.map((c) => c.categoria))
+          .returns<PosizionePortafoglioVendibile[]>()
+
+        const posizioniVendibili = (posizioniVendibiliRaw ?? []).filter((p) => direttaOPac(p.contenitore_id))
+        const strumentoIdsVendibili = posizioniVendibili.map((p) => p.strumento_id)
+        const vendutoPerCategoriaPortafoglio = new Map<string, number>()
+
+        if (strumentoIdsVendibili.length > 0) {
+          const { data: strumentiInfoPortafoglio } = await supabase
+            .from('strumenti')
+            .select('id, nome, ticker, aliquota_tassazione')
+            .in('id', strumentoIdsVendibili)
+            .returns<StrumentoInfo[]>()
+
+          const { data: lottiPortafoglioRaw } = await supabase
+            .from('v_lotti_residui')
+            .select('strumento_id, quantita_residua, prezzo_acquisto, commissione_residua, data_acquisto')
+            .in('strumento_id', strumentoIdsVendibili)
+            .order('data_acquisto', { ascending: true })
+            .returns<LottoRaw[]>()
+
+          for (const c of categorieSovrappesate) {
+            const posizioniCategoria = posizioniVendibili.filter((p) => p.categoria === c.categoria)
+            const totaleCategoriaVendibile = posizioniCategoria.reduce((sum, p) => sum + Number(p.valore_attuale), 0)
+            const idealeCategoria = Math.min(
+              c.valoreAttuale - (c.targetPct ?? 0) * totaleAttualePortafoglio,
+              totaleCategoriaVendibile
+            )
+            if (totaleCategoriaVendibile <= 0 || idealeCategoria <= 0) continue
+
+            let vendutoCategoria = 0
+
+            for (const p of posizioniCategoria) {
+              const info = strumentiInfoPortafoglio?.find((si) => si.id === p.strumento_id)
+              if (!info) continue
+
+              const idealeStrumento = idealeCategoria * (Number(p.valore_attuale) / totaleCategoriaVendibile)
+              const quantitaIdeale = idealeStrumento / Number(p.prezzo_attuale)
+              if (quantitaIdeale <= 0) continue
+
+              const lottiStrumento = (lottiPortafoglioRaw ?? [])
+                .filter((l) => l.strumento_id === p.strumento_id)
+                .map((l) => ({
+                  quantitaResidua: Number(l.quantita_residua),
+                  prezzoAcquisto: Number(l.prezzo_acquisto),
+                  commissioneResidua: Number(l.commissione_residua),
+                }))
+
+              // Mai in Polizza in questo insieme: sempre una vendita reale imponibile.
+              const aliquota = aliquotaPerStrumento({ aliquotaTassazione: info.aliquota_tassazione })
+
+              const esito = simulaVenditaStrumento(
+                p.strumento_id,
+                info.nome,
+                lottiStrumento,
+                quantitaIdeale,
+                Number(p.prezzo_attuale),
+                commissioneVenditaStimata,
+                true,
+                aliquota,
+                forzaVendita
+              )
+
+              venditePortafoglioProposte.push(esito)
+              vendutoCategoria += esito.valoreVenduto
+            }
+
+            vendutoPerCategoriaPortafoglio.set(c.categoria, vendutoCategoria)
+          }
+        }
+
+        const proventoNettoTotalePortafoglio = venditePortafoglioProposte.reduce((s, v) => s + v.proventoNetto, 0)
+
+        if (proventoNettoTotalePortafoglio > 0) {
+          poolPortafoglioTotale = versamentoPortafoglio + proventoNettoTotalePortafoglio
+
+          const categoriePortafoglioPostVendita: CategoriaPortafoglio[] = categoriePortafoglio.map((c) => ({
+            ...c,
+            valoreAttuale: c.valoreAttuale - (vendutoPerCategoriaPortafoglio.get(c.categoria) ?? 0),
+          }))
+
+          risultatoPortafoglio = calcolaRibilanciamentoPortafoglio(
+            categoriePortafoglioPostVendita,
+            blocchiPac,
+            soglia,
+            poolPortafoglioTotale
+          )
+        }
+      }
+    }
   }
 
   // I gruppi Personalizzati compaiono negli scostamenti ma non si simulano:
@@ -199,8 +326,6 @@ export default async function RibilanciamentoPage({
 
   const contenitoreSelezionato = params.contenitore_id
   const versamento = params.versamento ? Number(params.versamento) : 0
-  const forzaVendita = params.forza === '1'
-  const commissioneVenditaStimata = params.commissione_vendita ? Number(params.commissione_vendita) : 0
 
   let necessario: number | null = null
   let sufficiente = false
@@ -469,12 +594,75 @@ export default async function RibilanciamentoPage({
         <>
           <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 24, marginBottom: 12 }}>{t('titoloSimulazione')}</h3>
           <Sezione>
-            <FormSimulazionePortafoglio versamentoIniziale={params.versamento_portafoglio} />
+            <FormSimulazionePortafoglio
+              versamentoIniziale={params.versamento_portafoglio}
+              commissioneIniziale={params.commissione_vendita}
+              forzaIniziale={forzaVendita}
+            />
           </Sezione>
           {risultatoPortafoglio && (
             <div style={{ marginTop: 16 }}>
               <Sezione>
-                <RisultatoPortafoglioVista risultato={risultatoPortafoglio} versamentoMassimo={versamentoPortafoglio} />
+                {venditePortafoglioProposte.length > 0 && (
+                  <>
+                    <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)', fontWeight: 500 }}>
+                      {t('messaggioVersamentoInsufficiente', { importo: formatEuro(versamentoPortafoglio ?? 0, locale) })}
+                    </p>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
+                      <thead>
+                        <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
+                          <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaStrumento')}</th>
+                          <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaQuantita')}</th>
+                          <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaValore')}</th>
+                          <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPlusMinusLorda')}</th>
+                          <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaAliquota')}</th>
+                          <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTassa')}</th>
+                          <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaNetto')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {venditePortafoglioProposte.map((v) => (
+                          <tr key={v.strumentoId} className="tabella-riga">
+                            <td style={{ padding: 8 }}>{v.nome}</td>
+                            <td style={{ padding: 8 }}>
+                              {formatNumero(v.quantitaVenduta, 6, false, locale)}
+                              {!v.vincoloRispettato && (
+                                <div style={{ color: 'var(--warning)', fontSize: 'var(--fs-card-link)' }}>
+                                  {t('notaQuantitaRidotta', { quantita: formatNumero(v.quantitaIdeale, 6, false, locale) })}
+                                </div>
+                              )}
+                            </td>
+                            <td style={{ padding: 8 }}>{formatEuro(v.valoreVenduto, locale)}</td>
+                            <td style={{ padding: 8, color: v.plusvalenzaLorda >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                              {formatEuroSigned(v.plusvalenzaLorda, locale)}
+                            </td>
+                            <td style={{ padding: 8 }}>{formatPercent(v.aliquota * 100, 1, false, locale)}</td>
+                            <td style={{ padding: 8 }}>{formatEuro(v.tassa, locale)}</td>
+                            <td style={{ padding: 8, fontWeight: 500 }}>{formatEuro(v.proventoNetto, locale)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    {poolPortafoglioTotale !== null && (
+                      <p style={{ fontSize: 'var(--fs-body)', marginTop: 12 }}>
+                        {t.rich('messaggioPoolReinvestire', {
+                          importo: formatEuro(poolPortafoglioTotale, locale),
+                          strong: (chunks) => <strong>{chunks}</strong>,
+                        })}
+                      </p>
+                    )}
+                  </>
+                )}
+
+                <p style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', marginTop: venditePortafoglioProposte.length > 0 ? 16 : 0, marginBottom: venditePortafoglioProposte.length > 0 ? 16 : 12 }}>
+                  {t('notaPolizzaEsclusaDalleVendite')}
+                </p>
+
+                <RisultatoPortafoglioVista
+                  risultato={risultatoPortafoglio}
+                  versamentoMassimo={poolPortafoglioTotale !== null ? null : versamentoPortafoglio}
+                />
               </Sezione>
             </div>
           )}

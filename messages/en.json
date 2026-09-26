@@ -406,7 +406,8 @@
     "titoloDoveVersare": "Where to invest",
     "notaBloccoPac": "investment plan, in its target proportions",
     "notaAcquistoLibero": "free purchase, direct or in a policy",
-    "alertNessunAcquisto": "Nothing to buy."
+    "alertNessunAcquisto": "Nothing to buy.",
+    "notaPolizzaEsclusaDalleVendite": "Policy positions are never sold for this rebalancing: they stay a separate compartment from the rest of the portfolio, rebalanceable only internally with the single-group tool below."
   },
   "CapitaleInvestito": {
     "daRicompense": "of which from rewards: {valore}",
