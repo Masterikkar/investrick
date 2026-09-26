@@ -71,12 +71,20 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
   const [risultato, setRisultato] = useState<RisultatoSimulazioneGruppo>(null)
   const [storico, setStorico] = useState<RigaStoricoSimulazione[]>([])
 
-  useEffect(() => {
+  // Azzera risultato e storico al cambio di gruppo durante il render (non in
+  // un effect: eslint-plugin-react-hooks segnala un setState sincrono e
+  // incondizionato nel corpo di un effect come possibile causa di render a
+  // cascata). L'effect resta solo per il vero side-effect: leggere lo
+  // storico del nuovo gruppo da Supabase.
+  const [ultimoContenitoreId, setUltimoContenitoreId] = useState(contenitoreId)
+  if (contenitoreId !== ultimoContenitoreId) {
+    setUltimoContenitoreId(contenitoreId)
     setRisultato(null)
-    if (!contenitoreId) {
-      setStorico([])
-      return
-    }
+    setStorico([])
+  }
+
+  useEffect(() => {
+    if (!contenitoreId) return
     leggiUltimeSimulazioniGruppo(contenitoreId).then(setStorico)
   }, [contenitoreId])
 
