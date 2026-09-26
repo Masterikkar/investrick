@@ -9,6 +9,7 @@ import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
 import { aggiornaContenitoreTransazione, eliminaTransazione } from '../gestione/transazioni/actions'
 import { useConferma } from '@/components/conferma'
+import { IconaSposta, IconaElimina } from '@/components/icone'
 
 export type RigaStoricoTransazione = {
   id: string
@@ -273,13 +274,14 @@ export function StoricoTransazioni({
                               border: 'none',
                               background: 'none',
                               cursor: inCorso ? 'default' : 'pointer',
-                              fontSize: 16,
+                              display: 'inline-flex',
+                              alignItems: 'center',
                               padding: '2px 4px',
                               opacity: inCorso ? 0.4 : 1,
                               color: 'var(--text-secondary)',
                             }}
                           >
-                            →
+                            <IconaSposta />
                           </button>
                           <select
                             value=""
@@ -314,13 +316,14 @@ export function StoricoTransazioni({
                             border: 'none',
                             background: 'none',
                             cursor: inCorso ? 'default' : 'pointer',
-                            fontSize: 16,
+                            display: 'inline-flex',
+                            alignItems: 'center',
                             padding: '2px 4px',
                             color: 'var(--danger)',
                             opacity: inCorso ? 0.4 : 1,
                           }}
                         >
-                          🗑
+                          <IconaElimina />
                         </button>
                       </div>
                     </td>

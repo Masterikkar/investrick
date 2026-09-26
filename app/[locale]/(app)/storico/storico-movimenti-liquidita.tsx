@@ -8,6 +8,7 @@ import { RippleLink } from '@/components/ripple-link'
 import { CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA } from '@/lib/i18n-tipi-movimento-liquidita'
 import { aggiornaContenitoreMovimentoLiquidita, eliminaMovimentoLiquidita } from '../gestione/transazioni/actions'
 import { useConferma } from '@/components/conferma'
+import { IconaSposta, IconaElimina } from '@/components/icone'
 
 export type RigaStoricoMovimentoLiquidita = {
   id: string
@@ -257,13 +258,14 @@ export function StoricoMovimentiLiquidita({
                               border: 'none',
                               background: 'none',
                               cursor: inCorso ? 'default' : 'pointer',
-                              fontSize: 16,
+                              display: 'inline-flex',
+                              alignItems: 'center',
                               padding: '2px 4px',
                               opacity: inCorso ? 0.4 : 1,
                               color: 'var(--text-secondary)',
                             }}
                           >
-                            →
+                            <IconaSposta />
                           </button>
                           <select
                             value=""
@@ -298,13 +300,14 @@ export function StoricoMovimentiLiquidita({
                             border: 'none',
                             background: 'none',
                             cursor: inCorso ? 'default' : 'pointer',
-                            fontSize: 16,
+                            display: 'inline-flex',
+                            alignItems: 'center',
                             padding: '2px 4px',
                             color: 'var(--danger)',
                             opacity: inCorso ? 0.4 : 1,
                           }}
                         >
-                          🗑
+                          <IconaElimina />
                         </button>
                       </div>
                     </td>

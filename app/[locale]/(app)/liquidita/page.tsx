@@ -151,12 +151,12 @@ export default async function LiquiditaPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloInteressiAnno', { anno: annoCorrente })}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloInteressiAnno', { anno: annoCorrente })}</h2>
         <Sezione>
           <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 'var(--fs-hero-secondario)', margin: 0, color: interesseNettoYtd >= 0 ? 'var(--success)' : 'var(--danger)' }}>
             {formatEuroSigned(interesseNettoYtd, locale)}
           </p>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4, marginBottom: 16 }}>{t('labelNettoDaInizioAnno')}</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', marginTop: 4, marginBottom: 16 }}>{t('labelNettoDaInizioAnno')}</p>
 
           <div style={{ maxWidth: 1024 }}>
             <GraficoLineaSemplice punti={puntiCumulati} messaggioNessunDato={t('alertNessunDatoAnno')} />
@@ -169,7 +169,7 @@ export default async function LiquiditaPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloStoricoInteressi')}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloStoricoInteressi')}</h2>
         <Sezione>
           {righeStoricoAnni.length === 0 ? (
             <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{t('alertNessunInteresse')}</p>
@@ -180,7 +180,7 @@ export default async function LiquiditaPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>
         <Sezione>
           <TabellaOrdinabile colonne={COLONNE} righe={righe} />
         </Sezione>

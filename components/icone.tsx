@@ -1,3 +1,19 @@
+import type { CSSProperties } from 'react'
+
+// Pulsante con sola icona (Salva, Elimina, Sposta, ...): stesso aspetto
+// ovunque, il colore lo decide chi lo usa. Spostato qui (era nel solo form
+// di Gestione strumenti) perché ora lo usa anche Storico.
+export const STILE_BOTTONE_ICONA: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  border: '1px solid var(--border-default)',
+  background: 'var(--bg-surface)',
+  padding: 4,
+  cursor: 'pointer',
+  flexShrink: 0,
+}
+
 function IconaBase({ children }: { children: React.ReactNode }) {
   return (
     <svg
@@ -198,6 +214,36 @@ export function IconaElimina() {
     <IconaBase>
       <path d="M3.5 6h13M8 6V3.5h4V6M5.5 6l1 10.5h7l1-10.5M8.5 9v4.5M11.5 9v4.5" />
     </IconaBase>
+  )
+}
+
+// Sostituisce il glifo "→" (sposta in un altro gruppo): un'emoji/glifo di
+// testo cambia forma da sistema a sistema, un'icona vera no.
+export function IconaSposta() {
+  return (
+    <IconaBase>
+      <path d="M4 10h11M11 6l4 4-4 4" />
+    </IconaBase>
+  )
+}
+
+// Sostituisce la "×" di chiusura di un popup (Modale).
+export function IconaChiudi() {
+  return (
+    <IconaBase>
+      <path d="M5.5 5.5l9 9M14.5 5.5l-9 9" />
+    </IconaBase>
+  )
+}
+
+// Sostituisce la "i" testuale di InfoTooltip: pensata per il pulsante
+// rotondo da 16px del componente, non per lo stile a riga degli altri.
+export function IconaInfo() {
+  return (
+    <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor">
+      <circle cx="5" cy="2.6" r="1.1" />
+      <rect x="4" y="4.5" width="2" height="4.5" rx="0.5" />
+    </svg>
   )
 }
 

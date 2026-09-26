@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { IconaInfo } from '@/components/icone'
 
 export function InfoTooltip({ testo }: { testo: string }) {
   const t = useTranslations('PaginaFiscalita')
@@ -37,9 +38,6 @@ export function InfoTooltip({ testo }: { testo: string }) {
           border: '1px solid var(--text-secondary)',
           background: 'none',
           color: 'var(--text-secondary)',
-          fontSize: 10,
-          lineHeight: '14px',
-          fontFamily: 'inherit',
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -48,7 +46,7 @@ export function InfoTooltip({ testo }: { testo: string }) {
           flexShrink: 0,
         }}
       >
-        i
+        <IconaInfo />
       </button>
 
       {aperto && (

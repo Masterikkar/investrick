@@ -119,9 +119,9 @@ export default async function RendimentiPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{tMenu('analisi')}</div>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{tMenu('analisi')}</div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{tMenu('rendimenti')}</h1>
-      <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24, maxWidth: 640 }}>
+      <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', marginBottom: 24, maxWidth: 640 }}>
         {t('paragrafoSpiegazione')}
       </p>
 
@@ -143,10 +143,10 @@ export default async function RendimentiPage() {
             return (
               <section key={c.id}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 500, margin: 0 }}>{c.nome}</h2>
+                  <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, margin: 0 }}>{c.nome}</h2>
                   <span
                     style={{
-                      fontSize: 12,
+                      fontSize: 'var(--fs-card-link)',
                       color: 'var(--text-secondary)',
                       background: 'var(--bg-surface)',
                       padding: '2px 8px',
@@ -164,10 +164,10 @@ export default async function RendimentiPage() {
         )}
 
         <section>
-          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 4 }}>
+          <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 4 }}>
             {tContenitori('liquidita')} — {t('suffissoInteressiMaturati')}
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 12 }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', marginBottom: 12 }}>
             {t('paragrafoSpiegazioneLiquidita')}
           </p>
           <Sezione>

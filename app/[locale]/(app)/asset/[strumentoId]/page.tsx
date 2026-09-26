@@ -213,7 +213,7 @@ export default async function AssetPage({
     <div>
       <Breadcrumb />
 
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>{t('eyebrowAsset')}</div>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)', marginTop: 12 }}>{t('eyebrowAsset')}</div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 4, fontWeight: 500 }}>{strumento.nome}</h1>
       <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
         {traduciCategoria(tCategorie, strumento.categoria)}
@@ -228,7 +228,7 @@ export default async function AssetPage({
           {posizioniAttuali.filter((r) => r.contenitore_id !== null).map((r) => (
             <span
               key={chiaveContenitore(r.contenitore_id)}
-              style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', padding: '2px 10px', fontSize: 13 }}
+              style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', padding: '2px 10px', fontSize: 'var(--fs-badge)' }}
             >
               {nomeContenitore(r.contenitore_id)}
             </span>
@@ -264,7 +264,7 @@ export default async function AssetPage({
               {variazione?.variazione_pct != null && (
                 <span
                   style={{
-                    fontSize: 14,
+                    fontSize: 'var(--fs-hero-badge)',
                     marginLeft: 6,
                     color: Number(variazione.variazione_pct) >= 0 ? 'var(--success)' : 'var(--danger)',
                   }}
@@ -287,7 +287,7 @@ export default async function AssetPage({
 
       {posizioniAttuali.length > 0 && (
         <section style={{ marginTop: 32 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloPosizioniPerContenitore')}</h2>
+          <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloPosizioniPerContenitore')}</h2>
           <Sezione>
             <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
               <thead>
@@ -344,7 +344,7 @@ export default async function AssetPage({
 
       {ricavi.length > 0 && (
         <section style={{ marginTop: 32 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloRicaviDaVendite')}</h2>
+          <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloRicaviDaVendite')}</h2>
           <Sezione>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
               <CardMetrica label={t('labelQuantitaVenduta')}>{formatNumero(ricaviTotali.quantita, 6, false, locale)}</CardMetrica>
@@ -407,7 +407,7 @@ export default async function AssetPage({
       )}
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloStoricoTransazioni')}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloStoricoTransazioni')}</h2>
         <Sezione>
           {transazioni.length === 0 ? (
             <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{t('alertNessunaTransazione')}</p>

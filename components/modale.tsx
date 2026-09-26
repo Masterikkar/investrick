@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { IconaChiudi } from '@/components/icone'
 
 export function Modale({
   aperto,
@@ -80,13 +81,14 @@ export function Modale({
                   background: 'none',
                   border: 'none',
                   color: 'var(--text-secondary)',
-                  fontSize: 20,
                   lineHeight: 1,
                   cursor: 'pointer',
                   padding: 4,
+                  display: 'inline-flex',
+                  alignItems: 'center',
                 }}
               >
-                ×
+                <IconaChiudi />
               </button>
             )}
           </div>

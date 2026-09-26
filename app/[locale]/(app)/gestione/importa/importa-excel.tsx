@@ -203,7 +203,7 @@ function RisolviStrumento({
           ? t('erroreIsinSconosciuto', { valore: identificatore.valore })
           : t('erroreTickerSconosciuto', { valore: identificatore.valore })}
       </div>
-      {errore && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{errore}</p>}
+      {errore && <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)' }}>{errore}</p>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 380 }}>
         <label>
           {tPaginaGestioneStrumenti('labelCategoria')}
@@ -430,14 +430,14 @@ export function ImportaExcel({
             {risultato.errori.length > 0 && t('risultatoRigheNonImportate', { n: risultato.errori.length })}
           </p>
           {risultato.errori.length > 0 && (
-            <ul style={{ fontSize: 13, color: 'var(--danger)' }}>
+            <ul style={{ fontSize: 'var(--fs-body)', color: 'var(--danger)' }}>
               {risultato.errori.map((e, i) => (
                 <li key={i}>{t('rigaErrore', { n: e.riga, messaggio: e.messaggio })}</li>
               ))}
             </ul>
           )}
           {risultato.avvisoRicostruzione && (
-            <p style={{ color: 'var(--warning)', fontSize: 13, marginTop: 8 }}>{risultato.avvisoRicostruzione}</p>
+            <p style={{ color: 'var(--warning)', fontSize: 'var(--fs-body)', marginTop: 8 }}>{risultato.avvisoRicostruzione}</p>
           )}
         </div>
       )}
@@ -450,7 +450,7 @@ export function ImportaExcel({
           </p>
 
           {righeConErrore.length > 0 && (
-            <ul style={{ fontSize: 13, color: 'var(--danger)', maxHeight: 160, overflowY: 'auto' }}>
+            <ul style={{ fontSize: 'var(--fs-body)', color: 'var(--danger)', maxHeight: 160, overflowY: 'auto' }}>
               {righeConErrore.map((r) => (
                 <li key={r.numeroRiga}>{t('rigaErrore', { n: r.numeroRiga, messaggio: r.errore ?? '' })}</li>
               ))}

@@ -189,7 +189,7 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('etichettaDashboard')}</div>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{t('etichettaDashboard')}</div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{t('titolo')}</h1>
 
       <section>
@@ -238,7 +238,7 @@ export default async function DashboardPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloAllocazioneAsset')}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloAllocazioneAsset')}</h2>
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
             <Sezione>
@@ -254,7 +254,7 @@ export default async function DashboardPage() {
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloAllocazioneContenitori')}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloAllocazioneContenitori')}</h2>
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 380px', maxWidth: 480 }}>
             <Sezione>
@@ -272,7 +272,7 @@ export default async function DashboardPage() {
       <ValoriChiusura />
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{t('titoloRibilanciamento')}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloRibilanciamento')}</h2>
         <Sezione>
           {alert.length === 0 ? (
             <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-table)', margin: 0 }}>

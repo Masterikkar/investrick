@@ -237,7 +237,7 @@ export default async function PacDettaglioPage({
         {t('linkTuttiPac')}
       </RippleLink>
 
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>{tContenitori('pac')}</div>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)', marginTop: 12 }}>{tContenitori('pac')}</div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{pac.nome ?? '—'}</h1>
 
       <section>
@@ -270,7 +270,7 @@ export default async function PacDettaglioPage({
 
       <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloAnalisiRendimento')}</h2>
+          <h2 style={{ fontSize: 'var(--fs-h2)', marginBottom: 12, fontWeight: 500 }}>{t('titoloAnalisiRendimento')}</h2>
           <Sezione>
             <AnalisiRendimento
               contributoPerCategoria={contributoPerCategoria}
@@ -282,7 +282,7 @@ export default async function PacDettaglioPage({
 
         <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 18, margin: 0, fontWeight: 500 }}>{t('titoloAnalisiComposizione')}</h2>
+            <h2 style={{ fontSize: 'var(--fs-h2)', margin: 0, fontWeight: 500 }}>{t('titoloAnalisiComposizione')}</h2>
             <RippleLink href={`/target/${contenitoreId}`} className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
               {t('linkModificaTarget')}
             </RippleLink>
@@ -299,7 +299,7 @@ export default async function PacDettaglioPage({
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>
         <Sezione>
           <TabellaOrdinabile colonne={COLONNE} righe={righe} filtro={{ chiavi: CHIAVI_FILTRO_POSIZIONE }} />
         </Sezione>

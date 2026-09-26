@@ -297,7 +297,7 @@ export async function PaginaGruppi({
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{titolo}</div>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{titolo}</div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{titolo}</h1>
 
       {mostraTotaleAggregato && (
@@ -339,7 +339,7 @@ export async function PaginaGruppi({
 
           <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
             <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
-              <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloAnalisiRendimento')}</h2>
+              <h2 style={{ fontSize: 'var(--fs-h2)', marginBottom: 12, fontWeight: 500 }}>{t('titoloAnalisiRendimento')}</h2>
               <Sezione>
                 <AnalisiRendimento
                   contributoPerCategoria={contributoPerCategoria}
@@ -351,7 +351,7 @@ export async function PaginaGruppi({
 
             <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h2 style={{ fontSize: 18, margin: 0, fontWeight: 500 }}>{t('titoloAnalisiComposizione')}</h2>
+                <h2 style={{ fontSize: 'var(--fs-h2)', margin: 0, fontWeight: 500 }}>{t('titoloAnalisiComposizione')}</h2>
                 {idsConTargetAttivo.length === 1 && (
                   <RippleLink href={`/target/${idsConTargetAttivo[0]}`} className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
                     {t('linkModificaTarget')}
@@ -373,7 +373,7 @@ export async function PaginaGruppi({
       )}
 
       <section style={{ marginTop: mostraTotaleAggregato ? 32 : 0 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{titoloElenco}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', marginBottom: 12, fontWeight: 500 }}>{titoloElenco}</h2>
         <Sezione>
           {righeGruppi.length === 0 ? (
             <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{alertNessunGruppo}</p>
@@ -388,17 +388,17 @@ export async function PaginaGruppi({
                 >
                   <div style={{ fontWeight: 500 }}>{r.nome}</div>
                   {mostraDataAttivazione && (
-                    <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
+                    <div style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', marginTop: 4 }}>
                       {r.dataAttivazione
                         ? t('dataAttivazioneAttiva', { data: formatData(r.dataAttivazione, locale) })
                         : t('dataAttivazioneNonImpostata')}
                     </div>
                   )}
-                  <div style={{ marginTop: 12, fontSize: 20 }}>{formatEuro(r.valore, locale)}</div>
-                  <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-secondary)' }}>
+                  <div style={{ marginTop: 12, fontSize: 'var(--fs-card-value)' }}>{formatEuro(r.valore, locale)}</div>
+                  <div style={{ marginTop: 8, fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)' }}>
                     {t('rigaCosto', { valore: formatEuro(r.costo, locale) })}
                   </div>
-                  <div style={{ marginTop: 4, fontSize: 13, color: r.plusMinus >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                  <div style={{ marginTop: 4, fontSize: 'var(--fs-card-link)', color: r.plusMinus >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                     {t('rigaPlusMinus', { valore: formatEuroSigned(r.plusMinus, locale) })}
                   </div>
                 </RippleLink>
@@ -409,7 +409,7 @@ export async function PaginaGruppi({
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>
         <Sezione>
           <TabellaOrdinabile colonne={COLONNE} righe={righe} filtro={{ chiavi: CHIAVI_FILTRO_POSIZIONE }} />
         </Sezione>
