@@ -209,6 +209,18 @@ export function IconaSalva() {
   )
 }
 
+// Segno di spunta: riquadro selezionato della checkbox personalizzata
+// (components/checkbox.tsx) e marcatore "passo fatto" della sidebar del
+// wizard di ribilanciamento. Piccola e a sé come IconaInfo, non da IconaBase:
+// a 18px dentro un riquadro di 18px risulterebbe senza margine.
+export function IconaSpunta() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 10.5l3.5 3.5 8-9" />
+    </svg>
+  )
+}
+
 export function IconaElimina() {
   return (
     <IconaBase>

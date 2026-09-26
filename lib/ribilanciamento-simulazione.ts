@@ -22,6 +22,27 @@ import {
 
 type ClientSupabase = Awaited<ReturnType<typeof createClient>>
 
+// Nome della simulazione salvata (step "Esecuzione" del wizard): solo
+// lettere, numeri e spazi — niente accenti né simboli — così un nome scelto
+// male non può mai rompere l'export o un futuro filtro testuale. Un solo
+// punto di validazione, usato sia lato client (filtro live mentre si scrive)
+// sia lato server (controllo prima di salvare) — mai duplicato.
+export const NOME_SIMULAZIONE_MAX = 40
+const REGEX_NOME_SIMULAZIONE_VALIDO = /^[A-Za-z0-9 ]+$/
+
+// Rimuove i caratteri non ammessi e tronca alla lunghezza massima: usata
+// dal campo di input mentre l'utente digita, per un filtro "live".
+export function pulisciNomeSimulazione(nome: string): string {
+  return nome.replace(/[^A-Za-z0-9 ]/g, '').slice(0, NOME_SIMULAZIONE_MAX)
+}
+
+// Vero solo se il nome è già pulito, non vuoto (dopo trim) e nei limiti:
+// usata dal server prima di salvare, per non fidarsi del solo filtro client.
+export function nomeSimulazioneValido(nome: string): boolean {
+  const pulito = nome.trim()
+  return pulito.length > 0 && pulito.length <= NOME_SIMULAZIONE_MAX && REGEX_NOME_SIMULAZIONE_VALIDO.test(pulito)
+}
+
 export type Scostamento = {
   target_id: string
   contenitore_id: string

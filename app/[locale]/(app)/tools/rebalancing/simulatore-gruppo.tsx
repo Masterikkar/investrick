@@ -7,7 +7,8 @@ import { Sezione } from '@/components/sezione'
 import { MenuSelect } from '@/components/menu-select'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { WizardRibilanciamento, type PassoWizard } from './wizard-ribilanciamento'
-import { PassoSogliaVersamento, PassoCommissioniVendita, PassoVendiInPerdita } from './passi-comuni'
+import { PassoSogliaVersamento, PassoCommissioniVendita, PassoVendiInPerdita, PassoEsecuzione } from './passi-comuni'
+import { StoricoSimulazioni, type RigaStoricoVista } from './storico-simulazioni'
 import { eseguiSimulazioneGruppo, leggiUltimeSimulazioniGruppo, type RigaStoricoSimulazione } from './actions-simulazione'
 import type { RisultatoSimulazioneGruppo } from '@/lib/ribilanciamento-simulazione'
 
@@ -24,6 +25,25 @@ const stileBottonePrimario: React.CSSProperties = {
 function fmtDataOra(iso: string, locale: LocaleFormato) {
   const d = new Date(iso)
   return `${d.toLocaleDateString(locale)} ${d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}`
+}
+
+// Come rigaVista in simulatore-portafoglio.tsx, ma sul risultato "gruppo"
+// (sufficiente: booleano, non un esito a tre stati) — mappature diverse,
+// stessa forma in uscita: la card non lo sa.
+function rigaVista(s: RigaStoricoSimulazione, locale: LocaleFormato, t: (chiave: string) => string): RigaStoricoVista {
+  const risultato = s.risultato as Exclude<RisultatoSimulazioneGruppo, null>
+  const badge = risultato.sufficiente
+    ? { testo: t('badgeSimulazioneRaggiunto'), colore: 'var(--success)', sfondo: 'rgba(52,199,123,0.15)' }
+    : { testo: t('badgeSimulazioneInsufficiente'), colore: 'var(--warning)', sfondo: 'rgba(232,162,59,0.15)' }
+  return {
+    id: s.id,
+    nome: s.nome,
+    dataOra: fmtDataOra(s.creato_at, locale),
+    importo: formatEuro(risultato.versamentoUsato, locale),
+    badgeTesto: badge.testo,
+    badgeColore: badge.colore,
+    badgeSfondo: badge.sfondo,
+  }
 }
 
 export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDisponibili: [string, string][] }) {
@@ -46,6 +66,7 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
   const [sogliaValore, setSogliaValore] = useState('')
   const [commissione, setCommissione] = useState('')
   const [forzaVendita, setForzaVendita] = useState(false)
+  const [nomeSimulazione, setNomeSimulazione] = useState('')
 
   const [risultato, setRisultato] = useState<RisultatoSimulazioneGruppo>(null)
   const [storico, setStorico] = useState<RigaStoricoSimulazione[]>([])
@@ -68,12 +89,19 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
     { id: 'soglia', titolo: t('stepSogliaVersamento') },
     { id: 'commissioni', titolo: t('stepCommissioniVendita') },
     { id: 'perdita', titolo: t('stepVendiInPerdita') },
+    { id: 'esecuzione', titolo: t('stepEsecuzione') },
   ]
+
+  function reset() {
+    setIndice(0)
+    setErrore(null)
+    setNomeSimulazione('')
+  }
 
   async function handleCalcola() {
     setInCalcolo(true)
     setErrore(null)
-    const esito = await eseguiSimulazioneGruppo({
+    const esito = await eseguiSimulazioneGruppo(nomeSimulazione, {
       contenitoreId,
       versamentoMassimo: sogliaImpostata && sogliaValore ? Number(sogliaValore) : null,
       commissioneVendita: commissione ? Number(commissione) : 0,
@@ -87,7 +115,16 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
     setRisultato(esito.risultato)
     setAperto(false)
     setStorico((precedente) =>
-      [{ id: crypto.randomUUID(), creato_at: new Date().toISOString(), parametri: null, risultato: esito.risultato }, ...precedente].slice(0, 3)
+      [
+        {
+          id: crypto.randomUUID(),
+          nome: nomeSimulazione.trim(),
+          creato_at: new Date().toISOString(),
+          parametri: null,
+          risultato: esito.risultato,
+        },
+        ...precedente,
+      ].slice(0, 3)
     )
   }
 
@@ -101,7 +138,10 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
     />,
     <PassoCommissioniVendita key="commissioni" valore={commissione} onCambia={setCommissione} />,
     <PassoVendiInPerdita key="perdita" valore={forzaVendita} onCambia={setForzaVendita} />,
+    <PassoEsecuzione key="esecuzione" valore={nomeSimulazione} onCambia={setNomeSimulazione} />,
   ]
+
+  const ultimoPasso = indice === passi.length - 1
 
   return (
     <div>
@@ -119,8 +159,7 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
           <button
             type="button"
             onClick={() => {
-              setIndice(0)
-              setErrore(null)
+              reset()
               setAperto(true)
             }}
             disabled={!contenitoreId}
@@ -141,6 +180,7 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
         onAvanti={() => setIndice((i) => Math.min(passi.length - 1, i + 1))}
         onCalcola={handleCalcola}
         inCalcolo={inCalcolo}
+        puoAvanzare={!ultimoPasso || nomeSimulazione.trim().length > 0}
       >
         {passoCorrenteContenuto[indice]}
       </WizardRibilanciamento>
@@ -267,24 +307,15 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
       {contenitoreId && (
         <div style={{ marginTop: 24 }}>
           <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 12 }}>{t('titoloUltimeSimulazioni')}</h3>
-          {storico.length === 0 ? (
-            <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', margin: 0 }}>{t('nessunaSimulazionePrecedente')}</p>
-          ) : (
-            <ul style={{ fontSize: 'var(--fs-body)', margin: 0 }}>
-              {storico.map((s) => (
-                <li key={s.id}>
-                  <button
-                    type="button"
-                    onClick={() => setRisultato(s.risultato as RisultatoSimulazioneGruppo)}
-                    className="link-dettaglio"
-                    style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer' }}
-                  >
-                    {fmtDataOra(s.creato_at, locale)}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+          <StoricoSimulazioni
+            righe={storico.map((s) => rigaVista(s, locale, t))}
+            onSeleziona={(id) => {
+              const riga = storico.find((s) => s.id === id)
+              if (riga) setRisultato(riga.risultato as RisultatoSimulazioneGruppo)
+            }}
+            onRinominato={(id, nuovoNome) => setStorico((prev) => prev.map((s) => (s.id === id ? { ...s, nome: nuovoNome } : s)))}
+            onEliminato={(id) => setStorico((prev) => prev.filter((s) => s.id !== id))}
+          />
         </div>
       )}
     </div>

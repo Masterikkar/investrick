@@ -10,6 +10,7 @@ export function Modale({
   children,
   mostraChiusura = true,
   larghezzaMassima = 480,
+  layoutLibero = false,
 }: {
   aperto: boolean
   onChiudi: () => void
@@ -21,6 +22,10 @@ export function Modale({
   // chiudono comunque.
   mostraChiusura?: boolean
   larghezzaMassima?: number
+  // true quando il contenuto gestisce da sé intestazione, padding e fasce di
+  // sfondo (es. il wizard di ribilanciamento): Modale si limita a overlay,
+  // Esc, clic-fuori e blocco scroll — niente h2/×, niente padding.
+  layoutLibero?: boolean
 }) {
   useEffect(() => {
     if (!aperto) return
@@ -66,10 +71,11 @@ export function Modale({
           border: '1px solid var(--border-section)',
           width: '100%',
           maxWidth: larghezzaMassima,
-          padding: 24,
+          padding: layoutLibero ? 0 : 24,
+          overflow: layoutLibero ? 'hidden' : undefined,
         }}
       >
-        {(titolo || mostraChiusura) && (
+        {!layoutLibero && (titolo || mostraChiusura) && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, margin: 0 }}>{titolo}</h2>
             {mostraChiusura && (

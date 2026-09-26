@@ -4,9 +4,12 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatEuro, formatEuroSigned, formatNumero, formatPercent, type LocaleFormato } from '@/lib/format'
 import { Sezione } from '@/components/sezione'
+import { Checkbox } from '@/components/checkbox'
+import { MenuSelect } from '@/components/menu-select'
 import { RisultatoPortafoglioVista } from './risultato-portafoglio'
 import { WizardRibilanciamento, type PassoWizard } from './wizard-ribilanciamento'
-import { PassoSogliaVersamento, PassoCommissioniVendita, PassoVendiInPerdita } from './passi-comuni'
+import { PassoSogliaVersamento, PassoCommissioniVendita, PassoVendiInPerdita, PassoEsecuzione } from './passi-comuni'
+import { StoricoSimulazioni, type RigaStoricoVista } from './storico-simulazioni'
 import { eseguiSimulazionePortafoglio, type RigaStoricoSimulazione } from './actions-simulazione'
 import type { RisultatoSimulazionePortafoglio } from '@/lib/ribilanciamento-simulazione'
 
@@ -48,15 +51,12 @@ function ListaSpuntabile({
   return (
     <div style={stileCampoLista}>
       {opzioni.map((o) => (
-        <label key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-body)' }}>
-          <input
-            type="checkbox"
-            checked={selezionati.includes(o.id)}
-            onChange={(e) => onCambia(o.id, e.target.checked)}
-            style={{ accentColor: 'var(--primary)' }}
-          />
-          {o.nome}
-        </label>
+        <Checkbox
+          key={o.id}
+          checked={selezionati.includes(o.id)}
+          onChange={(spuntato) => onCambia(o.id, spuntato)}
+          label={o.nome}
+        />
       ))}
     </div>
   )
@@ -65,6 +65,34 @@ function ListaSpuntabile({
 function fmtDataOra(iso: string, locale: LocaleFormato) {
   const d = new Date(iso)
   return `${d.toLocaleDateString(locale)} ${d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}`
+}
+
+// Traduce una riga grezza dello storico in ciò che la mini card mostra: solo
+// qui si conoscono i campi propri del risultato "portafoglio" (poolTotale,
+// risultato.esito) — la card resta generica.
+function rigaVista(
+  s: RigaStoricoSimulazione,
+  locale: LocaleFormato,
+  t: (chiave: string) => string
+): RigaStoricoVista {
+  const risultato = s.risultato as RisultatoSimulazionePortafoglio
+  const importoNumero = risultato.poolTotale ?? risultato.versamentoMassimo
+  const esito = risultato.risultato.esito
+  const badge =
+    esito === 'raggiunto'
+      ? { testo: t('badgeSimulazioneRaggiunto'), colore: 'var(--success)', sfondo: 'rgba(52,199,123,0.15)' }
+      : esito === 'residuo'
+        ? { testo: t('badgeSimulazioneParziale'), colore: 'var(--warning)', sfondo: 'rgba(232,162,59,0.15)' }
+        : { testo: t('badgeSimulazioneNonRaggiunto'), colore: 'var(--danger)', sfondo: 'rgba(229,72,77,0.15)' }
+  return {
+    id: s.id,
+    nome: s.nome,
+    dataOra: fmtDataOra(s.creato_at, locale),
+    importo: importoNumero !== null ? formatEuro(importoNumero, locale) : null,
+    badgeTesto: badge.testo,
+    badgeColore: badge.colore,
+    badgeSfondo: badge.sfondo,
+  }
 }
 
 export function SimulatorePortafoglio({
@@ -95,6 +123,7 @@ export function SimulatorePortafoglio({
   const [polizzeSelezionate, setPolizzeSelezionate] = useState<string[]>([])
   const [valutaPac, setValutaPac] = useState(false)
   const [pacSelezionati, setPacSelezionati] = useState<string[]>([])
+  const [nomeSimulazione, setNomeSimulazione] = useState('')
 
   const [risultato, setRisultato] = useState<RisultatoSimulazionePortafoglio | null>(null)
   const [storico, setStorico] = useState(storicoIniziale)
@@ -105,17 +134,19 @@ export function SimulatorePortafoglio({
     { id: 'perdita', titolo: t('stepVendiInPerdita') },
     { id: 'polizza', titolo: t('stepRiscattoPolizza') },
     { id: 'pac', titolo: t('stepToccaPac') },
+    { id: 'esecuzione', titolo: t('stepEsecuzione') },
   ]
 
   function reset() {
     setIndice(0)
     setErrore(null)
+    setNomeSimulazione('')
   }
 
   async function handleCalcola() {
     setInCalcolo(true)
     setErrore(null)
-    const esito = await eseguiSimulazionePortafoglio({
+    const esito = await eseguiSimulazionePortafoglio(nomeSimulazione, {
       versamentoMassimo: sogliaImpostata && sogliaValore ? Number(sogliaValore) : null,
       commissioneVendita: commissione ? Number(commissione) : 0,
       forzaVendita,
@@ -132,11 +163,24 @@ export function SimulatorePortafoglio({
     }
     setRisultato(esito.risultato)
     setAperto(false)
-    setStorico((precedente) => [
-      { id: crypto.randomUUID(), creato_at: new Date().toISOString(), parametri: null, risultato: esito.risultato },
-      ...precedente,
-    ].slice(0, 3))
+    setStorico((precedente) =>
+      [
+        {
+          id: crypto.randomUUID(),
+          nome: nomeSimulazione.trim(),
+          creato_at: new Date().toISOString(),
+          parametri: null,
+          risultato: esito.risultato,
+        },
+        ...precedente,
+      ].slice(0, 3)
+    )
   }
+
+  const opzioniModoRiscatto = [
+    { value: 'automatico', label: t('modoRiscattoAutomatico') },
+    { value: 'manuale', label: t('modoRiscattoManuale') },
+  ]
 
   const passoCorrenteContenuto = [
     <PassoSogliaVersamento
@@ -149,38 +193,12 @@ export function SimulatorePortafoglio({
     <PassoCommissioniVendita key="commissioni" valore={commissione} onCambia={setCommissione} />,
     <PassoVendiInPerdita key="perdita" valore={forzaVendita} onCambia={setForzaVendita} />,
     <div key="polizza" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-form-label)' }}>
-        <input
-          type="checkbox"
-          checked={valutaRiscatto}
-          onChange={(e) => setValutaRiscatto(e.target.checked)}
-          style={{ accentColor: 'var(--primary)' }}
-        />
-        {t('domandaRiscattoPolizza')}
-      </label>
+      <Checkbox checked={valutaRiscatto} onChange={setValutaRiscatto} label={t('domandaRiscattoPolizza')} />
       {valutaRiscatto && (
         <>
-          <div style={{ display: 'flex', gap: 16 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-body)' }}>
-              <input
-                type="radio"
-                name="modo-riscatto"
-                checked={modoRiscatto === 'automatico'}
-                onChange={() => setModoRiscatto('automatico')}
-                style={{ accentColor: 'var(--primary)' }}
-              />
-              {t('modoRiscattoAutomatico')}
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-body)' }}>
-              <input
-                type="radio"
-                name="modo-riscatto"
-                checked={modoRiscatto === 'manuale'}
-                onChange={() => setModoRiscatto('manuale')}
-                style={{ accentColor: 'var(--primary)' }}
-              />
-              {t('modoRiscattoManuale')}
-            </label>
+          <div style={{ maxWidth: 340 }}>
+            <span style={{ fontSize: 'var(--fs-form-label)', display: 'block', marginBottom: 4 }}>{t('labelModoRiscatto')}</span>
+            <MenuSelect value={modoRiscatto} onChange={(v) => setModoRiscatto(v as 'manuale' | 'automatico')} options={opzioniModoRiscatto} />
           </div>
           {modoRiscatto === 'manuale' && (
             <div>
@@ -199,15 +217,7 @@ export function SimulatorePortafoglio({
       )}
     </div>,
     <div key="pac" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-form-label)' }}>
-        <input
-          type="checkbox"
-          checked={valutaPac}
-          onChange={(e) => setValutaPac(e.target.checked)}
-          style={{ accentColor: 'var(--primary)' }}
-        />
-        {t('domandaToccaPac')}
-      </label>
+      <Checkbox checked={valutaPac} onChange={setValutaPac} label={t('domandaToccaPac')} />
       {valutaPac && (
         <div>
           <span style={{ fontSize: 'var(--fs-form-label)' }}>{t('labelPacDaToccare')}</span>
@@ -220,7 +230,10 @@ export function SimulatorePortafoglio({
         </div>
       )}
     </div>,
+    <PassoEsecuzione key="esecuzione" valore={nomeSimulazione} onCambia={setNomeSimulazione} />,
   ]
+
+  const ultimoPasso = indice === passi.length - 1
 
   return (
     <div>
@@ -240,6 +253,7 @@ export function SimulatorePortafoglio({
         onAvanti={() => setIndice((i) => Math.min(passi.length - 1, i + 1))}
         onCalcola={handleCalcola}
         inCalcolo={inCalcolo}
+        puoAvanzare={!ultimoPasso || nomeSimulazione.trim().length > 0}
       >
         {passoCorrenteContenuto[indice]}
       </WizardRibilanciamento>
@@ -344,24 +358,15 @@ export function SimulatorePortafoglio({
 
       <div style={{ marginTop: 24 }}>
         <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 12 }}>{t('titoloUltimeSimulazioni')}</h3>
-        {storico.length === 0 ? (
-          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', margin: 0 }}>{t('nessunaSimulazionePrecedente')}</p>
-        ) : (
-          <ul style={{ fontSize: 'var(--fs-body)', margin: 0 }}>
-            {storico.map((s) => (
-              <li key={s.id}>
-                <button
-                  type="button"
-                  onClick={() => setRisultato(s.risultato as RisultatoSimulazionePortafoglio)}
-                  className="link-dettaglio"
-                  style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer' }}
-                >
-                  {fmtDataOra(s.creato_at, locale)}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <StoricoSimulazioni
+          righe={storico.map((s) => rigaVista(s, locale, t))}
+          onSeleziona={(id) => {
+            const riga = storico.find((s) => s.id === id)
+            if (riga) setRisultato(riga.risultato as RisultatoSimulazionePortafoglio)
+          }}
+          onRinominato={(id, nuovoNome) => setStorico((prev) => prev.map((s) => (s.id === id ? { ...s, nome: nuovoNome } : s)))}
+          onEliminato={(id) => setStorico((prev) => prev.filter((s) => s.id !== id))}
+        />
       </div>
     </div>
   )

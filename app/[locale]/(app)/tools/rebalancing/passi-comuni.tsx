@@ -1,6 +1,8 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { Checkbox } from '@/components/checkbox'
+import { NOME_SIMULAZIONE_MAX, pulisciNomeSimulazione } from '@/lib/ribilanciamento-simulazione'
 
 const stileCampo: React.CSSProperties = {
   display: 'block',
@@ -31,15 +33,7 @@ export function PassoSogliaVersamento({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-form-label)' }}>
-        <input
-          type="checkbox"
-          checked={impostata}
-          onChange={(e) => onCambiaImpostata(e.target.checked)}
-          style={{ accentColor: 'var(--primary)' }}
-        />
-        {t('domandaSogliaVersamento')}
-      </label>
+      <Checkbox checked={impostata} onChange={onCambiaImpostata} label={t('domandaSogliaVersamento')} />
 
       {impostata ? (
         <label style={{ fontSize: 'var(--fs-form-label)' }}>
@@ -79,10 +73,37 @@ export function PassoCommissioniVendita({ valore, onCambia }: { valore: string; 
 export function PassoVendiInPerdita({ valore, onCambia }: { valore: boolean; onCambia: (v: boolean) => void }) {
   const t = useTranslations('PaginaRibilanciamento')
 
+  return <Checkbox checked={valore} onChange={onCambia} label={t('checkboxVendiInPerdita')} />
+}
+
+// Ultimo passo, condiviso: il nome con cui la simulazione verrà salvata nello
+// storico, prima di avviare davvero il calcolo. Filtro live (solo lettere,
+// numeri e spazi, max NOME_SIMULAZIONE_MAX caratteri) — stessa regola
+// applicata di nuovo lato server in salvaSimulazione, mai duplicata a mano.
+export function PassoEsecuzione({ valore, onCambia }: { valore: string; onCambia: (v: string) => void }) {
+  const t = useTranslations('PaginaRibilanciamento')
+  const lunghezza = valore.length
+
   return (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-form-label)' }}>
-      <input type="checkbox" checked={valore} onChange={(e) => onCambia(e.target.checked)} style={{ accentColor: 'var(--primary)' }} />
-      {t('checkboxVendiInPerdita')}
-    </label>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 340 }}>
+      <label style={{ fontSize: 'var(--fs-form-label)' }}>
+        {t('labelNomeSimulazione')}
+        <input
+          type="text"
+          value={valore}
+          onChange={(e) => onCambia(pulisciNomeSimulazione(e.target.value))}
+          placeholder={t('placeholderNomeSimulazione')}
+          maxLength={NOME_SIMULAZIONE_MAX}
+          autoFocus
+          style={stileCampo}
+        />
+      </label>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 'var(--fs-form-hint)', color: 'var(--text-muted)' }}>{t('hintNomeSimulazione')}</span>
+        <span style={{ fontSize: 'var(--fs-form-hint)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', flexShrink: 0, marginLeft: 12 }}>
+          {lunghezza} / {NOME_SIMULAZIONE_MAX}
+        </span>
+      </div>
+    </div>
   )
 }

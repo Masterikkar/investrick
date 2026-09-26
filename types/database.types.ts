@@ -333,6 +333,7 @@ export type Database = {
           contenitore_id: string | null
           creato_at: string
           id: string
+          nome: string
           parametri: Json
           risultato: Json
           tipo: string
@@ -342,6 +343,7 @@ export type Database = {
           contenitore_id?: string | null
           creato_at?: string
           id?: string
+          nome: string
           parametri: Json
           risultato: Json
           tipo: string
@@ -351,6 +353,7 @@ export type Database = {
           contenitore_id?: string | null
           creato_at?: string
           id?: string
+          nome?: string
           parametri?: Json
           risultato?: Json
           tipo?: string
