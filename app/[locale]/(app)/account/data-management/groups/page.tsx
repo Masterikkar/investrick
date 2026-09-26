@@ -2,10 +2,8 @@ import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { NotificaDaParametro } from '@/components/notifica-da-parametro'
 import { SezioneImpostazioni } from '../../settings/sezione-impostazioni'
-import { FormNuovoContenitore } from './form-nuovo-contenitore'
+import { FormContenitore, type ContenitoreModificabile } from './form-contenitore'
 import { ListaContenitori } from './lista-contenitori'
-
-type Contenitore = { id: string; nome: string; tipo: string }
 
 export default async function GroupsPage({
   searchParams,
@@ -19,7 +17,11 @@ export default async function GroupsPage({
   const params = await searchParams
   const supabase = await createClient()
 
-  const { data: contenitori } = await supabase.from('contenitori').select('id, nome, tipo').order('nome').returns<Contenitore[]>()
+  const { data: contenitori } = await supabase
+    .from('contenitori')
+    .select('id, nome, tipo, data_attivazione, note, target_attivo')
+    .order('nome')
+    .returns<ContenitoreModificabile[]>()
 
   return (
     <>
@@ -35,7 +37,7 @@ export default async function GroupsPage({
           </p>
         )}
 
-        <FormNuovoContenitore />
+        <FormContenitore />
       </SezioneImpostazioni>
     </>
   )

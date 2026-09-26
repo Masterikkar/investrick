@@ -4,30 +4,41 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from '@/i18n/navigation'
 import { getLocale } from 'next-intl/server'
+import type { Database } from '@/types/database.types'
 
 const TIPI_VALIDI = ['PAC', 'Polizza', 'Personalizzato']
 
-export async function creaContenitore(formData: FormData) {
-  const supabase = await createClient()
-  const locale = await getLocale()
+type UpsertContenitore = Database['public']['Tables']['contenitori']['Insert']
 
+// Legge i campi del form gruppo, condiviso da creaContenitore e aggiornaContenitore.
+function leggiCampiContenitore(formData: FormData) {
   const nome = (formData.get('nome') as string)?.trim()
   const tipo = formData.get('tipo') as string
-  const dataAttivazione = (formData.get('data_attivazione') as string) || null
-  const note = (formData.get('note') as string)?.trim() || null
+  const dataAttivazione = ((formData.get('data_attivazione') as string) || '').trim() || null
+  const note = ((formData.get('note') as string) || '').trim() || null
   const targetAttivo = formData.get('target_attivo') === 'on'
 
-  if (!nome || !TIPI_VALIDI.includes(tipo)) {
-    redirect({ href: '/account/data-management/groups?errore_contenitore=1', locale })
-  }
-
-  const { error } = await supabase.from('contenitori').insert({
+  const payload: UpsertContenitore = {
     nome,
     tipo,
     data_attivazione: dataAttivazione,
     note,
     target_attivo: targetAttivo,
-  })
+  }
+  return payload
+}
+
+export async function creaContenitore(formData: FormData) {
+  const supabase = await createClient()
+  const locale = await getLocale()
+
+  const payload = leggiCampiContenitore(formData)
+
+  if (!payload.nome || !TIPI_VALIDI.includes(payload.tipo)) {
+    redirect({ href: '/account/data-management/groups?errore_contenitore=1', locale })
+  }
+
+  const { error } = await supabase.from('contenitori').insert(payload)
 
   if (error) {
     redirect({ href: '/account/data-management/groups?errore_contenitore=1', locale })
@@ -37,22 +48,20 @@ export async function creaContenitore(formData: FormData) {
   redirect({ href: '/account/data-management/groups?successo_contenitore=1', locale })
 }
 
-export async function rinominaContenitore(
+// Modifica di un gruppo esistente dal modale di Gruppi: stessi campi di
+// creaContenitore, ma niente redirect (il client chiude il modale e aggiorna
+// la pagina).
+export async function aggiornaContenitore(
   id: string,
-  nuovoNome: string
-): Promise<{ successo: true } | { errore: string }> {
+  formData: FormData
+): Promise<{ successo: true } | { errore: 'campi' | 'generico' }> {
   const supabase = await createClient()
 
-  const nome = nuovoNome.trim()
-  if (!nome) {
-    return { errore: 'Il nome non può essere vuoto.' }
-  }
+  const payload = leggiCampiContenitore(formData)
+  if (!payload.nome || !TIPI_VALIDI.includes(payload.tipo)) return { errore: 'campi' }
 
-  const { error } = await supabase.from('contenitori').update({ nome }).eq('id', id)
-
-  if (error) {
-    return { errore: error.message }
-  }
+  const { error } = await supabase.from('contenitori').update(payload).eq('id', id)
+  if (error) return { errore: 'generico' }
 
   revalidatePath('/', 'layout')
   return { successo: true }
