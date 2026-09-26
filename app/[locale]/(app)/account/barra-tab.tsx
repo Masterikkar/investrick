@@ -4,7 +4,9 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link, usePathname } from '@/i18n/navigation'
 
-export function BarraTab({ tab }: { tab: { href: string; label: string; icona: ReactNode }[] }) {
+type VoceTab = { href: string; label: string; icona: ReactNode } | { separatore: true }
+
+export function BarraTab({ tab }: { tab: VoceTab[] }) {
   const pathname = usePathname()
   const ref = useRef<HTMLElement>(null)
   const [altezzaMinima, setAltezzaMinima] = useState<number>()
@@ -43,7 +45,11 @@ export function BarraTab({ tab }: { tab: { href: string; label: string; icona: R
         borderRadius: 0,
       }}
     >
-      {tab.map(({ href, label, icona }) => {
+      {tab.map((voce, indice) => {
+        if ('separatore' in voce) {
+          return <hr key={`separatore-${indice}`} className="menu-divider" style={{ margin: '4px 4px' }} />
+        }
+        const { href, label, icona } = voce
         const attiva = pathname === href
         return (
           <Link

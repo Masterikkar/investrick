@@ -7,7 +7,7 @@ import { formatData, formatEuro, formatNumero, type LocaleFormato } from '@/lib/
 import { RippleLink } from '@/components/ripple-link'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
-import { aggiornaContenitoreTransazione, eliminaTransazione } from '../gestione/transazioni/actions'
+import { aggiornaContenitoreTransazione, eliminaTransazione } from '../account/data-management/transactions/actions'
 import { useConferma } from '@/components/conferma'
 import { IconaSposta, IconaElimina } from '@/components/icone'
 

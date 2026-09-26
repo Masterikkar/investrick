@@ -247,6 +247,37 @@ export function IconaInfo() {
   )
 }
 
+export function IconaTransazioni() {
+  return (
+    <IconaBase>
+      <path d="M4 7h10" />
+      <path d="M11 4l3 3-3 3" />
+      <path d="M16 13H6" />
+      <path d="M9 10l-3 3 3 3" />
+    </IconaBase>
+  )
+}
+
+export function IconaImporta() {
+  return (
+    <IconaBase>
+      <path d="M10 11V3" />
+      <path d="M6.5 6l3.5-3 3.5 3" />
+      <path d="M3 14v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2" />
+    </IconaBase>
+  )
+}
+
+export function IconaEsporta() {
+  return (
+    <IconaBase>
+      <path d="M10 3v8" />
+      <path d="M6.5 8l3.5 3 3.5-3" />
+      <path d="M3 14v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2" />
+    </IconaBase>
+  )
+}
+
 export function IconaDownload() {
   return (
     <svg

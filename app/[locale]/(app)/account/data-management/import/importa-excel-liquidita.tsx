@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { dataIsoDaCellaExcel } from '@/lib/data-excel'
-import { importaMovimentiLiquiditaBulk, type RigaImportLiquidita } from '../transazioni/actions'
+import { importaMovimentiLiquiditaBulk, type RigaImportLiquidita } from '../transactions/actions'
 import { IconaDownload } from '@/components/icone'
 import type { LocaleFormato } from '@/lib/format'
 import {

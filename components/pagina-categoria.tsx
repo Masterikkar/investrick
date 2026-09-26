@@ -195,7 +195,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
               </span>
             </CardMetrica>
 
-            <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
+            <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/account/data-management/transactions" linkLabel={t('linkTransazioni')}>
               <CapitaleInvestito capitale={capitaleInvestitoNettoTotale} ricompense={ricompenseTotale} />
             </CardMetrica>
 

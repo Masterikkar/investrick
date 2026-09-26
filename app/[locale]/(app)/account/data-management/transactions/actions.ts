@@ -9,7 +9,7 @@ import type { Database } from '@/types/database.types'
 import { CATEGORIE_MERCATO } from '@/lib/categorie'
 import { eseguiImportazione, type FileImport } from '@/lib/importazioni'
 
-// Stessa ragione di app/(app)/gestione/strumenti/actions.ts: aliquota_tassazione
+// Stessa ragione di app/(app)/account/data-management/asset/actions.ts: aliquota_tassazione
 // la riempie il trigger, mai l'app.
 type InsertStrumento = Omit<Database['public']['Tables']['strumenti']['Insert'], 'aliquota_tassazione'>
 
@@ -33,16 +33,16 @@ export async function aggiungiTransazione(formData: FormData) {
 
   if (operazione === 'Costo_contanti') {
     if (strumentoId) {
-      redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
+      redirect({ href: '/account/data-management/transactions?errore_finanziaria=1', locale })
     }
     if (!CATEGORIE_MERCATO.includes(categoriaManuale)) {
-      redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
+      redirect({ href: '/account/data-management/transactions?errore_finanziaria=1', locale })
     }
     categoria = categoriaManuale
     strumentoIdFinale = null
   } else {
     if (!strumentoId) {
-      redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
+      redirect({ href: '/account/data-management/transactions?errore_finanziaria=1', locale })
     }
 
     const { data: strumento, error: erroreStrumento } = await supabase
@@ -52,7 +52,7 @@ export async function aggiungiTransazione(formData: FormData) {
       .single()
 
     if (erroreStrumento || !strumento || strumento.categoria === 'Liquidita') {
-      redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
+      redirect({ href: '/account/data-management/transactions?errore_finanziaria=1', locale })
       return
     }
 
@@ -74,18 +74,18 @@ export async function aggiungiTransazione(formData: FormData) {
   })
 
   if (error) {
-    redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
+    redirect({ href: '/account/data-management/transactions?errore_finanziaria=1', locale })
   }
 
   const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
 
   if (erroreRicostruzione) {
-    redirect({ href: '/gestione/transazioni?errore_finanziaria=1', locale })
+    redirect({ href: '/account/data-management/transactions?errore_finanziaria=1', locale })
   }
 
   revalidatePath(`/${locale}`)
-  revalidatePath(`/${locale}/gestione/transazioni`)
-  redirect({ href: '/gestione/transazioni?successo_finanziaria=1', locale })
+  revalidatePath(`/${locale}/account/data-management/transactions`)
+  redirect({ href: '/account/data-management/transactions?successo_finanziaria=1', locale })
 }
 
 export async function aggiungiMovimentoLiquidita(formData: FormData) {
@@ -100,7 +100,7 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
   const tassaTrattenuta = Number(formData.get('tassa_trattenuta') || 0)
 
   if (!strumentoId) {
-    redirect({ href: '/gestione/transazioni?errore_liquidita=1', locale })
+    redirect({ href: '/account/data-management/transactions?errore_liquidita=1', locale })
   }
 
   const { error } = await supabase.from('movimenti_liquidita').insert({
@@ -113,18 +113,18 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
   })
 
   if (error) {
-    redirect({ href: '/gestione/transazioni?errore_liquidita=1', locale })
+    redirect({ href: '/account/data-management/transactions?errore_liquidita=1', locale })
   }
 
   const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
 
   if (erroreRicostruzione) {
-    redirect({ href: '/gestione/transazioni?errore_liquidita=1', locale })
+    redirect({ href: '/account/data-management/transactions?errore_liquidita=1', locale })
   }
 
   revalidatePath(`/${locale}`)
-  revalidatePath(`/${locale}/gestione/transazioni`)
-  redirect({ href: '/gestione/transazioni?successo_liquidita=1', locale })
+  revalidatePath(`/${locale}/account/data-management/transactions`)
+  redirect({ href: '/account/data-management/transactions?successo_liquidita=1', locale })
 }
 
 // --- Storico transazioni: riallocazione contenitore ed eliminazione ---
@@ -273,7 +273,7 @@ export async function creaAssetPerImport(dati: {
     return { errore: error?.message ?? t('erroreSconosciutoCreazione') }
   }
 
-  revalidatePath(`/${locale}/gestione/transazioni`)
+  revalidatePath(`/${locale}/account/data-management/transactions`)
   return { id: nuovo.id }
 }
 
@@ -381,7 +381,7 @@ async function concludiImport(
     const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
     if (erroreRicostruzione) {
       revalidatePath(`/${locale}`)
-      revalidatePath(`/${locale}/gestione/transazioni`)
+      revalidatePath(`/${locale}/account/data-management/transactions`)
       return {
         inserite,
         errori,
@@ -391,7 +391,7 @@ async function concludiImport(
   }
 
   revalidatePath(`/${locale}`)
-  revalidatePath(`/${locale}/gestione/transazioni`)
+  revalidatePath(`/${locale}/account/data-management/transactions`)
 
   return { inserite, errori }
 }

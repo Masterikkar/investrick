@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { IconaImpostazioni, IconaFiscalita } from '@/components/icone'
-import { BarraTab } from './barra-tab'
+import { BarraTab } from '../barra-tab'
 
 export default async function ImpostazioniLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations('PaginaImpostazioni')

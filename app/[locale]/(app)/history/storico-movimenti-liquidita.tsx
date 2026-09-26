@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { formatData, formatEuro, type LocaleFormato } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
 import { CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA } from '@/lib/i18n-tipi-movimento-liquidita'
-import { aggiornaContenitoreMovimentoLiquidita, eliminaMovimentoLiquidita } from '../gestione/transazioni/actions'
+import { aggiornaContenitoreMovimentoLiquidita, eliminaMovimentoLiquidita } from '../account/data-management/transactions/actions'
 import { useConferma } from '@/components/conferma'
 import { IconaSposta, IconaElimina } from '@/components/icone'
 

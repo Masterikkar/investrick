@@ -7,7 +7,7 @@ import { MenuSelect } from '@/components/menu-select'
 import { RippleLink } from '@/components/ripple-link'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
-import { LARGHEZZA_STANDARD, GAP_CAMPI, LARGHEZZA_RIGA_QUATTRO_CAMPI, LARGHEZZA_NOME } from './layout-campi'
+import { LARGHEZZA_STANDARD, GAP_CAMPI, LARGHEZZA_RIGA_QUATTRO_CAMPI, LARGHEZZA_NOME } from '../layout-campi'
 
 type TipiPerCategoria = Record<string, string[]>
 

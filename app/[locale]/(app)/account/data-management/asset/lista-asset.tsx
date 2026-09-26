@@ -11,7 +11,7 @@ import { useNotifica } from '@/components/notifica'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { traduciTipoStrumento } from '@/lib/i18n-tipi-strumento'
 import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
-import { LARGHEZZA_RIGA_QUATTRO_CAMPI } from './layout-campi'
+import { LARGHEZZA_RIGA_QUATTRO_CAMPI } from '../layout-campi'
 import { FormAsset, type StrumentoModificabile } from './form-asset'
 
 export type AssetElenco = StrumentoModificabile & {

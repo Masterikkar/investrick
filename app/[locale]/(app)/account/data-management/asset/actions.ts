@@ -60,7 +60,7 @@ export async function creaAsset(formData: FormData) {
   const { categoria, tipo, nome, isin } = payload
 
   if (!categoria || !tipo || !nome) {
-    redirect({ href: '/gestione/strumenti?errore=1', locale })
+    redirect({ href: '/account/data-management/asset?errore=1', locale })
   }
 
   if (isin) {
@@ -72,7 +72,7 @@ export async function creaAsset(formData: FormData) {
 
     if (esistente) {
       redirect({
-        href: `/gestione/strumenti?errore=duplicato&duplicato_id=${esistente.id}&duplicato_nome=${encodeURIComponent(esistente.nome)}`,
+        href: `/account/data-management/asset?errore=duplicato&duplicato_id=${esistente.id}&duplicato_nome=${encodeURIComponent(esistente.nome)}`,
         locale,
       })
     }
@@ -85,7 +85,7 @@ export async function creaAsset(formData: FormData) {
     .single()
 
   if (error || !nuovo) {
-    redirect({ href: '/gestione/strumenti?errore=1', locale })
+    redirect({ href: '/account/data-management/asset?errore=1', locale })
     return
   }
 

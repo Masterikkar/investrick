@@ -257,7 +257,7 @@ export default async function PacDettaglioPage({
               </span>
             </CardMetrica>
 
-            <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
+            <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/account/data-management/transactions" linkLabel={t('linkTransazioni')}>
               <CapitaleInvestito capitale={capitaleInvestitoNettoTotale} ricompense={ricompenseTotale} />
             </CardMetrica>
 

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import * as XLSX from 'xlsx'
 import { dataIsoDaCellaExcel } from '@/lib/data-excel'
-import { creaAssetPerImport, importaTransazioniBulk, type RigaImport } from '../transazioni/actions'
+import { creaAssetPerImport, importaTransazioniBulk, type RigaImport } from '../transactions/actions'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE, operazioneDaEtichettaExcel } from '@/lib/i18n-tipi-operazione'
 import {

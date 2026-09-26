@@ -37,7 +37,7 @@ export default async function TransazioniLiquiditaPage() {
 
   return (
     <div>
-      <RippleLink href="/gestione/transazioni" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
+      <RippleLink href="/account/data-management/transactions" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
         {t('linkNuovaTransazione')}
       </RippleLink>
 

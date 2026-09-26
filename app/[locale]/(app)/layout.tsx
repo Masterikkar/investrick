@@ -24,6 +24,7 @@ import {
   IconaEsci,
 } from '@/components/icone'
 
+
 // Voci del sottomenu Portafoglio → Asset: categoria del database, pagina,
 // chiave nel namespace "Categorie". La Liquidità ha la sua pagina dedicata.
 const VOCI_ASSET = [
@@ -47,7 +48,6 @@ const stilePannello: React.CSSProperties = {
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations('Menu')
   const tCategorie = await getTranslations('Categorie')
-  const tGestioneTransazioni = await getTranslations('PaginaGestioneTransazioni')
   const locale = await getLocale()
   const supabase = await createClient()
 
@@ -226,31 +226,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 </span>
               </summary>
               <div className="menu-panel" style={stilePannello}>
-                <details>
-                  <summary className="menu-toggle" style={{ padding: '9px 10px' }}>
-                    <span className="menu-row-left">
-                      <IconaGestione /> {t('gestioneDatabase')}
-                    </span>
-                    <span className="menu-chevron">
-                      <IconaChevron />
-                    </span>
-                  </summary>
-                  <div className="menu-submenu-items">
-                    <RippleLink href="/gestione/esporta" className="menu-row link-interattivo">
-                      {tGestioneTransazioni('titoloEsporta')}
-                    </RippleLink>
-                    <RippleLink href="/gestione/importa" className="menu-row link-interattivo">
-                      {tGestioneTransazioni('titoloImporta')}
-                    </RippleLink>
-                    <RippleLink href="/gestione/strumenti" className="menu-row link-interattivo">
-                      {t('strumenti')}
-                    </RippleLink>
-                    <RippleLink href="/gestione/transazioni" className="menu-row link-interattivo">
-                      {t('transazioni')}
-                    </RippleLink>
-                  </div>
-                </details>
-                <hr className="menu-divider" />
+                <RippleLink
+                  href="/account/data-management"
+                  className="menu-row link-interattivo"
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
+                >
+                  <IconaGestione /> {t('gestioneDatabase')}
+                </RippleLink>
                 <RippleLink
                   href="/account/settings"
                   className="menu-row link-interattivo"
