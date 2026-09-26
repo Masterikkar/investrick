@@ -328,6 +328,58 @@ export type Database = {
           },
         ]
       }
+      simulazioni_ribilanciamento: {
+        Row: {
+          contenitore_id: string | null
+          creato_at: string
+          id: string
+          parametri: Json
+          risultato: Json
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          contenitore_id?: string | null
+          creato_at?: string
+          id?: string
+          parametri: Json
+          risultato: Json
+          tipo: string
+          user_id?: string
+        }
+        Update: {
+          contenitore_id?: string | null
+          creato_at?: string
+          id?: string
+          parametri?: Json
+          risultato?: Json
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulazioni_ribilanciamento_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "contenitori"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulazioni_ribilanciamento_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "simulazioni_ribilanciamento_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_valore_per_contenitore"
+            referencedColumns: ["contenitore_id"]
+          },
+        ]
+      }
       storico_valorizzazioni: {
         Row: {
           capitale_investito: number | null

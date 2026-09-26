@@ -155,6 +155,23 @@ body {
   }
 }
 
+/* Barra di caricamento del wizard di ribilanciamento, durante il calcolo */
+@keyframes barra-caricamento-scorrimento {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.barra-caricamento-riempimento {
+  width: 40%;
+  height: 100%;
+  background: var(--primary);
+  animation: barra-caricamento-scorrimento 1.1s ease-in-out infinite;
+}
+
 /* Menu di navigazione a tendina */
 .menu-toggle {
   position: relative;
