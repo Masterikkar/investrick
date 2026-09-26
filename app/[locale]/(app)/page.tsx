@@ -206,7 +206,7 @@ export default async function DashboardPage() {
               variazioneOggi={variazioneDaUltimoSnapshot}
               label={t('titoloRendimentoLive')}
               etichettaOggi={t('etichettaOggi')}
-              href="/rendimenti"
+              href="/returns"
               linkLabel={t('linkRendimenti')}
             />
 

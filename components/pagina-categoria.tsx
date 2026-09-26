@@ -179,7 +179,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
               variazioneOggi={variazioneDaUltimoSnapshot}
               label={tDashboard('titoloRendimentoLive')}
               etichettaOggi={tDashboard('etichettaOggi')}
-              href="/rendimenti"
+              href="/returns"
               linkLabel={t('linkRendimenti')}
               info={t('tooltipRendimentoLive')}
             />

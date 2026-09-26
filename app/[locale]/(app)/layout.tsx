@@ -181,7 +181,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                   <IconaFiscalita /> {t('fiscalita')}
                 </RippleLink>
                 <RippleLink
-                  href="/rendimenti"
+                  href="/returns"
                   className="menu-row link-interattivo"
                   style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}
                 >

@@ -260,7 +260,7 @@ export default async function TuttiAssetPage() {
               variazioneOggi={variazioneDaUltimoSnapshot}
               label={tDashboard('titoloRendimentoLive')}
               etichettaOggi={tDashboard('etichettaOggi')}
-              href="/rendimenti"
+              href="/returns"
               linkLabel={t('linkRendimenti')}
               info={tTuttiAsset('tooltipRendimentoLive')}
             />

@@ -316,7 +316,7 @@ export async function PaginaGruppi({
                   variazioneOggi={variazioneDaUltimoSnapshot}
                   label={t('labelRendimento')}
                   etichettaOggi={tDashboard('etichettaOggi')}
-                  href="/rendimenti"
+                  href="/returns"
                   linkLabel={t('linkRendimenti')}
                 />
 
