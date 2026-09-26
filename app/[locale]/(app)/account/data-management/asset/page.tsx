@@ -77,6 +77,14 @@ export default async function AssetPage({
 
   return (
     <>
+      <SezioneImpostazioni titolo={t('titoloAssetEsistenti')}>
+        <ListaAsset
+          asset={assetElenco}
+          tipiPerCategoria={tipiPerCategoria}
+          aliquoteDefaultPerCategoria={aliquoteDefaultPerCategoria}
+        />
+      </SezioneImpostazioni>
+
       <SezioneImpostazioni titolo={t('titoloCreaNuovoAsset')}>
         {params.errore === 'duplicato' && params.duplicato_id && (
           <div
@@ -108,14 +116,6 @@ export default async function AssetPage({
         )}
 
         <FormAsset tipiPerCategoria={tipiPerCategoria} aliquoteDefaultPerCategoria={aliquoteDefaultPerCategoria} />
-      </SezioneImpostazioni>
-
-      <SezioneImpostazioni titolo={t('titoloAssetEsistenti')}>
-        <ListaAsset
-          asset={assetElenco}
-          tipiPerCategoria={tipiPerCategoria}
-          aliquoteDefaultPerCategoria={aliquoteDefaultPerCategoria}
-        />
       </SezioneImpostazioni>
     </>
   )

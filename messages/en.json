@@ -454,7 +454,7 @@
     "titoloGestioneStrumenti": "Instrument management",
     "titoloAsset": "Asset",
     "titoloCreaNuovoAsset": "Create new asset",
-    "titoloAssetEsistenti": "Existing assets",
+    "titoloAssetEsistenti": "Edit assets",
     "alertNessunAssetCreato": "No asset created.",
     "ariaLabelEliminaAsset": "Delete {nome}",
     "titoloModificaAsset": "Edit asset",
