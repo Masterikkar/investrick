@@ -8,6 +8,8 @@ import { CardRendimento } from '@/components/card-rendimento'
 import { Sezione } from '@/components/sezione'
 import { traduciTipoStrumento } from '@/lib/i18n-tipi-strumento'
 import { tutteLeRighe } from '@/lib/supabase-tutte-le-righe'
+import { caricaRicompenseResidue, ricompensePosizione } from '@/lib/ricompense'
+import { CapitaleInvestito } from '@/components/capitale-investito'
 
 // Pagina di una categoria di investimento (Azioni, Obbligazioni, …), condivisa
 // dalle sei route di categoria. categoria è il valore usato per interrogare il
@@ -35,6 +37,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
   ]
 
   const supabase = await createClient()
+  const ricompense = await caricaRicompenseResidue(supabase)
 
   const { data: categoriaValore } = await supabase
     .from('v_valore_per_categoria')
@@ -130,6 +133,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
         valore: p.valore ?? 0,
         capitaleInvestito: p.capitale_investito ?? 0,
         capitaleInvestitoNetto: (p.quantita_posseduta ?? 0) * (p.prezzo_medio_unitario ?? 0),
+        ricompense: ricompensePosizione(ricompense, p.strumento_id, p.contenitore_id),
         peso: valoreTotaleCategoria > 0 ? ((p.valore ?? 0) / valoreTotaleCategoria) * 100 : 0,
         nav: p.prezzo_attuale ?? 0,
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
@@ -143,6 +147,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
   const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
   const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
   const capitaleInvestitoNettoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestitoNetto as number), 0)
+  const ricompenseTotale = righe.reduce((acc, r) => acc + (r.ricompense as number), 0)
   const plusMinusNonRealizzata = valoreTotalePosizioni - capitaleInvestitoTotale
   const rendimentoPctTotale =
     capitaleInvestitoTotale > 0 ? (plusMinusNonRealizzata / capitaleInvestitoTotale) * 100 : null
@@ -191,7 +196,7 @@ export async function PaginaCategoria({ categoria, chiaveTraduzione }: { categor
             </CardMetrica>
 
             <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
-              {formatEuro(capitaleInvestitoNettoTotale, locale)}
+              <CapitaleInvestito capitale={capitaleInvestitoNettoTotale} ricompense={ricompenseTotale} />
             </CardMetrica>
 
             <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>

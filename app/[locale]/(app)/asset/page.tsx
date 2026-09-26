@@ -11,6 +11,8 @@ import { traduciCategoria } from '@/lib/i18n-categorie'
 import { traduciTipoStrumento } from '@/lib/i18n-tipi-strumento'
 import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
 import { saldoRiportatoAllaData, serieSaldiPerConto } from '@/lib/saldi-riportati'
+import { caricaRicompenseResidue, ricompensePosizione } from '@/lib/ricompense'
+import { CapitaleInvestito } from '@/components/capitale-investito'
 
 // Tutte le posizioni aperte di tutte e 7 le categorie insieme, Liquidità
 // compresa, con la stessa struttura di PaginaCategoria: grafico del
@@ -44,6 +46,7 @@ export default async function TuttiAssetPage() {
   ]
 
   const supabase = await createClient()
+  const ricompense = await caricaRicompenseResidue(supabase)
 
   const { data: strumenti } = await supabase.from('strumenti').select('id, nome, tipo, categoria, ticker, isin')
 
@@ -183,6 +186,7 @@ export default async function TuttiAssetPage() {
       valore: saldo,
       capitaleInvestito: saldo,
       capitaleInvestitoNetto: saldo,
+      ricompense: 0,
       peso: valoreTotaleTabella > 0 ? (saldo / valoreTotaleTabella) * 100 : 0,
       nav: null,
       prezzoMedioUnitario: null,
@@ -209,6 +213,7 @@ export default async function TuttiAssetPage() {
         valore: p.valore ?? 0,
         capitaleInvestito: p.capitale_investito ?? 0,
         capitaleInvestitoNetto: (p.quantita_posseduta ?? 0) * (p.prezzo_medio_unitario ?? 0),
+        ricompense: ricompensePosizione(ricompense, p.strumento_id, p.contenitore_id),
         peso: valoreTotaleTabella > 0 ? ((p.valore ?? 0) / valoreTotaleTabella) * 100 : 0,
         nav: p.prezzo_attuale ?? 0,
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
@@ -223,6 +228,7 @@ export default async function TuttiAssetPage() {
   const costoTotale = righe.reduce((acc, r) => acc + (r.costo as number), 0)
   const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
   const capitaleInvestitoNettoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestitoNetto as number), 0)
+  const ricompenseTotale = righe.reduce((acc, r) => acc + (r.ricompense as number), 0)
   const plusMinusNonRealizzata = valoreTotaleTabella - capitaleInvestitoTotale
   const rendimentoPctTotale =
     capitaleInvestitoTotale > 0 ? (plusMinusNonRealizzata / capitaleInvestitoTotale) * 100 : null
@@ -271,7 +277,7 @@ export default async function TuttiAssetPage() {
             </CardMetrica>
 
             <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
-              {formatEuro(capitaleInvestitoNettoTotale, locale)}
+              <CapitaleInvestito capitale={capitaleInvestitoNettoTotale} ricompense={ricompenseTotale} />
             </CardMetrica>
 
             <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>

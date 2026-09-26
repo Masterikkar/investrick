@@ -13,6 +13,8 @@ import type { ContributoStrumento } from '@/components/barre-sottocategoria-rend
 import { AnalisiRendimento, type ContributoCategoria } from '@/components/analisi-rendimento'
 import { AnalisiComposizione, type ScostamentoCategoria } from '@/components/analisi-composizione'
 import { CATEGORIE } from '@/lib/categorie'
+import { caricaRicompenseResidue, ricompensePosizione } from '@/lib/ricompense'
+import { CapitaleInvestito } from '@/components/capitale-investito'
 
 
 export default async function PacDettaglioPage({
@@ -26,6 +28,7 @@ export default async function PacDettaglioPage({
   const tCategorie = await getTranslations('Categorie')
   const tContenitori = await getTranslations('Contenitori')
   const supabase = await createClient()
+  const ricompense = await caricaRicompenseResidue(supabase)
 
   const { data: pac } = await supabase
     .from('v_valore_per_contenitore')
@@ -145,6 +148,7 @@ export default async function PacDettaglioPage({
         valore: p.valore ?? 0,
         capitaleInvestito: p.capitale_investito ?? 0,
         capitaleInvestitoNetto: (p.quantita_posseduta ?? 0) * (p.prezzo_medio_unitario ?? 0),
+        ricompense: ricompensePosizione(ricompense, p.strumento_id, contenitoreId),
         nav: p.prezzo_attuale ?? 0,
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
         peso: valoreTotalePac > 0 ? ((p.valore ?? 0) / valoreTotalePac) * 100 : 0,
@@ -157,6 +161,7 @@ export default async function PacDettaglioPage({
   const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
   const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
   const capitaleInvestitoNettoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestitoNetto as number), 0)
+  const ricompenseTotale = righe.reduce((acc, r) => acc + (r.ricompense as number), 0)
   const plusMinusNonRealizzata = valoreTotalePosizioni - capitaleInvestitoTotale
   const rendimentoPctTotale = capitaleInvestitoTotale > 0 ? (plusMinusNonRealizzata / capitaleInvestitoTotale) * 100 : null
 
@@ -253,7 +258,7 @@ export default async function PacDettaglioPage({
             </CardMetrica>
 
             <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
-              {formatEuro(capitaleInvestitoNettoTotale, locale)}
+              <CapitaleInvestito capitale={capitaleInvestitoNettoTotale} ricompense={ricompenseTotale} />
             </CardMetrica>
 
             <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>

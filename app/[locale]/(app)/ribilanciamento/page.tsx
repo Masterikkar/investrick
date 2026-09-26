@@ -205,7 +205,7 @@ export default async function RibilanciamentoPage({
   let necessario: number | null = null
   let sufficiente = false
   let allocazioneAcquisto: RigaAllocazione[] = []
-  let venditeProposte: EsitoVenditaStrumento[] = []
+  const venditeProposte: EsitoVenditaStrumento[] = []
   let poolTotale = 0
   const allocazioneStrumenti: {
     categoria: string

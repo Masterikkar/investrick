@@ -24,7 +24,7 @@
     "linkRendimenti": "View return details →",
     "labelPlusMinusNonRealizzata": "Unrealized gain/loss",
     "linkFiscalita": "View tax details →",
-    "labelCapitaleInvestitoNetto": "Net capital invested",
+    "labelCapitaleInvestitoNetto": "Capital invested",
     "linkTransazioni": "View transactions →",
     "labelCostoTotale": "Total cost",
     "linkCosti": "View cost details →",
@@ -99,7 +99,7 @@
     "labelPlusMinusRealizzata": "Net realized gain/loss {anno}",
     "labelCostoTotale": "Total cost",
     "linkCosti": "→ Costs",
-    "labelCapitaleInvestitoNetto": "Net capital invested",
+    "labelCapitaleInvestitoNetto": "Capital invested",
     "linkTransazioni": "→ Transactions",
     "titoloAllocazioneAsset": "Asset allocation",
     "titoloAllocazioneContenitori": "Group allocation",
@@ -126,7 +126,7 @@
     "linkRendimenti": "→ Returns",
     "labelPlusMinusNonRealizzata": "Unrealized gain/loss",
     "linkFiscalita": "→ Tax",
-    "labelCapitaleInvestitoNetto": "Net capital invested",
+    "labelCapitaleInvestitoNetto": "Capital invested",
     "linkTransazioni": "→ Transactions",
     "labelCostoTotale": "Total cost",
     "linkCosti": "→ Costs",
@@ -407,6 +407,10 @@
     "notaBloccoPac": "investment plan, in its target proportions",
     "notaAcquistoLibero": "free purchase, direct or in a policy",
     "alertNessunAcquisto": "Nothing to buy."
+  },
+  "CapitaleInvestito": {
+    "daRicompense": "of which from rewards: {valore}",
+    "capitaleProprio": "Own capital invested: {valore}"
   },
   "PaginaAsset": {
     "notaTassatoAlRiscatto": "Taxed when the policy is redeemed",

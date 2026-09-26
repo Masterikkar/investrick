@@ -13,6 +13,8 @@ import type { ContributoStrumento } from '@/components/barre-sottocategoria-rend
 import { AnalisiRendimento, type ContributoCategoria } from '@/components/analisi-rendimento'
 import { AnalisiComposizione, type ScostamentoCategoria } from '@/components/analisi-composizione'
 import { CATEGORIE } from '@/lib/categorie'
+import { caricaRicompenseResidue, ricompensePosizione } from '@/lib/ricompense'
+import { CapitaleInvestito } from '@/components/capitale-investito'
 
 
 export default async function PolizzaDettaglioPage({
@@ -25,6 +27,7 @@ export default async function PolizzaDettaglioPage({
   const t = await getTranslations('PaginaContenitore')
   const tCategorie = await getTranslations('Categorie')
   const supabase = await createClient()
+  const ricompense = await caricaRicompenseResidue(supabase)
 
   const { data: polizza } = await supabase
     .from('v_valore_per_contenitore')
@@ -144,6 +147,7 @@ export default async function PolizzaDettaglioPage({
         valore: p.valore ?? 0,
         capitaleInvestito: p.capitale_investito ?? 0,
         capitaleInvestitoNetto: (p.quantita_posseduta ?? 0) * (p.prezzo_medio_unitario ?? 0),
+        ricompense: ricompensePosizione(ricompense, p.strumento_id, contenitoreId),
         nav: p.prezzo_attuale ?? 0,
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
         peso: valoreTotalePolizza > 0 ? ((p.valore ?? 0) / valoreTotalePolizza) * 100 : 0,
@@ -156,6 +160,7 @@ export default async function PolizzaDettaglioPage({
   const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
   const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
   const capitaleInvestitoNettoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestitoNetto as number), 0)
+  const ricompenseTotale = righe.reduce((acc, r) => acc + (r.ricompense as number), 0)
   // Performance sui lotti, fondo per fondo (analisi del rendimento, tabella).
   const plusMinusLotti = valoreTotalePosizioni - capitaleInvestitoTotale
 
@@ -268,7 +273,7 @@ export default async function PolizzaDettaglioPage({
             </CardMetrica>
 
             <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
-              {formatEuro(capitaleInvestitoNettoTotale, locale)}
+              <CapitaleInvestito capitale={capitaleInvestitoNettoTotale} ricompense={ricompenseTotale} />
             </CardMetrica>
 
             <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>

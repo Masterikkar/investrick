@@ -4,6 +4,8 @@ import { redirect } from '@/i18n/navigation'
 import { formatData, formatEuro, formatEuroSigned, formatPercent, formatNumero, type LocaleFormato } from '@/lib/format'
 import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
 import { CardMetrica } from '@/components/card-metrica'
+import { CapitaleInvestito } from '@/components/capitale-investito'
+import { caricaRicompenseResidue, ricompensePosizione } from '@/lib/ricompense'
 import { Sezione } from '@/components/sezione'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { traduciCategoria } from '@/lib/i18n-categorie'
@@ -104,6 +106,7 @@ export default async function AssetPage({
     { data: contenitoriRaw },
     { data: costoStrumentoRaw },
     { data: storicoRaw },
+    ricompense,
   ] = await Promise.all([
     supabase.from('strumenti').select('id, nome, categoria, ticker, isin, valuta').eq('id', strumentoId).single(),
     supabase
@@ -129,6 +132,7 @@ export default async function AssetPage({
       .eq('strumento_id', strumentoId)
       .order('data', { ascending: true })
       .returns<StoricoValorizzazione[]>(),
+    caricaRicompenseResidue(supabase),
   ])
 
   const strumento = strumentoRaw as Strumento | null
@@ -185,6 +189,7 @@ export default async function AssetPage({
 
   const quantitaTotale = posizioniAttuali.reduce((s, r) => s + Number(r.quantita_posseduta), 0)
   const capitaleInvestitoTotale = posizioniAttuali.reduce((s, r) => s + Number(r.capitale_investito), 0)
+  const ricompenseTotale = posizioniAttuali.reduce((s, r) => s + ricompensePosizione(ricompense, strumentoId, r.contenitore_id), 0)
   const valoreTotale = posizioniAttuali.reduce((s, r) => s + (r.valore != null ? Number(r.valore) : 0), 0)
   const prezzoMedioPonderato = quantitaTotale > 0 ? capitaleInvestitoTotale / quantitaTotale : null
   const rendimentoTotalePct =
@@ -273,7 +278,9 @@ export default async function AssetPage({
               {prezzoMedioPonderato != null ? formatEuro(prezzoMedioPonderato, locale) : '—'}
             </CardMetrica>
 
-            <CardMetrica label={t('capitaleInvestito')}>{formatEuro(capitaleInvestitoTotale, locale)}</CardMetrica>
+            <CardMetrica label={t('capitaleInvestito')}>
+              <CapitaleInvestito capitale={capitaleInvestitoTotale} ricompense={ricompenseTotale} />
+            </CardMetrica>
           </div>
         </Sezione>
       </section>
@@ -316,7 +323,13 @@ export default async function AssetPage({
                         {rendimentoEuro != null ? formatEuroSigned(rendimentoEuro, locale) : '—'}
                       </td>
                       <td style={{ padding: 8 }}>{r.valore != null ? formatEuro(Number(r.valore), locale) : '—'}</td>
-                      <td style={{ padding: 8 }}>{formatEuro(Number(r.capitale_investito), locale)}</td>
+                      <td style={{ padding: 8 }}>
+                        <CapitaleInvestito
+                          capitale={Number(r.capitale_investito)}
+                          ricompense={ricompensePosizione(ricompense, strumentoId, r.contenitore_id)}
+                          compatto
+                        />
+                      </td>
                       <td style={{ padding: 8 }}>{formatEuro(costo, locale)}</td>
                       <td style={{ padding: 8 }}>{r.prezzo_attuale != null ? formatEuro(Number(r.prezzo_attuale), locale) : '—'}</td>
                       <td style={{ padding: 8 }}>{formatEuro(Number(r.prezzo_medio_unitario), locale)}</td>

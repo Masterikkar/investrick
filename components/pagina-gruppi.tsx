@@ -14,6 +14,7 @@ import { AnalisiRendimento, type ContributoCategoria } from '@/components/analis
 import { AnalisiComposizione, type ScostamentoCategoria } from '@/components/analisi-composizione'
 import { CATEGORIE } from '@/lib/categorie'
 import type { DatiGruppi } from '@/lib/gruppi'
+import { CapitaleInvestito } from '@/components/capitale-investito'
 
 // Pagina elenco di un tipo di gruppo (PAC, Polizze, Personalizzati): grafico
 // del rendimento, card riassuntive, analisi di rendimento e composizione, una
@@ -122,6 +123,7 @@ export async function PaginaGruppi({
         valore: p.valore,
         capitaleInvestito: p.capitaleInvestito,
         capitaleInvestitoNetto: p.capitaleInvestitoNetto,
+        ricompense: p.ricompense,
         nav: p.prezzoAttuale,
         prezzoMedioUnitario: p.prezzoMedioUnitario,
         peso: pesoSu(p.valore, mostraTotaleAggregato ? valoreTotale : valoreGruppo.get(p.contenitoreId) ?? 0),
@@ -135,6 +137,7 @@ export async function PaginaGruppi({
   const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
   const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
   const capitaleInvestitoNettoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestitoNetto as number), 0)
+  const ricompenseTotale = righe.reduce((acc, r) => acc + (r.ricompense as number), 0)
   // Performance sui lotti, fondo per fondo (analisi del rendimento, tabella).
   const plusMinusLotti = valoreTotalePosizioni - capitaleInvestitoTotale
 
@@ -324,7 +327,7 @@ export async function PaginaGruppi({
                 </CardMetrica>
 
                 <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
-                  {formatEuro(capitaleInvestitoNettoTotale, locale)}
+                  <CapitaleInvestito capitale={capitaleInvestitoNettoTotale} ricompense={ricompenseTotale} />
                 </CardMetrica>
 
                 <CardMetrica label={t('labelCostoTotale')} href="/costi" linkLabel={t('linkCosti')}>

@@ -1,6 +1,7 @@
 import type { createClient } from '@/lib/supabase/server'
 import { tutteLeRighe } from '@/lib/supabase-tutte-le-righe'
 import { saldoRiportatoAllaData, serieSaldiPerConto } from '@/lib/saldi-riportati'
+import { caricaRicompenseResidue, ricompensePosizione, ricompenseStrumento } from '@/lib/ricompense'
 
 // Dati della pagina elenco di un tipo di gruppo (PAC, Polizze, Personalizzati),
 // già nella forma che components/pagina-gruppi.tsx impagina. Cambia solo da
@@ -32,6 +33,8 @@ export type PosizioneGruppo = {
   valore: number
   capitaleInvestito: number
   capitaleInvestitoNetto: number
+  // Parte di capitaleInvestitoNetto nata da ricompense (lib/ricompense.ts).
+  ricompense: number
   rendimentoPct: number | null
   prezzoAttuale: number | null
   prezzoMedioUnitario: number | null
@@ -92,7 +95,7 @@ export async function caricaGruppiReali(
   const ids = (contenitori ?? []).map((c) => c.id)
   if (ids.length === 0) return { gruppi: [], posizioni: [], strumenti: [], storico: [] }
 
-  const [{ data: valori }, { data: storicoRaw }, { data: riepilogo }, { data: costi }, { data: premi }] = await Promise.all([
+  const [{ data: valori }, { data: storicoRaw }, { data: riepilogo }, { data: costi }, { data: premi }, ricompense] = await Promise.all([
     supabase.from('v_valore_per_contenitore').select('contenitore_id, valore_totale').in('contenitore_id', ids),
     // Una riga per gruppo e per giorno: letta a blocchi per non fermarsi a 1000
     // righe, con un ordinamento univoco (data, contenitore).
@@ -115,6 +118,7 @@ export async function caricaGruppiReali(
     tipo === 'Polizza'
       ? supabase.from('v_premi_residui_polizza').select('contenitore_id, premi_residui').in('contenitore_id', ids)
       : Promise.resolve({ data: null }),
+    caricaRicompenseResidue(supabase),
   ])
   const premiResidui = new Map(
     (premi ?? []).filter((p) => p.contenitore_id !== null).map((p) => [p.contenitore_id as string, Number(p.premi_residui ?? 0)])
@@ -147,6 +151,7 @@ export async function caricaGruppiReali(
         valore: p.valore ?? 0,
         capitaleInvestito: p.capitale_investito ?? 0,
         capitaleInvestitoNetto: (p.quantita_posseduta ?? 0) * (p.prezzo_medio_unitario ?? 0),
+        ricompense: ricompensePosizione(ricompense, p.strumento_id, p.contenitore_id),
         rendimentoPct: p.rendimento_pct ?? 0,
         prezzoAttuale: p.prezzo_attuale ?? 0,
         prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
@@ -181,6 +186,7 @@ export type StrumentoAggregato = {
   valore: number
   capitaleInvestito: number
   capitaleInvestitoNetto: number
+  ricompense: number
   quantita: number
   prezzoAttuale: number | null
   costo: number
@@ -193,7 +199,7 @@ export async function aggregaStrumenti(
   const idsMercato = strumenti.filter((s) => s.categoria !== 'Liquidita').map((s) => s.id)
   const idsLiquidita = strumenti.filter((s) => s.categoria === 'Liquidita').map((s) => s.id)
 
-  const [{ data: riepilogo }, { data: costiMercato }, { data: saldi }, { data: costiLiquidita }] = await Promise.all([
+  const [{ data: riepilogo }, { data: costiMercato }, { data: saldi }, { data: costiLiquidita }, ricompense] = await Promise.all([
     idsMercato.length
       ? supabase
           .from('v_riepilogo_posizione')
@@ -210,19 +216,20 @@ export async function aggregaStrumenti(
     idsLiquidita.length
       ? supabase.from('v_costo_liquidita').select('strumento_id, costo_totale').in('strumento_id', idsLiquidita)
       : Promise.resolve({ data: null }),
+    caricaRicompenseResidue(supabase),
   ])
 
   const aggregati = new Map<string, StrumentoAggregato>()
   const voce = (id: string) => {
     let a = aggregati.get(id)
     if (!a) {
-      a = { valore: 0, capitaleInvestito: 0, capitaleInvestitoNetto: 0, quantita: 0, prezzoAttuale: null, costo: 0 }
+      a = { valore: 0, capitaleInvestito: 0, capitaleInvestitoNetto: 0, ricompense: 0, quantita: 0, prezzoAttuale: null, costo: 0 }
       aggregati.set(id, a)
     }
     return a
   }
 
-  for (const s of strumenti) voce(s.id)
+  for (const s of strumenti) voce(s.id).ricompense = ricompenseStrumento(ricompense, s.id)
   for (const r of riepilogo ?? []) {
     if (!r.strumento_id) continue
     const a = voce(r.strumento_id)
@@ -306,6 +313,7 @@ export async function caricaGruppiPersonalizzati(supabase: ClientSupabase): Prom
       valore,
       capitaleInvestito: capitale,
       capitaleInvestitoNetto: a?.capitaleInvestitoNetto ?? 0,
+      ricompense: a?.ricompense ?? 0,
       rendimentoPct: capitale > 0 ? Math.round(((valore - capitale) / capitale) * 10000) / 100 : conto ? 0 : null,
       prezzoAttuale: conto ? null : a?.prezzoAttuale ?? null,
       prezzoMedioUnitario: conto ? null : a && a.quantita > 0 ? a.capitaleInvestitoNetto / a.quantita : null,

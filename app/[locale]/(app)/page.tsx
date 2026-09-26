@@ -10,6 +10,8 @@ import { CardRendimento } from '@/components/card-rendimento'
 import { Sezione } from '@/components/sezione'
 import { ValoriChiusura } from '@/components/valori-chiusura'
 import { CATEGORIE } from '@/lib/categorie'
+import { caricaRicompenseResidue, ricompensePosizione } from '@/lib/ricompense'
+import { CapitaleInvestito } from '@/components/capitale-investito'
 
 type Posizione = {
   strumento_id: string
@@ -55,10 +57,10 @@ export default async function DashboardPage() {
     { data: costoLiquiditaRaw },
     { data: storicoRaw },
     { data: realizzatoAnnoRaw },
-    { data: contenitori },
     { data: scostamenti },
     { data: impostazioni },
     { data: nonRealizzatoRaw },
+    ricompense,
   ] = await Promise.all([
     supabase.from('v_valore_totale_portafoglio').select('valore_totale').single(),
     supabase
@@ -78,13 +80,13 @@ export default async function DashboardPage() {
         .returns<StoricoTotale[]>()
     ),
     supabase.from('v_realizzato_per_anno').select('anno, realizzato_netto_totale').eq('anno', annoCorrente).maybeSingle().returns<RealizzatoAnno>(),
-    supabase.from('v_valore_per_contenitore').select('contenitore_id, tipo, nome, valore_totale').order('tipo'),
     supabase.from('v_scostamento_target').select('*'),
     supabase.from('impostazioni_utente').select('soglia_ribilanciamento_pp').maybeSingle(),
     supabase
       .from('v_non_realizzato_dettaglio')
       .select('strumento_id, contenitore_id, categoria, contenitore_tipo, valore, capitale_investito, base_fiscale')
       .returns<NonRealizzatoDettaglio[]>(),
+    caricaRicompenseResidue(supabase),
   ])
 
   const posizioni = posizioniRaw ?? []
@@ -111,6 +113,10 @@ export default async function DashboardPage() {
 
   const capitaleInvestitoNetto = posizioni.reduce(
     (s, p) => s + (p.quantita_posseduta ?? 0) * (p.prezzo_medio_unitario ?? 0),
+    0
+  )
+  const ricompenseCapitale = posizioni.reduce(
+    (s, p) => s + ricompensePosizione(ricompense, p.strumento_id, p.contenitore_id),
     0
   )
 
@@ -225,7 +231,7 @@ export default async function DashboardPage() {
             </CardMetrica>
 
             <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/gestione/transazioni" linkLabel={t('linkTransazioni')}>
-              {formatEuro(capitaleInvestitoNetto, locale)}
+              <CapitaleInvestito capitale={capitaleInvestitoNetto} ricompense={ricompenseCapitale} />
             </CardMetrica>
           </div>
         </Sezione>

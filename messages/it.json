@@ -24,7 +24,7 @@
     "linkRendimenti": "Vedi dettaglio rendimenti →",
     "labelPlusMinusNonRealizzata": "Plus/minusvalenza non realizzata",
     "linkFiscalita": "Vedi dettaglio fiscalità →",
-    "labelCapitaleInvestitoNetto": "Capitale investito netto",
+    "labelCapitaleInvestitoNetto": "Capitale investito",
     "linkTransazioni": "Vedi transazioni →",
     "labelCostoTotale": "Costo totale",
     "linkCosti": "Vedi dettaglio costi →",
@@ -99,7 +99,7 @@
     "labelPlusMinusRealizzata": "Plus/minus {anno} realizzata netta",
     "labelCostoTotale": "Costo totale",
     "linkCosti": "→ Costi",
-    "labelCapitaleInvestitoNetto": "Capitale investito netto",
+    "labelCapitaleInvestitoNetto": "Capitale investito",
     "linkTransazioni": "→ Transazioni",
     "titoloAllocazioneAsset": "Allocazione asset",
     "titoloAllocazioneContenitori": "Allocazione gruppi",
@@ -126,7 +126,7 @@
     "linkRendimenti": "→ Rendimenti",
     "labelPlusMinusNonRealizzata": "Plus/minusvalenza non realizzata",
     "linkFiscalita": "→ Fiscalità",
-    "labelCapitaleInvestitoNetto": "Capitale investito netto",
+    "labelCapitaleInvestitoNetto": "Capitale investito",
     "linkTransazioni": "→ Transazioni",
     "labelCostoTotale": "Costo totale",
     "linkCosti": "→ Costi",
@@ -407,6 +407,10 @@
     "notaBloccoPac": "PAC, nelle proporzioni del suo target",
     "notaAcquistoLibero": "acquisto libero, diretto o in Polizza",
     "alertNessunAcquisto": "Nessun acquisto da fare."
+  },
+  "CapitaleInvestito": {
+    "daRicompense": "di cui da ricompense: {valore}",
+    "capitaleProprio": "Capitale proprio investito: {valore}"
   },
   "PaginaAsset": {
     "notaTassatoAlRiscatto": "Tassato al riscatto del contratto",

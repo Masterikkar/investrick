@@ -20,7 +20,7 @@ App web personale di gestione portafoglio multi-asset (regime amministrato itali
 
 ## Database: regole tecniche
 
-- Il database remoto è l'unica fonte di verità dello schema: non esistono migrazioni nel repo. Gli SQL applicati vanno salvati in `scratchpad/` per riferimento.
+- Il database remoto è l'unica fonte di verità dello schema: non esistono migrazioni nel repo. Ogni SQL applicato al DB va salvato nel repo in `sql/applicati/AAAA-MM-GG-descrizione.sql` e committato insieme al codice. Non usare cartelle temporanee: vengono perse a fine sessione.
 - Mai `CREATE TEMPORARY TABLE` nelle funzioni: fallisce in silenzio nelle transazioni read-only di PostgREST. Usa array in memoria.
 - Ogni `CREATE VIEW` / `CREATE OR REPLACE VIEW` deve avere `security_invoker = true`.
 - `CREATE OR REPLACE VIEW` non può togliere colonne: serve `DROP VIEW` + `CREATE VIEW`. Prima di un `DROP`, rileggi le dipendenze da `pg_depend` e ricrea tutte le viste dipendenti, non a memoria.
