@@ -48,7 +48,11 @@ export function Modale({
         background: 'rgba(10, 13, 22, 0.75)',
         zIndex: 100,
         display: 'flex',
-        alignItems: 'flex-start',
+        // "safe center": centrato quando il contenuto ci sta nell'altezza
+        // della finestra, ancorato in alto (come prima) quando non ci sta —
+        // un center puro taglierebbe la parte alta di un popup più lungo del
+        // pattern content-scrollbar (es. il form di modifica asset).
+        alignItems: 'safe center',
         justifyContent: 'center',
         padding: '48px 24px',
         overflowY: 'auto',
