@@ -10,13 +10,16 @@
 // fuori dal browser, è la scelta più affidabile finché quella dipendenza non
 // si potrà aggiungere e verificare con calma.
 //
-// Copre solo ciò che serve per esportare il risultato di una simulazione:
-// testo con a capo automatico, un titolo/sottotitolo, tabelle semplici con
-// intestazione ed eventuale colonna numerica allineata a destra, più pagine
-// se il contenuto eccede la prima. Font Helvetica/Helvetica-Bold standard
-// (nessun embedding necessario, sempre disponibili in qualunque lettore
-// PDF), con codifica WinAnsi: copre l'italiano (à, è, é, ì, ò, ù e
-// maiuscole), l'euro e i trattini/ellissi che l'app usa nei testi.
+// Pensato per un vero "report da consegnare": banda di intestazione colorata
+// (nome simulazione + sottotitolo + eventuale badge esito), sottotitoli di
+// sezione con accento colorato, caselle di avviso colorate (stesso
+// significato semantico di --warning/--success/--danger dell'app), tabelle
+// con intestazione a bandiera piena e colonne a larghezza proporzionale al
+// contenuto (una tabella con colonne uguali per forza mostrava intestazioni
+// lunghe sovrapposte a quelle vicine), celle colorate per plus/minus, più
+// pagine con piè di pagina (nome simulazione + numero pagina) se il
+// contenuto eccede la prima. Font Helvetica/Helvetica-Bold standard (nessun
+// embedding necessario), codifica WinAnsi (italiano, euro, trattini/ellissi).
 
 // --- Codifica testo → WinAnsi (Windows-1252) ---
 //
@@ -77,6 +80,62 @@ function escapePdfString(bytes: Uint8Array): Uint8Array {
     else out.push(b)
   }
   return Uint8Array.from(out)
+}
+
+// --- Colori: stessa palette dei CSS custom properties dell'app
+// (app/[locale]/globals.css), qui come terne RGB frazionarie 0–1 per gli
+// operatori PDF `rg`/`RG`. Il report è pensato per essere stampato: sfondo
+// pagina bianco, il colore primario dell'app resta l'accento forte
+// (intestazione, tabelle), i colori semantici (successo/avviso/pericolo)
+// hanno lo stesso significato che hanno a schermo.
+type Rgb = readonly [number, number, number]
+
+function hex(valore: string): Rgb {
+  const n = parseInt(valore.replace('#', ''), 16)
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]
+}
+
+export const PALETTE = {
+  primario: hex('#4C5FE0'),
+  primarioVivido: hex('#7C8CFF'),
+  primarioChiaro: hex('#E4E7FB'), // per la riga sotto l'intestazione dei sottotitoli
+  successo: hex('#1F9D5F'), // leggermente più scuro di --success: su carta bianca resta leggibile
+  successoChiaro: hex('#E3F8ED'),
+  pericolo: hex('#D6383D'),
+  pericoloChiaro: hex('#FBE7E8'),
+  avviso: hex('#B87816'), // --warning scurito: su sfondo bianco l'originale è poco leggibile
+  avvisoChiaro: hex('#FBF0DD'),
+  testo: hex('#1C2033'),
+  testoSecondario: hex('#5B6178'),
+  testoMuto: hex('#9198AD'),
+  bianco: hex('#FFFFFF'),
+  riga: hex('#DEE1EC'),
+  sottotitoloSuBanda: hex('#C7CEFA'),
+} as const
+
+export type Tono = 'normale' | 'secondario' | 'successo' | 'pericolo' | 'avviso'
+
+function coloreTono(tono: Tono | undefined): Rgb {
+  switch (tono) {
+    case 'secondario':
+      return PALETTE.testoSecondario
+    case 'successo':
+      return PALETTE.successo
+    case 'pericolo':
+      return PALETTE.pericolo
+    case 'avviso':
+      return PALETTE.avviso
+    default:
+      return PALETTE.testo
+  }
+}
+
+function coloreToneChiaro(tono: 'successo' | 'pericolo' | 'avviso'): Rgb {
+  return tono === 'successo' ? PALETTE.successoChiaro : tono === 'pericolo' ? PALETTE.pericoloChiaro : PALETTE.avvisoChiaro
+}
+
+function coloreToneSolido(tono: 'successo' | 'pericolo' | 'avviso'): Rgb {
+  return tono === 'successo' ? PALETTE.successo : tono === 'pericolo' ? PALETTE.pericolo : PALETTE.avviso
 }
 
 // --- Larghezze dei glifi Helvetica / Helvetica-Bold (unità per 1000, come
@@ -181,20 +240,40 @@ function spezzaRighe(testo: string, larghezzaMassima: number, dimensione: number
 
 // --- Costruzione del documento ---
 
-type ColonnaTabella = { intestazione: string; allineaDestra?: boolean; larghezza?: number }
+export type ColonnaTabella = { intestazione: string; allineaDestra?: boolean; larghezza?: number }
+// Una cella può essere semplice testo, oppure un testo con un tono
+// (successo/pericolo) per i valori che a schermo sono colorati — es. una
+// plusvalenza/minusvalenza.
+export type CellaTabella = string | { testo: string; tono?: 'successo' | 'pericolo' }
 
-type ComandoTesto = { tipo: 'testo'; x: number; y: number; testo: string; dimensione: number; peso: PesoFont; grigio?: number }
-type ComandoLinea = { tipo: 'linea'; x1: number; y1: number; x2: number; y2: number; grigio: number }
-type Comando = ComandoTesto | ComandoLinea
+function testoCella(c: CellaTabella): string {
+  return typeof c === 'string' ? c : c.testo
+}
+function coloreCella(c: CellaTabella): Rgb {
+  if (typeof c === 'string' || !c.tono) return PALETTE.testo
+  return coloreTono(c.tono)
+}
+
+type ComandoTesto = { tipo: 'testo'; x: number; y: number; testo: string; dimensione: number; peso: PesoFont; colore: Rgb }
+type ComandoLinea = { tipo: 'linea'; x1: number; y1: number; x2: number; y2: number; colore: Rgb; spessore: number }
+type ComandoRettangolo = { tipo: 'rettangolo'; x: number; y: number; larghezza: number; altezza: number; colore: Rgb }
+type Comando = ComandoTesto | ComandoLinea | ComandoRettangolo
 
 const LARGHEZZA_PAGINA = 595.28 // A4 in punti
 const ALTEZZA_PAGINA = 841.89
 const MARGINE = 42
+// Spazio riservato in basso per il piè di pagina (linea + "Nome — Pagina X
+// di Y"): garantisciSpazio non lascia mai scrivere sopra questa soglia.
+const ZONA_FOOTER = 46
 
 export class DocumentoPdf {
   private pagine: Comando[][] = [[]]
   private y = ALTEZZA_PAGINA - MARGINE
   private readonly larghezzaUtile = LARGHEZZA_PAGINA - MARGINE * 2
+  // Nome mostrato nel piè di pagina di ogni pagina: impostato da
+  // intestazioneReport, così il documento resta identificabile anche
+  // separato dalla prima pagina.
+  private titoloFooter = ''
 
   private paginaCorrente(): Comando[] {
     return this.pagine[this.pagine.length - 1]
@@ -205,124 +284,285 @@ export class DocumentoPdf {
     this.y = ALTEZZA_PAGINA - MARGINE
   }
 
-  // Garantisce almeno `altezza` punti liberi prima del margine inferiore,
-  // aprendo una nuova pagina se necessario — così una tabella o un paragrafo
-  // non vengono mai tagliati a metà tra il testo e il bordo del foglio.
+  // Garantisce almeno `altezza` punti liberi prima della zona del piè di
+  // pagina, aprendo una nuova pagina se necessario — così una tabella o un
+  // paragrafo non vengono mai tagliati a metà, né finiscono sopra al footer.
   private garantisciSpazio(altezza: number) {
-    if (this.y - altezza < MARGINE) this.nuovaPagina()
+    if (this.y - altezza < ZONA_FOOTER) this.nuovaPagina()
   }
 
-  private testo(x: number, testo: string, dimensione: number, peso: PesoFont, grigio = 0) {
-    this.paginaCorrente().push({ tipo: 'testo', x, y: this.y, testo, dimensione, peso, grigio })
+  private testo(x: number, y: number, testo: string, dimensione: number, peso: PesoFont, colore: Rgb = PALETTE.testo) {
+    this.paginaCorrente().push({ tipo: 'testo', x, y, testo, dimensione, peso, colore })
   }
 
-  private linea(x1: number, x2: number, grigio: number) {
-    this.paginaCorrente().push({ tipo: 'linea', x1, y1: this.y, x2, y2: this.y, grigio })
+  private linea(x1: number, x2: number, y: number, colore: Rgb = PALETTE.riga, spessore = 0.75) {
+    this.paginaCorrente().push({ tipo: 'linea', x1, y1: y, x2, y2: y, colore, spessore })
+  }
+
+  // x/yAlto = angolo superiore sinistro nel nostro sistema di riferimento
+  // (this.y scende scorrendo la pagina) — internamente si converte nella
+  // coordinata PDF (angolo inferiore sinistro + altezza).
+  private rettangolo(x: number, yAlto: number, larghezza: number, altezza: number, colore: Rgb) {
+    this.paginaCorrente().push({ tipo: 'rettangolo', x, y: yAlto - altezza, larghezza, altezza, colore })
   }
 
   spazio(altezza: number) {
     this.y -= altezza
   }
 
-  titolo(testo: string) {
-    this.garantisciSpazio(26)
-    this.testo(MARGINE, testo, 18, 'grassetto')
-    this.y -= 26
+  // Banda di intestazione a piena pagina (bordo a bordo): nome della
+  // simulazione, sottotitolo (tipo + data) e un badge opzionale con l'esito
+  // (Raggiunto/Parziale/Non raggiunto/Insufficiente) — stessa informazione e
+  // stessi colori della mini-card "Ultime simulazioni" a schermo. Va
+  // chiamata una sola volta, come primo elemento del documento.
+  intestazioneReport(titolo: string, sottotitolo: string, distintivo?: { testo: string; tono: 'successo' | 'avviso' | 'pericolo' }) {
+    this.titoloFooter = titolo || 'Investrick'
+
+    const dimTitolo = 19
+    const dimSottotitolo = 10.5
+    const padSuperiore = 26
+    const padInferiore = 22
+    const eyebrowH = 20
+
+    const larghezzaBadge = distintivo ? larghezzaTesto(distintivo.testo, 9, 'grassetto') + 20 : 0
+    const larghezzaTitoloDisponibile = this.larghezzaUtile - (distintivo ? larghezzaBadge + 16 : 0)
+    const righeTitolo = spezzaRighe(titolo, Math.max(larghezzaTitoloDisponibile, 120), dimTitolo, 'grassetto').slice(0, 2)
+    const altezzaRigaTitolo = dimTitolo * 1.28
+
+    const altezzaBanda =
+      padSuperiore + eyebrowH + righeTitolo.length * altezzaRigaTitolo + 6 + dimSottotitolo * 1.3 + padInferiore
+
+    this.rettangolo(0, ALTEZZA_PAGINA, LARGHEZZA_PAGINA, altezzaBanda, PALETTE.primario)
+
+    // Eyebrow — piccola etichetta sopra il titolo, come su un vero report.
+    this.testo(MARGINE, ALTEZZA_PAGINA - padSuperiore, 'INVESTRICK · REPORT DI RIBILANCIAMENTO', 8.5, 'grassetto', PALETTE.primarioVivido)
+
+    let yTitolo = ALTEZZA_PAGINA - padSuperiore - eyebrowH
+    for (const riga of righeTitolo) {
+      this.testo(MARGINE, yTitolo, riga, dimTitolo, 'grassetto', PALETTE.bianco)
+      yTitolo -= altezzaRigaTitolo
+    }
+
+    this.testo(MARGINE, yTitolo - 4, sottotitolo, dimSottotitolo, 'normale', PALETTE.sottotitoloSuBanda)
+
+    if (distintivo) {
+      const altezzaPillola = 22
+      const yPillola = ALTEZZA_PAGINA - padSuperiore - 4
+      const xPillola = LARGHEZZA_PAGINA - MARGINE - larghezzaBadge
+      this.rettangolo(xPillola, yPillola, larghezzaBadge, altezzaPillola, coloreToneSolido(distintivo.tono))
+      this.testo(xPillola + 10, yPillola - altezzaPillola + 7.5, distintivo.testo, 9, 'grassetto', PALETTE.bianco)
+    }
+
+    this.y = ALTEZZA_PAGINA - altezzaBanda - 26
   }
 
+  // Titolo di sezione: testo in blu primario con un piccolo accento colorato
+  // sotto, al posto del semplice grassetto nero — separa visivamente le
+  // sezioni di un report lungo (vendite, riscatti, tabella soluzione, ...).
   sottotitolo(testo: string) {
-    this.garantisciSpazio(20)
-    this.testo(MARGINE, testo, 13, 'grassetto')
-    this.y -= 20
+    this.garantisciSpazio(30)
+    this.testo(MARGINE, this.y, testo, 13, 'grassetto', PALETTE.primario)
+    this.y -= 9
+    this.rettangolo(MARGINE, this.y + 4, 26, 2.6, PALETTE.primario)
+    this.y -= 14
   }
 
   // Un paragrafo può andare a capo su più righe: ognuna prenota il proprio
-  // spazio verticale (così una riga non finisce mai a cavallo di due pagine).
-  paragrafo(testo: string, opzioni?: { grassetto?: boolean; dimensione?: number; grigio?: number }) {
+  // spazio verticale (così una riga non finisce mai a cavallo di due
+  // pagine). `tono` colora il testo come farebbe --warning/--success/
+  // --danger a schermo (es. i messaggi di esito della simulazione).
+  paragrafo(testo: string, opzioni?: { grassetto?: boolean; dimensione?: number; tono?: Tono }) {
     const dimensione = opzioni?.dimensione ?? 10.5
     const peso: PesoFont = opzioni?.grassetto ? 'grassetto' : 'normale'
+    const colore = coloreTono(opzioni?.tono)
     const righe = spezzaRighe(testo, this.larghezzaUtile, dimensione, peso)
     const altezzaRiga = dimensione * 1.35
     for (const riga of righe) {
       this.garantisciSpazio(altezzaRiga)
-      this.testo(MARGINE, riga, dimensione, peso, opzioni?.grigio)
+      this.testo(MARGINE, this.y, riga, dimensione, peso, colore)
       this.y -= altezzaRiga
     }
+  }
+
+  // Casella di avviso: stessa idea della fascia gialla/rossa/verde usata nel
+  // wizard e nella pagina risultato (sfondo tenue, testo in grassetto nel
+  // colore del tono, più una barra piena sul bordo sinistro).
+  casella(testo: string, tono: 'successo' | 'pericolo' | 'avviso') {
+    const dimensione = 10.5
+    const padOrizzontale = 14
+    const padVerticale = 10
+    const barraLarghezza = 4
+    const xTesto = MARGINE + barraLarghezza + padOrizzontale
+    const larghezzaTestoDisponibile = this.larghezzaUtile - barraLarghezza - padOrizzontale * 2
+    const righe = spezzaRighe(testo, larghezzaTestoDisponibile, dimensione, 'grassetto')
+    const altezzaRiga = dimensione * 1.35
+    const altezzaBox = padVerticale * 2 + righe.length * altezzaRiga
+
+    this.garantisciSpazio(altezzaBox + 8)
+    const boxTop = this.y
+
+    this.rettangolo(MARGINE, boxTop, this.larghezzaUtile, altezzaBox, coloreToneChiaro(tono))
+    this.rettangolo(MARGINE, boxTop, barraLarghezza, altezzaBox, coloreToneSolido(tono))
+
+    let cursore = boxTop - padVerticale - dimensione * 0.85
+    for (const riga of righe) {
+      this.testo(xTesto, cursore, riga, dimensione, 'grassetto', coloreToneSolido(tono))
+      cursore -= altezzaRiga
+    }
+
+    this.y = boxTop - altezzaBox - 10
   }
 
   lineaSeparatrice() {
     this.garantisciSpazio(10)
     this.y -= 4
-    this.linea(MARGINE, LARGHEZZA_PAGINA - MARGINE, 0.75)
+    this.linea(MARGINE, LARGHEZZA_PAGINA - MARGINE, this.y, PALETTE.riga)
     this.y -= 6
   }
 
-  // Tabella semplice: intestazione in grassetto con riga sotto, poi le righe
-  // dati separate da un filo sottile — stesso principio "flat" (niente
-  // sfondo a zebra, niente arrotondamenti) usato nel resto dell'app.
-  tabella(colonne: ColonnaTabella[], righe: string[][]) {
+  // Tabella con intestazione a bandiera piena (sfondo blu primario, testo
+  // bianco) e colonne a larghezza proporzionale al contenuto, non tutte
+  // uguali. Due categorie fra le colonne automatiche: quelle allineate a
+  // destra (di norma numeri/valute/percentuali) prendono per intero la
+  // larghezza che serve al loro valore più lungo e non si comprimono mai —
+  // un importo che va a capo a metà cifra è illeggibile — mentre la colonna
+  // di testo libero (di norma la prima: strumento/asset/polizza) si prende
+  // quel che resta e può invece spezzare il nome su più righe.
+  tabella(colonne: ColonnaTabella[], righe: CellaTabella[][]) {
     const dimensione = 9.5
+    const dimensioneHeader = 8.5
     const altezzaRiga = 14
-    const padding = 4
+    const altezzaRigaHeader = 12
+    const padding = 6
+
     const larghezzeEsplicite = colonne.map((c) => c.larghezza)
     const larghezzaFissata = larghezzeEsplicite.reduce((acc: number, l) => acc + (l ?? 0), 0)
-    const colonneAutomatiche = colonne.filter((_, i) => larghezzeEsplicite[i] === undefined).length
-    const larghezzaAutomatica = colonneAutomatiche > 0 ? (this.larghezzaUtile - larghezzaFissata) / colonneAutomatiche : 0
-    const larghezze = colonne.map((c) => c.larghezza ?? larghezzaAutomatica)
+
+    // Larghezza "desiderata" di ogni colonna automatica: la più lunga fra
+    // intestazione e celle.
+    const desiderata = colonne.map((c, i) => {
+      if (larghezzeEsplicite[i] !== undefined) return 0
+      const larghezzaIntestazione = larghezzaTesto(c.intestazione.toUpperCase(), dimensioneHeader, 'grassetto')
+      const larghezzaMaxCella = righe.reduce((max, r) => Math.max(max, larghezzaTesto(testoCella(r[i] ?? ''), dimensione, 'normale')), 0)
+      // +0.5pt di margine oltre al padding: senza questo, quando
+      // l'intestazione è il termine dominante del max() il giro
+      // larghezza→(-padding)→larghezza nel wrapping dell'header può perdere
+      // l'ultimo bit per arrotondamento in virgola mobile e far scattare un
+      // a-capo indesiderato proprio al confine esatto (es. "PESO" / "FINALE"
+      // anche se "PESO FINALE" ci starebbe su una riga sola).
+      return Math.max(larghezzaIntestazione, larghezzaMaxCella) + padding * 2 + 0.5
+    })
+
+    const indiciStretti = colonne.map((_, i) => i).filter((i) => larghezzeEsplicite[i] === undefined && colonne[i].allineaDestra)
+    const indiciLiberi = colonne.map((_, i) => i).filter((i) => larghezzeEsplicite[i] === undefined && !colonne[i].allineaDestra)
+    const larghezzaStretti = indiciStretti.reduce((acc, i) => acc + desiderata[i], 0)
+    const larghezzaResiduaLiberi = Math.max(this.larghezzaUtile - larghezzaFissata - larghezzaStretti, 0)
+    const desiderataLiberi = indiciLiberi.reduce((acc, i) => acc + desiderata[i], 0)
+
+    const larghezze = colonne.map((c, i) => {
+      if (larghezzeEsplicite[i] !== undefined) return larghezzeEsplicite[i] as number
+      if (c.allineaDestra) return desiderata[i]
+      return desiderataLiberi > 0
+        ? (desiderata[i] / desiderataLiberi) * larghezzaResiduaLiberi
+        : larghezzaResiduaLiberi / (indiciLiberi.length || 1)
+    })
 
     const posizioniX: number[] = []
-    let cursore = MARGINE
+    let cursoreX = MARGINE
     for (const l of larghezze) {
-      posizioniX.push(cursore)
-      cursore += l
+      posizioniX.push(cursoreX)
+      cursoreX += l
     }
 
-    this.garantisciSpazio(altezzaRiga * 2)
-    // Intestazione
+    // Intestazione: sfondo pieno colore primario, testo bianco maiuscolo,
+    // può andare a capo su più righe come le celle dati.
+    const righeHeaderPerColonna = colonne.map((c, i) => spezzaRighe(c.intestazione.toUpperCase(), larghezze[i] - padding * 2, dimensioneHeader, 'grassetto'))
+    const numeroRigheHeader = Math.max(1, ...righeHeaderPerColonna.map((r) => r.length))
+    const padVerticaleHeader = 6
+    const altezzaHeader = numeroRigheHeader * altezzaRigaHeader + padVerticaleHeader * 2
+
+    this.garantisciSpazio(altezzaHeader + altezzaRiga * 2)
+    const headerTop = this.y
+    this.rettangolo(MARGINE, headerTop, this.larghezzaUtile, altezzaHeader, PALETTE.primario)
     colonne.forEach((c, i) => {
-      const x = c.allineaDestra ? posizioniX[i] + larghezze[i] - padding - larghezzaTesto(c.intestazione, dimensione, 'grassetto') : posizioniX[i] + padding
-      this.testo(x, c.intestazione, dimensione, 'grassetto')
+      let cursoreY = headerTop - padVerticaleHeader - dimensioneHeader * 0.85
+      for (const riga of righeHeaderPerColonna[i]) {
+        const x = c.allineaDestra
+          ? posizioniX[i] + larghezze[i] - padding - larghezzaTesto(riga, dimensioneHeader, 'grassetto')
+          : posizioniX[i] + padding
+        this.testo(x, cursoreY, riga, dimensioneHeader, 'grassetto', PALETTE.bianco)
+        cursoreY -= altezzaRigaHeader
+      }
     })
-    this.y -= 4
-    this.linea(MARGINE, LARGHEZZA_PAGINA - MARGINE, 0.75)
-    this.y -= altezzaRiga - 4
+    // +4pt oltre al bordo della fascia colorata: la y di un testo è la sua
+    // baseline, quindi senza questo margine la parte alta delle cifre della
+    // prima riga (l'ascendente) risalirebbe dentro il rettangolo blu
+    // dell'intestazione — impercettibile su testo scuro, ben visibile sulle
+    // celle rosse/verdi per il contrasto col blu.
+    this.y = headerTop - altezzaHeader - 4
 
     for (const riga of righe) {
       // Ogni cella può andare a capo: l'altezza della riga di tabella è la
       // più alta fra tutte le sue celle.
-      const righeCella = riga.map((valore, i) => spezzaRighe(valore, larghezze[i] - padding * 2, dimensione, 'normale'))
+      const righeCella = riga.map((valore, i) => spezzaRighe(testoCella(valore), larghezze[i] - padding * 2, dimensione, 'normale'))
       const numeroRigheMax = Math.max(1, ...righeCella.map((r) => r.length))
       this.garantisciSpazio(numeroRigheMax * altezzaRiga + 4)
 
+      // y calcolata dal livello, non da this.y decrementato dentro il ciclo:
+      // altrimenti la seconda colonna di uno stesso livello finirebbe più in
+      // basso della prima (this.y sarebbe già stato decrementato da lei).
+      const rigaTop = this.y
       for (let livello = 0; livello < numeroRigheMax; livello++) {
-        riga.forEach((_, i) => {
+        const y = rigaTop - livello * altezzaRiga
+        riga.forEach((valore, i) => {
           const testoLivello = righeCella[i][livello]
           if (testoLivello === undefined) return
           const colonna = colonne[i]
           const x = colonna.allineaDestra
             ? posizioniX[i] + larghezze[i] - padding - larghezzaTesto(testoLivello, dimensione, 'normale')
             : posizioniX[i] + padding
-          this.testo(x, testoLivello, dimensione, 'normale')
+          this.testo(x, y, testoLivello, dimensione, 'normale', coloreCella(valore))
         })
-        this.y -= altezzaRiga
       }
-      // this.y è ora subito sotto l'ultima riga di testo della cella: un
-      // piccolo margine, il filo separatore, un altro margine prima della
-      // riga successiva.
+      this.y = rigaTop - numeroRigheMax * altezzaRiga
       this.y -= 2
-      this.linea(MARGINE, LARGHEZZA_PAGINA - MARGINE, 0.9)
-      this.y -= 3
+      this.linea(MARGINE, LARGHEZZA_PAGINA - MARGINE, this.y, PALETTE.riga)
+      this.y -= 5
     }
-    this.y -= 6
+    this.y -= 4
   }
 
   // Serializza in bytes PDF validi: header, oggetti (catalogo, pagine, 2
   // font standard, una coppia pagina+content-stream per pagina), xref e
-  // trailer con gli offset esatti calcolati durante la scrittura.
-  // <ArrayBuffer> esplicito (non il default ArrayBufferLike): new Blob()
-  // richiede un ArrayBufferView<ArrayBuffer>, e risultato qui sotto è sempre
-  // un ArrayBuffer vero (mai SharedArrayBuffer).
+  // trailer con gli offset esatti calcolati durante la scrittura. Il piè di
+  // pagina (linea + nome simulazione + numero pagina) si genera qui, non
+  // durante il layout: solo a questo punto si conosce il numero totale di
+  // pagine.
   bytes(): Uint8Array<ArrayBuffer> {
+    const numeroPagine = this.pagine.length
+    const yLineaFooter = 34
+    const yTestoFooter = 20
+    const dimFooter = 8
+
+    const pagineConFooter: Comando[][] = this.pagine.map((comandi, i) => {
+      const numero = `Pagina ${i + 1} di ${numeroPagine}`
+      const larghezzaNumero = larghezzaTesto(numero, dimFooter, 'normale')
+      const footer: Comando[] = [
+        { tipo: 'linea', x1: MARGINE, y1: yLineaFooter, x2: LARGHEZZA_PAGINA - MARGINE, y2: yLineaFooter, colore: PALETTE.riga, spessore: 0.75 },
+        { tipo: 'testo', x: MARGINE, y: yTestoFooter, testo: this.titoloFooter || 'Investrick', dimensione: dimFooter, peso: 'normale', colore: PALETTE.testoMuto },
+        {
+          tipo: 'testo',
+          x: LARGHEZZA_PAGINA - MARGINE - larghezzaNumero,
+          y: yTestoFooter,
+          testo: numero,
+          dimensione: dimFooter,
+          peso: 'normale',
+          colore: PALETTE.testoMuto,
+        },
+      ]
+      return [...comandi, ...footer]
+    })
+
     const parti: Uint8Array[] = []
     let lunghezza = 0
     const offsets: number[] = [0] // indice 0 non usato (l'oggetto 0 del PDF è sempre libero)
@@ -342,7 +582,6 @@ export class DocumentoPdf {
       scriviAscii('endobj\n')
     }
 
-    const numeroPagine = this.pagine.length
     const primoOggettoPagina = 5 // 1=Catalog 2=Pages 3=F1 4=F2
     const numeroOggettoPagina = (i: number) => primoOggettoPagina + i * 2
     const numeroOggettoContenuto = (i: number) => primoOggettoPagina + i * 2 + 1
@@ -370,7 +609,7 @@ export class DocumentoPdf {
     chiudiOggetto()
 
     // Pagine + content stream
-    this.pagine.forEach((comandi, i) => {
+    pagineConFooter.forEach((comandi, i) => {
       const contenutoParti: Uint8Array[] = []
       let contenutoLunghezza = 0
       const aggiungiContenuto = (b: Uint8Array) => {
@@ -378,15 +617,20 @@ export class DocumentoPdf {
         contenutoLunghezza += b.length
       }
       const aggiungiContenutoAscii = (s: string) => aggiungiContenuto(codificaAscii(s))
+      const rgb = (c: Rgb) => c.map((v) => v.toFixed(3)).join(' ')
 
       for (const comando of comandi) {
         if (comando.tipo === 'linea') {
-          const grigio = comando.grigio
-          aggiungiContenutoAscii(`q ${grigio.toFixed(3)} G 0.75 w ${comando.x1.toFixed(2)} ${comando.y1.toFixed(2)} m ${comando.x2.toFixed(2)} ${comando.y2.toFixed(2)} l S Q\n`)
+          aggiungiContenutoAscii(
+            `q ${rgb(comando.colore)} RG ${comando.spessore.toFixed(2)} w ${comando.x1.toFixed(2)} ${comando.y1.toFixed(2)} m ${comando.x2.toFixed(2)} ${comando.y2.toFixed(2)} l S Q\n`
+          )
+        } else if (comando.tipo === 'rettangolo') {
+          aggiungiContenutoAscii(
+            `q ${rgb(comando.colore)} rg ${comando.x.toFixed(2)} ${comando.y.toFixed(2)} ${comando.larghezza.toFixed(2)} ${comando.altezza.toFixed(2)} re f Q\n`
+          )
         } else {
           const font = comando.peso === 'grassetto' ? '/F2' : '/F1'
-          const grigio = comando.grigio ?? 0
-          aggiungiContenutoAscii(`q ${grigio.toFixed(3)} g BT ${font} ${comando.dimensione} Tf ${comando.x.toFixed(2)} ${comando.y.toFixed(2)} Td (`)
+          aggiungiContenutoAscii(`q ${rgb(comando.colore)} rg BT ${font} ${comando.dimensione} Tf ${comando.x.toFixed(2)} ${comando.y.toFixed(2)} Td (`)
           aggiungiContenuto(escapePdfString(codificaWinAnsi(comando.testo)))
           aggiungiContenutoAscii(') Tj ET Q\n')
         }

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useConferma } from '@/components/conferma'
-import { IconaRibilanciamento, IconaModifica, IconaElimina, STILE_BOTTONE_ICONA } from '@/components/icone'
+import { IconaRibilanciamento, IconaModifica, IconaElimina, IconaSalva, STILE_BOTTONE_ICONA } from '@/components/icone'
 import { NOME_SIMULAZIONE_MAX, pulisciNomeSimulazione } from '@/lib/ribilanciamento-simulazione'
 import { rinominaSimulazione, eliminaSimulazione } from './actions-simulazione'
 
@@ -36,11 +36,15 @@ const stileBottoneNome: React.CSSProperties = {
 export function StoricoSimulazioni({
   righe,
   onSeleziona,
+  onEsportaPdf,
   onRinominato,
   onEliminato,
 }: {
   righe: RigaStoricoVista[]
   onSeleziona: (id: string) => void
+  // Esporta subito in PDF senza aprire l'overlay del risultato — stesso PDF
+  // che si otterrebbe aprendo la simulazione e premendo "Salva PDF" lì.
+  onEsportaPdf: (id: string) => void
   // La card salva da sé (server action); avvisa il chiamante solo per
   // aggiornare la propria copia dello storico — niente logica di persistenza
   // duplicata fra portafoglio e gruppo.
@@ -165,6 +169,9 @@ export function StoricoSimulazioni({
           </div>
 
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            <button type="button" onClick={() => onEsportaPdf(r.id)} aria-label={t('bottoneSalvaPdf')} style={STILE_BOTTONE_ICONA}>
+              <IconaSalva />
+            </button>
             <button
               type="button"
               onClick={() => {

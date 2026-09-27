@@ -8,7 +8,7 @@
 // entrambi gli estremi come due tabelle separate) e le poche righe di
 // notazione UI (bordi, hover) che non hanno equivalente su carta.
 
-import { DocumentoPdf, scaricaPdf } from '@/lib/pdf-minimo'
+import { DocumentoPdf, scaricaPdf, type Tono, type CellaTabella } from '@/lib/pdf-minimo'
 
 // Alcuni messaggi (es. messaggioBudgetPortafoglio, messaggioPoolReinvestire)
 // contengono un tag <strong> e vanno letti con t.rich, non t(): sullo
@@ -26,8 +26,12 @@ export type ColonnaPdf = { intestazione: string; allineaDestra?: boolean }
 
 export type SezionePdf =
   | { tipo: 'sottotitolo'; testo: string }
-  | { tipo: 'paragrafo'; testo: string; grassetto?: boolean }
-  | { tipo: 'tabella'; colonne: ColonnaPdf[]; righe: string[][] }
+  | { tipo: 'paragrafo'; testo: string; grassetto?: boolean; tono?: Tono }
+  // Casella colorata (avviso/successo/pericolo): stessa fascia colorata che
+  // a schermo segnala l'esito della simulazione (--warning/--success/
+  // --danger), non un semplice paragrafo.
+  | { tipo: 'casella'; testo: string; tono: 'successo' | 'pericolo' | 'avviso' }
+  | { tipo: 'tabella'; colonne: ColonnaPdf[]; righe: CellaTabella[][] }
   | { tipo: 'lista'; voci: string[] }
   | { tipo: 'separatore' }
   | { tipo: 'spazio'; altezza: number }
@@ -37,14 +41,16 @@ export type ContenutoPdfSimulazione = {
   // Es. "Portafoglio — 27/09/2026, 11:45" — già formattato dal chiamante,
   // che conosce la locale.
   sottotitolo: string
+  // Badge dell'esito (Raggiunto/Parziale/Non raggiunto/Insufficiente),
+  // mostrato nella banda di intestazione: stesso testo e stesso significato
+  // del badge della mini-card "Ultime simulazioni" a schermo.
+  distintivo?: { testo: string; tono: 'successo' | 'avviso' | 'pericolo' }
   sezioni: SezionePdf[]
 }
 
 export function esportaSimulazionePdf(contenuto: ContenutoPdfSimulazione) {
   const doc = new DocumentoPdf()
-  doc.titolo(contenuto.nome)
-  doc.paragrafo(contenuto.sottotitolo, { grigio: 0.4 })
-  doc.spazio(8)
+  doc.intestazioneReport(contenuto.nome, contenuto.sottotitolo, contenuto.distintivo)
 
   for (const sezione of contenuto.sezioni) {
     switch (sezione.tipo) {
@@ -52,7 +58,10 @@ export function esportaSimulazionePdf(contenuto: ContenutoPdfSimulazione) {
         doc.sottotitolo(sezione.testo)
         break
       case 'paragrafo':
-        doc.paragrafo(sezione.testo, { grassetto: sezione.grassetto })
+        doc.paragrafo(sezione.testo, { grassetto: sezione.grassetto, tono: sezione.tono })
+        break
+      case 'casella':
+        doc.casella(sezione.testo, sezione.tono)
         break
       case 'tabella':
         doc.tabella(sezione.colonne, sezione.righe)

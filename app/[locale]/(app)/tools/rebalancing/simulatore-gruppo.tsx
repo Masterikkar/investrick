@@ -65,6 +65,14 @@ function rigaVista(s: RigaStoricoSimulazione, locale: LocaleFormato, t: (chiave:
   }
 }
 
+// Stesso booleano usato da rigaVista qui sopra per il badge della mini-card
+// — qui tradotto nel vocabolario successo/avviso/pericolo del PDF.
+function distintivoGruppo(sufficiente: boolean, t: Traduttore) {
+  return sufficiente
+    ? { testo: t('badgeSimulazioneRaggiunto'), tono: 'successo' as const }
+    : { testo: t('badgeSimulazioneInsufficiente'), tono: 'avviso' as const }
+}
+
 // Stessa idea di costruisciContenutoPdf in simulatore-portafoglio.tsx, sul
 // risultato "gruppo": stesso ordine di sezioni dell'overlay a schermo.
 function costruisciContenutoPdf(
@@ -91,19 +99,19 @@ function costruisciContenutoPdf(
 
   if (risultato.sufficiente) {
     sezioni.push({
-      tipo: 'paragrafo',
+      tipo: 'casella',
+      tono: 'successo',
       testo: t('messaggioVersamentoSufficiente', { importo: formatEuro(risultato.versamentoUsato, locale) }),
-      grassetto: true,
     })
   } else {
     sezioni.push({
-      tipo: 'paragrafo',
+      tipo: 'casella',
+      tono: 'avviso',
       testo: t('messaggioVersamentoInsufficiente', { importo: formatEuro(risultato.versamentoUsato, locale) }),
-      grassetto: true,
     })
 
     if (risultato.venditeProposte.length === 0) {
-      sezioni.push({ tipo: 'paragrafo', testo: t('alertNessunCompartoSovrappesato') })
+      sezioni.push({ tipo: 'paragrafo', tono: 'secondario', testo: t('alertNessunCompartoSovrappesato') })
     } else {
       sezioni.push({
         tipo: 'tabella',
@@ -122,7 +130,7 @@ function costruisciContenutoPdf(
             ? formatNumero(v.quantitaVenduta, 6, false, locale)
             : `${formatNumero(v.quantitaVenduta, 6, false, locale)} — ${t('notaQuantitaRidotta', { quantita: formatNumero(v.quantitaIdeale, 6, false, locale) })}`,
           formatEuro(v.valoreVenduto, locale),
-          formatEuroSigned(v.plusvalenzaLorda, locale),
+          { testo: formatEuroSigned(v.plusvalenzaLorda, locale), tono: v.plusvalenzaLorda >= 0 ? ('successo' as const) : ('pericolo' as const) },
           v.imponibile ? formatPercent(v.aliquota * 100, 1, false, locale) : t('esenteTipoContenitore', { tipo: tPaginaContenitore('etichettaPolizza') }),
           formatEuro(v.tassa, locale),
           formatEuro(v.proventoNetto, locale),
@@ -160,7 +168,7 @@ function costruisciContenutoPdf(
       const nota = c.usaTarget ? t('notaSecondoTargetStrumento') : t('notaSecondoPesiAttuali')
       sezioni.push({ tipo: 'sottotitolo', testo: `${traduciCategoria(tCategorie, c.categoria)} (${nota})` })
       if (c.strumenti.length === 0) {
-        sezioni.push({ tipo: 'paragrafo', testo: t('alertNessunoStrumentoPosseduto') })
+        sezioni.push({ tipo: 'paragrafo', tono: 'avviso', testo: t('alertNessunoStrumentoPosseduto') })
       } else {
         sezioni.push({
           tipo: 'lista',
@@ -173,6 +181,7 @@ function costruisciContenutoPdf(
   return {
     nome,
     sottotitolo: `${t('wizardTitoloGruppo')} · ${nomeGruppo} — ${fmtDataOra(dataOraIso, locale)}`,
+    distintivo: distintivoGruppo(risultato.sufficiente, t),
     sezioni,
   }
 }
@@ -491,6 +500,25 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
               setRisultato(riga.risultato as RisultatoSimulazioneGruppo)
               setNomeRisultato(riga.nome)
               setDataOraRisultato(riga.creato_at)
+            }}
+            onEsportaPdf={(id) => {
+              const riga = storico.find((s) => s.id === id)
+              if (!riga) return
+              esportaSimulazionePdf(
+                costruisciContenutoPdf(
+                  riga.risultato as Exclude<RisultatoSimulazioneGruppo, null>,
+                  riga.nome,
+                  nomeGruppoSelezionato,
+                  riga.creato_at,
+                  t,
+                  tPaginaFiscalita,
+                  tPaginaStorico,
+                  tPaginaCosti,
+                  tPaginaContenitore,
+                  tCategorie,
+                  locale
+                )
+              )
             }}
             onRinominato={(id, nuovoNome) => setStorico((prev) => prev.map((s) => (s.id === id ? { ...s, nome: nuovoNome } : s)))}
             onEliminato={(id) => setStorico((prev) => prev.filter((s) => s.id !== id))}

@@ -332,14 +332,17 @@ export function costruisciSezioniRisultatoPortafoglio(
   tCategorie: Traduttore,
   locale: LocaleFormato
 ): SezionePdf[] {
+  // Stessi colori semantici del messaggio a schermo (--warning/--success/
+  // --text-secondary): niente qui è colorato "a caso", replica 1:1
+  // RisultatoPortafoglioVista qui sopra.
   const sezioniSenzaVeicolo = (categorie: string[]): SezionePdf[] =>
     categorie.length > 0
-      ? [{ tipo: 'paragrafo', testo: t('alertSenzaVeicolo', { categorie: categorie.map((c) => traduciCategoria(tCategorie, c)).join(', ') }) }]
+      ? [{ tipo: 'paragrafo', tono: 'avviso', testo: t('alertSenzaVeicolo', { categorie: categorie.map((c) => traduciCategoria(tCategorie, c)).join(', ') }) }]
       : []
 
   if (risultato.esito === 'irraggiungibile') {
     return [
-      { tipo: 'paragrafo', testo: t('messaggioPortafoglioIrraggiungibile'), grassetto: true },
+      { tipo: 'casella', tono: 'avviso', testo: t('messaggioPortafoglioIrraggiungibile') },
       ...sezioniSenzaVeicolo(risultato.senzaVeicolo),
     ]
   }
@@ -347,17 +350,18 @@ export function costruisciSezioniRisultatoPortafoglio(
   if (risultato.esito === 'residuo') {
     const sezioni: SezionePdf[] = [
       {
-        tipo: 'paragrafo',
+        tipo: 'casella',
+        tono: 'avviso',
         testo: t('messaggioPortafoglioResiduo', {
           importo: formatEuro(risultato.soluzione.versamento, locale),
           scostamento: formatNumero(risultato.soluzione.scostamentoMassimoPp, 2, false, locale),
         }),
-        grassetto: true,
       },
     ]
     if (avvisoStrutturale && avvisoStrutturale.categorie.length > 0) {
       sezioni.push({
         tipo: 'paragrafo',
+        tono: 'avviso',
         testo: t('avvisoScostamentoStrutturale', {
           floor: formatNumero(avvisoStrutturale.floorPp, 2, false, locale),
           categorie: avvisoStrutturale.categorie.map((c) => traduciCategoria(tCategorie, c)).join(', '),
@@ -380,12 +384,12 @@ export function costruisciSezioniRisultatoPortafoglio(
     { tipo: 'paragrafo', testo: testoDaRich(t.rich('messaggioBudgetPortafoglio', { importo: formatEuro(budgetMinimo, locale), strong: (chunks: unknown) => chunks })) },
   ]
   if (versamentoMassimo !== null) {
-    sezioni.push({ tipo: 'paragrafo', testo: t('messaggioVersamentoSufficiente', { importo: formatEuro(versamentoMassimo, locale) }), grassetto: true })
+    sezioni.push({ tipo: 'casella', tono: 'successo', testo: t('messaggioVersamentoSufficiente', { importo: formatEuro(versamentoMassimo, locale) }) })
   }
   sezioni.push(...sezioniSenzaVeicolo(senzaVeicolo))
 
   if (coincidono || !soloLibere || !massimoPac) {
-    if (!soloLibere && massimoPac) sezioni.push({ tipo: 'paragrafo', testo: t('notaSoloTramitePac') })
+    if (!soloLibere && massimoPac) sezioni.push({ tipo: 'paragrafo', tono: 'secondario', testo: t('notaSoloTramitePac') })
     sezioni.push(...sezioniTabellaSoluzionePdf(unica, t, tCategorie, locale))
     return sezioni
   }

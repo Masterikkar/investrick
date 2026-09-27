@@ -119,6 +119,17 @@ function rigaVista(
 // reinvestire, nota Polizza, poi il risultato del ribilanciamento vero e
 // proprio (costruisciSezioniRisultatoPortafoglio, condivisa con
 // risultato-portafoglio.tsx).
+// Stesso esito a tre stati usato da rigaVista qui sopra per il badge della
+// mini-card — qui tradotto nel vocabolario successo/avviso/pericolo del PDF
+// invece che nelle variabili CSS --success/--warning/--danger.
+function distintivoPortafoglio(esito: RisultatoSimulazionePortafoglio['risultato']['esito'], t: Traduttore) {
+  return esito === 'raggiunto'
+    ? { testo: t('badgeSimulazioneRaggiunto'), tono: 'successo' as const }
+    : esito === 'residuo'
+      ? { testo: t('badgeSimulazioneParziale'), tono: 'avviso' as const }
+      : { testo: t('badgeSimulazioneNonRaggiunto'), tono: 'pericolo' as const }
+}
+
 function costruisciContenutoPdf(
   risultato: RisultatoSimulazionePortafoglio,
   nome: string,
@@ -144,11 +155,13 @@ function costruisciContenutoPdf(
         { intestazione: t('colonnaTassa'), allineaDestra: true },
         { intestazione: t('colonnaNetto'), allineaDestra: true },
       ],
+      // Plus/minus colorata come a schermo (rosso in perdita, verde in
+      // guadagno): unica cella "tono" di questa tabella.
       righe: risultato.venditeProposte.map((v) => [
         v.nome,
         formatNumero(v.quantitaVenduta, 6, false, locale),
         formatEuro(v.valoreVenduto, locale),
-        formatEuroSigned(v.plusvalenzaLorda, locale),
+        { testo: formatEuroSigned(v.plusvalenzaLorda, locale), tono: v.plusvalenzaLorda >= 0 ? ('successo' as const) : ('pericolo' as const) },
         formatPercent(v.aliquota * 100, 1, false, locale),
         formatEuro(v.tassa, locale),
         formatEuro(v.proventoNetto, locale),
@@ -186,7 +199,7 @@ function costruisciContenutoPdf(
     })
   }
 
-  sezioni.push({ tipo: 'paragrafo', testo: t('notaPolizzaEsclusaDalleVendite') })
+  sezioni.push({ tipo: 'paragrafo', tono: 'secondario', testo: t('notaPolizzaEsclusaDalleVendite') })
   sezioni.push({ tipo: 'separatore' })
   sezioni.push(
     ...costruisciSezioniRisultatoPortafoglio(risultato.risultato, risultato.versamentoMassimo, risultato.avvisoStrutturale, t, tCategorie, locale)
@@ -195,6 +208,7 @@ function costruisciContenutoPdf(
   return {
     nome,
     sottotitolo: `${t('wizardTitoloPortafoglio')} — ${fmtDataOra(dataOraIso, locale)}`,
+    distintivo: distintivoPortafoglio(risultato.risultato.esito, t),
     sezioni,
   }
 }
@@ -493,6 +507,22 @@ export function SimulatorePortafoglio({
             setRisultato(riga.risultato as RisultatoSimulazionePortafoglio)
             setNomeRisultato(riga.nome)
             setDataOraRisultato(riga.creato_at)
+          }}
+          onEsportaPdf={(id) => {
+            const riga = storico.find((s) => s.id === id)
+            if (!riga) return
+            esportaSimulazionePdf(
+              costruisciContenutoPdf(
+                riga.risultato as RisultatoSimulazionePortafoglio,
+                riga.nome,
+                riga.creato_at,
+                t,
+                tPaginaFiscalita,
+                tPaginaStorico,
+                tCategorie,
+                locale
+              )
+            )
           }}
           onRinominato={(id, nuovoNome) => setStorico((prev) => prev.map((s) => (s.id === id ? { ...s, nome: nuovoNome } : s)))}
           onEliminato={(id) => setStorico((prev) => prev.filter((s) => s.id !== id))}
