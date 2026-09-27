@@ -319,7 +319,10 @@ export class DocumentoPdf {
   // Serializza in bytes PDF validi: header, oggetti (catalogo, pagine, 2
   // font standard, una coppia pagina+content-stream per pagina), xref e
   // trailer con gli offset esatti calcolati durante la scrittura.
-  bytes(): Uint8Array {
+  // <ArrayBuffer> esplicito (non il default ArrayBufferLike): new Blob()
+  // richiede un ArrayBufferView<ArrayBuffer>, e risultato qui sotto è sempre
+  // un ArrayBuffer vero (mai SharedArrayBuffer).
+  bytes(): Uint8Array<ArrayBuffer> {
     const parti: Uint8Array[] = []
     let lunghezza = 0
     const offsets: number[] = [0] // indice 0 non usato (l'oggetto 0 del PDF è sempre libero)

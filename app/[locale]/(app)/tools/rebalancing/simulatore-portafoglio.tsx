@@ -18,9 +18,13 @@ import { MAX_SIMULAZIONI_STORICO, type RisultatoSimulazionePortafoglio } from '@
 // Tipo minimo del traduttore next-intl di cui questo file ha bisogno (niente
 // IntlMessages tipizzato in questo progetto: il vero t di useTranslations
 // soddisfa già questa forma strutturalmente).
+// rich con sintassi "metodo" (non proprietà-freccia): così il confronto dei
+// parametri resta bivariante e il vero t di useTranslations (che accetta
+// solo string/number/Date/RichTagsFunction nei valori, non unknown) risulta
+// comunque assegnabile a questo tipo strutturale.
 type Traduttore = {
   (chiave: string, valori?: Record<string, string | number>): string
-  rich: (chiave: string, valori: Record<string, unknown>) => unknown
+  rich(chiave: string, valori: Record<string, unknown>): unknown
 }
 
 const stileBottonePrimario: React.CSSProperties = {

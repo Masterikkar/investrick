@@ -11,9 +11,13 @@ import { testoDaRich, type SezionePdf } from './esporta-pdf'
 // costruire il PDF: il progetto non ha una tipizzazione stretta delle chiavi
 // dei messaggi (nessun global.d.ts con IntlMessages), quindi il traduttore
 // vero restituito da useTranslations soddisfa già questa forma.
+// rich con sintassi "metodo" (non proprietà-freccia): così il confronto dei
+// parametri resta bivariante e il vero t di useTranslations (che accetta
+// solo string/number/Date/RichTagsFunction nei valori, non unknown) risulta
+// comunque assegnabile a questo tipo strutturale.
 type Traduttore = {
   (chiave: string, valori?: Record<string, string | number>): string
-  rich: (chiave: string, valori: Record<string, unknown>) => unknown
+  rich(chiave: string, valori: Record<string, unknown>): unknown
 }
 
 // Sotto questo importo una voce non si mostra: è rumore numerico, non un acquisto.
