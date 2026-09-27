@@ -11,13 +11,18 @@ import { testoDaRich, type SezionePdf } from './esporta-pdf'
 // costruire il PDF: il progetto non ha una tipizzazione stretta delle chiavi
 // dei messaggi (nessun global.d.ts con IntlMessages), quindi il traduttore
 // vero restituito da useTranslations soddisfa già questa forma.
-// rich con sintassi "metodo" (non proprietà-freccia): così il confronto dei
-// parametri resta bivariante e il vero t di useTranslations (che accetta
-// solo string/number/Date/RichTagsFunction nei valori, non unknown) risulta
-// comunque assegnabile a questo tipo strutturale.
+// `valori: any` e non Record<string, unknown>: il vero rich di next-intl
+// dichiara il suo secondo parametro come parte di un rest (...args:
+// TranslateArgs<...>), e per un rest parameter TypeScript confronta il tipo
+// elemento in modo stretto anche quando rich è scritto in sintassi-metodo
+// (il trucco della bivarianza dei metodi non si applica in quel caso) — un
+// Record<string, unknown> lì risultava sempre incompatibile con
+// Record<string, string | number | Date | RichTagsFunction>. `any` bypassa
+// il controllo di varianza (verificato riproducendo l'errore con i tipi
+// reali di next-intl clonati da GitHub, prima e dopo il fix).
 type Traduttore = {
   (chiave: string, valori?: Record<string, string | number>): string
-  rich(chiave: string, valori: Record<string, unknown>): unknown
+  rich(chiave: string, valori: any): unknown
 }
 
 // Sotto questo importo una voce non si mostra: è rumore numerico, non un acquisto.
