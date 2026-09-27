@@ -383,6 +383,41 @@ export type Database = {
           },
         ]
       }
+      storico_aliquote_strumento: {
+        Row: {
+          aliquota: number
+          created_at: string
+          data_decorrenza: string
+          id: string
+          strumento_id: string
+          user_id: string
+        }
+        Insert: {
+          aliquota: number
+          created_at?: string
+          data_decorrenza: string
+          id?: string
+          strumento_id: string
+          user_id?: string
+        }
+        Update: {
+          aliquota?: number
+          created_at?: string
+          data_decorrenza?: string
+          id?: string
+          strumento_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storico_aliquote_strumento_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       storico_valorizzazioni: {
         Row: {
           capitale_investito: number | null
@@ -1771,6 +1806,10 @@ export type Database = {
       }
     }
     Functions: {
+      aliquota_tassazione_a_data: {
+        Args: { p_data: string; p_strumento_id: string }
+        Returns: number
+      }
       calcola_fifo_posizione: {
         Args: { p_contenitore_id: string; p_strumento_id: string }
         Returns: {
