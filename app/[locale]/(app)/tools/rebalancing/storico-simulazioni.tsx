@@ -147,7 +147,7 @@ export function StoricoSimulazioni({
 
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             {r.importo && (
-              <div style={{ fontSize: 'var(--fs-body)', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>{r.importo}</div>
+              <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-primary)' }}>{r.importo}</div>
             )}
             <span
               style={{

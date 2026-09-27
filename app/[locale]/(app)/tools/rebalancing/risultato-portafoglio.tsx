@@ -5,6 +5,16 @@ import { useLocale, useTranslations } from 'next-intl'
 import { formatEuro, formatNumero, formatPercent, type LocaleFormato } from '@/lib/format'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import type { RisultatoPortafoglio, SoluzionePortafoglio } from '@/lib/ribilanciamento'
+import { testoDaRich, type SezionePdf } from './esporta-pdf'
+
+// Tipo minimo del traduttore next-intl di cui questo file ha bisogno per
+// costruire il PDF: il progetto non ha una tipizzazione stretta delle chiavi
+// dei messaggi (nessun global.d.ts con IntlMessages), quindi il traduttore
+// vero restituito da useTranslations soddisfa già questa forma.
+type Traduttore = {
+  (chiave: string, valori?: Record<string, string | number>): string
+  rich: (chiave: string, valori: Record<string, unknown>) => unknown
+}
 
 // Sotto questo importo una voce non si mostra: è rumore numerico, non un acquisto.
 const IMPORTO_MINIMO = 0.005
@@ -257,4 +267,124 @@ export function RisultatoPortafoglioVista({
       <TabellaSoluzione soluzione={corrente} />
     </>
   )
+}
+
+// Equivalente di TabellaSoluzione ma per il PDF: stessa fonte dati
+// (soluzione.pac/libere/righe), stesso filtro IMPORTO_MINIMO sulle voci
+// "dove versare".
+function sezioniTabellaSoluzionePdf(
+  soluzione: SoluzionePortafoglio,
+  t: Traduttore,
+  tCategorie: Traduttore,
+  locale: LocaleFormato
+): SezionePdf[] {
+  const totaleAttuale = soluzione.righe.reduce((acc, r) => acc + r.valoreAttuale, 0)
+  const voci = [
+    ...soluzione.pac.map((p) => `${p.nome} (${t('notaBloccoPac')}): ${formatEuro(p.importo, locale)}`),
+    ...soluzione.libere
+      .filter((f) => f.importo >= IMPORTO_MINIMO)
+      .map((f) => `${traduciCategoria(tCategorie, f.categoria)} (${t('notaAcquistoLibero')}): ${formatEuro(f.importo, locale)}`),
+  ]
+
+  const sezioni: SezionePdf[] = [{ tipo: 'sottotitolo', testo: t('titoloDoveVersare') }]
+  sezioni.push(voci.length === 0 ? { tipo: 'paragrafo', testo: t('alertNessunAcquisto') } : { tipo: 'lista', voci })
+  sezioni.push({
+    tipo: 'tabella',
+    colonne: [
+      { intestazione: t('colonnaAsset') },
+      { intestazione: t('colonnaTarget'), allineaDestra: true },
+      { intestazione: t('colonnaAttuale'), allineaDestra: true },
+      { intestazione: t('colonnaDaVersare'), allineaDestra: true },
+      { intestazione: t('colonnaPesoFinale'), allineaDestra: true },
+      { intestazione: t('colonnaScostamentoFinale'), allineaDestra: true },
+    ],
+    righe: soluzione.righe.map((r) => [
+      traduciCategoria(tCategorie, r.categoria),
+      r.targetPct === null ? '—' : formatPercent(r.targetPct, 2, false, locale),
+      formatPercent(totaleAttuale > 0 ? (r.valoreAttuale / totaleAttuale) * 100 : 0, 2, false, locale),
+      formatEuro(r.acquisto, locale),
+      formatPercent(r.pesoFinalePct, 2, false, locale),
+      r.scostamentoFinalePp === null ? '—' : `${formatNumero(r.scostamentoFinalePp, 2, true, locale)} pp`,
+    ]),
+  })
+  return sezioni
+}
+
+// Traduce RisultatoPortafoglio nelle sezioni PDF equivalenti a
+// RisultatoPortafoglioVista qui sopra. Unica differenza voluta: la scelta
+// interattiva "quota nei PAC" non ha senso su carta, quindi quando i due
+// estremi (soloLibere / massimoPac) non coincidono si esportano entrambi
+// come due tabelle separate invece dello slider.
+export function costruisciSezioniRisultatoPortafoglio(
+  risultato: RisultatoPortafoglio,
+  versamentoMassimo: number | null,
+  avvisoStrutturale: { floorPp: number; categorie: string[] } | null | undefined,
+  t: Traduttore,
+  tCategorie: Traduttore,
+  locale: LocaleFormato
+): SezionePdf[] {
+  const sezioniSenzaVeicolo = (categorie: string[]): SezionePdf[] =>
+    categorie.length > 0
+      ? [{ tipo: 'paragrafo', testo: t('alertSenzaVeicolo', { categorie: categorie.map((c) => traduciCategoria(tCategorie, c)).join(', ') }) }]
+      : []
+
+  if (risultato.esito === 'irraggiungibile') {
+    return [
+      { tipo: 'paragrafo', testo: t('messaggioPortafoglioIrraggiungibile'), grassetto: true },
+      ...sezioniSenzaVeicolo(risultato.senzaVeicolo),
+    ]
+  }
+
+  if (risultato.esito === 'residuo') {
+    const sezioni: SezionePdf[] = [
+      {
+        tipo: 'paragrafo',
+        testo: t('messaggioPortafoglioResiduo', {
+          importo: formatEuro(risultato.soluzione.versamento, locale),
+          scostamento: formatNumero(risultato.soluzione.scostamentoMassimoPp, 2, false, locale),
+        }),
+        grassetto: true,
+      },
+    ]
+    if (avvisoStrutturale && avvisoStrutturale.categorie.length > 0) {
+      sezioni.push({
+        tipo: 'paragrafo',
+        testo: t('avvisoScostamentoStrutturale', {
+          floor: formatNumero(avvisoStrutturale.floorPp, 2, false, locale),
+          categorie: avvisoStrutturale.categorie.map((c) => traduciCategoria(tCategorie, c)).join(', '),
+        }),
+      })
+    }
+    sezioni.push(...sezioniSenzaVeicolo(risultato.senzaVeicolo))
+    sezioni.push(...sezioniTabellaSoluzionePdf(risultato.soluzione, t, tCategorie, locale))
+    return sezioni
+  }
+
+  const { budgetMinimo, soloLibere, massimoPac, coincidono, senzaVeicolo } = risultato
+  const unica = massimoPac ?? soloLibere
+
+  if (budgetMinimo < IMPORTO_MINIMO || !unica) {
+    return [{ tipo: 'paragrafo', testo: t('messaggioPortafoglioGiaInSoglia') }, ...sezioniSenzaVeicolo(senzaVeicolo)]
+  }
+
+  const sezioni: SezionePdf[] = [
+    { tipo: 'paragrafo', testo: testoDaRich(t.rich('messaggioBudgetPortafoglio', { importo: formatEuro(budgetMinimo, locale), strong: (chunks: unknown) => chunks })) },
+  ]
+  if (versamentoMassimo !== null) {
+    sezioni.push({ tipo: 'paragrafo', testo: t('messaggioVersamentoSufficiente', { importo: formatEuro(versamentoMassimo, locale) }), grassetto: true })
+  }
+  sezioni.push(...sezioniSenzaVeicolo(senzaVeicolo))
+
+  if (coincidono || !soloLibere || !massimoPac) {
+    if (!soloLibere && massimoPac) sezioni.push({ tipo: 'paragrafo', testo: t('notaSoloTramitePac') })
+    sezioni.push(...sezioniTabellaSoluzionePdf(unica, t, tCategorie, locale))
+    return sezioni
+  }
+
+  sezioni.push({ tipo: 'sottotitolo', testo: t('schedaSoloLibere') })
+  sezioni.push(...sezioniTabellaSoluzionePdf(soloLibere, t, tCategorie, locale))
+  sezioni.push({ tipo: 'spazio', altezza: 6 })
+  sezioni.push({ tipo: 'sottotitolo', testo: t('schedaMassimoPac') })
+  sezioni.push(...sezioniTabellaSoluzionePdf(massimoPac, t, tCategorie, locale))
+  return sezioni
 }

@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { Checkbox } from '@/components/checkbox'
-import { NOME_SIMULAZIONE_MAX, pulisciNomeSimulazione } from '@/lib/ribilanciamento-simulazione'
+import { NOME_SIMULAZIONE_MAX, MAX_SIMULAZIONI_STORICO, pulisciNomeSimulazione } from '@/lib/ribilanciamento-simulazione'
 
 const stileCampo: React.CSSProperties = {
   display: 'block',
@@ -15,24 +15,44 @@ const stileCampo: React.CSSProperties = {
   border: '1px solid var(--border-default)',
 }
 
+// Stesso stile "avviso non bloccante" già usato in form-asset.tsx
+// (background superficie, bordo e testo in --warning): qui il messaggio è
+// più lungo, quindi fs-body invece di fs-form-hint.
+const stileAvviso: React.CSSProperties = {
+  color: 'var(--warning)',
+  background: 'var(--bg-surface)',
+  border: '1px solid var(--warning)',
+  padding: '10px 12px',
+  margin: 0,
+  fontSize: 'var(--fs-body)',
+}
+
 // Passo 1, condiviso da portafoglio e gruppo: un tetto facoltativo al
 // versamento. Senza soglia il sistema versa esattamente il minimo
-// necessario, senza valutare vendite né riscatti.
+// necessario, senza valutare vendite né riscatti. Se lo storico per questo
+// tipo/gruppo è già al tetto (MAX_SIMULAZIONI_STORICO), un avviso in giallo
+// anticipa che la simulazione più vecchia verrà sovrascritta.
 export function PassoSogliaVersamento({
   impostata,
   onCambiaImpostata,
   valore,
   onCambiaValore,
+  numeroSimulazioniSalvate,
 }: {
   impostata: boolean
   onCambiaImpostata: (v: boolean) => void
   valore: string
   onCambiaValore: (v: string) => void
+  numeroSimulazioniSalvate: number
 }) {
   const t = useTranslations('PaginaRibilanciamento')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {numeroSimulazioniSalvate >= MAX_SIMULAZIONI_STORICO && (
+        <p style={stileAvviso}>{t('avvisoLimiteSimulazioni', { numero: MAX_SIMULAZIONI_STORICO })}</p>
+      )}
+
       <Checkbox checked={impostata} onChange={onCambiaImpostata} label={t('domandaSogliaVersamento')} />
 
       {impostata ? (

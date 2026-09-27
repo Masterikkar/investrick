@@ -46,6 +46,7 @@ export function WizardRibilanciamento({
   onCalcola,
   inCalcolo,
   puoAvanzare = true,
+  mostraAnnullaAccantoAvanti = false,
   children,
 }: {
   aperto: boolean
@@ -58,6 +59,11 @@ export function WizardRibilanciamento({
   onCalcola: () => void
   inCalcolo: boolean
   puoAvanzare?: boolean
+  // true nel caso "stai per sovrascrivere una simulazione": oltre
+  // all'Annulla già presente in basso a sinistra (sempre visibile), ne
+  // affianca uno secondo accanto ad Avanti/Calcola, dove l'occhio è già
+  // puntato quando appare l'avviso in giallo.
+  mostraAnnullaAccantoAvanti?: boolean
   children: React.ReactNode
 }) {
   const t = useTranslations('PaginaRibilanciamento')
@@ -209,6 +215,11 @@ export function WizardRibilanciamento({
               {indiceCorrente > 0 && (
                 <button type="button" onClick={onIndietro} style={stileBottoneSecondario}>
                   {t('bottoneIndietro')}
+                </button>
+              )}
+              {mostraAnnullaAccantoAvanti && (
+                <button type="button" onClick={onChiudi} style={stileBottoneSecondario}>
+                  {t('bottoneAnnulla')}
                 </button>
               )}
               <button

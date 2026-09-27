@@ -30,6 +30,11 @@ type ClientSupabase = Awaited<ReturnType<typeof createClient>>
 export const NOME_SIMULAZIONE_MAX = 40
 const REGEX_NOME_SIMULAZIONE_VALIDO = /^[A-Za-z0-9 ]+$/
 
+// Quante simulazioni si tengono nello storico (mini card + tetto DB): un solo
+// punto, riusato da actions-simulazione.ts (lettura e pulizia) e dai due
+// simulatori (avviso "stai per sovrascrivere" allo step 1 del wizard).
+export const MAX_SIMULAZIONI_STORICO = 3
+
 // Rimuove i caratteri non ammessi e tronca alla lunghezza massima: usata
 // dal campo di input mentre l'utente digita, per un filtro "live".
 export function pulisciNomeSimulazione(nome: string): string {

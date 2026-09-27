@@ -6,12 +6,22 @@ import { formatEuro, formatEuroSigned, formatNumero, formatPercent, type LocaleF
 import { Sezione } from '@/components/sezione'
 import { Checkbox } from '@/components/checkbox'
 import { MenuSelect } from '@/components/menu-select'
-import { RisultatoPortafoglioVista } from './risultato-portafoglio'
+import { RisultatoPortafoglioVista, costruisciSezioniRisultatoPortafoglio } from './risultato-portafoglio'
 import { WizardRibilanciamento, type PassoWizard } from './wizard-ribilanciamento'
 import { PassoSogliaVersamento, PassoCommissioniVendita, PassoVendiInPerdita, PassoEsecuzione } from './passi-comuni'
 import { StoricoSimulazioni, type RigaStoricoVista } from './storico-simulazioni'
+import { OverlayRisultatoSimulazione } from './overlay-risultato-simulazione'
+import { esportaSimulazionePdf, testoDaRich, type SezionePdf } from './esporta-pdf'
 import { eseguiSimulazionePortafoglio, type RigaStoricoSimulazione } from './actions-simulazione'
-import type { RisultatoSimulazionePortafoglio } from '@/lib/ribilanciamento-simulazione'
+import { MAX_SIMULAZIONI_STORICO, type RisultatoSimulazionePortafoglio } from '@/lib/ribilanciamento-simulazione'
+
+// Tipo minimo del traduttore next-intl di cui questo file ha bisogno (niente
+// IntlMessages tipizzato in questo progetto: il vero t di useTranslations
+// soddisfa già questa forma strutturalmente).
+type Traduttore = {
+  (chiave: string, valori?: Record<string, string | number>): string
+  rich: (chiave: string, valori: Record<string, unknown>) => unknown
+}
 
 const stileBottonePrimario: React.CSSProperties = {
   background: 'var(--primary)',
@@ -95,6 +105,91 @@ function rigaVista(
   }
 }
 
+// Traduce il risultato tipizzato nelle sezioni PDF, nello stesso ordine in
+// cui appaiono nell'overlay: vendite proposte, riscatti proposti, pool da
+// reinvestire, nota Polizza, poi il risultato del ribilanciamento vero e
+// proprio (costruisciSezioniRisultatoPortafoglio, condivisa con
+// risultato-portafoglio.tsx).
+function costruisciContenutoPdf(
+  risultato: RisultatoSimulazionePortafoglio,
+  nome: string,
+  dataOraIso: string,
+  t: Traduttore,
+  tPaginaFiscalita: Traduttore,
+  tPaginaStorico: Traduttore,
+  tCategorie: Traduttore,
+  locale: LocaleFormato
+) {
+  const sezioni: SezionePdf[] = []
+
+  if (risultato.venditeProposte.length > 0) {
+    sezioni.push({ tipo: 'sottotitolo', testo: t('titoloVenditeProposte') })
+    sezioni.push({
+      tipo: 'tabella',
+      colonne: [
+        { intestazione: tPaginaFiscalita('colonnaStrumento') },
+        { intestazione: tPaginaStorico('colonnaQuantita'), allineaDestra: true },
+        { intestazione: tPaginaFiscalita('colonnaValore'), allineaDestra: true },
+        { intestazione: t('colonnaPlusMinusLorda'), allineaDestra: true },
+        { intestazione: t('colonnaAliquota'), allineaDestra: true },
+        { intestazione: t('colonnaTassa'), allineaDestra: true },
+        { intestazione: t('colonnaNetto'), allineaDestra: true },
+      ],
+      righe: risultato.venditeProposte.map((v) => [
+        v.nome,
+        formatNumero(v.quantitaVenduta, 6, false, locale),
+        formatEuro(v.valoreVenduto, locale),
+        formatEuroSigned(v.plusvalenzaLorda, locale),
+        formatPercent(v.aliquota * 100, 1, false, locale),
+        formatEuro(v.tassa, locale),
+        formatEuro(v.proventoNetto, locale),
+      ]),
+    })
+  }
+
+  if (risultato.riscattiProposti.length > 0) {
+    sezioni.push({ tipo: 'sottotitolo', testo: t('titoloRiscattiProposti') })
+    sezioni.push({
+      tipo: 'tabella',
+      colonne: [
+        { intestazione: t('colonnaPolizza') },
+        { intestazione: tPaginaFiscalita('colonnaValore'), allineaDestra: true },
+        { intestazione: t('colonnaImponibile'), allineaDestra: true },
+        { intestazione: t('colonnaTassa'), allineaDestra: true },
+        { intestazione: t('colonnaNetto'), allineaDestra: true },
+      ],
+      righe: risultato.riscattiProposti.map((r) => [
+        r.nome,
+        formatEuro(r.valoreAttuale, locale),
+        formatEuro(r.imponibile, locale),
+        formatEuro(r.tassa, locale),
+        formatEuro(r.proventoNetto, locale),
+      ]),
+    })
+  }
+
+  if (risultato.poolTotale !== null) {
+    sezioni.push({
+      tipo: 'paragrafo',
+      testo: testoDaRich(
+        t.rich('messaggioPoolReinvestire', { importo: formatEuro(risultato.poolTotale, locale), strong: (chunks: unknown) => chunks })
+      ),
+    })
+  }
+
+  sezioni.push({ tipo: 'paragrafo', testo: t('notaPolizzaEsclusaDalleVendite') })
+  sezioni.push({ tipo: 'separatore' })
+  sezioni.push(
+    ...costruisciSezioniRisultatoPortafoglio(risultato.risultato, risultato.versamentoMassimo, risultato.avvisoStrutturale, t, tCategorie, locale)
+  )
+
+  return {
+    nome,
+    sottotitolo: `${t('wizardTitoloPortafoglio')} — ${fmtDataOra(dataOraIso, locale)}`,
+    sezioni,
+  }
+}
+
 export function SimulatorePortafoglio({
   pacDisponibili,
   polizzeDisponibili,
@@ -107,6 +202,7 @@ export function SimulatorePortafoglio({
   const t = useTranslations('PaginaRibilanciamento')
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
   const tPaginaStorico = useTranslations('PaginaStorico')
+  const tCategorie = useTranslations('Categorie')
   const locale = useLocale() as LocaleFormato
 
   const [aperto, setAperto] = useState(false)
@@ -126,6 +222,13 @@ export function SimulatorePortafoglio({
   const [nomeSimulazione, setNomeSimulazione] = useState('')
 
   const [risultato, setRisultato] = useState<RisultatoSimulazionePortafoglio | null>(null)
+  // Nome e data/ora mostrati in testa all'overlay: il nome digitato nel
+  // wizard resta nello stato nomeSimulazione anche dopo il calcolo, ma se poi
+  // si riapre una simulazione più vecchia dallo storico il nome/la data
+  // giusti sono quelli della riga selezionata, non quelli dell'ultimo giro
+  // nel wizard — da qui uno stato dedicato invece di riusare nomeSimulazione.
+  const [nomeRisultato, setNomeRisultato] = useState('')
+  const [dataOraRisultato, setDataOraRisultato] = useState('')
   const [storico, setStorico] = useState(storicoIniziale)
 
   const passi: PassoWizard[] = [
@@ -161,19 +264,22 @@ export function SimulatorePortafoglio({
       setErrore(t('erroreSimulazione'))
       return
     }
+    const adesso = new Date().toISOString()
     setRisultato(esito.risultato)
+    setNomeRisultato(nomeSimulazione.trim())
+    setDataOraRisultato(adesso)
     setAperto(false)
     setStorico((precedente) =>
       [
         {
           id: crypto.randomUUID(),
           nome: nomeSimulazione.trim(),
-          creato_at: new Date().toISOString(),
+          creato_at: adesso,
           parametri: null,
           risultato: esito.risultato,
         },
         ...precedente,
-      ].slice(0, 3)
+      ].slice(0, MAX_SIMULAZIONI_STORICO)
     )
   }
 
@@ -189,6 +295,7 @@ export function SimulatorePortafoglio({
       onCambiaImpostata={setSogliaImpostata}
       valore={sogliaValore}
       onCambiaValore={setSogliaValore}
+      numeroSimulazioniSalvate={storico.length}
     />,
     <PassoCommissioniVendita key="commissioni" valore={commissione} onCambia={setCommissione} />,
     <PassoVendiInPerdita key="perdita" valore={forzaVendita} onCambia={setForzaVendita} />,
@@ -254,15 +361,26 @@ export function SimulatorePortafoglio({
         onCalcola={handleCalcola}
         inCalcolo={inCalcolo}
         puoAvanzare={!ultimoPasso || nomeSimulazione.trim().length > 0}
+        mostraAnnullaAccantoAvanti={indice === 0 && storico.length >= MAX_SIMULAZIONI_STORICO}
       >
         {passoCorrenteContenuto[indice]}
       </WizardRibilanciamento>
 
       {errore && <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginTop: 12 }}>{errore}</p>}
 
-      {risultato && (
-        <div style={{ marginTop: 16 }}>
-          <Sezione>
+      <OverlayRisultatoSimulazione
+        aperto={risultato !== null}
+        onChiudi={() => setRisultato(null)}
+        nomeSimulazione={nomeRisultato}
+        onEsportaPdf={() => {
+          if (!risultato) return
+          esportaSimulazionePdf(
+            costruisciContenutoPdf(risultato, nomeRisultato, dataOraRisultato, t, tPaginaFiscalita, tPaginaStorico, tCategorie, locale)
+          )
+        }}
+      >
+        {risultato && (
+          <>
             {risultato.venditeProposte.length > 0 && (
               <>
                 <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)', fontWeight: 500 }}>{t('titoloVenditeProposte')}</p>
@@ -352,9 +470,9 @@ export function SimulatorePortafoglio({
               versamentoMassimo={risultato.versamentoMassimo}
               avvisoStrutturale={risultato.avvisoStrutturale}
             />
-          </Sezione>
-        </div>
-      )}
+          </>
+        )}
+      </OverlayRisultatoSimulazione>
 
       <div style={{ marginTop: 24 }}>
         <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 12 }}>{t('titoloUltimeSimulazioni')}</h3>
@@ -362,7 +480,10 @@ export function SimulatorePortafoglio({
           righe={storico.map((s) => rigaVista(s, locale, t))}
           onSeleziona={(id) => {
             const riga = storico.find((s) => s.id === id)
-            if (riga) setRisultato(riga.risultato as RisultatoSimulazionePortafoglio)
+            if (!riga) return
+            setRisultato(riga.risultato as RisultatoSimulazionePortafoglio)
+            setNomeRisultato(riga.nome)
+            setDataOraRisultato(riga.creato_at)
           }}
           onRinominato={(id, nuovoNome) => setStorico((prev) => prev.map((s) => (s.id === id ? { ...s, nome: nuovoNome } : s)))}
           onEliminato={(id) => setStorico((prev) => prev.filter((s) => s.id !== id))}

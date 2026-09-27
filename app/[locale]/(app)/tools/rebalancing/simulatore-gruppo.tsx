@@ -9,8 +9,18 @@ import { traduciCategoria } from '@/lib/i18n-categorie'
 import { WizardRibilanciamento, type PassoWizard } from './wizard-ribilanciamento'
 import { PassoSogliaVersamento, PassoCommissioniVendita, PassoVendiInPerdita, PassoEsecuzione } from './passi-comuni'
 import { StoricoSimulazioni, type RigaStoricoVista } from './storico-simulazioni'
+import { OverlayRisultatoSimulazione } from './overlay-risultato-simulazione'
+import { esportaSimulazionePdf, testoDaRich, type SezionePdf } from './esporta-pdf'
 import { eseguiSimulazioneGruppo, leggiUltimeSimulazioniGruppo, type RigaStoricoSimulazione } from './actions-simulazione'
-import type { RisultatoSimulazioneGruppo } from '@/lib/ribilanciamento-simulazione'
+import { MAX_SIMULAZIONI_STORICO, type RisultatoSimulazioneGruppo } from '@/lib/ribilanciamento-simulazione'
+
+// Tipo minimo del traduttore next-intl di cui questo file ha bisogno (niente
+// IntlMessages tipizzato in questo progetto: il vero t di useTranslations
+// soddisfa già questa forma strutturalmente).
+type Traduttore = {
+  (chiave: string, valori?: Record<string, string | number>): string
+  rich: (chiave: string, valori: Record<string, unknown>) => unknown
+}
 
 const stileBottonePrimario: React.CSSProperties = {
   background: 'var(--primary)',
@@ -46,6 +56,118 @@ function rigaVista(s: RigaStoricoSimulazione, locale: LocaleFormato, t: (chiave:
   }
 }
 
+// Stessa idea di costruisciContenutoPdf in simulatore-portafoglio.tsx, sul
+// risultato "gruppo": stesso ordine di sezioni dell'overlay a schermo.
+function costruisciContenutoPdf(
+  risultato: Exclude<RisultatoSimulazioneGruppo, null>,
+  nome: string,
+  nomeGruppo: string,
+  dataOraIso: string,
+  t: Traduttore,
+  tPaginaFiscalita: Traduttore,
+  tPaginaStorico: Traduttore,
+  tPaginaCosti: Traduttore,
+  tPaginaContenitore: Traduttore,
+  tCategorie: Traduttore,
+  locale: LocaleFormato
+) {
+  const sezioni: SezionePdf[] = []
+
+  sezioni.push({
+    tipo: 'paragrafo',
+    testo: testoDaRich(
+      t.rich('messaggioBudgetNecessario', { importo: formatEuro(risultato.necessario, locale), strong: (chunks: unknown) => chunks })
+    ),
+  })
+
+  if (risultato.sufficiente) {
+    sezioni.push({
+      tipo: 'paragrafo',
+      testo: t('messaggioVersamentoSufficiente', { importo: formatEuro(risultato.versamentoUsato, locale) }),
+      grassetto: true,
+    })
+  } else {
+    sezioni.push({
+      tipo: 'paragrafo',
+      testo: t('messaggioVersamentoInsufficiente', { importo: formatEuro(risultato.versamentoUsato, locale) }),
+      grassetto: true,
+    })
+
+    if (risultato.venditeProposte.length === 0) {
+      sezioni.push({ tipo: 'paragrafo', testo: t('alertNessunCompartoSovrappesato') })
+    } else {
+      sezioni.push({
+        tipo: 'tabella',
+        colonne: [
+          { intestazione: tPaginaFiscalita('colonnaStrumento') },
+          { intestazione: tPaginaStorico('colonnaQuantita'), allineaDestra: true },
+          { intestazione: tPaginaFiscalita('colonnaValore'), allineaDestra: true },
+          { intestazione: t('colonnaPlusMinusLorda'), allineaDestra: true },
+          { intestazione: t('colonnaAliquota'), allineaDestra: true },
+          { intestazione: t('colonnaTassa'), allineaDestra: true },
+          { intestazione: t('colonnaNetto'), allineaDestra: true },
+        ],
+        righe: risultato.venditeProposte.map((v) => [
+          v.nome,
+          v.vincoloRispettato
+            ? formatNumero(v.quantitaVenduta, 6, false, locale)
+            : `${formatNumero(v.quantitaVenduta, 6, false, locale)} — ${t('notaQuantitaRidotta', { quantita: formatNumero(v.quantitaIdeale, 6, false, locale) })}`,
+          formatEuro(v.valoreVenduto, locale),
+          formatEuroSigned(v.plusvalenzaLorda, locale),
+          v.imponibile ? formatPercent(v.aliquota * 100, 1, false, locale) : t('esenteTipoContenitore', { tipo: tPaginaContenitore('etichettaPolizza') }),
+          formatEuro(v.tassa, locale),
+          formatEuro(v.proventoNetto, locale),
+        ]),
+      })
+    }
+
+    sezioni.push({
+      tipo: 'paragrafo',
+      testo: testoDaRich(
+        t.rich('messaggioPoolReinvestire', { importo: formatEuro(risultato.poolTotale, locale), strong: (chunks: unknown) => chunks })
+      ),
+    })
+  }
+
+  if (risultato.allocazioneAcquisto.length > 0) {
+    sezioni.push({ tipo: 'sottotitolo', testo: t('titoloAcquistiProposti') })
+    sezioni.push({
+      tipo: 'tabella',
+      colonne: [
+        { intestazione: tPaginaCosti('colonnaCategoria') },
+        { intestazione: t('colonnaDaVersare'), allineaDestra: true },
+        { intestazione: t('colonnaPesoFinale'), allineaDestra: true },
+        { intestazione: t('colonnaScostamentoFinale'), allineaDestra: true },
+      ],
+      righe: risultato.allocazioneAcquisto.map((a) => [
+        traduciCategoria(tCategorie, a.categoria),
+        formatEuro(a.importo, locale),
+        formatPercent(a.pesoFinalePct, 2, false, locale),
+        `${formatNumero(a.scostamentoFinalePp, 2, true, locale)} pp`,
+      ]),
+    })
+
+    for (const c of risultato.allocazioneStrumenti) {
+      const nota = c.usaTarget ? t('notaSecondoTargetStrumento') : t('notaSecondoPesiAttuali')
+      sezioni.push({ tipo: 'sottotitolo', testo: `${traduciCategoria(tCategorie, c.categoria)} (${nota})` })
+      if (c.strumenti.length === 0) {
+        sezioni.push({ tipo: 'paragrafo', testo: t('alertNessunoStrumentoPosseduto') })
+      } else {
+        sezioni.push({
+          tipo: 'lista',
+          voci: c.strumenti.map((s) => `${s.nome}${s.ticker ? ` (${s.ticker})` : ''}: ${formatEuro(s.importo, locale)}`),
+        })
+      }
+    }
+  }
+
+  return {
+    nome,
+    sottotitolo: `${t('wizardTitoloGruppo')} · ${nomeGruppo} — ${fmtDataOra(dataOraIso, locale)}`,
+    sezioni,
+  }
+}
+
 export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDisponibili: [string, string][] }) {
   const t = useTranslations('PaginaRibilanciamento')
   const tContenitori = useTranslations('Contenitori')
@@ -69,6 +191,12 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
   const [nomeSimulazione, setNomeSimulazione] = useState('')
 
   const [risultato, setRisultato] = useState<RisultatoSimulazioneGruppo>(null)
+  // Vedi il commento analogo in simulatore-portafoglio.tsx: nome/data mostrati
+  // in testa all'overlay, distinti da nomeSimulazione perché una simulazione
+  // riaperta dallo storico può avere nome/data diversi dall'ultimo giro nel
+  // wizard.
+  const [nomeRisultato, setNomeRisultato] = useState('')
+  const [dataOraRisultato, setDataOraRisultato] = useState('')
   const [storico, setStorico] = useState<RigaStoricoSimulazione[]>([])
 
   // Azzera risultato e storico al cambio di gruppo durante il render (non in
@@ -80,6 +208,8 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
   if (contenitoreId !== ultimoContenitoreId) {
     setUltimoContenitoreId(contenitoreId)
     setRisultato(null)
+    setNomeRisultato('')
+    setDataOraRisultato('')
     setStorico([])
   }
 
@@ -120,21 +250,26 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
       setErrore(t('erroreSimulazione'))
       return
     }
+    const adesso = new Date().toISOString()
     setRisultato(esito.risultato)
+    setNomeRisultato(nomeSimulazione.trim())
+    setDataOraRisultato(adesso)
     setAperto(false)
     setStorico((precedente) =>
       [
         {
           id: crypto.randomUUID(),
           nome: nomeSimulazione.trim(),
-          creato_at: new Date().toISOString(),
+          creato_at: adesso,
           parametri: null,
           risultato: esito.risultato,
         },
         ...precedente,
-      ].slice(0, 3)
+      ].slice(0, MAX_SIMULAZIONI_STORICO)
     )
   }
+
+  const nomeGruppoSelezionato = contenitoriDisponibili.find(([id]) => id === contenitoreId)?.[1] ?? ''
 
   const passoCorrenteContenuto = [
     <PassoSogliaVersamento
@@ -143,6 +278,7 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
       onCambiaImpostata={setSogliaImpostata}
       valore={sogliaValore}
       onCambiaValore={setSogliaValore}
+      numeroSimulazioniSalvate={storico.length}
     />,
     <PassoCommissioniVendita key="commissioni" valore={commissione} onCambia={setCommissione} />,
     <PassoVendiInPerdita key="perdita" valore={forzaVendita} onCambia={setForzaVendita} />,
@@ -189,15 +325,38 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
         onCalcola={handleCalcola}
         inCalcolo={inCalcolo}
         puoAvanzare={!ultimoPasso || nomeSimulazione.trim().length > 0}
+        mostraAnnullaAccantoAvanti={indice === 0 && storico.length >= MAX_SIMULAZIONI_STORICO}
       >
         {passoCorrenteContenuto[indice]}
       </WizardRibilanciamento>
 
       {errore && <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-body)', marginTop: 12 }}>{errore}</p>}
 
-      {risultato && (
-        <div style={{ marginTop: 16 }}>
-          <Sezione>
+      <OverlayRisultatoSimulazione
+        aperto={risultato !== null}
+        onChiudi={() => setRisultato(null)}
+        nomeSimulazione={nomeRisultato}
+        onEsportaPdf={() => {
+          if (!risultato) return
+          esportaSimulazionePdf(
+            costruisciContenutoPdf(
+              risultato,
+              nomeRisultato,
+              nomeGruppoSelezionato,
+              dataOraRisultato,
+              t,
+              tPaginaFiscalita,
+              tPaginaStorico,
+              tPaginaCosti,
+              tPaginaContenitore,
+              tCategorie,
+              locale
+            )
+          )
+        }}
+      >
+        {risultato && (
+          <>
             <p style={{ fontSize: 'var(--fs-body)', margin: 0 }}>
               {t.rich('messaggioBudgetNecessario', {
                 importo: formatEuro(risultato.necessario, locale),
@@ -308,9 +467,9 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
                 ))}
               </>
             )}
-          </Sezione>
-        </div>
-      )}
+          </>
+        )}
+      </OverlayRisultatoSimulazione>
 
       {contenitoreId && (
         <div style={{ marginTop: 24 }}>
@@ -319,7 +478,10 @@ export function SimulatoreGruppo({ contenitoriDisponibili }: { contenitoriDispon
             righe={storico.map((s) => rigaVista(s, locale, t))}
             onSeleziona={(id) => {
               const riga = storico.find((s) => s.id === id)
-              if (riga) setRisultato(riga.risultato as RisultatoSimulazioneGruppo)
+              if (!riga) return
+              setRisultato(riga.risultato as RisultatoSimulazioneGruppo)
+              setNomeRisultato(riga.nome)
+              setDataOraRisultato(riga.creato_at)
             }}
             onRinominato={(id, nuovoNome) => setStorico((prev) => prev.map((s) => (s.id === id ? { ...s, nome: nuovoNome } : s)))}
             onEliminato={(id) => setStorico((prev) => prev.filter((s) => s.id !== id))}

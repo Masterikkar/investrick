@@ -6,11 +6,14 @@ import {
   simulaPortafoglio,
   simulaGruppo,
   nomeSimulazioneValido,
+  MAX_SIMULAZIONI_STORICO,
   type ParametriSimulazionePortafoglio,
   type RisultatoSimulazionePortafoglio,
   type ParametriSimulazioneGruppo,
   type RisultatoSimulazioneGruppo,
 } from '@/lib/ribilanciamento-simulazione'
+
+type ClientSupabase = Awaited<ReturnType<typeof createClient>>
 
 export type RigaStoricoSimulazione = {
   id: string
@@ -18,6 +21,43 @@ export type RigaStoricoSimulazione = {
   creato_at: string
   parametri: unknown
   risultato: unknown
+}
+
+// Tiene lo storico a MAX_SIMULAZIONI_STORICO righe per tipo/gruppo: dopo un
+// inserimento, elimina tutto ciò che eccede le più recenti — la stessa regola
+// enunciata all'utente nel wizard ("procedendo, il sistema sovrascriverà
+// quella meno recente"). Chiamata dopo l'insert invece che prima: si
+// autocorregge anche se in passato fossero rimaste più di
+// MAX_SIMULAZIONI_STORICO righe (lo storico non era ancora limitato lato DB).
+async function eliminaSimulazioniEccedenti(
+  supabase: ClientSupabase,
+  tipo: 'portafoglio' | 'gruppo',
+  contenitoreId: string | null
+): Promise<void> {
+  // Due rami separati invece di un unico query builder condizionale: stesso
+  // stile già usato da leggiUltimeSimulazioniPortafoglio/Gruppo qui sotto
+  // (.is contro .eq su contenitore_id), niente riassegnazioni di tipo del
+  // builder Supabase.
+  const { data } =
+    contenitoreId === null
+      ? await supabase
+          .from('simulazioni_ribilanciamento')
+          .select('id')
+          .eq('tipo', tipo)
+          .is('contenitore_id', null)
+          .order('creato_at', { ascending: false })
+          .range(MAX_SIMULAZIONI_STORICO, 9999)
+      : await supabase
+          .from('simulazioni_ribilanciamento')
+          .select('id')
+          .eq('tipo', tipo)
+          .eq('contenitore_id', contenitoreId)
+          .order('creato_at', { ascending: false })
+          .range(MAX_SIMULAZIONI_STORICO, 9999)
+  const idEccedenti = (data ?? []).map((r) => r.id)
+  if (idEccedenti.length > 0) {
+    await supabase.from('simulazioni_ribilanciamento').delete().in('id', idEccedenti)
+  }
 }
 
 // Un solo punto di validazione lato server, non fidandosi del filtro live
@@ -43,6 +83,7 @@ async function salvaSimulazione(
     })
     .select('id')
     .single()
+  await eliminaSimulazioniEccedenti(supabase, tipo, contenitoreId)
   return { ok: true, id: data?.id ?? '' }
 }
 
@@ -85,7 +126,7 @@ export async function leggiUltimeSimulazioniPortafoglio(): Promise<RigaStoricoSi
     .eq('tipo', 'portafoglio')
     .is('contenitore_id', null)
     .order('creato_at', { ascending: false })
-    .limit(3)
+    .limit(MAX_SIMULAZIONI_STORICO)
   return data ?? []
 }
 
@@ -97,7 +138,7 @@ export async function leggiUltimeSimulazioniGruppo(contenitoreId: string): Promi
     .eq('tipo', 'gruppo')
     .eq('contenitore_id', contenitoreId)
     .order('creato_at', { ascending: false })
-    .limit(3)
+    .limit(MAX_SIMULAZIONI_STORICO)
   return data ?? []
 }
 
