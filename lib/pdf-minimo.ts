@@ -425,6 +425,11 @@ export class DocumentoPdf {
   sottotitolo(testo: string, tono?: 'successo' | 'pericolo' | 'avviso') {
     const dimensione = tono ? 11 : 13
     const conBarra = !tono
+    // Margine sopra: un titolo che segue un paragrafo (non un separatore
+    // esplicito) ha bisogno di uno stacco visibile, altrimenti si legge
+    // come l'ultima riga dello stesso blocco di testo invece che come
+    // inizio di una nuova sezione.
+    this.y -= 6
     this.garantisciSpazio(conBarra ? 34 : 26)
     const colore = tono ? coloreToneSolido(tono) : PALETTE.primario
     this.testo(MARGINE, this.y, testo, dimensione, 'grassetto', colore)
@@ -456,6 +461,12 @@ export class DocumentoPdf {
       this.testo(MARGINE, this.y, riga, dimensione, peso, colore)
       this.y -= altezzaRiga
     }
+    // Margine dopo il paragrafo: senza, due chiamate consecutive (due
+    // messaggi distinti, es. due frasi separate dello stesso esito) si
+    // leggono come un unico blocco di testo, indistinguibile a vista da un
+    // semplice a-capo interno alla stessa frase — il difetto di "testo non
+    // pulito, interlinee e paragrafi non separati" segnalato sul report.
+    this.y -= 5
   }
 
   // Casella di avviso: stessa idea della fascia gialla/rossa/verde usata nel
