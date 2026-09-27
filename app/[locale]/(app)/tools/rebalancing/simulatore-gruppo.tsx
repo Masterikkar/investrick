@@ -28,6 +28,7 @@ import { MAX_SIMULAZIONI_STORICO, type RisultatoSimulazioneGruppo } from '@/lib/
 // reali di next-intl clonati da GitHub, prima e dopo il fix).
 type Traduttore = {
   (chiave: string, valori?: Record<string, string | number>): string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- any obbligatorio qui, vedi commento sopra
   rich(chiave: string, valori: any): unknown
 }
 
