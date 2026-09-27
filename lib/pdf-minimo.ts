@@ -181,10 +181,12 @@ function coloreToneSolido(tono: 'successo' | 'pericolo' | 'avviso'): Rgb {
 // --- Larghezze dei glifi Helvetica / Helvetica-Bold (unità per 1000, come
 // da metriche standard Adobe AFM dei 14 font di base) — solo per i caratteri
 // che possono comparire nei testi dell'app (ASCII stampabile + lettere
-// accentate italiane + simboli usati: €, — – … ° ± ×). Un fallback fisso
-// copre qualunque altro carattere: un a-capo o un allineamento leggermente
-// impreciso su un carattere raro non è un problema, un file non valido lo
-// sarebbe.
+// accentate italiane + simboli usati: €, — – … ° ± ×, spazio unificatore di
+// formatEuro). Un fallback fisso copre qualunque altro carattere: un a-capo
+// o un allineamento leggermente impreciso su un carattere raro non è un
+// problema, un file non valido lo sarebbe — ma un carattere che COMPARE
+// spesso (come lo spazio unificatore, in ogni importo) va sempre misurato
+// con la larghezza vera, mai lasciato al fallback: la differenza si vede.
 const LARGHEZZA_FALLBACK = 556
 
 const LARGHEZZE_HELVETICA: Record<number, number> = {
@@ -204,6 +206,11 @@ const LARGHEZZE_HELVETICA: Record<number, number> = {
   0xe0: 556, 0xe8: 556, 0xe9: 556, 0xec: 222, 0xf2: 556, 0xf9: 556, // à è é ì ò ù
   0xc0: 667, 0xc8: 667, 0xc9: 667, 0xcc: 278, 0xd2: 778, 0xd9: 722, // À È É Ì Ò Ù
   0x20ac: 556, 0x2014: 1000, 0x2013: 556, 0x2026: 1000, // € — – …
+  0xa0: 278, // spazio unificatore (nbsp) — formatEuro lo usa fra il numero e €;
+             // stessa larghezza dello spazio normale (32), non il fallback
+             // generico: senza questa voce ogni importo in euro veniva
+             // misurato ~2,6pt più largo del vero, spostando a sinistra il
+             // testo allineato a destra rispetto all'intestazione di colonna.
 }
 
 const LARGHEZZE_HELVETICA_BOLD: Record<number, number> = {
@@ -223,6 +230,7 @@ const LARGHEZZE_HELVETICA_BOLD: Record<number, number> = {
   0xe0: 556, 0xe8: 556, 0xe9: 556, 0xec: 278, 0xf2: 611, 0xf9: 611,
   0xc0: 722, 0xc8: 667, 0xc9: 667, 0xcc: 278, 0xd2: 778, 0xd9: 722,
   0x20ac: 556, 0x2014: 1000, 0x2013: 556, 0x2026: 1000,
+  0xa0: 278, // vedi nota sulla tabella Helvetica non-bold
 }
 
 export type PesoFont = 'normale' | 'grassetto'
