@@ -10,27 +10,34 @@
 // fuori dal browser, è la scelta più affidabile finché quella dipendenza non
 // si potrà aggiungere e verificare con calma.
 //
-// Pensato per sembrare una schermata dell'app esportata, non un documento
-// "da ufficio" a sé stante: sfondo scuro identico a --bg-base, stessa
-// palette semantica (successo/avviso/pericolo, mai scurita: qui lo sfondo è
-// scuro come a schermo, non carta bianca), stesse convenzioni delle
-// tabelle vere dell'app (intestazione con bordo sottile e testo secondario,
-// non una bandiera colorata — vedi .tabella-riga in globals.css), e le
-// stesse caselle di avviso del wizard. Uniche deviazioni deliberate dal
-// letterale schema a schermo: le colonne numeriche sono allineate a destra
-// (a schermo sono a sinistra come tutto il resto) perché su una tabella
-// stampabile con molte righe è lo standard per confrontare colpo d'occhio i
-// valori, non un refuso. Colonne a larghezza proporzionale al contenuto
-// (una tabella con colonne uguali per forza mostrava intestazioni lunghe
-// sovrapposte a quelle vicine), celle colorate per plus/minus, più pagine
-// con piè di pagina (nome simulazione + numero pagina) se il contenuto
-// eccede la prima. Font Helvetica/Helvetica-Bold standard (nessun embedding
-// necessario — l'app usa IBM Plex Sans, ma incorporare un font vero in un
-// generatore scritto a mano da zero, senza librerie, è un rischio di bug
-// molto più alto del beneficio visivo: i 14 font standard PDF sono garantiti
-// presenti in ogni lettore conforme, un font incorporato va costruito a
-// mano fino al subsetting), codifica WinAnsi (italiano, euro,
-// trattini/ellissi).
+// Pensato come un report professionale da consegnare (a un cliente, via
+// email, in stampa), non come un calco letterale della schermata scura
+// dell'app: sfondo bianco (un fondo scuro a piena pagina è il caso peggiore
+// per il consumo d'inchiostro in stampa), ma riconoscibile a colpo d'occhio
+// come "di Investrick" grazie a un uso deliberato e coerente del blu del
+// brand (--primary, identico a globals.css) in pochi punti fissi — un
+// piccolo simbolo + la scritta "INVESTRICK" nell'intestazione, la barra
+// sotto l'intestazione del report, l'accento sotto i titoli di sezione e la
+// tinta leggera dell'intestazione di ogni tabella. Per il resto restano le
+// stesse convenzioni delle tabelle vere dell'app dove hanno senso su carta
+// bianca (colonne a larghezza proporzionale al contenuto, celle colorate
+// per plus/minus, badge d'esito con sfondo tenue), i colori semantici
+// (successo/avviso/pericolo) nelle versioni leggermente scurite rispetto
+// allo schermo per restare leggibili su bianco, più pagine con piè di
+// pagina (nome simulazione + numero pagina) se il contenuto eccede la
+// prima. Uniche deviazioni deliberate dal letterale schema a schermo: le
+// colonne numeriche sono allineate a destra (a schermo sono a sinistra come
+// tutto il resto) perché su una tabella stampabile con molte righe è lo
+// standard per confrontare colpo d'occhio i valori, non un refuso; e le
+// intestazioni di tabella sono maiuscole con tinta di sfondo, mentre a
+// schermo sono normali senza sfondo — qui serve un'ancora visiva blu per
+// riconoscimento immediato, a schermo basta il contesto dell'app intorno.
+// Font Helvetica/Helvetica-Bold standard (nessun embedding necessario —
+// l'app usa IBM Plex Sans, ma incorporare un font vero in un generatore
+// scritto a mano da zero, senza librerie, è un rischio di bug molto più
+// alto del beneficio visivo: i 14 font standard PDF sono garantiti presenti
+// in ogni lettore conforme, un font incorporato va costruito a mano fino al
+// subsetting), codifica WinAnsi (italiano, euro, trattini/ellissi).
 
 // --- Codifica testo → WinAnsi (Windows-1252) ---
 //
@@ -93,11 +100,22 @@ function escapePdfString(bytes: Uint8Array): Uint8Array {
   return Uint8Array.from(out)
 }
 
-// --- Colori: stessi valori esatti delle CSS custom properties dell'app
-// (app/[locale]/globals.css), qui come terne RGB frazionarie 0–1 per gli
-// operatori PDF `rg`/`RG`. Nessuna versione "scurita per la carta bianca":
-// lo sfondo del report è scuro come --bg-base, quindi i colori semantici
-// (successo/avviso/pericolo) sono usati identici a come appaiono a schermo.
+// --- Colori: sfondo bianco (un report pensato per essere stampato consuma
+// inchiostro proporzionalmente alle aree piene — uno sfondo scuro a piena
+// pagina è il caso peggiore possibile), ma con il blu del brand
+// dell'app (--primary, identico a globals.css) usato con intenzione precisa
+// in pochi punti fissi — non un'imitazione letterale dello schermo, che qui
+// userebbe il blu pochissimo: un report che qualcuno stampa o allega a
+// un'email deve restare riconoscibile come "di Investrick" anche senza il
+// contesto dell'app intorno, e il colore è il modo più efficace per
+// ottenerlo (il vero font dell'app, IBM Plex Sans, non è disponibile senza
+// incorporarlo — vedi la nota più sopra). Il blu compare quindi in: il
+// "logo" testuale dell'intestazione, l'accento sotto i titoli di sezione,
+// la tinta leggera (non piena) dell'intestazione di ogni tabella e la riga
+// sotto l'intestazione del report — sempre come tocco, mai come sfondo
+// pieno esteso. I colori semantici (successo/avviso/pericolo) restano
+// invece le versioni leggermente scurite rispetto allo schermo, per
+// restare leggibili su carta bianca.
 type Rgb = readonly [number, number, number]
 
 function hex(valore: string): Rgb {
@@ -106,26 +124,33 @@ function hex(valore: string): Rgb {
 }
 
 // Interpola linearmente fra due colori (quantita 0 = a, 1 = b): usata per
-// ottenere uno sfondo "tinteggiato" (es. una casella di avviso, un badge)
-// senza bisogno di trasparenza reale nel PDF — lo stesso effetto visivo di
-// un rgba(...) dell'app calcolato una volta come colore pieno.
+// ottenere una tinta leggera di un colore pieno (es. lo sfondo dell'header
+// di tabella) senza bisogno di trasparenza reale nel PDF.
 function mescola(a: Rgb, b: Rgb, quantita: number): Rgb {
   return [a[0] + (b[0] - a[0]) * quantita, a[1] + (b[1] - a[1]) * quantita, a[2] + (b[2] - a[2]) * quantita]
 }
 
+const BIANCO = hex('#FFFFFF')
+const PRIMARIO = hex('#4C5FE0')
+
 export const PALETTE = {
-  sfondoPagina: hex('#0A0D16'), // --bg-base
-  sfondoSezione: hex('#101421'), // --bg-section
-  primario: hex('#4C5FE0'),
+  bianco: BIANCO,
+  primario: PRIMARIO,
   primarioVivido: hex('#7C8CFF'),
-  successo: hex('#34C77B'),
-  pericolo: hex('#E5484D'),
-  avviso: hex('#E8A23B'),
-  testo: hex('#E8EBF2'), // --text-primary
-  testoSecondario: hex('#9198AD'), // --text-secondary
-  testoMuto: hex('#6C7286'), // --text-muted
-  bianco: hex('#FFFFFF'),
-  riga: hex('#2B3350'), // --border-default (righe separatrici, footer)
+  // Tinta leggera del blu del brand (7% su bianco): sfondo dell'intestazione
+  // di tabella — riconoscibile come "quel blu lì" senza essere un blu pieno
+  // che consuma inchiostro su ogni tabella del report.
+  primarioTenue: mescola(BIANCO, PRIMARIO, 0.07),
+  successo: hex('#1F9D5F'), // leggermente più scuro di --success: su carta bianca resta leggibile
+  successoChiaro: hex('#E3F8ED'),
+  pericolo: hex('#D6383D'),
+  pericoloChiaro: hex('#FBE7E8'),
+  avviso: hex('#B87816'), // --warning scurito: su sfondo bianco l'originale è poco leggibile
+  avvisoChiaro: hex('#FBF0DD'),
+  testo: hex('#1C2033'),
+  testoSecondario: hex('#5B6178'),
+  testoMuto: hex('#9198AD'),
+  riga: hex('#DEE1EC'),
 } as const
 
 export type Tono = 'normale' | 'secondario' | 'successo' | 'pericolo' | 'avviso'
@@ -145,12 +170,8 @@ function coloreTono(tono: Tono | undefined): Rgb {
   }
 }
 
-// Sfondo tenue di una casella/badge: una tinta del colore del tono sopra lo
-// sfondo scuro di base — stesso principio del badge dello storico
-// simulazioni a schermo (rgba(colore, 0.15) su sfondo scuro), qui come
-// colore pieno perché il nostro motore PDF non disegna con trasparenza.
 function coloreToneChiaro(tono: 'successo' | 'pericolo' | 'avviso'): Rgb {
-  return mescola(PALETTE.sfondoSezione, coloreToneSolido(tono), 0.18)
+  return tono === 'successo' ? PALETTE.successoChiaro : tono === 'pericolo' ? PALETTE.pericoloChiaro : PALETTE.avvisoChiaro
 }
 
 function coloreToneSolido(tono: 'successo' | 'pericolo' | 'avviso'): Rgb {
@@ -294,17 +315,6 @@ export class DocumentoPdf {
   // separato dalla prima pagina.
   private titoloFooter = ''
 
-  constructor() {
-    // Sfondo scuro su ogni pagina fin dalla prima: va disegnato come primo
-    // comando (sotto tutto il resto), non aggiunto dopo — altrimenti
-    // coprirebbe il contenuto già scritto.
-    this.disegnaSfondoPagina()
-  }
-
-  private disegnaSfondoPagina() {
-    this.paginaCorrente().push({ tipo: 'rettangolo', x: 0, y: 0, larghezza: LARGHEZZA_PAGINA, altezza: ALTEZZA_PAGINA, colore: PALETTE.sfondoPagina })
-  }
-
   private paginaCorrente(): Comando[] {
     return this.pagine[this.pagine.length - 1]
   }
@@ -312,7 +322,6 @@ export class DocumentoPdf {
   private nuovaPagina() {
     this.pagine.push([])
     this.y = ALTEZZA_PAGINA - MARGINE
-    this.disegnaSfondoPagina()
   }
 
   // Garantisce almeno `altezza` punti liberi prima della zona del piè di
@@ -346,10 +355,12 @@ export class DocumentoPdf {
   // raggiunto/Insufficiente) — stessa informazione e stessi colori della
   // mini-card "Ultime simulazioni" a schermo. Niente banda colorata a piena
   // pagina: a schermo un titolo di pagina è solo eyebrow + h1 sullo sfondo
-  // scuro normale (vedi es. il titolo del dettaglio PAC), non un blocco
-  // blu — qui si replica esattamente quello, con una sottile riga
-  // separatrice sotto al posto del bordo della sezione successiva. Va
-  // chiamata una sola volta, come primo elemento del documento.
+  // normale (vedi es. il titolo del dettaglio PAC), non un blocco blu pieno
+  // — qui il titolo resta impostato allo stesso modo, con in più il
+  // marchio (simbolo + "INVESTRICK") nell'eyebrow e una barra piena nel
+  // blu del brand al posto della sottile riga separatrice che chiuderebbe
+  // la sezione a schermo. Va chiamata una sola volta, come primo elemento
+  // del documento.
   intestazioneReport(titolo: string, sottotitolo: string, distintivo?: { testo: string; tono: 'successo' | 'avviso' | 'pericolo' }) {
     this.titoloFooter = titolo || 'Investrick'
 
@@ -362,11 +373,19 @@ export class DocumentoPdf {
     const righeTitolo = spezzaRighe(titolo, Math.max(larghezzaTitoloDisponibile, 120), dimTitolo, 'grassetto').slice(0, 2)
     const altezzaRigaTitolo = dimTitolo * 1.28
 
-    // Eyebrow — stessa etichetta piccola e secondaria di --text-secondary
-    // che l'app usa sopra ogni h1 di dettaglio (es. "PAC" sopra il nome del
-    // piano), non un accento colorato: il colore forte resta riservato al
-    // badge e ai dati.
-    this.testo(MARGINE, ALTEZZA_PAGINA - MARGINE, 'INVESTRICK · REPORT DI RIBILANCIAMENTO', 8.5, 'grassetto', PALETTE.testoSecondario)
+    // Eyebrow — a schermo sarebbe una sola etichetta secondaria uniforme
+    // (es. "PAC" sopra il nome del piano), ma qui il colore forte non resta
+    // riservato al badge e ai dati: un piccolo simbolo pieno + "INVESTRICK"
+    // in blu del brand rendono il report riconoscibile a colpo d'occhio
+    // anche fuori dal contesto dell'app, con il resto dell'etichetta che
+    // resta nel consueto testo secondario.
+    const yEyebrow = ALTEZZA_PAGINA - MARGINE
+    const latoLogo = 7
+    this.rettangolo(MARGINE, yEyebrow + 6.3, latoLogo, latoLogo, PALETTE.primario)
+    const xMarchio = MARGINE + latoLogo + 5
+    this.testo(xMarchio, yEyebrow, 'INVESTRICK', 8.5, 'grassetto', PALETTE.primario)
+    const larghezzaMarchio = larghezzaTesto('INVESTRICK', 8.5, 'grassetto')
+    this.testo(xMarchio + larghezzaMarchio, yEyebrow, ' · REPORT DI RIBILANCIAMENTO', 8.5, 'grassetto', PALETTE.testoSecondario)
 
     let yTitolo = ALTEZZA_PAGINA - MARGINE - eyebrowH
     for (const riga of righeTitolo) {
@@ -388,21 +407,38 @@ export class DocumentoPdf {
     }
 
     this.y = yTitolo - dimSottotitolo * 1.3 - 18
-    this.linea(MARGINE, LARGHEZZA_PAGINA - MARGINE, this.y, PALETTE.riga)
+    // Barra piena (non una semplice riga sottile) nel blu del brand: chiude
+    // l'intestazione con un secondo tocco di colore riconoscibile, oltre al
+    // marchio in alto.
+    this.rettangolo(MARGINE, this.y + 1.1, LARGHEZZA_PAGINA - MARGINE * 2, 2.2, PALETTE.primario)
     this.y -= 24
   }
 
-  // Titolo minore di sezione: grassetto in --text-primary, come un <h3>
-  // dell'app (nessun accento decorativo sotto — l'app non ne usa). Un
-  // `tono` opzionale lo ricolora e lo rimpicciolisce leggermente, per i
-  // pochi titoli che a schermo sono in realtà un paragrafo colorato (es.
-  // "Vendite proposte", in --warning) e non un vero h3.
+  // Titolo minore di sezione: a schermo sarebbe un <h3> grassetto in colore
+  // normale, senza accento decorativo. Qui invece — quarta e ultima
+  // ricorrenza deliberata del blu del brand — è colorato in --primary con
+  // una piccola barra piena sotto, per marcare ogni sezione come "di
+  // Investrick" anche a colpo d'occhio scorrendo solo i titoli. Un `tono`
+  // opzionale lo sostituisce con un semplice paragrafo colorato senza
+  // barra, per i pochi titoli che a schermo sono in realtà un paragrafo
+  // colorato (es. "Vendite proposte", in --warning) e non un vero h3.
   sottotitolo(testo: string, tono?: 'successo' | 'pericolo' | 'avviso') {
-    this.garantisciSpazio(26)
     const dimensione = tono ? 11 : 13
-    const colore = tono ? coloreToneSolido(tono) : PALETTE.testo
+    const conBarra = !tono
+    this.garantisciSpazio(conBarra ? 34 : 26)
+    const colore = tono ? coloreToneSolido(tono) : PALETTE.primario
     this.testo(MARGINE, this.y, testo, dimensione, 'grassetto', colore)
-    this.y -= dimensione * 1.35 + 8
+    if (conBarra) {
+      // Scende abbastanza sotto i discendenti del titolo prima della barra,
+      // e lascia un margine ampio dopo — con un margine stretto la barra
+      // finiva a ridosso (a tratti sovrapposta) dell'ascendente della riga
+      // successiva.
+      const yBarra = this.y - 8
+      this.rettangolo(MARGINE, yBarra, 24, 2.4, PALETTE.primario)
+      this.y = yBarra - 2.4 - 12
+    } else {
+      this.y -= dimensione * 1.35 + 8
+    }
   }
 
   // Un paragrafo può andare a capo su più righe: ognuna prenota il proprio
@@ -482,12 +518,14 @@ export class DocumentoPdf {
     const larghezzaFissata = larghezzeEsplicite.reduce((acc: number, l) => acc + (l ?? 0), 0)
 
     // Larghezza "desiderata" di ogni colonna automatica: la più lunga fra
-    // intestazione e celle. Intestazione non maiuscola (a differenza della
-    // prima versione): a schermo le etichette di colonna sono in tono
-    // normale ("Strumento", non "STRUMENTO"), qui uguale.
+    // intestazione e celle. Intestazione maiuscola (a differenza dello
+    // schermo, dove le <th> sono in tono normale): qui l'intestazione ha
+    // anche uno sfondo tenue nel blu del brand, e maiuscolo+tinta insieme
+    // la rendono un'ancora visiva immediata, coerente con le altre
+    // ricorrenze del colore nel resto del report.
     const desiderata = colonne.map((c, i) => {
       if (larghezzeEsplicite[i] !== undefined) return 0
-      const larghezzaIntestazione = larghezzaTesto(c.intestazione, dimensioneHeader, 'grassetto')
+      const larghezzaIntestazione = larghezzaTesto(c.intestazione.toUpperCase(), dimensioneHeader, 'grassetto')
       const larghezzaMaxCella = righe.reduce((max, r) => Math.max(max, larghezzaTesto(testoCella(r[i] ?? ''), dimensione, 'normale')), 0)
       // +0.5pt di margine oltre al padding: senza questo, quando
       // l'intestazione è il termine dominante del max() il giro
@@ -519,28 +557,32 @@ export class DocumentoPdf {
       cursoreX += l
     }
 
-    // Intestazione: nessuno sfondo, testo secondario (stesso colore delle
-    // <th> a schermo), una riga sottile sotto — può andare a capo su più
-    // righe come le celle dati.
-    const righeHeaderPerColonna = colonne.map((c, i) => spezzaRighe(c.intestazione, larghezze[i] - padding * 2, dimensioneHeader, 'grassetto'))
+    // Intestazione: sfondo tenue nel blu del brand, testo maiuscolo pieno
+    // nello stesso blu, riga di chiusura più marcata — a differenza dello
+    // schermo (nessuno sfondo, testo secondario, riga sottile): qui serve
+    // un'ancora visiva riconoscibile su ogni tabella del report, non solo
+    // nell'intestazione. Può comunque andare a capo su più righe come le
+    // celle dati.
+    const righeHeaderPerColonna = colonne.map((c, i) => spezzaRighe(c.intestazione.toUpperCase(), larghezze[i] - padding * 2, dimensioneHeader, 'grassetto'))
     const numeroRigheHeader = Math.max(1, ...righeHeaderPerColonna.map((r) => r.length))
     const padVerticaleHeader = 6
     const altezzaHeader = numeroRigheHeader * altezzaRigaHeader + padVerticaleHeader * 2
 
     this.garantisciSpazio(altezzaHeader + altezzaRiga * 2)
     const headerTop = this.y
+    this.rettangolo(MARGINE, headerTop, this.larghezzaUtile, altezzaHeader, PALETTE.primarioTenue)
     colonne.forEach((c, i) => {
       let cursoreY = headerTop - padVerticaleHeader - dimensioneHeader * 0.85
       for (const riga of righeHeaderPerColonna[i]) {
         const x = c.allineaDestra
           ? posizioniX[i] + larghezze[i] - padding - larghezzaTesto(riga, dimensioneHeader, 'grassetto')
           : posizioniX[i] + padding
-        this.testo(x, cursoreY, riga, dimensioneHeader, 'grassetto', PALETTE.testoSecondario)
+        this.testo(x, cursoreY, riga, dimensioneHeader, 'grassetto', PALETTE.primario)
         cursoreY -= altezzaRigaHeader
       }
     })
     this.y = headerTop - altezzaHeader
-    this.linea(MARGINE, LARGHEZZA_PAGINA - MARGINE, this.y, PALETTE.riga)
+    this.linea(MARGINE, LARGHEZZA_PAGINA - MARGINE, this.y, PALETTE.primario, 1.3)
     this.y -= 8
 
     for (const riga of righe) {
