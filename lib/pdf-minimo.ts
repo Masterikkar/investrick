@@ -10,16 +10,27 @@
 // fuori dal browser, è la scelta più affidabile finché quella dipendenza non
 // si potrà aggiungere e verificare con calma.
 //
-// Pensato per un vero "report da consegnare": banda di intestazione colorata
-// (nome simulazione + sottotitolo + eventuale badge esito), sottotitoli di
-// sezione con accento colorato, caselle di avviso colorate (stesso
-// significato semantico di --warning/--success/--danger dell'app), tabelle
-// con intestazione a bandiera piena e colonne a larghezza proporzionale al
-// contenuto (una tabella con colonne uguali per forza mostrava intestazioni
-// lunghe sovrapposte a quelle vicine), celle colorate per plus/minus, più
-// pagine con piè di pagina (nome simulazione + numero pagina) se il
-// contenuto eccede la prima. Font Helvetica/Helvetica-Bold standard (nessun
-// embedding necessario), codifica WinAnsi (italiano, euro, trattini/ellissi).
+// Pensato per sembrare una schermata dell'app esportata, non un documento
+// "da ufficio" a sé stante: sfondo scuro identico a --bg-base, stessa
+// palette semantica (successo/avviso/pericolo, mai scurita: qui lo sfondo è
+// scuro come a schermo, non carta bianca), stesse convenzioni delle
+// tabelle vere dell'app (intestazione con bordo sottile e testo secondario,
+// non una bandiera colorata — vedi .tabella-riga in globals.css), e le
+// stesse caselle di avviso del wizard. Uniche deviazioni deliberate dal
+// letterale schema a schermo: le colonne numeriche sono allineate a destra
+// (a schermo sono a sinistra come tutto il resto) perché su una tabella
+// stampabile con molte righe è lo standard per confrontare colpo d'occhio i
+// valori, non un refuso. Colonne a larghezza proporzionale al contenuto
+// (una tabella con colonne uguali per forza mostrava intestazioni lunghe
+// sovrapposte a quelle vicine), celle colorate per plus/minus, più pagine
+// con piè di pagina (nome simulazione + numero pagina) se il contenuto
+// eccede la prima. Font Helvetica/Helvetica-Bold standard (nessun embedding
+// necessario — l'app usa IBM Plex Sans, ma incorporare un font vero in un
+// generatore scritto a mano da zero, senza librerie, è un rischio di bug
+// molto più alto del beneficio visivo: i 14 font standard PDF sono garantiti
+// presenti in ogni lettore conforme, un font incorporato va costruito a
+// mano fino al subsetting), codifica WinAnsi (italiano, euro,
+// trattini/ellissi).
 
 // --- Codifica testo → WinAnsi (Windows-1252) ---
 //
@@ -82,12 +93,11 @@ function escapePdfString(bytes: Uint8Array): Uint8Array {
   return Uint8Array.from(out)
 }
 
-// --- Colori: stessa palette dei CSS custom properties dell'app
+// --- Colori: stessi valori esatti delle CSS custom properties dell'app
 // (app/[locale]/globals.css), qui come terne RGB frazionarie 0–1 per gli
-// operatori PDF `rg`/`RG`. Il report è pensato per essere stampato: sfondo
-// pagina bianco, il colore primario dell'app resta l'accento forte
-// (intestazione, tabelle), i colori semantici (successo/avviso/pericolo)
-// hanno lo stesso significato che hanno a schermo.
+// operatori PDF `rg`/`RG`. Nessuna versione "scurita per la carta bianca":
+// lo sfondo del report è scuro come --bg-base, quindi i colori semantici
+// (successo/avviso/pericolo) sono usati identici a come appaiono a schermo.
 type Rgb = readonly [number, number, number]
 
 function hex(valore: string): Rgb {
@@ -95,22 +105,27 @@ function hex(valore: string): Rgb {
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]
 }
 
+// Interpola linearmente fra due colori (quantita 0 = a, 1 = b): usata per
+// ottenere uno sfondo "tinteggiato" (es. una casella di avviso, un badge)
+// senza bisogno di trasparenza reale nel PDF — lo stesso effetto visivo di
+// un rgba(...) dell'app calcolato una volta come colore pieno.
+function mescola(a: Rgb, b: Rgb, quantita: number): Rgb {
+  return [a[0] + (b[0] - a[0]) * quantita, a[1] + (b[1] - a[1]) * quantita, a[2] + (b[2] - a[2]) * quantita]
+}
+
 export const PALETTE = {
+  sfondoPagina: hex('#0A0D16'), // --bg-base
+  sfondoSezione: hex('#101421'), // --bg-section
   primario: hex('#4C5FE0'),
   primarioVivido: hex('#7C8CFF'),
-  primarioChiaro: hex('#E4E7FB'), // per la riga sotto l'intestazione dei sottotitoli
-  successo: hex('#1F9D5F'), // leggermente più scuro di --success: su carta bianca resta leggibile
-  successoChiaro: hex('#E3F8ED'),
-  pericolo: hex('#D6383D'),
-  pericoloChiaro: hex('#FBE7E8'),
-  avviso: hex('#B87816'), // --warning scurito: su sfondo bianco l'originale è poco leggibile
-  avvisoChiaro: hex('#FBF0DD'),
-  testo: hex('#1C2033'),
-  testoSecondario: hex('#5B6178'),
-  testoMuto: hex('#9198AD'),
+  successo: hex('#34C77B'),
+  pericolo: hex('#E5484D'),
+  avviso: hex('#E8A23B'),
+  testo: hex('#E8EBF2'), // --text-primary
+  testoSecondario: hex('#9198AD'), // --text-secondary
+  testoMuto: hex('#6C7286'), // --text-muted
   bianco: hex('#FFFFFF'),
-  riga: hex('#DEE1EC'),
-  sottotitoloSuBanda: hex('#C7CEFA'),
+  riga: hex('#2B3350'), // --border-default (righe separatrici, footer)
 } as const
 
 export type Tono = 'normale' | 'secondario' | 'successo' | 'pericolo' | 'avviso'
@@ -130,8 +145,12 @@ function coloreTono(tono: Tono | undefined): Rgb {
   }
 }
 
+// Sfondo tenue di una casella/badge: una tinta del colore del tono sopra lo
+// sfondo scuro di base — stesso principio del badge dello storico
+// simulazioni a schermo (rgba(colore, 0.15) su sfondo scuro), qui come
+// colore pieno perché il nostro motore PDF non disegna con trasparenza.
 function coloreToneChiaro(tono: 'successo' | 'pericolo' | 'avviso'): Rgb {
-  return tono === 'successo' ? PALETTE.successoChiaro : tono === 'pericolo' ? PALETTE.pericoloChiaro : PALETTE.avvisoChiaro
+  return mescola(PALETTE.sfondoSezione, coloreToneSolido(tono), 0.18)
 }
 
 function coloreToneSolido(tono: 'successo' | 'pericolo' | 'avviso'): Rgb {
@@ -275,6 +294,17 @@ export class DocumentoPdf {
   // separato dalla prima pagina.
   private titoloFooter = ''
 
+  constructor() {
+    // Sfondo scuro su ogni pagina fin dalla prima: va disegnato come primo
+    // comando (sotto tutto il resto), non aggiunto dopo — altrimenti
+    // coprirebbe il contenuto già scritto.
+    this.disegnaSfondoPagina()
+  }
+
+  private disegnaSfondoPagina() {
+    this.paginaCorrente().push({ tipo: 'rettangolo', x: 0, y: 0, larghezza: LARGHEZZA_PAGINA, altezza: ALTEZZA_PAGINA, colore: PALETTE.sfondoPagina })
+  }
+
   private paginaCorrente(): Comando[] {
     return this.pagine[this.pagine.length - 1]
   }
@@ -282,6 +312,7 @@ export class DocumentoPdf {
   private nuovaPagina() {
     this.pagine.push([])
     this.y = ALTEZZA_PAGINA - MARGINE
+    this.disegnaSfondoPagina()
   }
 
   // Garantisce almeno `altezza` punti liberi prima della zona del piè di
@@ -310,61 +341,68 @@ export class DocumentoPdf {
     this.y -= altezza
   }
 
-  // Banda di intestazione a piena pagina (bordo a bordo): nome della
-  // simulazione, sottotitolo (tipo + data) e un badge opzionale con l'esito
-  // (Raggiunto/Parziale/Non raggiunto/Insufficiente) — stessa informazione e
-  // stessi colori della mini-card "Ultime simulazioni" a schermo. Va
+  // Intestazione del report: nome della simulazione, sottotitolo (tipo +
+  // data) e un badge opzionale con l'esito (Raggiunto/Parziale/Non
+  // raggiunto/Insufficiente) — stessa informazione e stessi colori della
+  // mini-card "Ultime simulazioni" a schermo. Niente banda colorata a piena
+  // pagina: a schermo un titolo di pagina è solo eyebrow + h1 sullo sfondo
+  // scuro normale (vedi es. il titolo del dettaglio PAC), non un blocco
+  // blu — qui si replica esattamente quello, con una sottile riga
+  // separatrice sotto al posto del bordo della sezione successiva. Va
   // chiamata una sola volta, come primo elemento del documento.
   intestazioneReport(titolo: string, sottotitolo: string, distintivo?: { testo: string; tono: 'successo' | 'avviso' | 'pericolo' }) {
     this.titoloFooter = titolo || 'Investrick'
 
-    const dimTitolo = 19
+    const dimTitolo = 20
     const dimSottotitolo = 10.5
-    const padSuperiore = 26
-    const padInferiore = 22
-    const eyebrowH = 20
+    const eyebrowH = 16
 
-    const larghezzaBadge = distintivo ? larghezzaTesto(distintivo.testo, 9, 'grassetto') + 20 : 0
+    const larghezzaBadge = distintivo ? larghezzaTesto(distintivo.testo, 9, 'grassetto') + 16 : 0
     const larghezzaTitoloDisponibile = this.larghezzaUtile - (distintivo ? larghezzaBadge + 16 : 0)
     const righeTitolo = spezzaRighe(titolo, Math.max(larghezzaTitoloDisponibile, 120), dimTitolo, 'grassetto').slice(0, 2)
     const altezzaRigaTitolo = dimTitolo * 1.28
 
-    const altezzaBanda =
-      padSuperiore + eyebrowH + righeTitolo.length * altezzaRigaTitolo + 6 + dimSottotitolo * 1.3 + padInferiore
+    // Eyebrow — stessa etichetta piccola e secondaria di --text-secondary
+    // che l'app usa sopra ogni h1 di dettaglio (es. "PAC" sopra il nome del
+    // piano), non un accento colorato: il colore forte resta riservato al
+    // badge e ai dati.
+    this.testo(MARGINE, ALTEZZA_PAGINA - MARGINE, 'INVESTRICK · REPORT DI RIBILANCIAMENTO', 8.5, 'grassetto', PALETTE.testoSecondario)
 
-    this.rettangolo(0, ALTEZZA_PAGINA, LARGHEZZA_PAGINA, altezzaBanda, PALETTE.primario)
-
-    // Eyebrow — piccola etichetta sopra il titolo, come su un vero report.
-    this.testo(MARGINE, ALTEZZA_PAGINA - padSuperiore, 'INVESTRICK · REPORT DI RIBILANCIAMENTO', 8.5, 'grassetto', PALETTE.primarioVivido)
-
-    let yTitolo = ALTEZZA_PAGINA - padSuperiore - eyebrowH
+    let yTitolo = ALTEZZA_PAGINA - MARGINE - eyebrowH
     for (const riga of righeTitolo) {
-      this.testo(MARGINE, yTitolo, riga, dimTitolo, 'grassetto', PALETTE.bianco)
+      this.testo(MARGINE, yTitolo, riga, dimTitolo, 'grassetto', PALETTE.testo)
       yTitolo -= altezzaRigaTitolo
     }
 
-    this.testo(MARGINE, yTitolo - 4, sottotitolo, dimSottotitolo, 'normale', PALETTE.sottotitoloSuBanda)
+    this.testo(MARGINE, yTitolo - 4, sottotitolo, dimSottotitolo, 'normale', PALETTE.testoSecondario)
 
     if (distintivo) {
-      const altezzaPillola = 22
-      const yPillola = ALTEZZA_PAGINA - padSuperiore - 4
+      // Badge "tenue" — sfondo tinteggiato del colore del tono, testo pieno
+      // nello stesso colore: identico principio del badge dello storico
+      // simulazioni a schermo, non una pillola piena a testo bianco.
+      const altezzaPillola = 18
+      const yPillola = ALTEZZA_PAGINA - MARGINE - 2
       const xPillola = LARGHEZZA_PAGINA - MARGINE - larghezzaBadge
-      this.rettangolo(xPillola, yPillola, larghezzaBadge, altezzaPillola, coloreToneSolido(distintivo.tono))
-      this.testo(xPillola + 10, yPillola - altezzaPillola + 7.5, distintivo.testo, 9, 'grassetto', PALETTE.bianco)
+      this.rettangolo(xPillola, yPillola, larghezzaBadge, altezzaPillola, coloreToneChiaro(distintivo.tono))
+      this.testo(xPillola + 8, yPillola - altezzaPillola + 5.5, distintivo.testo, 9, 'grassetto', coloreToneSolido(distintivo.tono))
     }
 
-    this.y = ALTEZZA_PAGINA - altezzaBanda - 26
+    this.y = yTitolo - dimSottotitolo * 1.3 - 18
+    this.linea(MARGINE, LARGHEZZA_PAGINA - MARGINE, this.y, PALETTE.riga)
+    this.y -= 24
   }
 
-  // Titolo di sezione: testo in blu primario con un piccolo accento colorato
-  // sotto, al posto del semplice grassetto nero — separa visivamente le
-  // sezioni di un report lungo (vendite, riscatti, tabella soluzione, ...).
-  sottotitolo(testo: string) {
-    this.garantisciSpazio(30)
-    this.testo(MARGINE, this.y, testo, 13, 'grassetto', PALETTE.primario)
-    this.y -= 9
-    this.rettangolo(MARGINE, this.y + 4, 26, 2.6, PALETTE.primario)
-    this.y -= 14
+  // Titolo minore di sezione: grassetto in --text-primary, come un <h3>
+  // dell'app (nessun accento decorativo sotto — l'app non ne usa). Un
+  // `tono` opzionale lo ricolora e lo rimpicciolisce leggermente, per i
+  // pochi titoli che a schermo sono in realtà un paragrafo colorato (es.
+  // "Vendite proposte", in --warning) e non un vero h3.
+  sottotitolo(testo: string, tono?: 'successo' | 'pericolo' | 'avviso') {
+    this.garantisciSpazio(26)
+    const dimensione = tono ? 11 : 13
+    const colore = tono ? coloreToneSolido(tono) : PALETTE.testo
+    this.testo(MARGINE, this.y, testo, dimensione, 'grassetto', colore)
+    this.y -= dimensione * 1.35 + 8
   }
 
   // Un paragrafo può andare a capo su più righe: ognuna prenota il proprio
@@ -420,14 +458,19 @@ export class DocumentoPdf {
     this.y -= 6
   }
 
-  // Tabella con intestazione a bandiera piena (sfondo blu primario, testo
-  // bianco) e colonne a larghezza proporzionale al contenuto, non tutte
-  // uguali. Due categorie fra le colonne automatiche: quelle allineate a
-  // destra (di norma numeri/valute/percentuali) prendono per intero la
-  // larghezza che serve al loro valore più lungo e non si comprimono mai —
-  // un importo che va a capo a metà cifra è illeggibile — mentre la colonna
-  // di testo libero (di norma la prima: strumento/asset/polizza) si prende
-  // quel che resta e può invece spezzare il nome su più righe.
+  // Tabella con intestazione a bordo sottile (stessa convenzione di
+  // .tabella-riga a schermo: niente sfondo, solo una riga sotto l'header e
+  // una sotto ogni riga dati) e colonne a larghezza proporzionale al
+  // contenuto, non tutte uguali. Due categorie fra le colonne automatiche:
+  // quelle allineate a destra (di norma numeri/valute/percentuali) prendono
+  // per intero la larghezza che serve al loro valore più lungo e non si
+  // comprimono mai — un importo che va a capo a metà cifra è illeggibile —
+  // mentre la colonna di testo libero (di norma la prima:
+  // strumento/asset/polizza) si prende quel che resta e può invece
+  // spezzare il nome su più righe. Le colonne numeriche sono allineate a
+  // destra anche se a schermo la stessa tabella è tutta a sinistra: su
+  // carta/PDF con molte righe di numeri è la convenzione che si legge a
+  // colpo d'occhio, deviazione voluta dal letterale layout a schermo.
   tabella(colonne: ColonnaTabella[], righe: CellaTabella[][]) {
     const dimensione = 9.5
     const dimensioneHeader = 8.5
@@ -439,10 +482,12 @@ export class DocumentoPdf {
     const larghezzaFissata = larghezzeEsplicite.reduce((acc: number, l) => acc + (l ?? 0), 0)
 
     // Larghezza "desiderata" di ogni colonna automatica: la più lunga fra
-    // intestazione e celle.
+    // intestazione e celle. Intestazione non maiuscola (a differenza della
+    // prima versione): a schermo le etichette di colonna sono in tono
+    // normale ("Strumento", non "STRUMENTO"), qui uguale.
     const desiderata = colonne.map((c, i) => {
       if (larghezzeEsplicite[i] !== undefined) return 0
-      const larghezzaIntestazione = larghezzaTesto(c.intestazione.toUpperCase(), dimensioneHeader, 'grassetto')
+      const larghezzaIntestazione = larghezzaTesto(c.intestazione, dimensioneHeader, 'grassetto')
       const larghezzaMaxCella = righe.reduce((max, r) => Math.max(max, larghezzaTesto(testoCella(r[i] ?? ''), dimensione, 'normale')), 0)
       // +0.5pt di margine oltre al padding: senza questo, quando
       // l'intestazione è il termine dominante del max() il giro
@@ -474,32 +519,29 @@ export class DocumentoPdf {
       cursoreX += l
     }
 
-    // Intestazione: sfondo pieno colore primario, testo bianco maiuscolo,
-    // può andare a capo su più righe come le celle dati.
-    const righeHeaderPerColonna = colonne.map((c, i) => spezzaRighe(c.intestazione.toUpperCase(), larghezze[i] - padding * 2, dimensioneHeader, 'grassetto'))
+    // Intestazione: nessuno sfondo, testo secondario (stesso colore delle
+    // <th> a schermo), una riga sottile sotto — può andare a capo su più
+    // righe come le celle dati.
+    const righeHeaderPerColonna = colonne.map((c, i) => spezzaRighe(c.intestazione, larghezze[i] - padding * 2, dimensioneHeader, 'grassetto'))
     const numeroRigheHeader = Math.max(1, ...righeHeaderPerColonna.map((r) => r.length))
     const padVerticaleHeader = 6
     const altezzaHeader = numeroRigheHeader * altezzaRigaHeader + padVerticaleHeader * 2
 
     this.garantisciSpazio(altezzaHeader + altezzaRiga * 2)
     const headerTop = this.y
-    this.rettangolo(MARGINE, headerTop, this.larghezzaUtile, altezzaHeader, PALETTE.primario)
     colonne.forEach((c, i) => {
       let cursoreY = headerTop - padVerticaleHeader - dimensioneHeader * 0.85
       for (const riga of righeHeaderPerColonna[i]) {
         const x = c.allineaDestra
           ? posizioniX[i] + larghezze[i] - padding - larghezzaTesto(riga, dimensioneHeader, 'grassetto')
           : posizioniX[i] + padding
-        this.testo(x, cursoreY, riga, dimensioneHeader, 'grassetto', PALETTE.bianco)
+        this.testo(x, cursoreY, riga, dimensioneHeader, 'grassetto', PALETTE.testoSecondario)
         cursoreY -= altezzaRigaHeader
       }
     })
-    // +4pt oltre al bordo della fascia colorata: la y di un testo è la sua
-    // baseline, quindi senza questo margine la parte alta delle cifre della
-    // prima riga (l'ascendente) risalirebbe dentro il rettangolo blu
-    // dell'intestazione — impercettibile su testo scuro, ben visibile sulle
-    // celle rosse/verdi per il contrasto col blu.
-    this.y = headerTop - altezzaHeader - 4
+    this.y = headerTop - altezzaHeader
+    this.linea(MARGINE, LARGHEZZA_PAGINA - MARGINE, this.y, PALETTE.riga)
+    this.y -= 8
 
     for (const riga of righe) {
       // Ogni cella può andare a capo: l'altezza della riga di tabella è la

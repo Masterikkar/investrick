@@ -25,7 +25,10 @@ export function testoDaRich(nodo: unknown): string {
 export type ColonnaPdf = { intestazione: string; allineaDestra?: boolean }
 
 export type SezionePdf =
-  | { tipo: 'sottotitolo'; testo: string }
+  // `tono` opzionale: per i pochi titoli che a schermo sono in realtà un
+  // paragrafo colorato (es. "Vendite proposte", in --warning) e non un vero
+  // <h3> — senza, resta il titolo minore standard in --text-primary.
+  | { tipo: 'sottotitolo'; testo: string; tono?: 'successo' | 'pericolo' | 'avviso' }
   | { tipo: 'paragrafo'; testo: string; grassetto?: boolean; tono?: Tono }
   // Casella colorata (avviso/successo/pericolo): stessa fascia colorata che
   // a schermo segnala l'esito della simulazione (--warning/--success/
@@ -55,7 +58,7 @@ export function esportaSimulazionePdf(contenuto: ContenutoPdfSimulazione) {
   for (const sezione of contenuto.sezioni) {
     switch (sezione.tipo) {
       case 'sottotitolo':
-        doc.sottotitolo(sezione.testo)
+        doc.sottotitolo(sezione.testo, sezione.tono)
         break
       case 'paragrafo':
         doc.paragrafo(sezione.testo, { grassetto: sezione.grassetto, tono: sezione.tono })

@@ -144,7 +144,7 @@ function costruisciContenutoPdf(
   const sezioni: SezionePdf[] = []
 
   if (risultato.venditeProposte.length > 0) {
-    sezioni.push({ tipo: 'sottotitolo', testo: t('titoloVenditeProposte') })
+    sezioni.push({ tipo: 'sottotitolo', tono: 'avviso', testo: t('titoloVenditeProposte') })
     sezioni.push({
       tipo: 'tabella',
       colonne: [
@@ -171,7 +171,7 @@ function costruisciContenutoPdf(
   }
 
   if (risultato.riscattiProposti.length > 0) {
-    sezioni.push({ tipo: 'sottotitolo', testo: t('titoloRiscattiProposti') })
+    sezioni.push({ tipo: 'sottotitolo', tono: 'avviso', testo: t('titoloRiscattiProposti') })
     sezioni.push({
       tipo: 'tabella',
       colonne: [
