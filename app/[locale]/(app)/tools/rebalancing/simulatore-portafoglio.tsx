@@ -6,7 +6,14 @@ import { formatEuro, formatEuroSigned, formatNumero, formatPercent, type LocaleF
 import { Sezione } from '@/components/sezione'
 import { Checkbox } from '@/components/checkbox'
 import { MenuSelect } from '@/components/menu-select'
-import { RisultatoPortafoglioVista, costruisciSezioniRisultatoPortafoglio } from './risultato-portafoglio'
+import {
+  RisultatoPortafoglioVista,
+  costruisciSezioniRisultatoPortafoglio,
+  AvvisoStrutturaleVista,
+  RiepilogoStrutturaleVista,
+  Numero,
+  stileTitoloBlocco,
+} from './risultato-portafoglio'
 import { WizardRibilanciamento, type PassoWizard } from './wizard-ribilanciamento'
 import { PassoSogliaVersamento, PassoCommissioniVendita, PassoVendiInPerdita, PassoEsecuzione } from './passi-comuni'
 import { StoricoSimulazioni, type RigaStoricoVista } from './storico-simulazioni'
@@ -148,7 +155,7 @@ function costruisciContenutoPdf(
     sezioni.push({
       tipo: 'tabella',
       colonne: [
-        { intestazione: tPaginaFiscalita('colonnaStrumento') },
+        { intestazione: t('colonnaPosizioneVenduta') },
         { intestazione: tPaginaStorico('colonnaQuantita'), allineaDestra: true },
         { intestazione: tPaginaFiscalita('colonnaValore'), allineaDestra: true },
         { intestazione: t('colonnaPlusMinusLorda'), allineaDestra: true },
@@ -403,99 +410,134 @@ export function SimulatorePortafoglio({
           )
         }}
       >
-        {risultato && (
-          <>
-            {risultato.venditeProposte.length > 0 && (
-              <>
-                <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)', fontWeight: 500 }}>{t('titoloVenditeProposte')}</p>
-                <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
-                  <thead>
-                    <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaStrumento')}</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaQuantita')}</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaValore')}</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPlusMinusLorda')}</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaAliquota')}</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTassa')}</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaNetto')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {risultato.venditeProposte.map((v) => (
-                      <tr key={v.strumentoId} className="tabella-riga">
-                        <td style={{ padding: 8 }}>{v.nome}</td>
-                        <td style={{ padding: 8 }}>{formatNumero(v.quantitaVenduta, 6, false, locale)}</td>
-                        <td style={{ padding: 8 }}>{formatEuro(v.valoreVenduto, locale)}</td>
-                        <td style={{ padding: 8, color: v.plusvalenzaLorda >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                          {formatEuroSigned(v.plusvalenzaLorda, locale)}
-                        </td>
-                        <td style={{ padding: 8 }}>{formatPercent(v.aliquota * 100, 1, false, locale)}</td>
-                        <td style={{ padding: 8 }}>{formatEuro(v.tassa, locale)}</td>
-                        <td style={{ padding: 8, fontWeight: 500 }}>{formatEuro(v.proventoNetto, locale)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </>
-            )}
+        {risultato && (() => {
+          // Layout a blocchi (Riepilogo + avviso + "Da dove arrivano i
+          // soldi" numerato) solo per lo scenario "limite strutturale": per
+          // ogni altro esito resta il rendering semplice, invariato.
+          const strutturale = !!(risultato.avvisoStrutturale && risultato.avvisoStrutturale.categorie.length > 0)
+          const haVendite = risultato.venditeProposte.length > 0
+          const haRiscatti = risultato.riscattiProposti.length > 0
+          const numeroVendite = 1
+          const numeroRiscatti = haVendite ? 2 : 1
 
-            {risultato.riscattiProposti.length > 0 && (
-              <>
-                <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)', fontWeight: 500, marginTop: risultato.venditeProposte.length > 0 ? 24 : 0 }}>
-                  {t('titoloRiscattiProposti')}
-                </p>
-                <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
-                  <thead>
-                    <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPolizza')}</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaValore')}</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaImponibile')}</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTassa')}</th>
-                      <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaNetto')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {risultato.riscattiProposti.map((r) => (
-                      <tr key={r.contenitoreId} className="tabella-riga">
-                        <td style={{ padding: 8 }}>{r.nome}</td>
-                        <td style={{ padding: 8 }}>{formatEuro(r.valoreAttuale, locale)}</td>
-                        <td style={{ padding: 8 }}>{formatEuro(r.imponibile, locale)}</td>
-                        <td style={{ padding: 8 }}>{formatEuro(r.tassa, locale)}</td>
-                        <td style={{ padding: 8, fontWeight: 500 }}>{formatEuro(r.proventoNetto, locale)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </>
-            )}
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {strutturale && (
+                <>
+                  <RiepilogoStrutturaleVista
+                    versamentoTotale={risultato.risultato.esito === 'residuo' ? risultato.risultato.soluzione.versamento : 0}
+                    conVendite={haVendite}
+                    conRiscatti={haRiscatti}
+                    scostamentoResiduoPp={risultato.risultato.esito === 'residuo' ? risultato.risultato.soluzione.scostamentoMassimoPp : 0}
+                    soglia={risultato.soglia ?? 3}
+                    categorieCoinvolte={risultato.avvisoStrutturale!.categorie}
+                  />
+                  <AvvisoStrutturaleVista avvisoStrutturale={risultato.avvisoStrutturale} />
+                </>
+              )}
 
-            {risultato.poolTotale !== null && (
-              <p style={{ fontSize: 'var(--fs-body)', marginTop: 12 }}>
-                {t.rich('messaggioPoolReinvestire', {
-                  importo: formatEuro(risultato.poolTotale, locale),
-                  strong: (chunks) => <strong>{chunks}</strong>,
-                })}
+              {(haVendite || haRiscatti) && (
+                <Sezione>
+                  <div style={stileTitoloBlocco}>{t('titoloDaDoveArrivanoISoldi')}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 16 }}>
+                    {haVendite && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <Numero valore={numeroVendite} />
+                          <div style={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>{t('titoloVenditeProposte')}</div>
+                        </div>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
+                          <thead>
+                            <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
+                              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPosizioneVenduta')}</th>
+                              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaStorico('colonnaQuantita')}</th>
+                              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaValore')}</th>
+                              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPlusMinusLorda')}</th>
+                              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaAliquota')}</th>
+                              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTassa')}</th>
+                              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaNetto')}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {risultato.venditeProposte.map((v) => (
+                              <tr key={v.strumentoId} className="tabella-riga">
+                                <td style={{ padding: 8 }}>{v.nome}</td>
+                                <td style={{ padding: 8, fontFamily: 'var(--font-plex-mono)' }}>{formatNumero(v.quantitaVenduta, 6, false, locale)}</td>
+                                <td style={{ padding: 8, fontFamily: 'var(--font-plex-mono)' }}>{formatEuro(v.valoreVenduto, locale)}</td>
+                                <td
+                                  style={{
+                                    padding: 8,
+                                    fontFamily: 'var(--font-plex-mono)',
+                                    color: v.plusvalenzaLorda >= 0 ? 'var(--success)' : 'var(--danger)',
+                                  }}
+                                >
+                                  {formatEuroSigned(v.plusvalenzaLorda, locale)}
+                                </td>
+                                <td style={{ padding: 8, fontFamily: 'var(--font-plex-mono)' }}>{formatPercent(v.aliquota * 100, 1, false, locale)}</td>
+                                <td style={{ padding: 8, fontFamily: 'var(--font-plex-mono)' }}>{formatEuro(v.tassa, locale)}</td>
+                                <td style={{ padding: 8, fontFamily: 'var(--font-plex-mono)', fontWeight: 600 }}>{formatEuro(v.proventoNetto, locale)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {haRiscatti && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <Numero valore={numeroRiscatti} />
+                          <div style={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>{t('titoloRiscattiProposti')}</div>
+                        </div>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: 'var(--fs-table)' }}>
+                          <thead>
+                            <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
+                              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPolizza')}</th>
+                              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaValore')}</th>
+                              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaImponibile')}</th>
+                              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTassa')}</th>
+                              <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaNetto')}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {risultato.riscattiProposti.map((r) => (
+                              <tr key={r.contenitoreId} className="tabella-riga">
+                                <td style={{ padding: 8 }}>{r.nome}</td>
+                                <td style={{ padding: 8, fontFamily: 'var(--font-plex-mono)' }}>{formatEuro(r.valoreAttuale, locale)}</td>
+                                <td style={{ padding: 8, fontFamily: 'var(--font-plex-mono)' }}>{formatEuro(r.imponibile, locale)}</td>
+                                <td style={{ padding: 8, fontFamily: 'var(--font-plex-mono)' }}>{formatEuro(r.tassa, locale)}</td>
+                                <td style={{ padding: 8, fontFamily: 'var(--font-plex-mono)', fontWeight: 600 }}>{formatEuro(r.proventoNetto, locale)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {risultato.poolTotale !== null && (
+                      <p style={{ fontSize: 'var(--fs-body)', margin: 0 }}>
+                        {t.rich('messaggioPoolReinvestire', {
+                          importo: formatEuro(risultato.poolTotale, locale),
+                          strong: (chunks) => <strong>{chunks}</strong>,
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </Sezione>
+              )}
+
+              <p style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', margin: 0 }}>
+                {t('notaPolizzaEsclusaDalleVendite')}
               </p>
-            )}
 
-            <p
-              style={{
-                fontSize: 'var(--fs-card-link)',
-                color: 'var(--text-secondary)',
-                marginTop: risultato.venditeProposte.length > 0 || risultato.riscattiProposti.length > 0 ? 16 : 0,
-                marginBottom: 16,
-              }}
-            >
-              {t('notaPolizzaEsclusaDalleVendite')}
-            </p>
-
-            <RisultatoPortafoglioVista
-              risultato={risultato.risultato}
-              versamentoMassimo={risultato.versamentoMassimo}
-              avvisoStrutturale={risultato.avvisoStrutturale}
-            />
-          </>
-        )}
+              <RisultatoPortafoglioVista
+                risultato={risultato.risultato}
+                versamentoMassimo={risultato.versamentoMassimo}
+                avvisoStrutturale={risultato.avvisoStrutturale}
+              />
+            </div>
+          )
+        })()}
       </OverlayRisultatoSimulazione>
 
       <div style={{ marginTop: 24 }}>

@@ -173,6 +173,10 @@ export type RisultatoSimulazionePortafoglio = {
   poolTotale: number | null
   versamentoMassimo: number | null
   avvisoStrutturale: { floorPp: number; categorie: string[]; alternative: AlternativaStrutturale[] } | null
+  // Soglia di scostamento impostata dall'utente (impostazioni_utente.soglia_ribilanciamento_pp,
+  // default 3): serve al layout a blocchi del risultato per mostrare "Soglia
+  // impostata: X%" accanto allo scostamento residuo ottenibile.
+  soglia: number
 }
 
 export async function simulaPortafoglio(
@@ -445,6 +449,7 @@ export async function simulaPortafoglio(
     poolTotale,
     versamentoMassimo: poolTotale !== null ? null : versamentoMassimo,
     avvisoStrutturale,
+    soglia,
   }
 }
 

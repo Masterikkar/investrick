@@ -290,6 +290,20 @@ export function IconaEsporta() {
   )
 }
 
+// Triangolo di avviso: unica icona di sezione rimasta nel layout a blocchi
+// del risultato di ribilanciamento (avviso di limite strutturale) — tutte le
+// altre icone di titolo di sezione sono state tolte lì per ridurre il rumore
+// visivo, questa resta perché segnala davvero un problema da guardare.
+export function IconaAvviso() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 2.3 1.5 17h17L10 2.3Z" />
+      <path d="M10 7.5v4" />
+      <circle cx="10" cy="14.3" r="0.5" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 export function IconaDownload() {
   return (
     <svg
