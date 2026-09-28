@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatEuro, formatNumero, formatPercent, type LocaleFormato } from '@/lib/format'
 import { traduciCategoria } from '@/lib/i18n-categorie'
-import type { RisultatoPortafoglio, SoluzionePortafoglio } from '@/lib/ribilanciamento'
+import type { AlternativaStrutturale, RisultatoPortafoglio, SoluzionePortafoglio } from '@/lib/ribilanciamento'
 import { testoDaRich, type SezionePdf } from './esporta-pdf'
 
 // Tipo minimo del traduttore next-intl di cui questo file ha bisogno per
@@ -54,6 +54,44 @@ function interpola(a: SoluzionePortafoglio, b: SoluzionePortafoglio, x: number):
     }),
     scostamentoMassimoPp: Math.max(a.scostamentoMassimoPp, b.scostamentoMassimoPp),
   }
+}
+
+// Testo di ciascuna alternativa strutturale, una riga per alternativa: stessa
+// fonte per il paragrafo a schermo (<li>) e per la lista nel PDF, mai
+// duplicata (vedi CLAUDE.md).
+function righeAlternativeStrutturali(
+  alternative: AlternativaStrutturale[],
+  t: Traduttore,
+  tCategorie: Traduttore,
+  locale: LocaleFormato
+): string[] {
+  return alternative.map((alt) => {
+    if (alt.tipo === 'nuoviTarget') {
+      const elenco = alt.categorie
+        .map(
+          (c) =>
+            `${traduciCategoria(tCategorie, c.categoria)} ${formatPercent(c.targetAttualePct, 2, false, locale)} → ${formatPercent(c.targetSuggeritoPct, 2, false, locale)}`
+        )
+        .join(', ')
+      return t('alternativaNuoviTarget', { elenco })
+    }
+    if (alt.tipo === 'nuovaFormaPac') {
+      const elenco = alt.categorie
+        .map(
+          (c) =>
+            `${traduciCategoria(tCategorie, c.categoria)} ${formatPercent(c.formaAttualePct, 1, false, locale)} → ${formatPercent(c.formaSuggeritaPct, 1, false, locale)}`
+        )
+        .join(', ')
+      return t('alternativaNuovaFormaPac', { pac: alt.pacNome, elenco })
+    }
+    const elenco = alt.opzioni
+      .map(
+        (o) =>
+          `${traduciCategoria(tCategorie, o.categoria)}: ${formatNumero(alt.floorAttualePp, 2, false, locale)} → ${formatNumero(o.floorSePp, 2, false, locale)} pp`
+      )
+      .join(', ')
+    return t('alternativaNuovoVeicolo', { elenco })
+  })
 }
 
 const stileTh: React.CSSProperties = { padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }
@@ -143,7 +181,7 @@ export function RisultatoPortafoglioVista({
 }: {
   risultato: RisultatoPortafoglio
   versamentoMassimo: number | null
-  avvisoStrutturale?: { floorPp: number; categorie: string[] } | null
+  avvisoStrutturale?: { floorPp: number; categorie: string[]; alternative: AlternativaStrutturale[] } | null
 }) {
   const t = useTranslations('PaginaRibilanciamento')
   const tCategorie = useTranslations('Categorie')
@@ -152,12 +190,26 @@ export function RisultatoPortafoglioVista({
 
   const avvisoScostamentoStrutturale =
     avvisoStrutturale && avvisoStrutturale.categorie.length > 0 ? (
-      <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)' }}>
-        {t('avvisoScostamentoStrutturale', {
-          floor: formatNumero(avvisoStrutturale.floorPp, 2, false, locale),
-          categorie: avvisoStrutturale.categorie.map((c) => traduciCategoria(tCategorie, c)).join(', '),
-        })}
-      </p>
+      <>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)' }}>
+          {t('avvisoScostamentoStrutturale', {
+            floor: formatNumero(avvisoStrutturale.floorPp, 2, false, locale),
+            categorie: avvisoStrutturale.categorie.map((c) => traduciCategoria(tCategorie, c)).join(', '),
+          })}
+        </p>
+        {avvisoStrutturale.alternative.length > 0 && (
+          <div style={{ marginTop: 4 }}>
+            <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', margin: 0 }}>
+              {t('titoloAlternativeStrutturali')}
+            </p>
+            <ul style={{ fontSize: 'var(--fs-body)', margin: '4px 0 0' }}>
+              {righeAlternativeStrutturali(avvisoStrutturale.alternative, t, tCategorie, locale).map((riga, i) => (
+                <li key={i}>{riga}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </>
     ) : null
 
   const avvisoSenzaVeicolo =
@@ -328,7 +380,7 @@ function sezioniTabellaSoluzionePdf(
 export function costruisciSezioniRisultatoPortafoglio(
   risultato: RisultatoPortafoglio,
   versamentoMassimo: number | null,
-  avvisoStrutturale: { floorPp: number; categorie: string[] } | null | undefined,
+  avvisoStrutturale: { floorPp: number; categorie: string[]; alternative: AlternativaStrutturale[] } | null | undefined,
   t: Traduttore,
   tCategorie: Traduttore,
   locale: LocaleFormato
@@ -368,6 +420,10 @@ export function costruisciSezioniRisultatoPortafoglio(
           categorie: avvisoStrutturale.categorie.map((c) => traduciCategoria(tCategorie, c)).join(', '),
         }),
       })
+      if (avvisoStrutturale.alternative.length > 0) {
+        sezioni.push({ tipo: 'paragrafo', tono: 'secondario', testo: t('titoloAlternativeStrutturali') })
+        sezioni.push({ tipo: 'lista', voci: righeAlternativeStrutturali(avvisoStrutturale.alternative, t, tCategorie, locale) })
+      }
     }
     sezioni.push(...sezioniSenzaVeicolo(risultato.senzaVeicolo))
     sezioni.push(...sezioniTabellaSoluzionePdf(risultato.soluzione, t, tCategorie, locale))

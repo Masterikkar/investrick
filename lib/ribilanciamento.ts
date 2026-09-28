@@ -237,6 +237,117 @@ export type RisultatoPortafoglio =
   | { esito: 'residuo'; soluzione: SoluzionePortafoglio; senzaVeicolo: string[] }
   | { esito: 'irraggiungibile'; senzaVeicolo: string[] }
 
+// --- Alternative quantificate quando lo scostamento resta bloccato su un
+// floor strutturale (vedi avvisoStrutturale in ribilanciamento-simulazione.ts) ---
+
+export type AlternativaStrutturale =
+  | {
+      tipo: 'nuoviTarget'
+      categorie: { categoria: string; targetAttualePct: number; targetSuggeritoPct: number }[]
+    }
+  | {
+      tipo: 'nuovaFormaPac'
+      pacId: string
+      pacNome: string
+      categorie: { categoria: string; formaAttualePct: number; formaSuggeritaPct: number }[]
+    }
+  | {
+      tipo: 'nuovoVeicolo'
+      floorAttualePp: number
+      opzioni: { categoria: string; floorSePp: number }[]
+    }
+
+/**
+ * Quando calcolaRibilanciamentoPortafoglio (a versamento illimitato) resta
+ * comunque fuori soglia, questa funzione calcola fino a 3 modi concreti e
+ * numerici per uscirne, così l'utente non deve rifare i conti a mano:
+ *
+ * 1. nuovi target di portafoglio — il punto più vicino già raggiunto a
+ *    versamento infinito è il punto che minimizza lo scostamento massimo,
+ *    quindi è già la miglior risposta a "quali target sarebbero coerenti";
+ * 2. una nuova forma interna per un PAC — per le categorie "intrappolate"
+ *    (coperte solo da quel PAC, senza alcuna alternativa libera), la forma
+ *    che azzererebbe lo scostamento tra loro è il loro target di
+ *    portafoglio rinormalizzato a somma 100;
+ * 3. l'effetto di rendere "libera" (un veicolo indipendente, fuori dal PAC)
+ *    una categoria intrappolata — un secondo giro dello stesso motore con
+ *    quella categoria marcata libera, per quantificare quanto scende il floor.
+ */
+export function calcolaAlternativeStrutturali(
+  categorie: CategoriaPortafoglio[],
+  pac: BloccoPac[],
+  sogliaPp: number,
+  categorieAlFloor: string[],
+  soluzioneIllimitata: SoluzionePortafoglio
+): AlternativaStrutturale[] {
+  const alternative: AlternativaStrutturale[] = []
+  const quota = (k: BloccoPac, categoria: string) => k.forma[categoria] ?? 0
+  const trova = (categoria: string) => categorie.find((c) => c.categoria === categoria) ?? null
+
+  // 1. Nuovi target: il peso a versamento infinito è già il punto più vicino
+  // raggiungibile, nessun ricalcolo aggiuntivo.
+  const categorieTarget = categorieAlFloor
+    .map((categoria) => {
+      const c = trova(categoria)
+      const r = soluzioneIllimitata.righe.find((rr) => rr.categoria === categoria)
+      if (!c || c.targetPct === null || !r) return null
+      return { categoria, targetAttualePct: c.targetPct * 100, targetSuggeritoPct: r.pesoFinalePct }
+    })
+    .filter((v): v is { categoria: string; targetAttualePct: number; targetSuggeritoPct: number } => v !== null)
+  if (categorieTarget.length > 0) alternative.push({ tipo: 'nuoviTarget', categorie: categorieTarget })
+
+  // 2. Nuova forma PAC: solo per le categorie al floor coperte esclusivamente
+  // da quel PAC (non libere, non coperte anche da un altro PAC) — con meno
+  // di due categorie intrappolate non c'è un rapporto interno da correggere.
+  for (const k of pac) {
+    const intrappolate = categorieAlFloor.filter((categoria) => {
+      const c = trova(categoria)
+      if (!c || c.libera || quota(k, categoria) <= 0) return false
+      return pac.every((altro) => altro.id === k.id || quota(altro, categoria) <= 0)
+    })
+    if (intrappolate.length < 2) continue
+
+    const sommaTarget = intrappolate.reduce((acc, categoria) => acc + (trova(categoria)?.targetPct ?? 0), 0)
+    if (sommaTarget <= 0) continue
+
+    alternative.push({
+      tipo: 'nuovaFormaPac',
+      pacId: k.id,
+      pacNome: k.nome,
+      categorie: intrappolate.map((categoria) => {
+        const c = trova(categoria)!
+        return {
+          categoria,
+          formaAttualePct: quota(k, categoria) * 100,
+          formaSuggeritaPct: ((c.targetPct ?? 0) / sommaTarget) * 100,
+        }
+      }),
+    })
+  }
+
+  // 3. Nuovo veicolo: per ciascuna categoria intrappolata (non libera), il
+  // floor che resterebbe se diventasse libera — un secondo giro del motore,
+  // ciascuno indipendente dagli altri.
+  const totaleFinale = categorie.reduce((acc, c) => acc + c.valoreAttuale, 0)
+  const versamentoIllimitato = Math.max(1e10, totaleFinale * 1e6)
+  const opzioniVeicolo = categorieAlFloor
+    .filter((categoria) => {
+      const c = trova(categoria)
+      return c !== null && !c.libera
+    })
+    .map((categoria) => {
+      const categorieConVeicolo = categorie.map((c) => (c.categoria === categoria ? { ...c, libera: true } : c))
+      const risultato = calcolaRibilanciamentoPortafoglio(categorieConVeicolo, pac, sogliaPp, versamentoIllimitato)
+      const floorSePp = risultato.esito === 'residuo' ? risultato.soluzione.scostamentoMassimoPp : 0
+      return { categoria, floorSePp }
+    })
+  if (opzioniVeicolo.length > 0) {
+    alternative.push({ tipo: 'nuovoVeicolo', floorAttualePp: soluzioneIllimitata.scostamentoMassimoPp, opzioni: opzioniVeicolo })
+  }
+
+  return alternative
+}
+
 // Margine sui vincoli B ≤ B* e ΣP ≥ Π* negli LP successivi al primo, per
 // l'aritmetica in virgola mobile. Deve restare piccolo: un margine di mezzo
 // centesimo lascia ai PAC budget in più e porta una categoria appena oltre la

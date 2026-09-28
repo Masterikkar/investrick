@@ -9,6 +9,7 @@ import { CATEGORIE } from '@/lib/categorie'
 import {
   calcolaRibilanciamentoConVersamento,
   calcolaRibilanciamentoPortafoglio,
+  calcolaAlternativeStrutturali,
   distribuisciAcquisto,
   simulaVenditaStrumento,
   aliquotaPerStrumento,
@@ -18,6 +19,7 @@ import {
   type BloccoPac,
   type CategoriaPortafoglio,
   type RisultatoPortafoglio,
+  type AlternativaStrutturale,
 } from '@/lib/ribilanciamento'
 
 type ClientSupabase = Awaited<ReturnType<typeof createClient>>
@@ -170,7 +172,7 @@ export type RisultatoSimulazionePortafoglio = {
   riscattiProposti: EsitoRiscattoPolizza[]
   poolTotale: number | null
   versamentoMassimo: number | null
-  avvisoStrutturale: { floorPp: number; categorie: string[] } | null
+  avvisoStrutturale: { floorPp: number; categorie: string[]; alternative: AlternativaStrutturale[] } | null
 }
 
 export async function simulaPortafoglio(
@@ -415,7 +417,7 @@ export async function simulaPortafoglio(
 
   // Limite strutturale: anche con un versamento enorme lo scostamento non
   // scenderebbe oltre una certa soglia (forma fissa di un PAC, per esempio).
-  let avvisoStrutturale: { floorPp: number; categorie: string[] } | null = null
+  let avvisoStrutturale: { floorPp: number; categorie: string[]; alternative: AlternativaStrutturale[] } | null = null
   if (risultato.esito === 'residuo') {
     const totaleFinale = categoriePortafoglio.reduce((acc, c) => acc + c.valoreAttuale, 0)
     const versamentoIllimitato = Math.max(1e10, totaleFinale * 1e6)
@@ -425,7 +427,14 @@ export async function simulaPortafoglio(
       const categorieAlFloor = risultatoIllimitato.soluzione.righe
         .filter((r) => r.scostamentoFinalePp !== null && Math.abs(Math.abs(r.scostamentoFinalePp) - floorPp) <= 0.05)
         .map((r) => r.categoria)
-      avvisoStrutturale = { floorPp, categorie: categorieAlFloor }
+      const alternative = calcolaAlternativeStrutturali(
+        categoriePortafoglio,
+        blocchiPac,
+        soglia,
+        categorieAlFloor,
+        risultatoIllimitato.soluzione
+      )
+      avvisoStrutturale = { floorPp, categorie: categorieAlFloor, alternative }
     }
   }
 
