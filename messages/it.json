@@ -94,6 +94,8 @@
   "placeholderCitta": "Scrivi le prime lettere del comune",
   "nessunComune": "Nessun comune trovato.",
   "erroreCittaDaElenco": "Scegli il comune dall'elenco che compare mentre scrivi.",
+  "erroreCampoObbligatorio": "Campo obbligatorio.",
+  "hintCampiObbligatori": "Tutti i campi sono obbligatori.",
   "hintProvinciaRegione": "Provincia e regione si compilano da sole scegliendo la città.",
   "bottoneSalva": "Salva",
   "notificaSalvato": "Informazioni personali salvate.",

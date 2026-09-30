@@ -25,7 +25,8 @@ export function FormProfilo({ iniziale }: { iniziale: Profilo }) {
   const [inCorso, startTransition] = useTransition()
   const [valori, setValori] = useState<Profilo>(iniziale)
   const [erroreData, setErroreData] = useState(false)
-  const [erroreCitta, setErroreCitta] = useState(false)
+  const [erroreCitta, setErroreCitta] = useState<string | null>(null)
+  const [mancanti, setMancanti] = useState<Record<string, boolean>>({})
   const [erroreSalvataggio, setErroreSalvataggio] = useState(false)
 
   function aggiorna(campo: keyof Profilo, valore: string) {
@@ -35,12 +36,24 @@ export function FormProfilo({ iniziale }: { iniziale: Profilo }) {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setErroreSalvataggio(false)
+    // Tutti i campi sono obbligatori.
+    const nuoviMancanti = {
+      nome: valori.nome.trim() === '',
+      cognome: valori.cognome.trim() === '',
+      dataNascita: valori.dataNascita === '',
+    }
+    setMancanti(nuoviMancanti)
     const dataNelFuturo = valori.dataNascita !== '' && valori.dataNascita > dataIsoOggi()
     setErroreData(dataNelFuturo)
-    // Una città scritta ma non scelta dall'elenco non ha provincia né regione.
-    const cittaNonScelta = valori.citta.trim() !== '' && valori.codiceIstat === ''
-    setErroreCitta(cittaNonScelta)
-    if (dataNelFuturo || cittaNonScelta) return
+    // La città va scelta dall'elenco: solo così ha provincia e regione.
+    const cittaNonScelta = valori.codiceIstat === ''
+    const messaggioCitta = cittaNonScelta
+      ? valori.citta.trim() === ''
+        ? t('erroreCampoObbligatorio')
+        : t('erroreCittaDaElenco')
+      : null
+    setErroreCitta(messaggioCitta)
+    if (Object.values(nuoviMancanti).some(Boolean) || dataNelFuturo || cittaNonScelta) return
 
     startTransition(async () => {
       const risultato = await salvaProfilo({
@@ -65,20 +78,27 @@ export function FormProfilo({ iniziale }: { iniziale: Profilo }) {
         <input
           type="text"
           value={valori[campo]}
-          onChange={(e) => aggiorna(campo, e.target.value)}
+          onChange={(e) => {
+            aggiorna(campo, e.target.value)
+            setMancanti((prev) => ({ ...prev, [campo]: false }))
+          }}
           maxLength={LUNGHEZZA_MASSIMA_CAMPO_PROFILO}
           autoComplete={autoComplete}
           style={stileCampo}
         />
+        {mancanti[campo] && <p style={stileErroreCampo}>{t('erroreCampoObbligatorio')}</p>}
       </label>
     )
   }
 
   return (
     <form
+      noValidate
       onSubmit={handleSubmit}
       style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420, color: 'var(--text-primary)' }}
     >
+      <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)' }}>{t('hintCampiObbligatori')}</small>
+
       {campoTesto('nome', t('labelNome'), 'given-name')}
       {campoTesto('cognome', t('labelCognome'), 'family-name')}
 
@@ -91,11 +111,13 @@ export function FormProfilo({ iniziale }: { iniziale: Profilo }) {
           onChange={(e) => {
             aggiorna('dataNascita', e.target.value)
             setErroreData(false)
+            setMancanti((prev) => ({ ...prev, dataNascita: false }))
           }}
           autoComplete="bday"
           style={stileCampo}
         />
         {erroreData && <p style={stileErroreCampo}>{t('erroreDataNascita')}</p>}
+        {mancanti.dataNascita && <p style={stileErroreCampo}>{t('erroreCampoObbligatorio')}</p>}
       </label>
 
       <SelettoreComune
@@ -103,7 +125,7 @@ export function FormProfilo({ iniziale }: { iniziale: Profilo }) {
         onCambiaTesto={(testo) => {
           // Cambiare il testo annulla il comune scelto e quindi provincia e regione.
           setValori((prev) => ({ ...prev, citta: testo, codiceIstat: '', provincia: '', regione: '' }))
-          setErroreCitta(false)
+          setErroreCitta(null)
         }}
         onSeleziona={(c) => {
           setValori((prev) => ({
@@ -113,9 +135,9 @@ export function FormProfilo({ iniziale }: { iniziale: Profilo }) {
             provincia: c.provincia,
             regione: c.regione,
           }))
-          setErroreCitta(false)
+          setErroreCitta(null)
         }}
-        errore={erroreCitta ? t('erroreCittaDaElenco') : undefined}
+        errore={erroreCitta ?? undefined}
       />
 
       <label style={stileEtichetta}>

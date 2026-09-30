@@ -60,30 +60,32 @@ export async function salvaProfilo(dati: DatiProfilo): Promise<RisultatoSalvaPro
   const dataNascita = dati.dataNascita.trim()
   const codiceIstat = dati.codiceIstat.trim()
 
+  // Tutti i campi sono obbligatori (la città si identifica col codice ISTAT).
+  const obbligatoriPresenti = [nome, cognome, dataNascita, codiceIstat].every((v) => v !== '')
   const testiValidi = [nome, cognome].every((v) => v.length <= LUNGHEZZA_MASSIMA_CAMPO_PROFILO)
-  const dataValida = dataNascita === '' || partiDataIso(dataNascita) !== null
-  if (!testiValidi || !dataValida) return { errore: 'datiNonValidi' }
+  const dataValida = partiDataIso(dataNascita) !== null
+  if (!obbligatoriPresenti || !testiValidi || !dataValida) return { errore: 'datiNonValidi' }
 
   const supabase = await createClient()
 
   // Città, provincia e regione non arrivano dal client: si rileggono dalla
   // tabella dei comuni, così non si possono salvare combinazioni inventate.
-  let citta = ''
-  let provincia = ''
-  let regione = ''
-  if (codiceIstat !== '') {
-    const { data: comune } = await supabase
-      .from('comuni')
-      .select('nome, provincia, regione')
-      .eq('codice_istat', codiceIstat)
-      .maybeSingle()
-    if (!comune) return { errore: 'datiNonValidi' }
-    citta = comune.nome
-    provincia = comune.provincia
-    regione = comune.regione
-  }
+  const { data: comune } = await supabase
+    .from('comuni')
+    .select('nome, provincia, regione')
+    .eq('codice_istat', codiceIstat)
+    .maybeSingle()
+  if (!comune) return { errore: 'datiNonValidi' }
 
-  const profilo: Profilo = { nome, cognome, dataNascita, codiceIstat, citta, provincia, regione }
+  const profilo: Profilo = {
+    nome,
+    cognome,
+    dataNascita,
+    codiceIstat,
+    citta: comune.nome,
+    provincia: comune.provincia,
+    regione: comune.regione,
+  }
   // updateUser unisce i metadati passati a quelli già presenti.
   const { error } = await supabase.auth.updateUser({ data: metadatiDaProfilo(profilo) })
   if (error) return { errore: 'salvataggio' }

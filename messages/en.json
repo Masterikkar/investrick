@@ -94,6 +94,8 @@
   "placeholderCitta": "Type the first letters of the municipality",
   "nessunComune": "No municipality found.",
   "erroreCittaDaElenco": "Pick the municipality from the list that appears as you type.",
+  "erroreCampoObbligatorio": "Required field.",
+  "hintCampiObbligatori": "All fields are required.",
   "hintProvinciaRegione": "Province and region are filled in automatically when you pick the city.",
   "bottoneSalva": "Save",
   "notificaSalvato": "Personal information saved.",
