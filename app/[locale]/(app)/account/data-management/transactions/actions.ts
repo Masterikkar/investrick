@@ -175,6 +175,68 @@ export async function eliminaTransazione(id: string): Promise<{ successo: true }
   return { successo: true }
 }
 
+// Modifica dei campi di una transazione dallo Storico. Strumento e categoria
+// non si toccano: cambiare strumento cambierebbe anche la categoria, e
+// "Costo (in contanti)" è legata al non avere strumento (vincolo
+// transazioni_strumento_coerente). Gli altri vincoli (quantità > 0, importi
+// >= 0, scambio solo in polizza, gruppo non Personalizzato) li applica il
+// database anche in UPDATE.
+export type DatiModificaTransazione = {
+  data: string // YYYY-MM-DD, così com'è nel campo data: nessuna conversione di fuso
+  operazione: string
+  contenitoreId: string | null
+  quantita: number
+  prezzoUnitario: number
+  commissione: number
+  tassaTrattenuta: number
+}
+
+export async function modificaTransazione(
+  id: string,
+  dati: DatiModificaTransazione
+): Promise<{ successo: true } | { errore: string }> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dati.data)) {
+    return { errore: 'data non valida' }
+  }
+  if (!Number.isFinite(dati.quantita) || dati.quantita <= 0) {
+    return { errore: 'quantità non valida' }
+  }
+  if (
+    ![dati.prezzoUnitario, dati.commissione, dati.tassaTrattenuta].every((n) => Number.isFinite(n) && n >= 0)
+  ) {
+    return { errore: 'importo non valido' }
+  }
+
+  const supabase = await createClient()
+
+  const { error: erroreUpdate } = await supabase
+    .from('transazioni')
+    .update({
+      data: dati.data,
+      operazione: dati.operazione,
+      contenitore_id: dati.contenitoreId,
+      quantita: dati.quantita,
+      prezzo_unitario: dati.prezzoUnitario,
+      commissione: dati.commissione,
+      tassa_trattenuta: dati.tassaTrattenuta,
+    })
+    .eq('id', id)
+
+  if (erroreUpdate) {
+    return { errore: erroreUpdate.message }
+  }
+
+  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+
+  if (erroreRicostruzione) {
+    return { errore: erroreRicostruzione.message }
+  }
+
+  revalidatePath('/', 'layout')
+
+  return { successo: true }
+}
+
 // --- Storico movimenti liquidità: riallocazione contenitore ed eliminazione ---
 
 export async function aggiornaContenitoreMovimentoLiquidita(

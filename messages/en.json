@@ -330,6 +330,8 @@
   "colonnaImporto": "Amount",
   "titleSpostaContenitore": "Move to another group",
   "optionSpostaIn": "Move to...",
+  "titleModificaTransazione": "Edit transaction",
+  "modaleTitoloModificaTransazione": "Edit transaction",
   "titleEliminaTransazione": "Delete transaction",
   "descrizioneOperazioneData": "{operazione} on {data}",
   "confermaEliminazione": "Delete this transaction?\n\n{descrizione}\n\nThis action cannot be undone.",

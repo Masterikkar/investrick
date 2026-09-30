@@ -330,6 +330,8 @@
   "colonnaImporto": "Importo",
   "titleSpostaContenitore": "Sposta in un altro gruppo",
   "optionSpostaIn": "Sposta in...",
+  "titleModificaTransazione": "Modifica transazione",
+  "modaleTitoloModificaTransazione": "Modifica transazione",
   "titleEliminaTransazione": "Elimina transazione",
   "descrizioneOperazioneData": "{operazione} del {data}",
   "confermaEliminazione": "Eliminare questa transazione?\n\n{descrizione}\n\nL'operazione non è reversibile.",
