@@ -9,8 +9,9 @@ import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
 import { aggiornaContenitoreTransazione, eliminaTransazione } from '../account/data-management/transactions/actions'
 import { useConferma } from '@/components/conferma'
-import { IconaElimina } from '@/components/icone'
+import { IconaModifica, IconaElimina } from '@/components/icone'
 import { MenuSpostaContenitore } from '@/components/menu-sposta-contenitore'
+import { ModificaTransazione } from './modifica-transazione'
 
 export type RigaStoricoTransazione = {
   id: string
@@ -26,7 +27,7 @@ export type RigaStoricoTransazione = {
   strumento_ticker: string | null
 }
 
-type Contenitore = { id: string; nome: string }
+type Contenitore = { id: string; nome: string; tipo: string }
 
 const RIGHE_PER_PAGINA = 100
 
@@ -49,6 +50,7 @@ export function StoricoTransazioni({
   const [query, setQuery] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [erroreId, setErroreId] = useState<string | null>(null)
+  const [rigaInModifica, setRigaInModifica] = useState<RigaStoricoTransazione | null>(null)
   const [, startTransition] = useTransition()
   const [righeVisibili, setRigheVisibili] = useState(RIGHE_PER_PAGINA)
 
@@ -266,6 +268,26 @@ export function StoricoTransazioni({
                     <td style={{ padding: 8 }}>{formatEuro(riga.tassa_trattenuta, locale)}</td>
                     <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => setRigaInModifica(riga)}
+                          disabled={inCorso}
+                          title={t('titleModificaTransazione')}
+                          aria-label={t('titleModificaTransazione')}
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            cursor: inCorso ? 'default' : 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '2px 4px',
+                            color: 'var(--text-secondary)',
+                            opacity: inCorso ? 0.4 : 1,
+                          }}
+                        >
+                          <IconaModifica />
+                        </button>
+
                         <MenuSpostaContenitore
                           contenitoreIdAttuale={riga.contenitore_id}
                           contenitori={contenitori}
@@ -325,6 +347,18 @@ export function StoricoTransazioni({
             )}
           </div>
         </>
+      )}
+      {rigaInModifica && (
+        <ModificaTransazione
+          key={rigaInModifica.id}
+          riga={rigaInModifica}
+          contenitori={contenitori}
+          onChiudi={() => setRigaInModifica(null)}
+          onSalvata={() => {
+            setRigaInModifica(null)
+            router.refresh()
+          }}
+        />
       )}
     </div>
   )

@@ -15,7 +15,7 @@ type Strumento = { id: string; nome: string; ticker: string | null; categoria: s
 type StrumentoLiquidita = { id: string; nome: string }
 type Contenitore = { id: string; nome: string; tipo: string }
 
-const CODICI_OPERAZIONE = [
+export const CODICI_OPERAZIONE = [
   'Acquisto',
   'Vendita',
   'Dividendo',
@@ -29,11 +29,11 @@ const CODICI_OPERAZIONE = [
 
 const CODICI_TIPO_MOVIMENTO_LIQUIDITA = ['Versamento', 'Prelievo', 'Interesse', 'Costo']
 
-const stileEtichetta: React.CSSProperties = {
+export const stileEtichetta: React.CSSProperties = {
   fontSize: 'var(--fs-form-label)',
 }
 
-const stileCampo: React.CSSProperties = {
+export const stileCampo: React.CSSProperties = {
   display: 'block',
   width: '100%',
   marginTop: 4,
@@ -44,7 +44,7 @@ const stileCampo: React.CSSProperties = {
   fontSize: 'var(--fs-form-label)',
 }
 
-const stileBottonePrimario: React.CSSProperties = {
+export const stileBottonePrimario: React.CSSProperties = {
   background: 'var(--primary)',
   color: '#fff',
   border: 'none',
@@ -55,7 +55,7 @@ const stileBottonePrimario: React.CSSProperties = {
   alignSelf: 'flex-start',
 }
 
-const stileErroreCampo: React.CSSProperties = {
+export const stileErroreCampo: React.CSSProperties = {
   color: 'var(--danger)',
   fontSize: 'var(--fs-form-hint)',
   margin: '4px 0 0',
