@@ -318,6 +318,9 @@
  "PaginaStorico": {
   "titoloTransazioniLiquidita": "Transazioni di liquidità",
   "alertErroreOperazione": "Non è stato possibile completare l'operazione su quella transazione. Riprova.",
+  "titleModificaMovimento": "Modifica movimento",
+  "modaleTitoloModificaMovimento": "Modifica movimento",
+  "successoMovimentoModificato": "Movimento modificato.",
   "successoTransazioneModificata": "Transazione modificata.",
   "successoTransazioneSpostata": "Transazione spostata.",
   "successoTransazioneEliminata": "Transazione eliminata.",

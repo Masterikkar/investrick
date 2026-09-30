@@ -11,6 +11,8 @@ import { useConferma } from '@/components/conferma'
 import { useNotifica } from '@/components/notifica'
 import { IconaElimina } from '@/components/icone'
 import { MenuSpostaContenitore } from '@/components/menu-sposta-contenitore'
+import { BottoneModifica } from '@/components/bottone-modifica'
+import { ModificaMovimentoLiquidita } from './modifica-movimento-liquidita'
 
 export type RigaStoricoMovimentoLiquidita = {
   id: string
@@ -47,6 +49,7 @@ export function StoricoMovimentiLiquidita({
   const [query, setQuery] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [erroreId, setErroreId] = useState<string | null>(null)
+  const [movimentoInModifica, setMovimentoInModifica] = useState<RigaStoricoMovimentoLiquidita | null>(null)
   const [, startTransition] = useTransition()
   const [righeVisibili, setRigheVisibili] = useState(RIGHE_PER_PAGINA)
 
@@ -254,6 +257,12 @@ export function StoricoMovimentiLiquidita({
                     <td style={{ padding: 8 }}>{formatEuro(m.tassa_trattenuta, locale)}</td>
                     <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <BottoneModifica
+                          onClick={() => setMovimentoInModifica(m)}
+                          disabled={inCorso}
+                          titolo={t('titleModificaMovimento')}
+                        />
+
                         <MenuSpostaContenitore
                           contenitoreIdAttuale={m.contenitore_id}
                           contenitori={contenitori}
@@ -313,6 +322,19 @@ export function StoricoMovimentiLiquidita({
             )}
           </div>
         </>
+      )}
+      {movimentoInModifica && (
+        <ModificaMovimentoLiquidita
+          key={movimentoInModifica.id}
+          movimento={movimentoInModifica}
+          contenitori={contenitori}
+          onChiudi={() => setMovimentoInModifica(null)}
+          onSalvato={() => {
+            setMovimentoInModifica(null)
+            notifica({ messaggio: t('successoMovimentoModificato') })
+            router.refresh()
+          }}
+        />
       )}
     </div>
   )

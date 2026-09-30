@@ -285,6 +285,60 @@ export async function eliminaMovimentoLiquidita(id: string): Promise<{ successo:
   return { successo: true }
 }
 
+// Modifica dei campi di un movimento di liquidità dallo Storico. Il conto non
+// si cambia (come lo strumento nelle transazioni finanziarie). Vincoli del
+// database anche in UPDATE: importo > 0, tassa >= 0, tipo tra i quattro noti,
+// gruppo non Personalizzato.
+export type DatiModificaMovimentoLiquidita = {
+  data: string // YYYY-MM-DD, così com'è nel campo data: nessuna conversione di fuso
+  tipoMovimento: string
+  contenitoreId: string | null
+  importo: number
+  tassaTrattenuta: number
+}
+
+export async function modificaMovimentoLiquidita(
+  id: string,
+  dati: DatiModificaMovimentoLiquidita
+): Promise<{ successo: true } | { errore: string }> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dati.data)) {
+    return { errore: 'data non valida' }
+  }
+  if (!Number.isFinite(dati.importo) || dati.importo <= 0) {
+    return { errore: 'importo non valido' }
+  }
+  if (!Number.isFinite(dati.tassaTrattenuta) || dati.tassaTrattenuta < 0) {
+    return { errore: 'tassa non valida' }
+  }
+
+  const supabase = await createClient()
+
+  const { error: erroreUpdate } = await supabase
+    .from('movimenti_liquidita')
+    .update({
+      data: dati.data,
+      tipo_movimento: dati.tipoMovimento,
+      contenitore_id: dati.contenitoreId,
+      importo: dati.importo,
+      tassa_trattenuta: dati.tassaTrattenuta,
+    })
+    .eq('id', id)
+
+  if (erroreUpdate) {
+    return { errore: erroreUpdate.message }
+  }
+
+  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+
+  if (erroreRicostruzione) {
+    return { errore: erroreRicostruzione.message }
+  }
+
+  revalidatePath('/', 'layout')
+
+  return { successo: true }
+}
+
 // --- Import Excel massivo: transazioni finanziarie ---
 
 export async function creaAssetPerImport(dati: {

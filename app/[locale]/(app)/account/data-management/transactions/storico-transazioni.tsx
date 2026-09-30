@@ -10,7 +10,8 @@ import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
 import { aggiornaContenitoreTransazione, eliminaTransazione } from './actions'
 import { useConferma } from '@/components/conferma'
 import { useNotifica } from '@/components/notifica'
-import { IconaModifica, IconaElimina } from '@/components/icone'
+import { IconaElimina } from '@/components/icone'
+import { BottoneModifica } from '@/components/bottone-modifica'
 import { MenuSpostaContenitore } from '@/components/menu-sposta-contenitore'
 import { ModificaTransazione } from './modifica-transazione'
 
@@ -272,25 +273,7 @@ export function StoricoTransazioni({
                     <td style={{ padding: 8 }}>{formatEuro(riga.tassa_trattenuta, locale)}</td>
                     <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                        <button
-                          type="button"
-                          onClick={() => setRigaInModifica(riga)}
-                          disabled={inCorso}
-                          title={t('titleModificaTransazione')}
-                          aria-label={t('titleModificaTransazione')}
-                          style={{
-                            border: 'none',
-                            background: 'none',
-                            cursor: inCorso ? 'default' : 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            padding: '2px 4px',
-                            color: 'var(--text-secondary)',
-                            opacity: inCorso ? 0.4 : 1,
-                          }}
-                        >
-                          <IconaModifica />
-                        </button>
+                        <BottoneModifica onClick={() => setRigaInModifica(riga)} disabled={inCorso} titolo={t('titleModificaTransazione')} />
 
                         <MenuSpostaContenitore
                           contenitoreIdAttuale={riga.contenitore_id}

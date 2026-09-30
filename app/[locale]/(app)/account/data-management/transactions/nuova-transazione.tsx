@@ -27,7 +27,7 @@ export const CODICI_OPERAZIONE = [
 ]
 
 
-const CODICI_TIPO_MOVIMENTO_LIQUIDITA = ['Versamento', 'Prelievo', 'Interesse', 'Costo']
+export const CODICI_TIPO_MOVIMENTO_LIQUIDITA = ['Versamento', 'Prelievo', 'Interesse', 'Costo']
 
 export const stileEtichetta: React.CSSProperties = {
   fontSize: 'var(--fs-form-label)',

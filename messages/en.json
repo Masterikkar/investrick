@@ -318,6 +318,9 @@
  "PaginaStorico": {
   "titoloTransazioniLiquidita": "Cash transactions",
   "alertErroreOperazione": "Could not complete the operation on that transaction. Please try again.",
+  "titleModificaMovimento": "Edit cash movement",
+  "modaleTitoloModificaMovimento": "Edit cash movement",
+  "successoMovimentoModificato": "Cash movement updated.",
   "successoTransazioneModificata": "Transaction updated.",
   "successoTransazioneSpostata": "Transaction moved.",
   "successoTransazioneEliminata": "Transaction deleted.",
