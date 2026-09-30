@@ -13,6 +13,10 @@ import {
   stileEtichetta,
 } from '../../data-management/transactions/nuova-transazione'
 import { salvaProfilo } from './actions'
+import { SelettoreComune } from './selettore-comune'
+
+// Provincia e regione si compilano da sole scegliendo la città.
+const stileCampoSolaLettura: React.CSSProperties = { ...stileCampo, opacity: 0.7, cursor: 'default' }
 
 export function FormProfilo({ iniziale }: { iniziale: Profilo }) {
   const t = useTranslations('PaginaProfilo')
@@ -21,6 +25,7 @@ export function FormProfilo({ iniziale }: { iniziale: Profilo }) {
   const [inCorso, startTransition] = useTransition()
   const [valori, setValori] = useState<Profilo>(iniziale)
   const [erroreData, setErroreData] = useState(false)
+  const [erroreCitta, setErroreCitta] = useState(false)
   const [erroreSalvataggio, setErroreSalvataggio] = useState(false)
 
   function aggiorna(campo: keyof Profilo, valore: string) {
@@ -32,10 +37,18 @@ export function FormProfilo({ iniziale }: { iniziale: Profilo }) {
     setErroreSalvataggio(false)
     const dataNelFuturo = valori.dataNascita !== '' && valori.dataNascita > dataIsoOggi()
     setErroreData(dataNelFuturo)
-    if (dataNelFuturo) return
+    // Una città scritta ma non scelta dall'elenco non ha provincia né regione.
+    const cittaNonScelta = valori.citta.trim() !== '' && valori.codiceIstat === ''
+    setErroreCitta(cittaNonScelta)
+    if (dataNelFuturo || cittaNonScelta) return
 
     startTransition(async () => {
-      const risultato = await salvaProfilo(valori)
+      const risultato = await salvaProfilo({
+        nome: valori.nome,
+        cognome: valori.cognome,
+        dataNascita: valori.dataNascita,
+        codiceIstat: valori.codiceIstat,
+      })
       if ('errore' in risultato) {
         setErroreSalvataggio(true)
       } else {
@@ -45,7 +58,7 @@ export function FormProfilo({ iniziale }: { iniziale: Profilo }) {
     })
   }
 
-  function campoTesto(campo: Exclude<keyof Profilo, 'dataNascita'>, etichetta: string, autoComplete: string) {
+  function campoTesto(campo: 'nome' | 'cognome', etichetta: string, autoComplete: string) {
     return (
       <label style={stileEtichetta}>
         {etichetta}
@@ -85,9 +98,37 @@ export function FormProfilo({ iniziale }: { iniziale: Profilo }) {
         {erroreData && <p style={stileErroreCampo}>{t('erroreDataNascita')}</p>}
       </label>
 
-      {campoTesto('citta', t('labelCitta'), 'address-level2')}
-      {campoTesto('provincia', t('labelProvincia'), 'address-level2')}
-      {campoTesto('regione', t('labelRegione'), 'address-level1')}
+      <SelettoreComune
+        testo={valori.citta}
+        onCambiaTesto={(testo) => {
+          // Cambiare il testo annulla il comune scelto e quindi provincia e regione.
+          setValori((prev) => ({ ...prev, citta: testo, codiceIstat: '', provincia: '', regione: '' }))
+          setErroreCitta(false)
+        }}
+        onSeleziona={(c) => {
+          setValori((prev) => ({
+            ...prev,
+            citta: c.nome,
+            codiceIstat: c.codice_istat,
+            provincia: c.provincia,
+            regione: c.regione,
+          }))
+          setErroreCitta(false)
+        }}
+        errore={erroreCitta ? t('erroreCittaDaElenco') : undefined}
+      />
+
+      <label style={stileEtichetta}>
+        {t('labelProvincia')}
+        <input type="text" readOnly tabIndex={-1} value={valori.provincia} style={stileCampoSolaLettura} />
+      </label>
+
+      <label style={stileEtichetta}>
+        {t('labelRegione')}
+        <input type="text" readOnly tabIndex={-1} value={valori.regione} style={stileCampoSolaLettura} />
+      </label>
+
+      <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)' }}>{t('hintProvinciaRegione')}</small>
 
       {erroreSalvataggio && <p style={{ ...stileErroreCampo, margin: 0 }}>{t('erroreSalvataggio')}</p>}
 

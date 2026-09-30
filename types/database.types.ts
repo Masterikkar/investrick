@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      comuni: {
+        Row: {
+          codice_istat: string
+          nome: string
+          nome_ricerca: string
+          nome_straniero: string | null
+          provincia: string
+          regione: string
+          sigla_provincia: string
+        }
+        Insert: {
+          codice_istat: string
+          nome: string
+          nome_ricerca: string
+          nome_straniero?: string | null
+          provincia: string
+          regione: string
+          sigla_provincia: string
+        }
+        Update: {
+          codice_istat?: string
+          nome?: string
+          nome_ricerca?: string
+          nome_straniero?: string | null
+          provincia?: string
+          regione?: string
+          sigla_provincia?: string
+        }
+        Relationships: []
+      }
       contenitori: {
         Row: {
           created_at: string

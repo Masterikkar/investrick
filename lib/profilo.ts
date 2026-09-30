@@ -7,6 +7,9 @@ export type Profilo = {
   nome: string
   cognome: string
   dataNascita: string // YYYY-MM-DD oppure vuota
+  // Il comune si sceglie dall'elenco ISTAT (tabella comuni): citta, provincia e
+  // regione derivano da lui. Tutti vuoti se non è stato scelto.
+  codiceIstat: string
   citta: string
   provincia: string
   regione: string
@@ -25,6 +28,7 @@ export function profiloDaUtente(utente: User | null): Profilo {
     nome: testo(metadati.nome),
     cognome: testo(metadati.cognome),
     dataNascita: testo(metadati.data_nascita),
+    codiceIstat: testo(metadati.comune_istat),
     citta: testo(metadati.citta),
     provincia: testo(metadati.provincia),
     regione: testo(metadati.regione),
@@ -37,6 +41,7 @@ export function metadatiDaProfilo(profilo: Profilo): Record<string, string> {
     nome: profilo.nome,
     cognome: profilo.cognome,
     data_nascita: profilo.dataNascita,
+    comune_istat: profilo.codiceIstat,
     citta: profilo.citta,
     provincia: profilo.provincia,
     regione: profilo.regione,
