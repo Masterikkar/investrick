@@ -74,11 +74,56 @@
   "titolo": "Impostazioni",
   "tabApp": "Impostazioni app",
   "tabFiscalita": "Impostazioni fiscalità",
+  "tabProfilo": "Informazioni personali",
+  "tabAccount": "Informazioni account",
   "sezioneLingua": "Lingua",
   "etichettaLingua": "Lingua",
   "lingueDisponibili": {
    "it": "Italiano",
    "en": "Inglese"
+  }
+ },
+ "PaginaProfilo": {
+  "titoloDatiPersonali": "Informazioni personali",
+  "labelNome": "Nome",
+  "labelCognome": "Cognome",
+  "labelDataNascita": "Data di nascita",
+  "labelCitta": "Città",
+  "labelProvincia": "Provincia",
+  "labelRegione": "Regione",
+  "bottoneSalva": "Salva",
+  "notificaSalvato": "Informazioni personali salvate.",
+  "erroreDataNascita": "La data di nascita non può essere nel futuro.",
+  "erroreSalvataggio": "Non è stato possibile salvare. Riprova."
+ },
+ "PaginaAccount": {
+  "titoloEmail": "Email",
+  "titoloPassword": "Password",
+  "labelEmailAttuale": "Email attuale",
+  "labelNuovaEmail": "Nuova email",
+  "bottoneCambiaEmail": "Cambia email",
+  "avvisoEmailInAttesa": "Cambio in attesa di conferma: abbiamo inviato un link a {email}. L'email attuale resta valida finché non lo apri.",
+  "notificaEmailInviata": "Ti abbiamo inviato un link di conferma. L'email cambierà quando lo aprirai.",
+  "erroriEmail": {
+   "emailNonValida": "Inserisci un indirizzo email valido.",
+   "emailUguale": "La nuova email coincide con quella attuale.",
+   "emailGiaUsata": "Questo indirizzo email è già in uso.",
+   "troppeRichieste": "Troppe richieste: riprova tra qualche minuto.",
+   "generico": "Non è stato possibile cambiare l'email. Riprova."
+  },
+  "labelPasswordAttuale": "Password attuale",
+  "labelNuovaPassword": "Nuova password",
+  "labelConfermaPassword": "Conferma nuova password",
+  "hintPassword": "Almeno {minimo} caratteri.",
+  "bottoneCambiaPassword": "Cambia password",
+  "notificaPasswordCambiata": "Password cambiata.",
+  "erroriPassword": {
+   "passwordCorta": "La nuova password deve avere almeno {minimo} caratteri.",
+   "confermaDiversa": "Le due password non coincidono.",
+   "passwordAttualeErrata": "La password attuale non è corretta.",
+   "passwordUguale": "La nuova password deve essere diversa da quella attuale.",
+   "passwordDebole": "La nuova password è troppo debole.",
+   "generico": "Non è stato possibile cambiare la password. Riprova."
   }
  },
  "Contenitori": {

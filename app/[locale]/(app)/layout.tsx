@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { inizialiProfilo, profiloDaUtente } from '@/lib/profilo'
 import { logout } from '@/app/[locale]/login/actions'
 import { ChiudiTendineAutomaticamente } from '@/components/chiudi-tendine-automaticamente'
 import { ConfermaProvider } from '@/components/conferma'
@@ -51,7 +52,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const locale = await getLocale()
   const supabase = await createClient()
 
-  const [{ data: strumenti }, { data: contenitori }, { data: posizioniAperte }, { count: numeroContiLiquidita }] = await Promise.all([
+  const [{ data: strumenti }, { data: contenitori }, { data: posizioniAperte }, { count: numeroContiLiquidita }, { data: datiUtente }] = await Promise.all([
     supabase
       .from('strumenti')
       .select('id, nome, categoria, ticker')
@@ -62,7 +63,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // Per la liquidità "ha posizioni" vuol dire che esiste almeno un conto,
     // anche a saldo zero, come nella pagina /liquidita.
     supabase.from('strumenti').select('id', { count: 'exact', head: true }).eq('categoria', 'Liquidita'),
+    supabase.auth.getUser(),
   ])
+  const inizialiUtente = inizialiProfilo(profiloDaUtente(datiUtente.user))
 
   // Categorie con almeno una posizione aperta, ricavate dagli strumenti già
   // caricati per la barra di ricerca. Il sottomenu Asset mostra solo quelle,
@@ -210,9 +213,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </details>
 
             <details style={{ position: 'relative' }}>
-              <summary className="menu-toggle menu-toggle-bar">
-                <IconaAccount />
-                {t('account')}
+              <summary className="menu-toggle menu-toggle-bar" aria-label={t('account')} title={t('account')}>
+                {/* Cerchio con le iniziali di nome e cognome; senza profilo compilato, l'icona. */}
+                <span
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: '50%',
+                    background: 'var(--primary)',
+                    color: '#fff',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 'var(--fs-badge)',
+                    fontWeight: 600,
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  {inizialiUtente || <IconaAccount />}
+                </span>
                 <span className="menu-chevron">
                   <IconaChevron />
                 </span>

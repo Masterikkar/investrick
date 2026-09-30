@@ -74,11 +74,56 @@
   "titolo": "Settings",
   "tabApp": "App settings",
   "tabFiscalita": "Tax settings",
+  "tabProfilo": "Personal information",
+  "tabAccount": "Account information",
   "sezioneLingua": "Language",
   "etichettaLingua": "Language",
   "lingueDisponibili": {
    "it": "Italian",
    "en": "English"
+  }
+ },
+ "PaginaProfilo": {
+  "titoloDatiPersonali": "Personal information",
+  "labelNome": "First name",
+  "labelCognome": "Last name",
+  "labelDataNascita": "Date of birth",
+  "labelCitta": "City",
+  "labelProvincia": "Province",
+  "labelRegione": "Region",
+  "bottoneSalva": "Save",
+  "notificaSalvato": "Personal information saved.",
+  "erroreDataNascita": "The date of birth cannot be in the future.",
+  "erroreSalvataggio": "Could not save. Please try again."
+ },
+ "PaginaAccount": {
+  "titoloEmail": "Email",
+  "titoloPassword": "Password",
+  "labelEmailAttuale": "Current email",
+  "labelNuovaEmail": "New email",
+  "bottoneCambiaEmail": "Change email",
+  "avvisoEmailInAttesa": "Change pending confirmation: we sent a link to {email}. Your current email stays valid until you open it.",
+  "notificaEmailInviata": "We sent you a confirmation link. The email will change once you open it.",
+  "erroriEmail": {
+   "emailNonValida": "Enter a valid email address.",
+   "emailUguale": "The new email is the same as the current one.",
+   "emailGiaUsata": "This email address is already in use.",
+   "troppeRichieste": "Too many requests: try again in a few minutes.",
+   "generico": "Could not change the email. Please try again."
+  },
+  "labelPasswordAttuale": "Current password",
+  "labelNuovaPassword": "New password",
+  "labelConfermaPassword": "Confirm new password",
+  "hintPassword": "At least {minimo} characters.",
+  "bottoneCambiaPassword": "Change password",
+  "notificaPasswordCambiata": "Password changed.",
+  "erroriPassword": {
+   "passwordCorta": "The new password must be at least {minimo} characters long.",
+   "confermaDiversa": "The two passwords do not match.",
+   "passwordAttualeErrata": "The current password is not correct.",
+   "passwordUguale": "The new password must be different from the current one.",
+   "passwordDebole": "The new password is too weak.",
+   "generico": "Could not change the password. Please try again."
   }
  },
  "Contenitori": {

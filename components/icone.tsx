@@ -75,6 +75,15 @@ export function IconaAccount() {
   )
 }
 
+export function IconaSicurezza() {
+  return (
+    <IconaBase>
+      <rect x="4" y="9" width="12" height="8" />
+      <path d="M7 9V6a3 3 0 0 1 6 0v3" />
+    </IconaBase>
+  )
+}
+
 export function IconaAsset() {
   return (
     <IconaBase>
