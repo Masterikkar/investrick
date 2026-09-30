@@ -343,6 +343,9 @@ export default async function FiscalitaPage() {
           </div>
 
           <p style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginTop: 24, marginBottom: 4 }}>{t('labelAndamento')}</p>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: 0, marginBottom: 16 }}>
+            {t('paragrafoStoricoPlusMinus')}
+          </p>
           <GraficoStoricoFiscale punti={puntiStorico} />
           {avvisoGrafico && (
             <p style={{ fontSize: 'var(--fs-body)', color: 'var(--warning)', marginTop: 8, marginBottom: 0 }}>{avvisoGrafico}</p>
