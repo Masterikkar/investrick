@@ -318,6 +318,11 @@
  "PaginaStorico": {
   "titoloTransazioniLiquidita": "Transazioni di liquidità",
   "alertErroreOperazione": "Non è stato possibile completare l'operazione su quella transazione. Riprova.",
+  "successoTransazioneModificata": "Transazione modificata.",
+  "successoTransazioneSpostata": "Transazione spostata.",
+  "successoTransazioneEliminata": "Transazione eliminata.",
+  "successoMovimentoSpostato": "Movimento spostato.",
+  "successoMovimentoEliminato": "Movimento eliminato.",
   "alertNessunaTransazioneTrovata": "Nessuna transazione trovata.",
   "colonnaOperazione": "Operazione",
   "colonnaQuantita": "Quantità",

@@ -9,6 +9,7 @@ import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
 import { aggiornaContenitoreTransazione, eliminaTransazione } from './actions'
 import { useConferma } from '@/components/conferma'
+import { useNotifica } from '@/components/notifica'
 import { IconaModifica, IconaElimina } from '@/components/icone'
 import { MenuSpostaContenitore } from '@/components/menu-sposta-contenitore'
 import { ModificaTransazione } from './modifica-transazione'
@@ -46,6 +47,7 @@ export function StoricoTransazioni({
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
   const tGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
   const conferma = useConferma()
+  const notifica = useNotifica()
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -111,6 +113,7 @@ export function StoricoTransazioni({
       if ('errore' in risultato) {
         setErroreId(transazioneId)
       } else {
+        notifica({ messaggio: t('successoTransazioneSpostata') })
         router.refresh()
       }
     })
@@ -140,6 +143,7 @@ export function StoricoTransazioni({
       if ('errore' in risultato) {
         setErroreId(riga.id)
       } else {
+        notifica({ messaggio: t('successoTransazioneEliminata') })
         router.refresh()
       }
     })
@@ -356,6 +360,7 @@ export function StoricoTransazioni({
           onChiudi={() => setRigaInModifica(null)}
           onSalvata={() => {
             setRigaInModifica(null)
+            notifica({ messaggio: t('successoTransazioneModificata') })
             router.refresh()
           }}
         />

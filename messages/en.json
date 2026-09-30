@@ -318,6 +318,11 @@
  "PaginaStorico": {
   "titoloTransazioniLiquidita": "Cash transactions",
   "alertErroreOperazione": "Could not complete the operation on that transaction. Please try again.",
+  "successoTransazioneModificata": "Transaction updated.",
+  "successoTransazioneSpostata": "Transaction moved.",
+  "successoTransazioneEliminata": "Transaction deleted.",
+  "successoMovimentoSpostato": "Cash movement moved.",
+  "successoMovimentoEliminato": "Cash movement deleted.",
   "alertNessunaTransazioneTrovata": "No transactions found.",
   "colonnaOperazione": "Transaction type",
   "colonnaQuantita": "Quantity",

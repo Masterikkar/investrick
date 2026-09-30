@@ -8,6 +8,7 @@ import { RippleLink } from '@/components/ripple-link'
 import { CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA } from '@/lib/i18n-tipi-movimento-liquidita'
 import { aggiornaContenitoreMovimentoLiquidita, eliminaMovimentoLiquidita } from './actions'
 import { useConferma } from '@/components/conferma'
+import { useNotifica } from '@/components/notifica'
 import { IconaElimina } from '@/components/icone'
 import { MenuSpostaContenitore } from '@/components/menu-sposta-contenitore'
 
@@ -41,6 +42,7 @@ export function StoricoMovimentiLiquidita({
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
   const tGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
   const conferma = useConferma()
+  const notifica = useNotifica()
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -101,6 +103,7 @@ export function StoricoMovimentiLiquidita({
       if ('errore' in risultato) {
         setErroreId(movimentoId)
       } else {
+        notifica({ messaggio: t('successoMovimentoSpostato') })
         router.refresh()
       }
     })
@@ -130,6 +133,7 @@ export function StoricoMovimentiLiquidita({
       if ('errore' in risultato) {
         setErroreId(riga.id)
       } else {
+        notifica({ messaggio: t('successoMovimentoEliminato') })
         router.refresh()
       }
     })
