@@ -1,6 +1,11 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { formatEuro, type LocaleFormato } from '@/lib/format'
+import { tutteLeRighe } from '@/lib/supabase-tutte-le-righe'
+import { CATEGORIE } from '@/lib/categorie'
+import { CardMetrica } from '@/components/card-metrica'
+import { BarreDivergenti, type VoceBarra } from '@/components/barre-divergenti'
+import { GraficoBarre, type PuntoBarra } from '@/components/grafico-barre'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { Sezione } from '@/components/sezione'
 import { traduciCategoria } from '@/lib/i18n-categorie'
@@ -57,6 +62,8 @@ export default async function CostiPage() {
     { data: strumentiRaw },
     { data: contenitoriRaw },
     { data: premiPolizzeRaw },
+    { data: eventiCostoRaw },
+    { data: movimentiCostoRaw },
   ] = await Promise.all([
     supabase.from('v_costo_per_contenitore').select('contenitore_id, costo_totale').returns<CostoPerContenitore[]>(),
     supabase.from('v_costo_per_strumento').select('strumento_id, contenitore_id, categoria, costo_totale').returns<CostoPerStrumento[]>(),
@@ -67,6 +74,25 @@ export default async function CostiPage() {
     supabase.from('strumenti').select('id, nome, categoria, tipo, provider').returns<Strumento[]>(),
     supabase.from('contenitori').select('id, nome').returns<Contenitore[]>(),
     supabase.from('v_premi_residui_polizza').select('contenitore_id, non_realizzato_fiscale'),
+    // Una riga per evento di costo (stessa fonte dei totali per gruppo e per asset),
+    // letta a blocchi per non fermarsi a 1000 righe; transazione_id è univoco.
+    tutteLeRighe((da, a) =>
+      supabase
+        .from('v_eventi_costo')
+        .select('transazione_id, categoria, contenitore_id, data, importo_costo')
+        .order('data', { ascending: true })
+        .order('transazione_id', { ascending: true })
+        .range(da, a)
+    ),
+    tutteLeRighe((da, a) =>
+      supabase
+        .from('movimenti_liquidita')
+        .select('id, contenitore_id, data, importo')
+        .eq('tipo_movimento', 'Costo')
+        .order('data', { ascending: true })
+        .order('id', { ascending: true })
+        .range(da, a)
+    ),
   ])
 
   const costoContenitore = costoContenitoreRaw ?? []
@@ -173,6 +199,51 @@ export default async function CostiPage() {
     }
   })
 
+  // Costi per anno: eventi di costo di mercato più i costi dei conti di
+  // liquidità. Per l'anno corrente anche il dettaglio per categoria e per gruppo.
+  const annoCorrente = new Date().getFullYear()
+  const costiPerAnno = new Map<number, number>()
+  const costiAnnoPerCategoria = new Map<string, number>()
+  const costiAnnoPerGruppo = new Map<string, number>() // '' = nessun gruppo
+
+  function aggiungiCosto(data: string | null, importo: number | null, categoria: string, contenitoreId: string | null) {
+    if (!data) return
+    const anno = Number(data.slice(0, 4))
+    const valore = Number(importo ?? 0)
+    costiPerAnno.set(anno, (costiPerAnno.get(anno) ?? 0) + valore)
+    if (anno !== annoCorrente) return
+    costiAnnoPerCategoria.set(categoria, (costiAnnoPerCategoria.get(categoria) ?? 0) + valore)
+    costiAnnoPerGruppo.set(contenitoreId ?? '', (costiAnnoPerGruppo.get(contenitoreId ?? '') ?? 0) + valore)
+  }
+  for (const e of eventiCostoRaw ?? []) aggiungiCosto(e.data, e.importo_costo, e.categoria ?? '', e.contenitore_id)
+  for (const m of movimentiCostoRaw ?? []) aggiungiCosto(m.data, m.importo, 'Liquidita', m.contenitore_id)
+
+  const costoAnnoCorrente = costiPerAnno.get(annoCorrente) ?? 0
+
+  const categorieOrdinate = [
+    ...CATEGORIE,
+    ...Array.from(costiAnnoPerCategoria.keys()).filter((c) => !CATEGORIE.includes(c)),
+  ]
+  const vociCategoria: VoceBarra[] = categorieOrdinate.map((cat) => ({
+    etichetta: traduciCategoria(tCategorie, cat),
+    valore: costiAnnoPerCategoria.get(cat) ?? 0,
+  }))
+  const vociGruppo: VoceBarra[] = Array.from(costiAnnoPerGruppo.entries())
+    .filter(([, valore]) => valore > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([id, valore]) => ({
+      etichetta: id ? contenitoreMap.get(id) ?? '—' : tContenitori('nessunGruppo'),
+      valore,
+    }))
+
+  // Un punto per anno dal primo con costi a oggi, anche se un anno è a zero.
+  const anniConCosti = Array.from(costiPerAnno.keys())
+  const primoAnno = anniConCosti.length > 0 ? Math.min(...anniConCosti) : annoCorrente
+  const puntiAnnuali: PuntoBarra[] = []
+  for (let anno = primoAnno; anno <= annoCorrente; anno++) {
+    puntiAnnuali.push({ etichetta: String(anno), valore: costiPerAnno.get(anno) ?? 0 })
+  }
+
   const tuttiGliAsset: RigaTabella[] = [...assetMercato, ...assetLiquidita].sort(
     (a, b) => (b.costo as number) - (a.costo as number)
   )
@@ -182,36 +253,50 @@ export default async function CostiPage() {
       <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{tMenu('analisi')}</div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{tMenu('costi')}</h1>
 
-      <section>
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloAnnoCorrente', { anno: annoCorrente })}</h2>
         <Sezione>
-          <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{t('titoloTotaleCosti')}</div>
-          <div
-            style={{
-              fontFamily: 'var(--font-zilla-slab)',
-              fontWeight: 600,
-              fontSize: 'var(--fs-hero)',
-              marginTop: 4,
-              color: 'var(--text-primary)',
-            }}
-          >
-            {formatEuro(totaleCosti, locale)}
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 4 }}>{t('titoloCostiSostenuti')}</h3>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 16 }}>{t('paragrafoAnnoCorrente')}</p>
+
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <CardMetrica label={t('labelTotaleAnno', { anno: annoCorrente })} minWidth={220}>
+              {formatEuro(costoAnnoCorrente, locale)}
+            </CardMetrica>
           </div>
-          <p style={{ fontSize: 'var(--fs-form-hint)', color: 'var(--text-secondary)', margin: '8px 0 0', maxWidth: 560 }}>
-            {t('notaTotaleCosti')}
-          </p>
+
+          <div style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginTop: 24, marginBottom: 4 }}>{t('labelPerCategoria')}</div>
+          <BarreDivergenti voci={vociCategoria} variante="positivo" />
+
+          <div style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginTop: 20, marginBottom: 4 }}>{t('labelPerGruppo')}</div>
+          {vociGruppo.length === 0 ? (
+            <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', margin: 0 }}>{t('alertNessunCostoAnno')}</p>
+          ) : (
+            <BarreDivergenti voci={vociGruppo} variante="positivo" />
+          )}
         </Sezione>
       </section>
 
       <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloPerContenitore')}</h2>
+        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloStorico')}</h2>
         <Sezione>
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginBottom: 4 }}>{t('titoloTotaleCosti')}</h3>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 16 }}>{t('notaTotaleCosti')}</p>
+
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <CardMetrica label={t('labelTotaleDaSempre')} minWidth={220}>
+              {formatEuro(totaleCosti, locale)}
+            </CardMetrica>
+          </div>
+
+          <p style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginTop: 24, marginBottom: 4 }}>{t('labelAndamento')}</p>
+          <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: 0, marginBottom: 16 }}>{t('paragrafoStorico')}</p>
+          <GraficoBarre punti={puntiAnnuali} coloreUnico="#4C5FE0" />
+
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 32, marginBottom: 12 }}>{t('titoloPerContenitore')}</h3>
           <TabellaOrdinabile colonne={COLONNE_CONTENITORE} righe={righeContenitore} />
-        </Sezione>
-      </section>
 
-      <section style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{t('titoloTuttiGliAsset')}</h2>
-        <Sezione>
+          <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, marginTop: 32, marginBottom: 12 }}>{t('titoloTuttiGliAsset')}</h3>
           <TabellaOrdinabile colonne={COLONNE_ASSET} righe={tuttiGliAsset} />
         </Sezione>
       </section>

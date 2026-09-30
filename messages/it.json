@@ -247,6 +247,17 @@
   "tooltipRendimento": "Rendimento"
  },
  "PaginaCosti": {
+  "titoloAnnoCorrente": "Anno corrente — {anno}",
+  "titoloStorico": "Storico",
+  "titoloCostiSostenuti": "Costi sostenuti",
+  "paragrafoAnnoCorrente": "Dal 1° gennaio: commissioni, costi addebitati in quote o in contanti e costi dei conti di liquidità.",
+  "labelTotaleAnno": "Totale {anno}",
+  "labelTotaleDaSempre": "Totale da sempre",
+  "labelPerCategoria": "Per categoria",
+  "labelPerGruppo": "Per gruppo",
+  "alertNessunCostoAnno": "Nessun costo registrato quest'anno.",
+  "labelAndamento": "Andamento",
+  "paragrafoStorico": "Costi sostenuti anno per anno.",
   "notaTotaleCosti": "Da sempre, su tutto lo storico: le commissioni di ogni transazione, anche su posizioni già chiuse, più i costi addebitati in quote o in contanti e i costi dei conti di liquidità.",
   "titoloTotaleCosti": "Totale costi",
   "titoloPerContenitore": "Gruppi",

@@ -247,6 +247,17 @@
   "tooltipRendimento": "Return"
  },
  "PaginaCosti": {
+  "titoloAnnoCorrente": "Current year — {anno}",
+  "titoloStorico": "History",
+  "titoloCostiSostenuti": "Costs incurred",
+  "paragrafoAnnoCorrente": "Since 1 January: fees, costs charged in units or in cash and cash account costs.",
+  "labelTotaleAnno": "Total {anno}",
+  "labelTotaleDaSempre": "All-time total",
+  "labelPerCategoria": "By category",
+  "labelPerGruppo": "By group",
+  "alertNessunCostoAnno": "No costs recorded this year.",
+  "labelAndamento": "Trend",
+  "paragrafoStorico": "Costs incurred year by year.",
   "notaTotaleCosti": "All time, across the whole history: fees on every transaction, including positions already closed, plus costs charged in units or in cash and costs on cash accounts.",
   "titoloTotaleCosti": "Total costs",
   "titoloPerContenitore": "Groups",

@@ -11,7 +11,9 @@ const ROSSO = '#E5484D'
 const GRIGLIA = '#2B3350'
 const TESTO_ASSI = '#9198AD'
 
-export function GraficoBarre({ punti }: { punti: PuntoBarra[] }) {
+// coloreUnico: un solo colore per tutte le barre (es. i costi, che non sono né
+// guadagni né perdite); senza, verde per i valori positivi e rosso per i negativi.
+export function GraficoBarre({ punti, coloreUnico }: { punti: PuntoBarra[]; coloreUnico?: string }) {
   const locale = useLocale() as LocaleFormato
 
   return (
@@ -29,7 +31,7 @@ export function GraficoBarre({ punti }: { punti: PuntoBarra[] }) {
         />
         <Bar dataKey="valore" maxBarSize={36}>
           {punti.map((p, i) => (
-            <Cell key={i} fill={p.valore >= 0 ? VERDE : ROSSO} />
+            <Cell key={i} fill={coloreUnico ?? (p.valore >= 0 ? VERDE : ROSSO)} />
           ))}
         </Bar>
       </BarChart>
