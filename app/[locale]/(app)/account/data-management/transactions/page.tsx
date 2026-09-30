@@ -21,7 +21,6 @@ export default async function TransactionsPage({
   }>
 }) {
   const t = await getTranslations('PaginaGestioneTransazioni')
-  const tMenu = await getTranslations('Menu')
   const params = await searchParams
   const supabase = await createClient()
 
@@ -42,26 +41,32 @@ export default async function TransactionsPage({
 
   return (
     <>
-      <SezioneImpostazioni titolo={tMenu('transazioni')}>
+      <SezioneImpostazioni titolo={t('titoloAggiungiTransazione')}>
         {params.successo_finanziaria === '1' && <NotificaDaParametro messaggio={t('successoTransazioneSalvata')} />}
         {params.successo_liquidita === '1' && <NotificaDaParametro messaggio={t('successoTransazioneSalvata')} />}
 
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          <SelettoreTipoTransazioni tipoAttivo={tipo} />
-          {tipo === 'finanziarie' ? (
-            <NuovaTransazioneFinanziaria
-              strumenti={strumentiFinanziari}
-              contenitori={contenitori ?? []}
-              errore={params.errore_finanziaria === '1'}
-            />
-          ) : (
-            <NuovaTransazioneLiquidita
-              strumentiLiquidita={strumentiLiquidita.map((s) => ({ id: s.id, nome: s.nome }))}
-              contenitori={contenitori ?? []}
-              errore={params.errore_liquidita === '1'}
-            />
-          )}
+          <NuovaTransazioneFinanziaria
+            strumenti={strumentiFinanziari}
+            contenitori={contenitori ?? []}
+            errore={params.errore_finanziaria === '1'}
+          />
+          <NuovaTransazioneLiquidita
+            strumentiLiquidita={strumentiLiquidita.map((s) => ({ id: s.id, nome: s.nome }))}
+            contenitori={contenitori ?? []}
+            errore={params.errore_liquidita === '1'}
+          />
         </div>
+
+        <div style={{ marginTop: 16 }}>
+          <RippleLink href="/account/data-management/import" className="link-dettaglio">
+            {t('linkImportaDaFile')}
+          </RippleLink>
+        </div>
+      </SezioneImpostazioni>
+
+      <SezioneImpostazioni titolo={t('titoloStoricoTransazioni')}>
+        <SelettoreTipoTransazioni tipoAttivo={tipo} />
 
         <div style={{ marginTop: 16 }}>
           {tipo === 'finanziarie' ? (
@@ -70,12 +75,6 @@ export default async function TransactionsPage({
             <ElencoMovimentiLiquidita strumenti={strumentiLiquidita} contenitori={contenitori ?? []} />
           )}
         </div>
-      </SezioneImpostazioni>
-
-      <SezioneImpostazioni titolo={t('titoloImporta')}>
-        <RippleLink href="/account/data-management/import" className="link-dettaglio">
-          {t('linkImportaDaFile')}
-        </RippleLink>
       </SezioneImpostazioni>
     </>
   )

@@ -149,7 +149,7 @@ export function NuovaTransazioneFinanziaria({
   return (
     <div>
       <button type="button" onClick={() => setAperto(true)} style={stileBottonePrimario}>
-        {t('bottoneNuovaTransazione')}
+        {t('bottoneNuovaTransazioneFinanziaria')}
       </button>
 
       {errore && <p style={{ color: 'var(--danger)', marginTop: 12 }}>{t('erroreRiprova')}</p>}
@@ -343,7 +343,7 @@ export function NuovaTransazioneLiquidita({
         </p>
       ) : (
         <button type="button" onClick={() => setAperto(true)} style={stileBottonePrimario}>
-          {t('bottoneNuovaTransazione')}
+          {t('bottoneNuovaTransazioneLiquidita')}
         </button>
       )}
 
