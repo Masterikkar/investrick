@@ -11,6 +11,7 @@ import {
   IconaChevron,
   IconaPortafoglio,
   IconaAnalisi,
+  IconaTool,
   IconaAccount,
   IconaAsset,
   IconaGruppi,
@@ -186,7 +187,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 >
                   <IconaRendimenti /> {t('rendimenti')}
                 </RippleLink>
-                <hr className="menu-divider" />
+              </div>
+            </details>
+
+            <details style={{ position: 'relative' }}>
+              <summary className="menu-toggle menu-toggle-bar">
+                <IconaTool />
+                {t('tool')}
+                <span className="menu-chevron">
+                  <IconaChevron />
+                </span>
+              </summary>
+              <div className="menu-panel" style={stilePannello}>
                 <RippleLink
                   href="/tools/rebalancing"
                   className="menu-row link-interattivo"

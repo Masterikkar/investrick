@@ -58,6 +58,14 @@ export function IconaAnalisi() {
   )
 }
 
+export function IconaTool() {
+  return (
+    <IconaBase>
+      <path d="M13.5 3a3.5 3.5 0 0 0-3.3 4.7L3.7 14.2a1.6 1.6 0 0 0 2.3 2.3l6.5-6.5A3.5 3.5 0 0 0 17 6.5l-2.3 2.3-2.5-.5-.5-2.5L14 3.5z" />
+    </IconaBase>
+  )
+}
+
 export function IconaAccount() {
   return (
     <IconaBase>

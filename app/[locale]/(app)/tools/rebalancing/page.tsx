@@ -52,7 +52,7 @@ export default async function RibilanciamentoPage() {
 
   return (
     <div>
-      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{tMenu('analisi')}</div>
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)' }}>{tMenu('tool')}</div>
       <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{tMenu('ribilanciamento')}</h1>
       <SogliaRibilanciamento sogliaIniziale={soglia} />
 
