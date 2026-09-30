@@ -84,6 +84,25 @@ export function IconaSicurezza() {
   )
 }
 
+export function IconaOcchio() {
+  return (
+    <IconaBase>
+      <path d="M1.5 10s3-5.5 8.5-5.5S18.5 10 18.5 10s-3 5.5-8.5 5.5S1.5 10 1.5 10z" />
+      <circle cx="10" cy="10" r="2.5" />
+    </IconaBase>
+  )
+}
+
+export function IconaOcchioBarrato() {
+  return (
+    <IconaBase>
+      <path d="M1.5 10s3-5.5 8.5-5.5S18.5 10 18.5 10s-3 5.5-8.5 5.5S1.5 10 1.5 10z" />
+      <circle cx="10" cy="10" r="2.5" />
+      <path d="M3 3l14 14" />
+    </IconaBase>
+  )
+}
+
 export function IconaAsset() {
   return (
     <IconaBase>

@@ -3,14 +3,10 @@
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 import { useNotifica } from '@/components/notifica'
-import {
-  stileBottonePrimario,
-  stileCampo,
-  stileErroreCampo,
-  stileEtichetta,
-} from '../../data-management/transactions/nuova-transazione'
 import { LUNGHEZZA_MINIMA_PASSWORD } from '@/lib/profilo'
+import { stileBottonePrimario, stileErroreCampo } from '../../data-management/transactions/nuova-transazione'
 import { cambiaPassword } from './actions'
+import { CampoPassword } from './campo-password'
 
 export function FormPassword() {
   const t = useTranslations('PaginaAccount')
@@ -21,9 +17,16 @@ export function FormPassword() {
   const [conferma, setConferma] = useState('')
   const [errore, setErrore] = useState<string | null>(null)
 
+  // Le due password si confrontano mentre si scrive, non solo all'invio.
+  const confermaDiversa = conferma !== '' && nuova !== conferma
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setErrore(null)
+    if (attuale === '') {
+      setErrore(t('erroriPassword.passwordAttualeErrata'))
+      return
+    }
     if (nuova.length < LUNGHEZZA_MINIMA_PASSWORD) {
       setErrore(t('erroriPassword.passwordCorta', { minimo: LUNGHEZZA_MINIMA_PASSWORD }))
       return
@@ -50,44 +53,28 @@ export function FormPassword() {
       onSubmit={handleSubmit}
       style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420, color: 'var(--text-primary)' }}
     >
-      <label style={stileEtichetta}>
-        {t('labelPasswordAttuale')}
-        <input
-          type="password"
-          required
-          value={attuale}
-          onChange={(e) => setAttuale(e.target.value)}
-          autoComplete="current-password"
-          style={stileCampo}
-        />
-      </label>
+      <CampoPassword
+        etichetta={t('labelPasswordAttuale')}
+        valore={attuale}
+        onCambia={setAttuale}
+        autoComplete="current-password"
+      />
 
-      <label style={stileEtichetta}>
-        {t('labelNuovaPassword')}
-        <input
-          type="password"
-          required
-          value={nuova}
-          onChange={(e) => setNuova(e.target.value)}
-          autoComplete="new-password"
-          style={stileCampo}
-        />
-        <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-form-hint)', marginTop: 4, display: 'block' }}>
-          {t('hintPassword', { minimo: LUNGHEZZA_MINIMA_PASSWORD })}
-        </small>
-      </label>
+      <CampoPassword
+        etichetta={t('labelNuovaPassword')}
+        valore={nuova}
+        onCambia={setNuova}
+        autoComplete="new-password"
+        hint={t('hintPassword', { minimo: LUNGHEZZA_MINIMA_PASSWORD })}
+      />
 
-      <label style={stileEtichetta}>
-        {t('labelConfermaPassword')}
-        <input
-          type="password"
-          required
-          value={conferma}
-          onChange={(e) => setConferma(e.target.value)}
-          autoComplete="new-password"
-          style={stileCampo}
-        />
-      </label>
+      <CampoPassword
+        etichetta={t('labelConfermaPassword')}
+        valore={conferma}
+        onCambia={setConferma}
+        autoComplete="new-password"
+        errore={confermaDiversa ? t('erroriPassword.confermaDiversa') : undefined}
+      />
 
       {errore && <p style={{ ...stileErroreCampo, margin: 0 }}>{errore}</p>}
 

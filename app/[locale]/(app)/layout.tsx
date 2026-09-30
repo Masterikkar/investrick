@@ -221,7 +221,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     height: 30,
                     borderRadius: '50%',
                     background: 'var(--primary)',
-                    border: '2px solid #fff',
+                    border: '1px solid #fff',
                     color: '#fff',
                     display: 'inline-flex',
                     alignItems: 'center',

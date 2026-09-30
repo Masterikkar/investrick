@@ -120,6 +120,8 @@
   "labelPasswordAttuale": "Password attuale",
   "labelNuovaPassword": "Nuova password",
   "labelConfermaPassword": "Conferma nuova password",
+  "mostraPassword": "Mostra password",
+  "nascondiPassword": "Nascondi password",
   "hintPassword": "Almeno {minimo} caratteri.",
   "bottoneCambiaPassword": "Cambia password",
   "notificaPasswordCambiata": "Password cambiata.",
