@@ -7,14 +7,14 @@ import { MenuSelect } from '@/components/menu-select'
 import { formatData, type LocaleFormato } from '@/lib/format'
 import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
-import { modificaTransazione } from '../account/data-management/transactions/actions'
+import { modificaTransazione } from './actions'
 import {
   CODICI_OPERAZIONE,
   stileBottonePrimario,
   stileCampo,
   stileErroreCampo,
   stileEtichetta,
-} from '../account/data-management/transactions/nuova-transazione'
+} from './nuova-transazione'
 import type { RigaStoricoTransazione } from './storico-transazioni'
 
 type Gruppo = { id: string; nome: string; tipo: string }

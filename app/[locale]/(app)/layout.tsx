@@ -18,7 +18,6 @@ import {
   IconaFiscalita,
   IconaRendimenti,
   IconaRibilanciamento,
-  IconaStorico,
   IconaGestione,
   IconaImpostazioni,
   IconaEsci,
@@ -195,25 +194,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 >
                   <IconaRibilanciamento /> {t('ribilanciamento')}
                 </RippleLink>
-                <hr className="menu-divider" />
-                <details>
-                  <summary className="menu-toggle" style={{ padding: '9px 10px' }}>
-                    <span className="menu-row-left">
-                      <IconaStorico /> {t('storico')}
-                    </span>
-                    <span className="menu-chevron">
-                      <IconaChevron />
-                    </span>
-                  </summary>
-                  <div className="menu-submenu-items">
-                    <RippleLink href="/history/cash" className="menu-row link-interattivo">
-                      {t('transazioniLiquidita')}
-                    </RippleLink>
-                    <RippleLink href="/history/asset" className="menu-row link-interattivo">
-                      {t('transazioniFinanziarie')}
-                    </RippleLink>
-                  </div>
-                </details>
               </div>
             </details>
 

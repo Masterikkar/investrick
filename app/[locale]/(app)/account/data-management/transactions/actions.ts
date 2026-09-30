@@ -100,7 +100,7 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
   const tassaTrattenuta = Number(formData.get('tassa_trattenuta') || 0)
 
   if (!strumentoId) {
-    redirect({ href: '/account/data-management/transactions?errore_liquidita=1', locale })
+    redirect({ href: '/account/data-management/transactions?tipo=liquidita&errore_liquidita=1', locale })
   }
 
   const { error } = await supabase.from('movimenti_liquidita').insert({
@@ -113,18 +113,18 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
   })
 
   if (error) {
-    redirect({ href: '/account/data-management/transactions?errore_liquidita=1', locale })
+    redirect({ href: '/account/data-management/transactions?tipo=liquidita&errore_liquidita=1', locale })
   }
 
   const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
 
   if (erroreRicostruzione) {
-    redirect({ href: '/account/data-management/transactions?errore_liquidita=1', locale })
+    redirect({ href: '/account/data-management/transactions?tipo=liquidita&errore_liquidita=1', locale })
   }
 
   revalidatePath(`/${locale}`)
   revalidatePath(`/${locale}/account/data-management/transactions`)
-  redirect({ href: '/account/data-management/transactions?successo_liquidita=1', locale })
+  redirect({ href: '/account/data-management/transactions?tipo=liquidita&successo_liquidita=1', locale })
 }
 
 // --- Storico transazioni: riallocazione contenitore ed eliminazione ---

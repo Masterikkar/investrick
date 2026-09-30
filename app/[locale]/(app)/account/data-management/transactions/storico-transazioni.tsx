@@ -3,40 +3,45 @@
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { formatData, formatEuro, type LocaleFormato } from '@/lib/format'
+import { formatData, formatEuro, formatNumero, type LocaleFormato } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
-import { CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA } from '@/lib/i18n-tipi-movimento-liquidita'
-import { aggiornaContenitoreMovimentoLiquidita, eliminaMovimentoLiquidita } from '../account/data-management/transactions/actions'
+import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
+import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
+import { aggiornaContenitoreTransazione, eliminaTransazione } from './actions'
 import { useConferma } from '@/components/conferma'
-import { IconaElimina } from '@/components/icone'
+import { IconaModifica, IconaElimina } from '@/components/icone'
 import { MenuSpostaContenitore } from '@/components/menu-sposta-contenitore'
+import { ModificaTransazione } from './modifica-transazione'
 
-export type RigaStoricoMovimentoLiquidita = {
+export type RigaStoricoTransazione = {
   id: string
   data: string
-  tipo_movimento: string
+  operazione: string
   contenitore_id: string | null
-  importo: number
+  quantita: number
+  prezzo_unitario: number
+  commissione: number
   tassa_trattenuta: number
-  strumento_id: string
+  strumento_id: string | null
   strumento_nome: string
+  strumento_ticker: string | null
 }
 
-type Contenitore = { id: string; nome: string }
+type Contenitore = { id: string; nome: string; tipo: string }
 
 const RIGHE_PER_PAGINA = 100
 
-export function StoricoMovimentiLiquidita({
-  movimenti,
+export function StoricoTransazioni({
+  transazioni,
   contenitori,
 }: {
-  movimenti: RigaStoricoMovimentoLiquidita[]
+  transazioni: RigaStoricoTransazione[]
   contenitori: Contenitore[]
 }) {
   const t = useTranslations('PaginaStorico')
   const locale = useLocale() as LocaleFormato
   const tFiltroTabellaStorico = useTranslations('FiltroTabellaStorico')
-  const tTipiMovimento = useTranslations('TipiMovimentoLiquidita')
+  const tTipiOperazione = useTranslations('TipiOperazione')
   const tContenitori = useTranslations('Contenitori')
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
   const tGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
@@ -45,13 +50,14 @@ export function StoricoMovimentiLiquidita({
   const [query, setQuery] = useState('')
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [erroreId, setErroreId] = useState<string | null>(null)
+  const [rigaInModifica, setRigaInModifica] = useState<RigaStoricoTransazione | null>(null)
   const [, startTransition] = useTransition()
   const [righeVisibili, setRigheVisibili] = useState(RIGHE_PER_PAGINA)
 
   const anniDisponibili = useMemo(() => {
-    const anni = new Set(movimenti.map((m) => Number(m.data.slice(0, 4))))
+    const anni = new Set(transazioni.map((t) => Number(t.data.slice(0, 4))))
     return Array.from(anni).sort((a, b) => b - a)
-  }, [movimenti])
+  }, [transazioni])
 
   const [anniSelezionati, setAnniSelezionati] = useState<Set<number>>(() => new Set(anniDisponibili))
 
@@ -60,21 +66,25 @@ export function StoricoMovimentiLiquidita({
     return contenitori.find((c) => c.id === id)?.nome ?? '—'
   }
 
-  function etichettaTipoMovimento(tipo: string): string {
-    const chiave = CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA[tipo]
-    return chiave ? tTipiMovimento(chiave) : tipo
+  function etichettaOperazione(operazione: string): string {
+    const etichettaItaliana = ETICHETTA_OPERAZIONE[operazione] ?? operazione
+    const chiave = CHIAVE_TRADUZIONE_OPERAZIONE[etichettaItaliana]
+    return chiave ? tTipiOperazione(chiave) : etichettaItaliana
   }
 
   const testo = query.trim().toLowerCase()
 
   const righeFiltrate = useMemo(() => {
-    return movimenti.filter((m) => {
-      const passaAnno = anniSelezionati.has(Number(m.data.slice(0, 4)))
+    return transazioni.filter((t) => {
+      const passaAnno = anniSelezionati.has(Number(t.data.slice(0, 4)))
       if (!passaAnno) return false
       if (!testo) return true
-      return m.strumento_nome.toLowerCase().includes(testo)
+      return (
+        t.strumento_nome.toLowerCase().includes(testo) ||
+        (t.strumento_ticker ?? '').toLowerCase().includes(testo)
+      )
     })
-  }, [movimenti, testo, anniSelezionati])
+  }, [transazioni, testo, anniSelezionati])
 
   const righeMostrate = righeFiltrate.slice(0, righeVisibili)
   const ciSonoAltre = righeVisibili < righeFiltrate.length
@@ -88,34 +98,34 @@ export function StoricoMovimentiLiquidita({
     })
   }
 
-  function handleSposta(movimentoId: string, valoreSelezionato: string) {
+  function handleSposta(transazioneId: string, valoreSelezionato: string) {
     if (!valoreSelezionato) return
     setErroreId(null)
-    setPendingId(movimentoId)
+    setPendingId(transazioneId)
 
     const nuovoContenitoreId = valoreSelezionato === 'diretto' ? null : valoreSelezionato
 
     startTransition(async () => {
-      const risultato = await aggiornaContenitoreMovimentoLiquidita(movimentoId, nuovoContenitoreId)
+      const risultato = await aggiornaContenitoreTransazione(transazioneId, nuovoContenitoreId)
       setPendingId(null)
       if ('errore' in risultato) {
-        setErroreId(movimentoId)
+        setErroreId(transazioneId)
       } else {
         router.refresh()
       }
     })
   }
 
-  async function handleElimina(riga: RigaStoricoMovimentoLiquidita) {
+  async function handleElimina(riga: RigaStoricoTransazione) {
     const base = t('descrizioneOperazioneData', {
-      operazione: etichettaTipoMovimento(riga.tipo_movimento),
+      operazione: etichettaOperazione(riga.operazione),
       data: formatData(riga.data, locale),
     })
-    const descrizione = `${base} — ${riga.strumento_nome}`
+    const descrizione = riga.strumento_nome !== '—' ? `${base} — ${riga.strumento_nome}` : base
 
     const confermato = await conferma({
-      titolo: t('titoloEliminaMovimento'),
-      messaggio: t('confermaEliminazioneMovimento', { descrizione }),
+      titolo: t('titleEliminaTransazione'),
+      messaggio: t('confermaEliminazione', { descrizione }),
       etichettaConferma: tGestioneStrumenti('bottoneElimina'),
       pericoloso: true,
     })
@@ -125,7 +135,7 @@ export function StoricoMovimentiLiquidita({
     setPendingId(riga.id)
 
     startTransition(async () => {
-      const risultato = await eliminaMovimentoLiquidita(riga.id)
+      const risultato = await eliminaTransazione(riga.id)
       setPendingId(null)
       if ('errore' in risultato) {
         setErroreId(riga.id)
@@ -226,42 +236,70 @@ export function StoricoMovimentiLiquidita({
               <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-default)' }}>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaData')}</th>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaPosizione')}</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaTipoMovimento')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaOperazione')}</th>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tContenitori('colonnaGruppo')}</th>
-                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaImporto')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaQuantita')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaPrezzoUnitario')}</th>
+                <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaCommissione')}</th>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{tPaginaFiscalita('colonnaTassaTrattenuta')}</th>
                 <th style={{ padding: 8, color: 'var(--text-secondary)', fontWeight: 500 }}>{t('colonnaAzioni')}</th>
               </tr>
             </thead>
             <tbody>
-              {righeMostrate.map((m) => {
-                const inCorso = pendingId === m.id
+              {righeMostrate.map((riga) => {
+                const inCorso = pendingId === riga.id
                 return (
-                  <tr key={m.id} className="tabella-riga">
-                    <td style={{ padding: 8 }}>{formatData(m.data, locale)}</td>
+                  <tr key={riga.id} className="tabella-riga">
+                    <td style={{ padding: 8 }}>{formatData(riga.data, locale)}</td>
                     <td style={{ padding: 8 }}>
-                      <RippleLink href={`/cash/${m.strumento_id}`} className="link-interattivo">
-                        {m.strumento_nome}
-                      </RippleLink>
+                      {riga.strumento_id ? (
+                        <RippleLink href={`/asset/${riga.strumento_id}`} className="link-interattivo">
+                          {riga.strumento_nome}
+                        </RippleLink>
+                      ) : (
+                        riga.strumento_nome
+                      )}
                     </td>
-                    <td style={{ padding: 8 }}>{etichettaTipoMovimento(m.tipo_movimento)}</td>
-                    <td style={{ padding: 8 }}>{nomeContenitore(m.contenitore_id)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(m.importo, locale)}</td>
-                    <td style={{ padding: 8 }}>{formatEuro(m.tassa_trattenuta, locale)}</td>
+                    <td style={{ padding: 8 }}>{etichettaOperazione(riga.operazione)}</td>
+                    <td style={{ padding: 8 }}>{nomeContenitore(riga.contenitore_id)}</td>
+                    <td style={{ padding: 8 }}>{formatNumero(riga.quantita, 6, false, locale)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(riga.prezzo_unitario, locale)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(riga.commissione, locale)}</td>
+                    <td style={{ padding: 8 }}>{formatEuro(riga.tassa_trattenuta, locale)}</td>
                     <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => setRigaInModifica(riga)}
+                          disabled={inCorso}
+                          title={t('titleModificaTransazione')}
+                          aria-label={t('titleModificaTransazione')}
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            cursor: inCorso ? 'default' : 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '2px 4px',
+                            color: 'var(--text-secondary)',
+                            opacity: inCorso ? 0.4 : 1,
+                          }}
+                        >
+                          <IconaModifica />
+                        </button>
+
                         <MenuSpostaContenitore
-                          contenitoreIdAttuale={m.contenitore_id}
+                          contenitoreIdAttuale={riga.contenitore_id}
                           contenitori={contenitori}
                           disabled={inCorso}
-                          onSposta={(valore) => handleSposta(m.id, valore)}
+                          onSposta={(valore) => handleSposta(riga.id, valore)}
                         />
 
                         <button
                           type="button"
-                          onClick={() => handleElimina(m)}
+                          onClick={() => handleElimina(riga)}
                           disabled={inCorso}
-                          title={t('titoloEliminaMovimento')}
+                          title={t('titleEliminaTransazione')}
                           style={{
                             border: 'none',
                             background: 'none',
@@ -309,6 +347,18 @@ export function StoricoMovimentiLiquidita({
             )}
           </div>
         </>
+      )}
+      {rigaInModifica && (
+        <ModificaTransazione
+          key={rigaInModifica.id}
+          riga={rigaInModifica}
+          contenitori={contenitori}
+          onChiudi={() => setRigaInModifica(null)}
+          onSalvata={() => {
+            setRigaInModifica(null)
+            router.refresh()
+          }}
+        />
       )}
     </div>
   )

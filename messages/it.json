@@ -61,7 +61,6 @@
   "fiscalita": "Fiscalità",
   "rendimenti": "Rendimenti",
   "ribilanciamento": "Ribilanciamento",
-  "storico": "Storico",
   "transazioniLiquidita": "Transazioni liquidità",
   "transazioniFinanziarie": "Transazioni finanziarie",
   "gestioneDatabase": "Gestione dati",
@@ -317,7 +316,6 @@
   "colonnaRendimento": "Rendimento"
  },
  "PaginaStorico": {
-  "linkNuovaTransazione": "→ Nuova transazione",
   "titoloTransazioniLiquidita": "Transazioni di liquidità",
   "alertErroreOperazione": "Non è stato possibile completare l'operazione su quella transazione. Riprova.",
   "alertNessunaTransazioneTrovata": "Nessuna transazione trovata.",

@@ -9,7 +9,7 @@ import { CardMetrica } from '@/components/card-metrica'
 import { Sezione } from '@/components/sezione'
 import { TabellaOrdinabile, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
 import { CHIAVE_TRADUZIONE_TIPO_LIQUIDITA } from '@/lib/i18n-tipi-liquidita'
-import { StoricoMovimentiLiquidita, type RigaStoricoMovimentoLiquidita } from '../../history/storico-movimenti-liquidita'
+import { StoricoMovimentiLiquidita, type RigaStoricoMovimentoLiquidita } from '../../account/data-management/transactions/storico-movimenti-liquidita'
 
 type SaldoRiga = { contenitore_id: string | null; saldo_corrente: number }
 type CostoRiga = { contenitore_id: string | null; costo_totale: number }
