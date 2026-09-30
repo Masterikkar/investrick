@@ -10,7 +10,7 @@
 
 import { DocumentoPdf, scaricaPdf, type Tono, type CellaTabella } from '@/lib/pdf-minimo'
 
-// Alcuni messaggi (es. messaggioBudgetPortafoglio, messaggioPoolReinvestire)
+// Alcuni messaggi (es. messaggioBudgetNecessario, messaggioPoolReinvestire)
 // contengono un tag <strong> e vanno letti con t.rich, non t(): sullo
 // schermo diventa un <strong>, qui basta il testo piatto. t.rich, quando il
 // callback del tag restituisce i chunk invariati (senza avvolgerli in JSX),

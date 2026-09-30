@@ -8,7 +8,8 @@ import { RippleLink } from '@/components/ripple-link'
 import { CHIAVE_TRADUZIONE_TIPO_MOVIMENTO_LIQUIDITA } from '@/lib/i18n-tipi-movimento-liquidita'
 import { aggiornaContenitoreMovimentoLiquidita, eliminaMovimentoLiquidita } from '../account/data-management/transactions/actions'
 import { useConferma } from '@/components/conferma'
-import { IconaSposta, IconaElimina } from '@/components/icone'
+import { IconaElimina } from '@/components/icone'
+import { MenuSpostaContenitore } from '@/components/menu-sposta-contenitore'
 
 export type RigaStoricoMovimentoLiquidita = {
   id: string
@@ -249,47 +250,12 @@ export function StoricoMovimentiLiquidita({
                     <td style={{ padding: 8 }}>{formatEuro(m.tassa_trattenuta, locale)}</td>
                     <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                        <div style={{ position: 'relative', display: 'inline-flex' }}>
-                          <button
-                            type="button"
-                            disabled={inCorso}
-                            title={t('titleSpostaContenitore')}
-                            style={{
-                              border: 'none',
-                              background: 'none',
-                              cursor: inCorso ? 'default' : 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              padding: '2px 4px',
-                              opacity: inCorso ? 0.4 : 1,
-                              color: 'var(--text-secondary)',
-                            }}
-                          >
-                            <IconaSposta />
-                          </button>
-                          <select
-                            value=""
-                            disabled={inCorso}
-                            onChange={(e) => handleSposta(m.id, e.target.value)}
-                            aria-label={t('titleSpostaContenitore')}
-                            style={{
-                              position: 'absolute',
-                              inset: 0,
-                              opacity: 0,
-                              cursor: inCorso ? 'default' : 'pointer',
-                            }}
-                          >
-                            <option value="">{t('optionSpostaIn')}</option>
-                            {m.contenitore_id !== null && <option value="diretto">{tContenitori('nessunGruppo')}</option>}
-                            {contenitori
-                              .filter((c) => c.id !== m.contenitore_id)
-                              .map((c) => (
-                                <option key={c.id} value={c.id}>
-                                  {c.nome}
-                                </option>
-                              ))}
-                          </select>
-                        </div>
+                        <MenuSpostaContenitore
+                          contenitoreIdAttuale={m.contenitore_id}
+                          contenitori={contenitori}
+                          disabled={inCorso}
+                          onSposta={(valore) => handleSposta(m.id, valore)}
+                        />
 
                         <button
                           type="button"

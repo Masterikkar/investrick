@@ -97,10 +97,13 @@ export function OverlayRisultatoSimulazione({
           </button>
         </div>
 
-        {/* Corpo del risultato — tono chiaro, come il contenuto del wizard */}
+        {/* Corpo del risultato — tono scuro (--bg-section, non --bg-surface
+            del wizard): le Sezione al suo interno usano chiara per risultare
+            più chiare del corpo che le ospita, invertito rispetto al resto
+            dell'app. */}
         <div
           style={{
-            background: 'var(--bg-surface)',
+            background: 'var(--bg-section)',
             padding: '24px 28px',
             minWidth: 0,
           }}

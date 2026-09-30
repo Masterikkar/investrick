@@ -164,6 +164,31 @@ export type ParametriSimulazionePortafoglio = {
   polizzeSelezionate: string[]
   valutaPac: boolean
   pacSelezionati: string[]
+  // PAC da trattare come un portafoglio a parte: valore e composizione
+  // spariscono da tutta la simulazione (categorie libere, blocchiPac, totali
+  // per categoria), indipendentemente da pacSelezionati/valutaPac — è un
+  // concetto ortogonale alla "toccabilità" (vedi pacEsclusiSet in
+  // simulaPortafoglio).
+  pacEsclusi: string[]
+}
+
+// Un gruppo per ciascun PAC la cui forma fissa "intrappola" almeno una
+// categoria al floor (quota > 0 nella forma del PAC per quella categoria):
+// causa da mostrare in "Causa del problema", indipendente dal fatto che
+// esista una specifica alternativa "nuovaFormaPac" (quella richiede almeno 2
+// categorie intrappolate SOLO da quel PAC — qui basta che il PAC concorra a
+// spingere la categoria al floor, anche da sola o anche se la categoria è
+// anche libera).
+export type AvvisoStrutturale = {
+  floorPp: number
+  categorie: string[]
+  causaPac: { pacNome: string; categorie: string[] }[]
+  // Sottoinsieme di risultato.senzaVeicolo che possiede comunque un valore
+  // (>0) nel portafoglio — es. tenuto in un PAC non toccabile o con una
+  // forma che non lo copre: il messaggio "non esistono asset" sarebbe falso
+  // per queste, serve un testo diverso (vedi testoCausaSenzaVeicolo).
+  senzaVeicoloConAsset: string[]
+  alternative: AlternativaStrutturale[]
 }
 
 export type RisultatoSimulazionePortafoglio = {
@@ -172,11 +197,16 @@ export type RisultatoSimulazionePortafoglio = {
   riscattiProposti: EsitoRiscattoPolizza[]
   poolTotale: number | null
   versamentoMassimo: number | null
-  avvisoStrutturale: { floorPp: number; categorie: string[]; alternative: AlternativaStrutturale[] } | null
+  avvisoStrutturale: AvvisoStrutturale | null
   // Soglia di scostamento impostata dall'utente (impostazioni_utente.soglia_ribilanciamento_pp,
   // default 3): serve al layout a blocchi del risultato per mostrare "Soglia
   // impostata: X%" accanto allo scostamento residuo ottenibile.
   soglia: number
+  // Nomi dei PAC esclusi dai ragionamenti (params.pacEsclusi, risolti qui una
+  // volta sola in nomi): usati da "Note conclusive" a schermo e nel PDF.
+  // Viaggia dentro il risultato salvato, così lo storico mostra la nota
+  // giusta anche riaprendo una simulazione più vecchia.
+  pacEsclusi: string[]
 }
 
 export async function simulaPortafoglio(
@@ -198,12 +228,12 @@ export async function simulaPortafoglio(
       tutteLeRighe((da, a) =>
         supabase
           .from('v_valore_posizioni_attuale')
-          .select('strumento_id, contenitore_id, categoria, quantita_corrente')
+          .select('strumento_id, contenitore_id, categoria, quantita_corrente, valore_attuale')
           .order('strumento_id')
           .order('contenitore_id', { nullsFirst: true })
           .range(da, a)
       ),
-      supabase.from('v_saldo_liquidita').select('contenitore_id'),
+      supabase.from('v_saldo_liquidita').select('contenitore_id, saldo_corrente'),
       supabase
         .from('target_allocazioni')
         .select('contenitore_id, categoria, target_percentuale')
@@ -212,6 +242,19 @@ export async function simulaPortafoglio(
     ])
 
   const tipoContenitore = new Map((contenitori ?? []).map((c) => [c.id, c.tipo]))
+
+  // PAC trattati come un portafoglio a parte: invisibili a tutta la
+  // simulazione, prima di qualunque altro controllo (toccabile o no) —
+  // ortogonale a pacSelezionati/valutaPac. posizioni/saldi grezzi restano
+  // disponibili qui sotto solo per calcolare quanto sottrarre da
+  // valorePerCategoria (la vista v_valore_per_categoria non conosce
+  // l'esclusione); ogni altro uso in questa funzione passa dalle versioni
+  // filtrate.
+  const pacEsclusiSet = new Set(params.pacEsclusi ?? [])
+  const contenitoreEscluso = (contenitoreId: string | null) => contenitoreId !== null && pacEsclusiSet.has(contenitoreId)
+  const posizioniPortafoglio = (posizioni ?? []).filter((p) => !contenitoreEscluso(p.contenitore_id))
+  const saldiPortafoglio = (saldi ?? []).filter((s) => !contenitoreEscluso(s.contenitore_id))
+
   const direttaOPolizza = (contenitoreId: string | null) =>
     contenitoreId === null || tipoContenitore.get(contenitoreId) === 'Polizza'
   // Vendibile senza chiedere permesso: diretta, sempre. Un PAC solo se
@@ -222,32 +265,16 @@ export async function simulaPortafoglio(
     contenitoreId === null ||
     (tipoContenitore.get(contenitoreId) === 'PAC' && pacSelezionatiSet.has(contenitoreId))
 
-  const categorieLibere = new Set(
-    (posizioni ?? [])
-      .filter((p) => Number(p.quantita_corrente) > 0 && p.categoria && direttaOPolizza(p.contenitore_id))
-      .map((p) => p.categoria as string)
-  )
-  if ((saldi ?? []).some((s) => direttaOPolizza(s.contenitore_id))) categorieLibere.add('Liquidita')
-
-  const targetPortafoglio = new Map(
-    (scostamentiPortafoglio ?? []).map((s) => [s.categoria, Number(s.target_percentuale) / 100])
-  )
-  const valorePerCategoria = new Map((valoriCategoria ?? []).map((v) => [v.categoria, Number(v.valore_totale ?? 0)]))
-  const categoriePortafoglioBase: CategoriaPortafoglio[] = CATEGORIE.map((categoria) => ({
-    categoria,
-    valoreAttuale: valorePerCategoria.get(categoria) ?? 0,
-    targetPct: targetPortafoglio.get(categoria) ?? null,
-    libera: categorieLibere.has(categoria),
-  }))
-
   // Un PAC entra come blocco a forma fissa nel modello di acquisto solo se ha
   // il target attivo e completo. Comprare in un PAC tramite versamento resta
   // sempre automatico: è il normale funzionamento di un piano di accumulo,
   // non un "tocco" a una posizione esistente — solo la vendita richiede
-  // l'opt-in dello step 5.
+  // l'opt-in dello step 5. Calcolato prima di categorieLibere perché serve
+  // anche lì: un PAC senza questa forma valida non ha un rapporto di
+  // allocazione da rispettare (vedi pacToccabileSenzaForma sotto).
   const blocchiPac: BloccoPac[] = []
   for (const c of contenitori ?? []) {
-    if (c.tipo !== 'PAC' || !c.target_attivo) continue
+    if (c.tipo !== 'PAC' || !c.target_attivo || pacEsclusiSet.has(c.id)) continue
     const righe = (targetGruppi ?? []).filter((r) => r.contenitore_id === c.id)
     const somma = righe.reduce((acc, r) => acc + Number(r.target_percentuale), 0)
     if (Math.abs(somma - 100) > 0.01) continue
@@ -257,6 +284,77 @@ export async function simulaPortafoglio(
       forma: Object.fromEntries(righe.map((r) => [r.categoria, Number(r.target_percentuale) / 100])),
     })
   }
+  const pacConFormaValidaIds = new Set(blocchiPac.map((k) => k.id))
+
+  // Un PAC toccabile (selezionato al passo 5) ma senza una forma valida non
+  // ha un rapporto di allocazione interno da rispettare: le sue categorie
+  // sono acquistabili liberamente come una posizione diretta, non "senza
+  // veicolo" — a differenza di un PAC con forma valida che semplicemente non
+  // copre quella categoria, dove il rapporto dichiarato andrebbe violato e
+  // resta "senza veicolo" com'è oggi.
+  const pacToccabileSenzaForma = (contenitoreId: string | null) =>
+    contenitoreId !== null &&
+    tipoContenitore.get(contenitoreId) === 'PAC' &&
+    pacSelezionatiSet.has(contenitoreId) &&
+    !pacConFormaValidaIds.has(contenitoreId)
+
+  const categorieLibere = new Set(
+    posizioniPortafoglio
+      .filter(
+        (p) =>
+          Number(p.quantita_corrente) > 0 &&
+          p.categoria &&
+          (direttaOPolizza(p.contenitore_id) || pacToccabileSenzaForma(p.contenitore_id))
+      )
+      .map((p) => p.categoria as string)
+  )
+  if (saldiPortafoglio.some((s) => direttaOPolizza(s.contenitore_id))) categorieLibere.add('Liquidita')
+
+  // Un PAC escluso è un portafoglio a parte: il suo valore non conta più
+  // nella baseline (sottratto sotto da valorePerCategoria), ma se possiede un
+  // asset di una categoria, quell'asset resta la prova che un veicolo per
+  // quella categoria esiste nell'universo investibile dell'utente — solo non
+  // dentro questo PAC. Il sistema può quindi proporre di acquistarne uno
+  // indipendente (posizione diretta, fuori dal PAC escluso) per arrivare al
+  // target, invece di dichiarare "senza veicolo" com'era prima di questo
+  // aggiustamento — l'esclusione toglie l'importo dal conteggio, non la prova
+  // che l'asset esiste.
+  if (pacEsclusiSet.size > 0) {
+    for (const p of posizioni ?? []) {
+      if (contenitoreEscluso(p.contenitore_id) && Number(p.quantita_corrente) > 0 && p.categoria) {
+        categorieLibere.add(p.categoria)
+      }
+    }
+    if ((saldi ?? []).some((s) => contenitoreEscluso(s.contenitore_id))) categorieLibere.add('Liquidita')
+  }
+
+  const targetPortafoglio = new Map(
+    (scostamentiPortafoglio ?? []).map((s) => [s.categoria, Number(s.target_percentuale) / 100])
+  )
+  const valorePerCategoria = new Map((valoriCategoria ?? []).map((v) => [v.categoria, Number(v.valore_totale ?? 0)]))
+  // v_valore_per_categoria somma l'intero portafoglio: per un PAC escluso si
+  // sottrae qui il suo contributo (valore_attuale delle posizioni, saldo_corrente
+  // della liquidità), stessa scomposizione della vista stessa (verificata via
+  // pg_get_viewdef) — nessuna modifica allo schema.
+  if (pacEsclusiSet.size > 0) {
+    for (const p of posizioni ?? []) {
+      if (contenitoreEscluso(p.contenitore_id) && p.categoria) {
+        valorePerCategoria.set(p.categoria, (valorePerCategoria.get(p.categoria) ?? 0) - Number(p.valore_attuale ?? 0))
+      }
+    }
+    const liquiditaEsclusa = (saldi ?? [])
+      .filter((s) => contenitoreEscluso(s.contenitore_id))
+      .reduce((acc, s) => acc + Number(s.saldo_corrente ?? 0), 0)
+    if (liquiditaEsclusa !== 0) {
+      valorePerCategoria.set('Liquidita', (valorePerCategoria.get('Liquidita') ?? 0) - liquiditaEsclusa)
+    }
+  }
+  const categoriePortafoglioBase: CategoriaPortafoglio[] = CATEGORIE.map((categoria) => ({
+    categoria,
+    valoreAttuale: valorePerCategoria.get(categoria) ?? 0,
+    targetPct: targetPortafoglio.get(categoria) ?? null,
+    libera: categorieLibere.has(categoria),
+  }))
 
   let categoriePortafoglio = categoriePortafoglioBase
   let risultato = calcolaRibilanciamentoPortafoglio(categoriePortafoglio, blocchiPac, soglia, versamentoMassimo)
@@ -421,7 +519,7 @@ export async function simulaPortafoglio(
 
   // Limite strutturale: anche con un versamento enorme lo scostamento non
   // scenderebbe oltre una certa soglia (forma fissa di un PAC, per esempio).
-  let avvisoStrutturale: { floorPp: number; categorie: string[]; alternative: AlternativaStrutturale[] } | null = null
+  let avvisoStrutturale: AvvisoStrutturale | null = null
   if (risultato.esito === 'residuo') {
     const totaleFinale = categoriePortafoglio.reduce((acc, c) => acc + c.valoreAttuale, 0)
     const versamentoIllimitato = Math.max(1e10, totaleFinale * 1e6)
@@ -438,9 +536,21 @@ export async function simulaPortafoglio(
         categorieAlFloor,
         risultatoIllimitato.soluzione
       )
-      avvisoStrutturale = { floorPp, categorie: categorieAlFloor, alternative }
+      const causaPac = blocchiPac
+        .map((k) => ({
+          pacNome: k.nome,
+          categorie: categorieAlFloor.filter((categoria) => (k.forma[categoria] ?? 0) > 0),
+        }))
+        .filter((g) => g.categorie.length > 0)
+      const valorePerCategoriaAttuale = new Map(categoriePortafoglio.map((c) => [c.categoria, c.valoreAttuale]))
+      const senzaVeicoloConAsset = risultato.senzaVeicolo.filter(
+        (categoria) => (valorePerCategoriaAttuale.get(categoria) ?? 0) > 0.01
+      )
+      avvisoStrutturale = { floorPp, categorie: categorieAlFloor, causaPac, senzaVeicoloConAsset, alternative }
     }
   }
+
+  const pacEsclusiNomi = (contenitori ?? []).filter((c) => pacEsclusiSet.has(c.id)).map((c) => c.nome)
 
   return {
     risultato,
@@ -450,6 +560,7 @@ export async function simulaPortafoglio(
     versamentoMassimo: poolTotale !== null ? null : versamentoMassimo,
     avvisoStrutturale,
     soglia,
+    pacEsclusi: pacEsclusiNomi,
   }
 }
 

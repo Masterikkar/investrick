@@ -8,11 +8,15 @@ import { Checkbox } from '@/components/checkbox'
 import { MenuSelect } from '@/components/menu-select'
 import {
   RisultatoPortafoglioVista,
+  NoteConclusiveVista,
   costruisciSezioniRisultatoPortafoglio,
   AvvisoStrutturaleVista,
-  RiepilogoStrutturaleVista,
+  AvvisoSuccessoVista,
+  RiepilogoVista,
+  importoVersamentoSufficiente,
   Numero,
   stileTitoloBlocco,
+  IMPORTO_MINIMO,
 } from './risultato-portafoglio'
 import { WizardRibilanciamento, type PassoWizard } from './wizard-ribilanciamento'
 import { PassoSogliaVersamento, PassoCommissioniVendita, PassoVendiInPerdita, PassoEsecuzione } from './passi-comuni'
@@ -196,6 +200,9 @@ function costruisciContenutoPdf(
         formatEuro(r.proventoNetto, locale),
       ]),
     })
+    // Stessa posizione dello schermo: subito dopo la tabella dei riscatti
+    // proposti, non come nota generica di chiusura.
+    sezioni.push({ tipo: 'paragrafo', tono: 'secondario', testo: t('notaPolizzaEsclusaDalleVendite') })
   }
 
   if (risultato.poolTotale !== null) {
@@ -207,10 +214,18 @@ function costruisciContenutoPdf(
     })
   }
 
-  sezioni.push({ tipo: 'paragrafo', tono: 'secondario', testo: t('notaPolizzaEsclusaDalleVendite') })
   sezioni.push({ tipo: 'separatore' })
   sezioni.push(
-    ...costruisciSezioniRisultatoPortafoglio(risultato.risultato, risultato.versamentoMassimo, risultato.avvisoStrutturale, t, tCategorie, locale)
+    ...costruisciSezioniRisultatoPortafoglio(
+      risultato.risultato,
+      risultato.versamentoMassimo,
+      risultato.poolTotale,
+      risultato.avvisoStrutturale,
+      risultato.pacEsclusi ?? [],
+      t,
+      tCategorie,
+      locale
+    )
   )
 
   return {
@@ -250,6 +265,13 @@ export function SimulatorePortafoglio({
   const [polizzeSelezionate, setPolizzeSelezionate] = useState<string[]>([])
   const [valutaPac, setValutaPac] = useState(false)
   const [pacSelezionati, setPacSelezionati] = useState<string[]>([])
+  // Indipendente da valutaPac/pacSelezionati: un PAC qui dentro sparisce da
+  // tutta la simulazione (vedi pacEsclusiSet in lib/ribilanciamento-simulazione.ts),
+  // non solo dalla possibilità di venderlo. La lista selezionabile compare
+  // solo dopo aver spuntato valutaEsclusionePac (stesso pattern di
+  // valutaPac/pacSelezionati qui sopra).
+  const [valutaEsclusionePac, setValutaEsclusionePac] = useState(false)
+  const [pacEsclusi, setPacEsclusi] = useState<string[]>([])
   const [nomeSimulazione, setNomeSimulazione] = useState('')
 
   const [risultato, setRisultato] = useState<RisultatoSimulazionePortafoglio | null>(null)
@@ -289,6 +311,7 @@ export function SimulatorePortafoglio({
       polizzeSelezionate: modoRiscatto === 'manuale' ? polizzeSelezionate : [],
       valutaPac,
       pacSelezionati: valutaPac ? pacSelezionati : [],
+      pacEsclusi: valutaEsclusionePac ? pacEsclusi : [],
     })
     setInCalcolo(false)
     if (!esito.ok) {
@@ -367,6 +390,18 @@ export function SimulatorePortafoglio({
           />
         </div>
       )}
+      <div style={{ marginTop: 4, paddingTop: 12, borderTop: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Checkbox checked={valutaEsclusionePac} onChange={setValutaEsclusionePac} label={t('domandaEscludiPac')} />
+        <p style={{ fontSize: 'var(--fs-form-hint)', color: 'var(--text-muted)', margin: 0 }}>{t('hintPacDaEscludere')}</p>
+        {valutaEsclusionePac && (
+          <ListaSpuntabile
+            opzioni={pacDisponibili}
+            selezionati={pacEsclusi}
+            onCambia={(id, spuntato) => setPacEsclusi((prev) => (spuntato ? [...prev, id] : prev.filter((x) => x !== id)))}
+            alertVuoto={t('alertNessunPac')}
+          />
+        )}
+      </div>
     </div>,
     <PassoEsecuzione key="esecuzione" valore={nomeSimulazione} onCambia={setNomeSimulazione} />,
   ]
@@ -411,10 +446,37 @@ export function SimulatorePortafoglio({
         }}
       >
         {risultato && (() => {
-          // Layout a blocchi (Riepilogo + avviso + "Da dove arrivano i
-          // soldi" numerato) solo per lo scenario "limite strutturale": per
-          // ogni altro esito resta il rendering semplice, invariato.
+          // Layout a blocchi (Riepilogo + avviso/successo + "Da dove
+          // arrivano i soldi" numerato): per lo scenario "limite
+          // strutturale" e per un ribilanciamento riuscito (esito
+          // "raggiunto", con un versamento effettivo — non il caso "già in
+          // soglia" senza nulla da versare). Sono mutuamente esclusivi
+          // (avvisoStrutturale con categorie non vuote implica un esito
+          // "residuo", mai "raggiunto"). Per ogni altro esito resta il
+          // rendering semplice, invariato.
           const strutturale = !!(risultato.avvisoStrutturale && risultato.avvisoStrutturale.categorie.length > 0)
+          // Estratto in un'unica espressione (non un booleano derivato a
+          // parte) perché è qui che TypeScript restringe risultato.risultato
+          // al ramo "raggiunto" del tipo unione — da qui in poi si leggono
+          // solo i suoi campi (massimoPac, soloLibere, budgetMinimo), mai da
+          // risultato.risultato direttamente.
+          const risultatoRaggiunto = risultato.risultato.esito === 'raggiunto' ? risultato.risultato : null
+          const unicaSuccesso = risultatoRaggiunto ? (risultatoRaggiunto.massimoPac ?? risultatoRaggiunto.soloLibere) : null
+          const successo = risultatoRaggiunto !== null && risultatoRaggiunto.budgetMinimo >= IMPORTO_MINIMO && !!unicaSuccesso
+          // Stessa fonte di AvvisoSuccessoVista/PDF (importoVersamentoSufficiente,
+          // condivisa da risultato-portafoglio.tsx): il tetto impostato
+          // dall'utente se è bastato da solo, altrimenti il pool con
+          // vendite/riscatti, altrimenti il budget minimo puro.
+          const versamentoTotaleSuccesso =
+            successo && risultatoRaggiunto
+              ? importoVersamentoSufficiente(risultato.versamentoMassimo, risultato.poolTotale, risultatoRaggiunto.budgetMinimo)
+              : 0
+          // Categorie che ricevono davvero un acquisto (stesso filtro
+          // IMPORTO_MINIMO di TabellaSoluzione in risultato-portafoglio.tsx),
+          // non tutte le categorie del portafoglio.
+          const categorieCoinvolteSuccesso = unicaSuccesso
+            ? unicaSuccesso.righe.filter((r) => r.acquisto >= IMPORTO_MINIMO).map((r) => r.categoria)
+            : []
           const haVendite = risultato.venditeProposte.length > 0
           const haRiscatti = risultato.riscattiProposti.length > 0
           const numeroVendite = 1
@@ -424,7 +486,7 @@ export function SimulatorePortafoglio({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {strutturale && (
                 <>
-                  <RiepilogoStrutturaleVista
+                  <RiepilogoVista
                     versamentoTotale={risultato.risultato.esito === 'residuo' ? risultato.risultato.soluzione.versamento : 0}
                     conVendite={haVendite}
                     conRiscatti={haRiscatti}
@@ -432,12 +494,40 @@ export function SimulatorePortafoglio({
                     soglia={risultato.soglia ?? 3}
                     categorieCoinvolte={risultato.avvisoStrutturale!.categorie}
                   />
-                  <AvvisoStrutturaleVista avvisoStrutturale={risultato.avvisoStrutturale} />
+                  <AvvisoStrutturaleVista avvisoStrutturale={risultato.avvisoStrutturale} senzaVeicolo={risultato.risultato.senzaVeicolo} />
+                </>
+              )}
+
+              {successo && (
+                <>
+                  <RiepilogoVista
+                    // A differenza di AvvisoSuccessoVista qui sotto (che
+                    // conferma "il TUO versamento impostato basta"), questa
+                    // card riporta quanto la simulazione ha calcolato come
+                    // davvero necessario — mai il tetto impostato in fase di
+                    // setup: budgetMinimo, non versamentoTotaleSuccesso.
+                    // Stesso principio del blocco "strutturale" qui sopra,
+                    // che per lo stesso motivo usa soluzione.versamento (il
+                    // totale della soluzione calcolata) e non un valore
+                    // d'ingresso dell'utente.
+                    versamentoTotale={risultatoRaggiunto!.budgetMinimo}
+                    conVendite={haVendite}
+                    conRiscatti={haRiscatti}
+                    scostamentoResiduoPp={unicaSuccesso!.scostamentoMassimoPp}
+                    soglia={risultato.soglia ?? 3}
+                    categorieCoinvolte={categorieCoinvolteSuccesso}
+                    successo
+                  />
+                  <AvvisoSuccessoVista
+                    versamentoTotale={versamentoTotaleSuccesso}
+                    budgetMinimo={risultatoRaggiunto!.budgetMinimo}
+                    locale={locale}
+                  />
                 </>
               )}
 
               {(haVendite || haRiscatti) && (
-                <Sezione>
+                <Sezione chiara>
                   <div style={stileTitoloBlocco}>{t('titoloDaDoveArrivanoISoldi')}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 16 }}>
                     {haVendite && (
@@ -511,6 +601,9 @@ export function SimulatorePortafoglio({
                             ))}
                           </tbody>
                         </table>
+                        <p style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', margin: 0 }}>
+                          {t('notaPolizzaEsclusaDalleVendite')}
+                        </p>
                       </div>
                     )}
 
@@ -526,15 +619,9 @@ export function SimulatorePortafoglio({
                 </Sezione>
               )}
 
-              <p style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', margin: 0 }}>
-                {t('notaPolizzaEsclusaDalleVendite')}
-              </p>
+              <RisultatoPortafoglioVista risultato={risultato.risultato} avvisoStrutturale={risultato.avvisoStrutturale} />
 
-              <RisultatoPortafoglioVista
-                risultato={risultato.risultato}
-                versamentoMassimo={risultato.versamentoMassimo}
-                avvisoStrutturale={risultato.avvisoStrutturale}
-              />
+              <NoteConclusiveVista pacEsclusi={risultato.pacEsclusi ?? []} />
             </div>
           )
         })()}

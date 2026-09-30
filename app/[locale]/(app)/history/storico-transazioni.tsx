@@ -9,7 +9,8 @@ import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
 import { aggiornaContenitoreTransazione, eliminaTransazione } from '../account/data-management/transactions/actions'
 import { useConferma } from '@/components/conferma'
-import { IconaSposta, IconaElimina } from '@/components/icone'
+import { IconaElimina } from '@/components/icone'
+import { MenuSpostaContenitore } from '@/components/menu-sposta-contenitore'
 
 export type RigaStoricoTransazione = {
   id: string
@@ -265,47 +266,12 @@ export function StoricoTransazioni({
                     <td style={{ padding: 8 }}>{formatEuro(riga.tassa_trattenuta, locale)}</td>
                     <td style={{ padding: 8 }}>
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                        <div style={{ position: 'relative', display: 'inline-flex' }}>
-                          <button
-                            type="button"
-                            disabled={inCorso}
-                            title={t('titleSpostaContenitore')}
-                            style={{
-                              border: 'none',
-                              background: 'none',
-                              cursor: inCorso ? 'default' : 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              padding: '2px 4px',
-                              opacity: inCorso ? 0.4 : 1,
-                              color: 'var(--text-secondary)',
-                            }}
-                          >
-                            <IconaSposta />
-                          </button>
-                          <select
-                            value=""
-                            disabled={inCorso}
-                            onChange={(e) => handleSposta(riga.id, e.target.value)}
-                            aria-label={t('titleSpostaContenitore')}
-                            style={{
-                              position: 'absolute',
-                              inset: 0,
-                              opacity: 0,
-                              cursor: inCorso ? 'default' : 'pointer',
-                            }}
-                          >
-                            <option value="">{t('optionSpostaIn')}</option>
-                            {riga.contenitore_id !== null && <option value="diretto">{tContenitori('nessunGruppo')}</option>}
-                            {contenitori
-                              .filter((c) => c.id !== riga.contenitore_id)
-                              .map((c) => (
-                                <option key={c.id} value={c.id}>
-                                  {c.nome}
-                                </option>
-                              ))}
-                          </select>
-                        </div>
+                        <MenuSpostaContenitore
+                          contenitoreIdAttuale={riga.contenitore_id}
+                          contenitori={contenitori}
+                          disabled={inCorso}
+                          onSposta={(valore) => handleSposta(riga.id, valore)}
+                        />
 
                         <button
                           type="button"
