@@ -104,7 +104,11 @@ export function MenuSelect({
             return (
               <div
                 key={o.value}
-                onClick={() => {
+                onClick={(e) => {
+                  // Il menu sta dentro un <label> (nei form): senza questo, il clic
+                  // su un'opzione verrebbe rigirato dal label al pulsante, che
+                  // riaprirebbe subito il menu appena chiuso.
+                  e.preventDefault()
                   onChange(o.value)
                   setAperto(false)
                 }}
