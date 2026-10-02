@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from '@/i18n/navigation'
 import { getLocale } from 'next-intl/server'
 import type { Database } from '@/types/database.types'
+import { ricalcolaStoricoCompleto } from '@/lib/ricalcolo-storico'
 
 const TIPI_VALIDI = ['PAC', 'Polizza', 'Personalizzato']
 
@@ -112,10 +113,12 @@ export async function eliminaContenitore(id: string): Promise<{ successo: true }
     return { errore: erroreContenitore.message }
   }
 
-  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
+  // Le transazioni del gruppo sono diventate posizioni dirette: si ricalcola
+  // tutto, un gruppo alla volta (vedi lib/ricalcolo-storico.ts).
+  const esitoStorico = await ricalcolaStoricoCompleto(supabase)
 
-  if (erroreRicostruzione) {
-    return { errore: erroreRicostruzione.message }
+  if (esitoStorico) {
+    return { errore: esitoStorico.errore }
   }
 
   revalidatePath('/', 'layout')

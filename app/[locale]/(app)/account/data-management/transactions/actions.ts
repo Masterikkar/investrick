@@ -8,10 +8,16 @@ import { ETICHETTA_OPERAZIONE } from '@/lib/operazioni'
 import type { Database } from '@/types/database.types'
 import { CATEGORIE_MERCATO } from '@/lib/categorie'
 import { eseguiImportazione, type FileImport } from '@/lib/importazioni'
+import { ricalcolaStoricoCompleto, ricalcolaStoricoPosizioni } from '@/lib/ricalcolo-storico'
 
 // Stessa ragione di app/(app)/account/data-management/asset/actions.ts: aliquota_tassazione
 // la riempie il trigger, mai l'app.
 type InsertStrumento = Omit<Database['public']['Tables']['strumenti']['Insert'], 'aliquota_tassazione'>
+
+// Esito delle azioni dello Storico. avvisoStorico: la modifica è stata salvata
+// ma lo storico dei grafici non si è potuto aggiornare (vedi lib/ricalcolo-storico.ts):
+// chi chiama lo dice, senza far credere che il salvataggio sia fallito.
+export type EsitoAzione = { successo: true; avvisoStorico?: boolean } | { errore: string }
 
 
 export async function aggiungiTransazione(formData: FormData) {
@@ -77,14 +83,21 @@ export async function aggiungiTransazione(formData: FormData) {
     redirect({ href: '/account/data-management/transactions?errore_finanziaria=1', locale })
   }
 
-  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
-
-  if (erroreRicostruzione) {
-    redirect({ href: '/account/data-management/transactions?errore_finanziaria=1', locale })
-  }
+  // Un "Costo (in contanti)" non ha strumento e non ha righe di storico.
+  const esitoStorico = strumentoIdFinale
+    ? await ricalcolaStoricoPosizioni(supabase, [
+        { contenitoreId: contenitoreId || null, strumentoId: strumentoIdFinale, daData: data },
+      ])
+    : null
 
   revalidatePath(`/${locale}`)
   revalidatePath(`/${locale}/account/data-management/transactions`)
+
+  // La transazione è salva: se lo storico non si è aggiornato, avviso dedicato
+  // e non l'errore generico (che inviterebbe a ripetere l'operazione).
+  if (esitoStorico) {
+    redirect({ href: '/account/data-management/transactions?avviso_storico=1', locale })
+  }
   redirect({ href: '/account/data-management/transactions?successo_finanziaria=1', locale })
 }
 
@@ -116,14 +129,17 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
     redirect({ href: '/account/data-management/transactions?tipo=liquidita&errore_liquidita=1', locale })
   }
 
-  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
-
-  if (erroreRicostruzione) {
-    redirect({ href: '/account/data-management/transactions?tipo=liquidita&errore_liquidita=1', locale })
-  }
+  const esitoStorico = await ricalcolaStoricoPosizioni(supabase, [
+    { contenitoreId: contenitoreId || null, strumentoId, daData: data },
+  ])
 
   revalidatePath(`/${locale}`)
   revalidatePath(`/${locale}/account/data-management/transactions`)
+
+  // Il movimento è salvo: vedi aggiungiTransazione.
+  if (esitoStorico) {
+    redirect({ href: '/account/data-management/transactions?tipo=liquidita&avviso_storico=1', locale })
+  }
   redirect({ href: '/account/data-management/transactions?tipo=liquidita&successo_liquidita=1', locale })
 }
 
@@ -132,8 +148,19 @@ export async function aggiungiMovimentoLiquidita(formData: FormData) {
 export async function aggiornaContenitoreTransazione(
   transazioneId: string,
   nuovoContenitoreId: string | null
-): Promise<{ successo: true } | { errore: string }> {
+): Promise<EsitoAzione> {
   const supabase = await createClient()
+
+  // Prima della modifica: servono strumento, gruppo e data per sapere cosa ricalcolare.
+  const { data: prima, error: erroreLettura } = await supabase
+    .from('transazioni')
+    .select('strumento_id, contenitore_id, data')
+    .eq('id', transazioneId)
+    .single()
+
+  if (erroreLettura || !prima) {
+    return { errore: erroreLettura?.message ?? 'transazione non trovata' }
+  }
 
   const { error: erroreUpdate } = await supabase
     .from('transazioni')
@@ -144,19 +171,29 @@ export async function aggiornaContenitoreTransazione(
     return { errore: erroreUpdate.message }
   }
 
-  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
-
-  if (erroreRicostruzione) {
-    return { errore: erroreRicostruzione.message }
-  }
+  // Cambia gruppo: si ricalcolano la posizione di partenza e quella di arrivo.
+  const esitoStorico = await ricalcolaStoricoPosizioni(supabase, [
+    { contenitoreId: prima.contenitore_id, strumentoId: prima.strumento_id, daData: prima.data },
+    { contenitoreId: nuovoContenitoreId, strumentoId: prima.strumento_id, daData: prima.data },
+  ])
 
   revalidatePath('/', 'layout')
 
-  return { successo: true }
+  return esitoStorico ? { successo: true, avvisoStorico: true } : { successo: true }
 }
 
-export async function eliminaTransazione(id: string): Promise<{ successo: true } | { errore: string }> {
+export async function eliminaTransazione(id: string): Promise<EsitoAzione> {
   const supabase = await createClient()
+
+  const { data: prima, error: erroreLettura } = await supabase
+    .from('transazioni')
+    .select('strumento_id, contenitore_id, data')
+    .eq('id', id)
+    .single()
+
+  if (erroreLettura || !prima) {
+    return { errore: erroreLettura?.message ?? 'transazione non trovata' }
+  }
 
   const { error: erroreDelete } = await supabase.from('transazioni').delete().eq('id', id)
 
@@ -164,15 +201,13 @@ export async function eliminaTransazione(id: string): Promise<{ successo: true }
     return { errore: erroreDelete.message }
   }
 
-  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
-
-  if (erroreRicostruzione) {
-    return { errore: erroreRicostruzione.message }
-  }
+  const esitoStorico = await ricalcolaStoricoPosizioni(supabase, [
+    { contenitoreId: prima.contenitore_id, strumentoId: prima.strumento_id, daData: prima.data },
+  ])
 
   revalidatePath('/', 'layout')
 
-  return { successo: true }
+  return esitoStorico ? { successo: true, avvisoStorico: true } : { successo: true }
 }
 
 // Modifica dei campi di una transazione dallo Storico. Strumento e categoria
@@ -194,7 +229,7 @@ export type DatiModificaTransazione = {
 export async function modificaTransazione(
   id: string,
   dati: DatiModificaTransazione
-): Promise<{ successo: true } | { errore: string }> {
+): Promise<EsitoAzione> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dati.data)) {
     return { errore: 'data non valida' }
   }
@@ -208,6 +243,16 @@ export async function modificaTransazione(
   }
 
   const supabase = await createClient()
+
+  const { data: prima, error: erroreLettura } = await supabase
+    .from('transazioni')
+    .select('strumento_id, contenitore_id, data')
+    .eq('id', id)
+    .single()
+
+  if (erroreLettura || !prima) {
+    return { errore: erroreLettura?.message ?? 'transazione non trovata' }
+  }
 
   const { error: erroreUpdate } = await supabase
     .from('transazioni')
@@ -226,15 +271,18 @@ export async function modificaTransazione(
     return { errore: erroreUpdate.message }
   }
 
-  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
-
-  if (erroreRicostruzione) {
-    return { errore: erroreRicostruzione.message }
-  }
+  // Gruppo e data possono essere cambiati: si ricalcolano la posizione di
+  // partenza e quella di arrivo, dalla più vecchia tra la data di prima e quella
+  // nuova.
+  const daData = prima.data < dati.data ? prima.data : dati.data
+  const esitoStorico = await ricalcolaStoricoPosizioni(supabase, [
+    { contenitoreId: prima.contenitore_id, strumentoId: prima.strumento_id, daData },
+    { contenitoreId: dati.contenitoreId, strumentoId: prima.strumento_id, daData },
+  ])
 
   revalidatePath('/', 'layout')
 
-  return { successo: true }
+  return esitoStorico ? { successo: true, avvisoStorico: true } : { successo: true }
 }
 
 // --- Storico movimenti liquidità: riallocazione contenitore ed eliminazione ---
@@ -242,8 +290,18 @@ export async function modificaTransazione(
 export async function aggiornaContenitoreMovimentoLiquidita(
   movimentoId: string,
   nuovoContenitoreId: string | null
-): Promise<{ successo: true } | { errore: string }> {
+): Promise<EsitoAzione> {
   const supabase = await createClient()
+
+  const { data: prima, error: erroreLettura } = await supabase
+    .from('movimenti_liquidita')
+    .select('strumento_id, contenitore_id, data')
+    .eq('id', movimentoId)
+    .single()
+
+  if (erroreLettura || !prima) {
+    return { errore: erroreLettura?.message ?? 'movimento non trovato' }
+  }
 
   const { error: erroreUpdate } = await supabase
     .from('movimenti_liquidita')
@@ -254,19 +312,28 @@ export async function aggiornaContenitoreMovimentoLiquidita(
     return { errore: erroreUpdate.message }
   }
 
-  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
-
-  if (erroreRicostruzione) {
-    return { errore: erroreRicostruzione.message }
-  }
+  const esitoStorico = await ricalcolaStoricoPosizioni(supabase, [
+    { contenitoreId: prima.contenitore_id, strumentoId: prima.strumento_id, daData: prima.data },
+    { contenitoreId: nuovoContenitoreId, strumentoId: prima.strumento_id, daData: prima.data },
+  ])
 
   revalidatePath('/', 'layout')
 
-  return { successo: true }
+  return esitoStorico ? { successo: true, avvisoStorico: true } : { successo: true }
 }
 
-export async function eliminaMovimentoLiquidita(id: string): Promise<{ successo: true } | { errore: string }> {
+export async function eliminaMovimentoLiquidita(id: string): Promise<EsitoAzione> {
   const supabase = await createClient()
+
+  const { data: prima, error: erroreLettura } = await supabase
+    .from('movimenti_liquidita')
+    .select('strumento_id, contenitore_id, data')
+    .eq('id', id)
+    .single()
+
+  if (erroreLettura || !prima) {
+    return { errore: erroreLettura?.message ?? 'movimento non trovato' }
+  }
 
   const { error: erroreDelete } = await supabase.from('movimenti_liquidita').delete().eq('id', id)
 
@@ -274,15 +341,13 @@ export async function eliminaMovimentoLiquidita(id: string): Promise<{ successo:
     return { errore: erroreDelete.message }
   }
 
-  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
-
-  if (erroreRicostruzione) {
-    return { errore: erroreRicostruzione.message }
-  }
+  const esitoStorico = await ricalcolaStoricoPosizioni(supabase, [
+    { contenitoreId: prima.contenitore_id, strumentoId: prima.strumento_id, daData: prima.data },
+  ])
 
   revalidatePath('/', 'layout')
 
-  return { successo: true }
+  return esitoStorico ? { successo: true, avvisoStorico: true } : { successo: true }
 }
 
 // Modifica dei campi di un movimento di liquidità dallo Storico. Il conto non
@@ -300,7 +365,7 @@ export type DatiModificaMovimentoLiquidita = {
 export async function modificaMovimentoLiquidita(
   id: string,
   dati: DatiModificaMovimentoLiquidita
-): Promise<{ successo: true } | { errore: string }> {
+): Promise<EsitoAzione> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dati.data)) {
     return { errore: 'data non valida' }
   }
@@ -312,6 +377,16 @@ export async function modificaMovimentoLiquidita(
   }
 
   const supabase = await createClient()
+
+  const { data: prima, error: erroreLettura } = await supabase
+    .from('movimenti_liquidita')
+    .select('strumento_id, contenitore_id, data')
+    .eq('id', id)
+    .single()
+
+  if (erroreLettura || !prima) {
+    return { errore: erroreLettura?.message ?? 'movimento non trovato' }
+  }
 
   const { error: erroreUpdate } = await supabase
     .from('movimenti_liquidita')
@@ -328,15 +403,15 @@ export async function modificaMovimentoLiquidita(
     return { errore: erroreUpdate.message }
   }
 
-  const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
-
-  if (erroreRicostruzione) {
-    return { errore: erroreRicostruzione.message }
-  }
+  const daData = prima.data < dati.data ? prima.data : dati.data
+  const esitoStorico = await ricalcolaStoricoPosizioni(supabase, [
+    { contenitoreId: prima.contenitore_id, strumentoId: prima.strumento_id, daData },
+    { contenitoreId: dati.contenitoreId, strumentoId: prima.strumento_id, daData },
+  ])
 
   revalidatePath('/', 'layout')
 
-  return { successo: true }
+  return esitoStorico ? { successo: true, avvisoStorico: true } : { successo: true }
 }
 
 // --- Import Excel massivo: transazioni finanziarie ---
@@ -475,7 +550,7 @@ export async function importaTransazioniBulk(
   return concludiImport(esito, righe, locale, t)
 }
 
-// Dopo l'inserimento, comune ai due import: ricostruisce lo storico se è
+// Dopo l'inserimento, comune ai due import: ricalcola lo storico se è
 // entrata almeno una riga e aggiorna le pagine. Se il registro dell'import non
 // si è potuto creare, non è stato inserito nulla: errore su tutte le righe.
 async function concludiImport(
@@ -494,14 +569,15 @@ async function concludiImport(
   const { inserite, errori } = esito
   if (inserite > 0) {
     const supabase = await createClient()
-    const { error: erroreRicostruzione } = await supabase.rpc('ricostruisci_storico_valorizzazioni')
-    if (erroreRicostruzione) {
+    // Un import può toccare molte posizioni e date: si ricalcola tutto, un gruppo alla volta.
+    const esitoStorico = await ricalcolaStoricoCompleto(supabase)
+    if (esitoStorico) {
       revalidatePath(`/${locale}`)
       revalidatePath(`/${locale}/account/data-management/transactions`)
       return {
         inserite,
         errori,
-        avvisoRicostruzione: t('avvisoRicostruzioneFallita', { errore: erroreRicostruzione.message }),
+        avvisoRicostruzione: t('avvisoRicostruzioneFallita', { errore: esitoStorico.errore }),
       }
     }
   }

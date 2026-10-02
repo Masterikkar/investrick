@@ -32,7 +32,8 @@ export function ModificaTransazione({
   riga: RigaStoricoTransazione
   contenitori: Gruppo[]
   onChiudi: () => void
-  onSalvata: () => void
+  // avvisoStorico: salvata, ma lo storico dei grafici non si è aggiornato
+  onSalvata: (avvisoStorico: boolean) => void
 }) {
   const t = useTranslations('PaginaStorico')
   const tGestioneTransazioni = useTranslations('PaginaGestioneTransazioni')
@@ -107,7 +108,7 @@ export function ModificaTransazione({
       if ('errore' in risultato) {
         setErroreSalvataggio(true)
       } else {
-        onSalvata()
+        onSalvata(Boolean(risultato.avvisoStorico))
       }
     })
   }

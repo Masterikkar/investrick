@@ -47,6 +47,7 @@ export function StoricoTransazioni({
   const tContenitori = useTranslations('Contenitori')
   const tPaginaFiscalita = useTranslations('PaginaFiscalita')
   const tGestioneStrumenti = useTranslations('PaginaGestioneStrumenti')
+  const tGestioneTransazioni = useTranslations('PaginaGestioneTransazioni')
   const conferma = useConferma()
   const notifica = useNotifica()
   const router = useRouter()
@@ -114,7 +115,7 @@ export function StoricoTransazioni({
       if ('errore' in risultato) {
         setErroreId(transazioneId)
       } else {
-        notifica({ messaggio: t('successoTransazioneSpostata') })
+        notifica({ messaggio: risultato.avvisoStorico ? tGestioneTransazioni('avvisoStoricoNonAggiornato') : t('successoTransazioneSpostata') })
         router.refresh()
       }
     })
@@ -144,7 +145,7 @@ export function StoricoTransazioni({
       if ('errore' in risultato) {
         setErroreId(riga.id)
       } else {
-        notifica({ messaggio: t('successoTransazioneEliminata') })
+        notifica({ messaggio: risultato.avvisoStorico ? tGestioneTransazioni('avvisoStoricoNonAggiornato') : t('successoTransazioneEliminata') })
         router.refresh()
       }
     })
@@ -341,9 +342,9 @@ export function StoricoTransazioni({
           riga={rigaInModifica}
           contenitori={contenitori}
           onChiudi={() => setRigaInModifica(null)}
-          onSalvata={() => {
+          onSalvata={(avvisoStorico) => {
             setRigaInModifica(null)
-            notifica({ messaggio: t('successoTransazioneModificata') })
+            notifica({ messaggio: avvisoStorico ? tGestioneTransazioni('avvisoStoricoNonAggiornato') : t('successoTransazioneModificata') })
             router.refresh()
           }}
         />

@@ -29,7 +29,8 @@ export function ModificaMovimentoLiquidita({
   movimento: RigaStoricoMovimentoLiquidita
   contenitori: Gruppo[]
   onChiudi: () => void
-  onSalvato: () => void
+  // avvisoStorico: salvato, ma lo storico dei grafici non si è aggiornato
+  onSalvato: (avvisoStorico: boolean) => void
 }) {
   const t = useTranslations('PaginaStorico')
   const tGestioneTransazioni = useTranslations('PaginaGestioneTransazioni')
@@ -88,7 +89,7 @@ export function ModificaMovimentoLiquidita({
       if ('errore' in risultato) {
         setErroreSalvataggio(true)
       } else {
-        onSalvato()
+        onSalvato(Boolean(risultato.avvisoStorico))
       }
     })
   }

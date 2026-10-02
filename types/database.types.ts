@@ -1941,6 +1941,24 @@ export type Database = {
         }
         Returns: Record<string, unknown>
       }
+      pulisci_storico_valorizzazioni: {
+        Args: never
+        Returns: {
+          righe_fantasma_rimosse: number
+          righe_orfane_rimosse: number
+        }[]
+      }
+      ricostruisci_storico_gruppo: {
+        Args: {
+          p_contenitore_id?: string
+          p_da_data?: string
+          p_strumento_id?: string
+        }
+        Returns: {
+          righe_liquidita: number
+          righe_mercato: number
+        }[]
+      }
       ricostruisci_storico_valorizzazioni: {
         Args: never
         Returns: {

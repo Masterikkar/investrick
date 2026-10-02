@@ -736,6 +736,7 @@
   "erroreVerificaStrumenti": "impossibile verificare gli strumenti",
   "erroreCategoriaSconosciuta": "impossibile determinare la categoria dello strumento",
   "avvisoRicostruzioneFallita": "La ricostruzione dello storico è fallita ({errore}). Rilanciala manualmente dallo SQL Editor.",
+  "avvisoStoricoNonAggiornato": "Salvato, ma lo storico dei grafici non si è aggiornato. Non ripetere l'operazione: rilancia l'aggiornamento dello storico dallo SQL Editor.",
   "dropzoneIstruzioniLiquidita": "Trascina qui il file Excel (.xlsx) dei movimenti di liquidità, oppure",
   "avvisoContoDeveEsistere": "Il conto deve già esistere in \"{pagina}\" — questo file non ne crea di nuovi.",
   "erroreStrumentoMancante": "Strumento mancante",

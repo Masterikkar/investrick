@@ -18,6 +18,7 @@ export default async function TransactionsPage({
     errore_finanziaria?: string
     successo_liquidita?: string
     errore_liquidita?: string
+    avviso_storico?: string
   }>
 }) {
   const t = await getTranslations('PaginaGestioneTransazioni')
@@ -44,6 +45,7 @@ export default async function TransactionsPage({
       <SezioneImpostazioni titolo={t('titoloAggiungiTransazione')}>
         {params.successo_finanziaria === '1' && <NotificaDaParametro messaggio={t('successoTransazioneSalvata')} />}
         {params.successo_liquidita === '1' && <NotificaDaParametro messaggio={t('successoTransazioneSalvata')} />}
+        {params.avviso_storico === '1' && <NotificaDaParametro messaggio={t('avvisoStoricoNonAggiornato')} />}
 
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <NuovaTransazioneFinanziaria

@@ -22,7 +22,7 @@ export function NotificaDaParametro({ messaggio }: { messaggio: string }) {
 
     const rimanenti = new URLSearchParams(searchParams.toString())
     for (const chiave of Array.from(rimanenti.keys())) {
-      if (chiave.startsWith('successo_') || chiave.startsWith('errore_')) rimanenti.delete(chiave)
+      if (chiave.startsWith('successo_') || chiave.startsWith('errore_') || chiave.startsWith('avviso_')) rimanenti.delete(chiave)
     }
     const query = rimanenti.toString()
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
