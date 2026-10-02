@@ -30,7 +30,7 @@ export default async function LiquiditaPage() {
   const annoCorrente = new Date().getFullYear()
 
   const COLONNE: ColonnaTabella[] = [
-    { key: 'nome', label: t('colonnaStrumento'), kind: 'link', linkPrefix: '/liquidita/', linkKey: 'strumentoId' },
+    { key: 'nome', label: t('colonnaStrumento'), kind: 'link', linkPrefix: '/cash/', linkKey: 'strumentoId' },
     { key: 'tipo', label: t('colonnaTipo'), kind: 'text' },
     { key: 'provider', label: t('colonnaProvider'), kind: 'text' },
     { key: 'valore', label: t('colonnaValore'), kind: 'euro' },

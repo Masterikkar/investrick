@@ -61,7 +61,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     supabase.from('contenitori').select('id, nome, tipo').order('nome'),
     supabase.from('v_riepilogo_posizione').select('strumento_id').gt('quantita_posseduta', 0),
     // Per la liquidità "ha posizioni" vuol dire che esiste almeno un conto,
-    // anche a saldo zero, come nella pagina /liquidita.
+    // anche a saldo zero, come nella pagina /cash.
     supabase.from('strumenti').select('id', { count: 'exact', head: true }).eq('categoria', 'Liquidita'),
     supabase.auth.getUser(),
   ])
