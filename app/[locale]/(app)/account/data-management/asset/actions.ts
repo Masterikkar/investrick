@@ -127,7 +127,7 @@ export async function aggiornaAsset(
 // Elimina uno strumento con tutte le sue transazioni e i suoi movimenti di
 // liquidità. La funzione database elimina_strumento fa tutto in un'unica
 // transazione Postgres (movimenti, transazioni, strumento — il resto è
-// CASCADE — poi ricostruisci_storico_valorizzazioni): o riesce tutto o non
+// CASCADE — poi pulisci_storico_valorizzazioni): o riesce tutto o non
 // cambia niente. Restituisce quante transazioni e movimenti ha eliminato.
 export async function eliminaAsset(
   id: string
