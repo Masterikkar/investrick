@@ -108,10 +108,15 @@ export async function GET(request: Request) {
       capitaleMap.set(`${c.strumento_id}|${c.contenitore_id ?? ''}`, Number(c.capitale_investito))
     }
 
-    const posizioniValide = (posizioniMercato ?? []).filter(
+    // Una posizione chiusa (quantità 0) non ha nulla da valorizzare: niente riga di
+    // storico. Il ricalcolo non la produce e la pulizia la toglierebbe comunque.
+    const posizioniAperte = (posizioniMercato ?? []).filter(
+      (p) => p.quantita_corrente === null || p.quantita_corrente > 0
+    )
+    const posizioniValide = posizioniAperte.filter(
       (p) => p.strumento_id !== null && p.quantita_corrente !== null && p.prezzo_attuale !== null
     )
-    const posizioniScartate = (posizioniMercato?.length ?? 0) - posizioniValide.length
+    const posizioniScartate = posizioniAperte.length - posizioniValide.length
 
     if (posizioniValide.length > 0) {
       const righeMercato = posizioniValide.map((p) => ({

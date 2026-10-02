@@ -30,6 +30,7 @@ App web personale di gestione portafoglio multi-asset (regime amministrato itali
 - PostgREST tronca in silenzio a 1000 righe: per le query lunghe usa `tutteLeRighe` (`lib/supabase-tutte-le-righe.ts`) con un ordinamento univoco.
 - Usa `.maybeSingle()` quando l'assenza di una riga è un caso normale.
 - Lo storico valorizzazioni si ricalcola dall'app solo con `lib/ricalcolo-storico.ts`: `ricalcolaStoricoPosizioni` dopo una singola modifica (solo strumento e gruppo toccati, dalla data in poi), `ricalcolaStoricoCompleto` dopo import massivi o eliminazione di un gruppo (un gruppo alla volta). Mai chiamare `ricostruisci_storico_valorizzazioni()` dall'app: dura ~3 s e cresce con lo storico, e ogni richiesta è interrotta dopo 8 s. Se il ricalcolo fallisce dopo un salvataggio riuscito è un avviso (`avvisoStoricoNonAggiornato`), non un errore da ripetere.
+- Il ricalcolo toglie anche le righe di mercato delle date in cui la posizione non è più posseduta (es. data di un acquisto corretta, transazione eliminata); le righe del fine settimana dello snapshot notturno, con la posizione posseduta, restano.
 - Dopo modifiche fatte a mano (SQL Editor) a transazioni, movimenti o prezzi storici va rilanciato `select * from ricostruisci_storico_valorizzazioni();`.
 - `contenitore_id` nullo indica una posizione diretta, senza gruppo.
 
