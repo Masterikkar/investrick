@@ -112,6 +112,74 @@ export type Database = {
           },
         ]
       }
+      geografia_etf: {
+        Row: {
+          isin: string
+          paese: string
+          peso_pct: number
+        }
+        Insert: {
+          isin: string
+          paese: string
+          peso_pct: number
+        }
+        Update: {
+          isin?: string
+          paese?: string
+          peso_pct?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geografia_etf_isin_fkey"
+            columns: ["isin"]
+            isOneToOne: false
+            referencedRelation: "geografia_fonti"
+            referencedColumns: ["isin"]
+          },
+        ]
+      }
+      geografia_fonti: {
+        Row: {
+          attiva: boolean
+          created_at: string
+          data_file: string | null
+          emittente: string
+          esito: string | null
+          isin: string
+          messaggio: string | null
+          parametro: string | null
+          somma_pesi_grezza: number | null
+          ultimo_successo: string | null
+          ultimo_tentativo: string | null
+        }
+        Insert: {
+          attiva?: boolean
+          created_at?: string
+          data_file?: string | null
+          emittente: string
+          esito?: string | null
+          isin: string
+          messaggio?: string | null
+          parametro?: string | null
+          somma_pesi_grezza?: number | null
+          ultimo_successo?: string | null
+          ultimo_tentativo?: string | null
+        }
+        Update: {
+          attiva?: boolean
+          created_at?: string
+          data_file?: string | null
+          emittente?: string
+          esito?: string | null
+          isin?: string
+          messaggio?: string | null
+          parametro?: string | null
+          somma_pesi_grezza?: number | null
+          ultimo_successo?: string | null
+          ultimo_tentativo?: string | null
+        }
+        Relationships: []
+      }
       gruppi_personalizzati_strumenti: {
         Row: {
           contenitore_id: string
@@ -319,6 +387,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      paesi_macro_regioni: {
+        Row: {
+          codice_iso: string
+          macro_regione: string
+          nome_nel_file: string
+        }
+        Insert: {
+          codice_iso: string
+          macro_regione: string
+          nome_nel_file: string
+        }
+        Update: {
+          codice_iso?: string
+          macro_regione?: string
+          nome_nel_file?: string
+        }
+        Relationships: []
       }
       prezzi_storici: {
         Row: {
@@ -1984,6 +2070,16 @@ export type Database = {
           valore_polizza_prima: number
           vendite_ids: string[]
         }[]
+      }
+      sostituisci_geografia_etf: {
+        Args: {
+          p_data_file: string
+          p_isin: string
+          p_messaggio: string
+          p_pesi: Json
+          p_somma_pesi_grezza: number
+        }
+        Returns: number
       }
     }
     Enums: {
