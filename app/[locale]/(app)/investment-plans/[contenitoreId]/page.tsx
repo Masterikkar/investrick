@@ -15,6 +15,8 @@ import { AnalisiComposizione, type ScostamentoCategoria } from '@/components/ana
 import { CATEGORIE } from '@/lib/categorie'
 import { caricaRicompenseResidue, ricompensePosizione } from '@/lib/ricompense'
 import { CapitaleInvestito } from '@/components/capitale-investito'
+import { GeographicExposure } from '@/components/geographic-exposure'
+import { caricaGeografiaEtf, esposizionePerCategoria, type PosizioneGeografica } from '@/lib/geographic-exposure'
 
 
 export default async function PacDettaglioPage({
@@ -27,6 +29,7 @@ export default async function PacDettaglioPage({
   const t = await getTranslations('PaginaContenitore')
   const tCategorie = await getTranslations('Categorie')
   const tContenitori = await getTranslations('Contenitori')
+  const tGeografia = await getTranslations('EsposizioneGeografica')
   const supabase = await createClient()
   const ricompense = await caricaRicompenseResidue(supabase)
 
@@ -196,6 +199,22 @@ export default async function PacDettaglioPage({
     sottoTargetPerCategoria[cat].sort((a, b) => b.targetPct - a.targetPct)
   }
 
+  // Esposizione geografica: una vista per categoria, solo per le categorie con almeno un ETF che ha dati
+  // (oro, fondi e il resto senza fonte restano fuori e non compaiono).
+  const posizioniGeografiche: PosizioneGeografica[] = righe.map((r) => ({
+    strumentoId: r.strumentoId as string,
+    nome: r.nome as string,
+    ticker: r.ticker as string | null,
+    isin: r.isin as string | null,
+    categoria: r.categoria as string,
+    valore: r.valore as number,
+  }))
+  const { perIsin: geografiaPerIsin, mappa: mappaPaesi } = await caricaGeografiaEtf(
+    supabase,
+    posizioniGeografiche.flatMap((p) => (p.isin ? [p.isin] : []))
+  )
+  const esposizioneGeografica = esposizionePerCategoria(posizioniGeografiche, geografiaPerIsin, mappaPaesi, CATEGORIE)
+
   const guadagnoPerCategoria: Record<string, number> = {}
   for (const r of righe) {
     const cat = r.categoria as string
@@ -297,6 +316,24 @@ export default async function PacDettaglioPage({
           </Sezione>
         </div>
       </section>
+
+      {esposizioneGeografica.length > 0 && (
+        <section style={{ marginTop: 32 }}>
+          <h2 style={{ fontSize: 'var(--fs-h2)', marginBottom: 12, fontWeight: 500 }}>{tGeografia('titolo')}</h2>
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            {esposizioneGeografica.map((e) => (
+              <div key={e.categoria} style={{ flex: '1 1 480px', maxWidth: 520 }}>
+                <h3 style={{ fontSize: 'var(--fs-h3)', marginBottom: 8, fontWeight: 500 }}>
+                  {traduciCategoria(tCategorie, e.categoria)}
+                </h3>
+                <Sezione>
+                  <GeographicExposure regioni={e.regioni} copertura={e.copertura} fonti={e.fonti} />
+                </Sezione>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section style={{ marginTop: 32 }}>
         <h2 style={{ fontSize: 'var(--fs-h2)', marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>

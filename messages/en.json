@@ -785,5 +785,21 @@
   "placeholder": "Search assets or groups...",
   "sottotitoloAsset": "Asset · {categoria}",
   "sottotitoloGruppo": "Group · {tipo}"
+ },
+ "EsposizioneGeografica": {
+  "titolo": "Geographic exposure",
+  "calcolataSu": "Calculated on {percentuale} of the category's value",
+  "altriPaesi": "Other {n} countries · {percentuale}",
+  "notaSoloTitoli": "Percentages cover the fund's securities only: cash, derivatives and currencies are excluded.",
+  "aggiornamento": "Data updated",
+  "datoScaduto": "stale data"
+ },
+ "Regioni": {
+  "nordAmerica": "North America",
+  "americaLatina": "Latin America",
+  "europa": "Europe",
+  "asiaPacifico": "Asia-Pacific",
+  "medioOrienteAfrica": "Middle East and Africa",
+  "altro": "Other"
  }
 }

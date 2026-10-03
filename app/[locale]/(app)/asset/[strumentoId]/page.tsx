@@ -7,6 +7,8 @@ import { CardMetrica } from '@/components/card-metrica'
 import { CapitaleInvestito } from '@/components/capitale-investito'
 import { caricaRicompenseResidue, ricompensePosizione } from '@/lib/ricompense'
 import { Sezione } from '@/components/sezione'
+import { GeographicExposure } from '@/components/geographic-exposure'
+import { caricaGeografiaEtf, esposizioneSingoloEtf } from '@/lib/geographic-exposure'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { traduciCategoria } from '@/lib/i18n-categorie'
 import { CHIAVE_TRADUZIONE_OPERAZIONE } from '@/lib/i18n-tipi-operazione'
@@ -95,6 +97,7 @@ export default async function AssetPage({
   const tPaginaStorico = await getTranslations('PaginaStorico')
   const tPaginaRibilanciamento = await getTranslations('PaginaRibilanciamento')
   const tPaginaLiquidita = await getTranslations('PaginaLiquidita')
+  const tGeografia = await getTranslations('EsposizioneGeografica')
   const supabase = await createClient()
 
   const [
@@ -146,6 +149,14 @@ export default async function AssetPage({
   if (strumento.categoria === 'Liquidita') {
     redirect({ href: `/cash/${strumento.id}`, locale })
   }
+
+  // Esposizione geografica dell'ETF, se ha una fonte e dati salvati: altrimenti la sezione non compare.
+  const { perIsin: geografiaPerIsin, mappa: mappaPaesi } = await caricaGeografiaEtf(
+    supabase,
+    strumento.isin ? [strumento.isin] : []
+  )
+  const geografiaStrumento = strumento.isin ? geografiaPerIsin.get(strumento.isin) : undefined
+  const esposizioneStrumento = geografiaStrumento ? esposizioneSingoloEtf(geografiaStrumento, mappaPaesi) : null
 
   const contenitoreMap = new Map((contenitoriRaw ?? []).map((c) => [c.id, c.nome]))
   const nomeContenitore = (id: string | null) => (id ? contenitoreMap.get(id) ?? '—' : '—')
@@ -339,6 +350,17 @@ export default async function AssetPage({
               </tbody>
             </table>
           </Sezione>
+        </section>
+      )}
+
+      {esposizioneStrumento && (
+        <section style={{ marginTop: 32 }}>
+          <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>{tGeografia('titolo')}</h2>
+          <div style={{ maxWidth: 520 }}>
+            <Sezione>
+              <GeographicExposure regioni={esposizioneStrumento.regioni} fonti={esposizioneStrumento.fonti} />
+            </Sezione>
+          </div>
         </section>
       )}
 

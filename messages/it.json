@@ -785,5 +785,21 @@
   "placeholder": "Cerca asset o gruppi...",
   "sottotitoloAsset": "Asset · {categoria}",
   "sottotitoloGruppo": "Gruppo · {tipo}"
+ },
+ "EsposizioneGeografica": {
+  "titolo": "Esposizione geografica",
+  "calcolataSu": "Calcolata sul {percentuale} del valore della categoria",
+  "altriPaesi": "Altri {n} paesi · {percentuale}",
+  "notaSoloTitoli": "Percentuali sui soli titoli del fondo: liquidità, derivati e valute sono esclusi.",
+  "aggiornamento": "Aggiornamento dati",
+  "datoScaduto": "dato scaduto"
+ },
+ "Regioni": {
+  "nordAmerica": "Nord America",
+  "americaLatina": "America Latina",
+  "europa": "Europa",
+  "asiaPacifico": "Asia-Pacifico",
+  "medioOrienteAfrica": "Medio Oriente e Africa",
+  "altro": "Altro"
  }
 }
