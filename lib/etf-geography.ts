@@ -2,10 +2,11 @@ import { read, utils } from 'xlsx'
 import type { createAdminClient } from '@/lib/supabase/admin'
 import { componiDataIso, giorniNelMese } from '@/lib/data-calendario'
 
-// Aggiornamento automatico della distribuzione geografica degli ETF del PAC.
+// Aggiornamento automatico dell'esposizione degli ETF del PAC: distribuzione geografica e partecipazioni.
 // Scarica i file delle holdings pubblicati dagli emittenti (iShares: CSV, Xtrackers: Excel),
 // somma i pesi per paese contando solo i titoli (niente cash, derivati, valute), riporta il
-// totale a 100 e sostituisce i dati dell'ETF con sostituisci_geografia_etf().
+// totale a 100 e sostituisce i dati dell'ETF con sostituisci_partecipazioni_etf() e
+// sostituisci_geografia_etf(). Salva anche le prime partecipazioni, sulla stessa base dei pesi.
 // Un file che non supera i controlli non tocca mai l'ultimo dato valido.
 // Solo lato server: usa SheetJS e la chiave di servizio.
 
@@ -13,9 +14,24 @@ type ClienteAdmin = ReturnType<typeof createAdminClient>
 
 // ───────────────────────── Tipi ─────────────────────────
 
+export type PartecipazioneEstratta = {
+  nome: string
+  ticker: string | null
+  /** ISIN del titolo, quando il file lo dichiara (Xtrackers). */
+  isinTitolo: string | null
+  /** Solo obbligazioni iShares. */
+  cedolaPct: number | null
+  /** Solo obbligazioni iShares (YYYY-MM-DD). */
+  scadenza: string | null
+  /** % sui soli titoli, sulla stessa base della geografia (la somma di tutti i titoli darebbe 100). */
+  peso: number
+}
+
 export type GeografiaEstratta = {
   /** % per paese (paese come scritto dall'emittente), riportata a 100 sui soli titoli. */
   pesi: Record<string, number>
+  /** Le posizioni più pesanti (al massimo MAX_PARTECIPAZIONI), dalla più pesante. */
+  partecipazioni: PartecipazioneEstratta[]
   /** Data delle holdings dichiarata dal file (YYYY-MM-DD), null se il file non la dichiara. */
   dataFile: string | null
   /** Somma dei pesi dei titoli prima di riportarli a 100 (serve per i controlli). */
@@ -41,6 +57,10 @@ export type EsitoFonte = {
   /** Totali per macro-regione (i paesi non mappati stanno in "Altro"). */
   regioni?: { regione: string; peso: number }[]
   esclusi?: { tipo: string; peso: number; righe: number }[]
+  /** Quante partecipazioni sono state (o sarebbero state) salvate. */
+  partecipazioniSalvate?: number
+  /** Le prime cinque partecipazioni, per controllare a colpo d'occhio che nomi e pesi abbiano senso. */
+  primePartecipazioni?: PartecipazioneEstratta[]
 }
 
 // ───────────────────────── Utilità ─────────────────────────
@@ -58,6 +78,13 @@ const MESI_INGLESI = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 's
 const SOMMA_TITOLI_ISHARES = { min: 90, max: 103 }
 const SOMMA_TITOLI_XTRACKERS = { min: 90, max: 115 }
 const RIGHE_TITOLI_MINIME = 10
+
+// Quante posizioni per ETF si salvano: abbastanza perché la lista aggregata del PAC sia esatta
+// (la 100ª posizione di un ETF globale pesa circa 0,1%), poche perché il dato resti leggero.
+// Le obbligazioni dei tre ETF del PAC sono meno di 100, quindi si salvano tutte.
+export const MAX_PARTECIPAZIONI = 100
+// I pesi delle partecipazioni salvate non possono superare 100 (stessa tolleranza della funzione SQL).
+const SOMMA_PARTECIPAZIONI_MAX = 100.5
 
 // Tipi di riga che contano come titoli, in minuscolo. Tutto il resto è escluso e segnalato.
 const TIPI_TITOLO_ISHARES = new Set(['equity', 'fixed income'])
@@ -114,20 +141,46 @@ function dataIsoDaIshares(testo: string): string | null {
   return componiDataIso(anno, mese, giorno)
 }
 
+// Cella facoltativa: vuota o "-" (come scrivono i file quando manca il dato) vale null.
+function testoOpzionale(valore: unknown): string | null {
+  const testo = String(valore ?? '').replace(/\s+/g, ' ').trim()
+  return testo === '' || testo === '-' ? null : testo
+}
+
+// Numero facoltativo di un CSV ("4.00", "1,234.5"); null se assente o non numerico.
+function numeroOpzionale(valore: unknown): number | null {
+  const testo = testoOpzionale(valore)
+  if (testo === null) return null
+  const numero = Number(testo.replace(/,/g, ''))
+  return Number.isFinite(numero) ? numero : null
+}
+
+type DettaglioTitolo = Omit<PartecipazioneEstratta, 'peso'>
+type TitoloGrezzo = DettaglioTitolo & { peso: number }
+
 type Accumulatori = {
   pesiGrezzi: Map<string, number>
+  titoli: TitoloGrezzo[]
   esclusi: Map<string, { peso: number; righe: number }>
   righeTitoli: number
 }
 
 function nuoviAccumulatori(): Accumulatori {
-  return { pesiGrezzi: new Map(), esclusi: new Map(), righeTitoli: 0 }
+  return { pesiGrezzi: new Map(), titoli: [], esclusi: new Map(), righeTitoli: 0 }
 }
 
-function aggiungiRiga(acc: Accumulatori, eTitolo: boolean, tipo: string, paese: string, peso: number) {
+function aggiungiRiga(
+  acc: Accumulatori,
+  eTitolo: boolean,
+  tipo: string,
+  paese: string,
+  peso: number,
+  dettaglio: DettaglioTitolo,
+) {
   if (eTitolo) {
     acc.righeTitoli++
     acc.pesiGrezzi.set(paese, (acc.pesiGrezzi.get(paese) ?? 0) + peso)
+    acc.titoli.push({ ...dettaglio, peso })
   } else {
     const precedente = acc.esclusi.get(tipo) ?? { peso: 0, righe: 0 }
     acc.esclusi.set(tipo, { peso: precedente.peso + peso, righe: precedente.righe + 1 })
@@ -161,8 +214,24 @@ function finalizza(
     pesi[paese] = arrotonda((peso / sommaPositivi) * 100, 4)
   }
 
+  // Le posizioni più pesanti, sulla stessa base dei paesi: così la lista e la geografia sono coerenti.
+  // L'ordinamento è stabile: a pari peso resta l'ordine del file.
+  const partecipazioni: PartecipazioneEstratta[] = acc.titoli
+    .filter((titolo) => titolo.peso > 0)
+    .sort((a, b) => b.peso - a.peso)
+    .slice(0, MAX_PARTECIPAZIONI)
+    .map((titolo) => ({ ...titolo, peso: arrotonda((titolo.peso / sommaPositivi) * 100, 4) }))
+  if (partecipazioni.length === 0) {
+    throw new Error('Nessuna partecipazione con peso positivo')
+  }
+  const sommaPartecipazioni = partecipazioni.reduce((somma, p) => somma + p.peso, 0)
+  if (sommaPartecipazioni > SOMMA_PARTECIPAZIONI_MAX) {
+    throw new Error(`Le partecipazioni sommano ${formatoMessaggio(sommaPartecipazioni)}% (oltre 100)`)
+  }
+
   return {
     pesi,
+    partecipazioni,
     dataFile,
     sommaPesiGrezza: arrotonda(sommaGrezza, 4),
     righeTitoli: acc.righeTitoli,
@@ -215,6 +284,12 @@ export function estraiGeografiaIshares(testoGrezzo: string): GeografiaEstratta {
   const indiceTipo = colonne.indexOf('Asset Class')
   const indicePeso = colonne.indexOf('Weight (%)')
   const indicePaese = colonne.indexOf('Location')
+  const indiceNome = colonne.indexOf('Name')
+  if (indiceNome === -1) throw new Error('Colonna Name non trovata')
+  // Facoltative: Ticker esiste per le azioni, Coupon (%) e Maturity solo per le obbligazioni.
+  const indiceTicker = colonne.indexOf('Ticker')
+  const indiceCedola = colonne.indexOf('Coupon (%)')
+  const indiceScadenza = colonne.indexOf('Maturity')
 
   const acc = nuoviAccumulatori()
   for (const riga of righe.slice(indiceIntestazione + 1)) {
@@ -225,7 +300,14 @@ export function estraiGeografiaIshares(testoGrezzo: string): GeografiaEstratta {
     if (!Number.isFinite(peso)) continue
     const tipo = campi[indiceTipo].trim() || '(senza tipo)'
     const paese = campi[indicePaese].trim() || '-'
-    aggiungiRiga(acc, TIPI_TITOLO_ISHARES.has(tipo.toLowerCase()), tipo, paese, peso)
+    const ticker = indiceTicker >= 0 ? testoOpzionale(campi[indiceTicker]) : null
+    aggiungiRiga(acc, TIPI_TITOLO_ISHARES.has(tipo.toLowerCase()), tipo, paese, peso, {
+      nome: testoOpzionale(campi[indiceNome]) ?? ticker ?? '(senza nome)',
+      ticker,
+      isinTitolo: null,
+      cedolaPct: indiceCedola >= 0 ? numeroOpzionale(campi[indiceCedola]) : null,
+      scadenza: indiceScadenza >= 0 ? dataIsoDaIshares(campi[indiceScadenza]) : null,
+    })
   }
 
   return finalizza(acc, dataFile, SOMMA_TITOLI_ISHARES)
@@ -262,6 +344,9 @@ export function estraiGeografiaXtrackers(righe: unknown[][]): GeografiaEstratta 
   const indicePeso = colonne.indexOf('Weighting')
   const indicePaese = colonne.indexOf('Country')
   const indiceTipo = colonne.indexOf('Type of Security')
+  const indiceNome = colonne.indexOf('Name')
+  if (indiceNome === -1) throw new Error('Colonna Name non trovata')
+  const indiceIsin = colonne.indexOf('ISIN') // facoltativa
 
   const acc = nuoviAccumulatori()
   for (const riga of righe.slice(indiceIntestazione + 1)) {
@@ -270,7 +355,14 @@ export function estraiGeografiaXtrackers(righe: unknown[][]): GeografiaEstratta 
     const peso = grezzo * 100
     const tipo = String(riga[indiceTipo] ?? '').trim() || '(senza tipo)'
     const paese = String(riga[indicePaese] ?? '').trim() || '-'
-    aggiungiRiga(acc, TIPI_TITOLO_XTRACKERS.has(tipo.toLowerCase()), tipo, paese, peso)
+    const isinTitolo = indiceIsin >= 0 ? testoOpzionale(riga[indiceIsin]) : null
+    aggiungiRiga(acc, TIPI_TITOLO_XTRACKERS.has(tipo.toLowerCase()), tipo, paese, peso, {
+      nome: testoOpzionale(riga[indiceNome]) ?? isinTitolo ?? '(senza nome)',
+      ticker: null,
+      isinTitolo,
+      cedolaPct: null,
+      scadenza: null,
+    })
   }
 
   return finalizza(acc, null, SOMMA_TITOLI_XTRACKERS)
@@ -302,6 +394,7 @@ function riepilogaMessaggio(
 ): string {
   const parti = [
     `ok: ${Object.keys(estratto.pesi).length} paesi da ${estratto.righeTitoli} titoli, somma grezza ${formatoMessaggio(estratto.sommaPesiGrezza)}%`,
+    `partecipazioni: ${estratto.partecipazioni.length}`,
   ]
   if (estratto.esclusi.length > 0) {
     parti.push(`esclusi: ${estratto.esclusi.map((e) => `${e.tipo} ${formatoMessaggio(e.peso)}%`).join(', ')}`)
@@ -384,6 +477,23 @@ export async function aggiornaGeografiaEtf(
       }
 
       if (!soloProva) {
+        // Prima le partecipazioni, poi la geografia (che registra anche l'esito e la data): se la prima
+        // scrittura fallisce non cambia nulla, e se fallisse la seconda resterebbe solo una lista più nuova.
+        const { error: errorePartecipazioni } = await supabase.rpc('sostituisci_partecipazioni_etf', {
+          p_isin: fonte.isin,
+          p_partecipazioni: estratto.partecipazioni.map((p) => ({
+            nome: p.nome,
+            ticker: p.ticker,
+            isin_titolo: p.isinTitolo,
+            cedola_pct: p.cedolaPct,
+            scadenza: p.scadenza,
+            peso_pct: p.peso,
+          })),
+        })
+        if (errorePartecipazioni) {
+          throw new Error(`Scrittura delle partecipazioni rifiutata dal database: ${errorePartecipazioni.message}`)
+        }
+
         const { error } = await supabase.rpc('sostituisci_geografia_etf', {
           p_isin: fonte.isin,
           // Xtrackers non dichiara la data: il database accetta null, il tipo generato non lo sa.
@@ -410,6 +520,8 @@ export async function aggiornaGeografiaEtf(
           .map(([regione, peso]) => ({ regione, peso: arrotonda(peso, 2) }))
           .sort((a, b) => b.peso - a.peso),
         esclusi: estratto.esclusi,
+        partecipazioniSalvate: estratto.partecipazioni.length,
+        primePartecipazioni: estratto.partecipazioni.slice(0, 5).map((p) => ({ ...p, peso: arrotonda(p.peso, 2) })),
       })
     } catch (errore) {
       const messaggio = `errore: ${testoErrore(errore)}`

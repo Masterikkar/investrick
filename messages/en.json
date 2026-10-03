@@ -786,10 +786,13 @@
   "sottotitoloAsset": "Asset · {categoria}",
   "sottotitoloGruppo": "Group · {tipo}"
  },
- "EsposizioneGeografica": {
-  "titolo": "Geographic exposure",
+ "Esposizione": {
+  "titolo": "Exposure",
+  "titoloGeografia": "Geographic exposure",
+  "titoloPartecipazioni": "Holdings",
   "calcolataSu": "Calculated on {percentuale} of the category's value",
-  "altriPaesi": "Other {n} countries · {percentuale}",
+  "altriPaesi": "Other countries",
+  "primePartecipazioni": "Top {n}: {percentuale} of the total",
   "notaSoloTitoli": "Percentages cover the fund's securities only: cash, derivatives and currencies are excluded.",
   "aggiornamento": "Data updated",
   "datoScaduto": "stale data"

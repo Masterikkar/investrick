@@ -786,10 +786,13 @@
   "sottotitoloAsset": "Asset · {categoria}",
   "sottotitoloGruppo": "Gruppo · {tipo}"
  },
- "EsposizioneGeografica": {
-  "titolo": "Esposizione geografica",
+ "Esposizione": {
+  "titolo": "Esposizione",
+  "titoloGeografia": "Esposizione geografica",
+  "titoloPartecipazioni": "Partecipazioni",
   "calcolataSu": "Calcolata sul {percentuale} del valore della categoria",
-  "altriPaesi": "Altri {n} paesi · {percentuale}",
+  "altriPaesi": "Altri paesi",
+  "primePartecipazioni": "Prime {n}: {percentuale} del totale",
   "notaSoloTitoli": "Percentuali sui soli titoli del fondo: liquidità, derivati e valute sono esclusi.",
   "aggiornamento": "Aggiornamento dati",
   "datoScaduto": "dato scaduto"

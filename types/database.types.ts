@@ -406,6 +406,47 @@ export type Database = {
         }
         Relationships: []
       }
+      partecipazioni_etf: {
+        Row: {
+          cedola_pct: number | null
+          isin: string
+          isin_titolo: string | null
+          nome: string
+          peso_pct: number
+          posizione: number
+          scadenza: string | null
+          ticker: string | null
+        }
+        Insert: {
+          cedola_pct?: number | null
+          isin: string
+          isin_titolo?: string | null
+          nome: string
+          peso_pct: number
+          posizione: number
+          scadenza?: string | null
+          ticker?: string | null
+        }
+        Update: {
+          cedola_pct?: number | null
+          isin?: string
+          isin_titolo?: string | null
+          nome?: string
+          peso_pct?: number
+          posizione?: number
+          scadenza?: string | null
+          ticker?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partecipazioni_etf_isin_fkey"
+            columns: ["isin"]
+            isOneToOne: false
+            referencedRelation: "geografia_fonti"
+            referencedColumns: ["isin"]
+          },
+        ]
+      }
       prezzi_storici: {
         Row: {
           created_at: string
@@ -2079,6 +2120,10 @@ export type Database = {
           p_pesi: Json
           p_somma_pesi_grezza: number
         }
+        Returns: number
+      }
+      sostituisci_partecipazioni_etf: {
+        Args: { p_isin: string; p_partecipazioni: Json }
         Returns: number
       }
     }

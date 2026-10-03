@@ -1,25 +1,23 @@
 import { getLocale, getTranslations } from 'next-intl/server'
-import { formatData, formatPercent, type LocaleFormato } from '@/lib/format'
-import { nomePaese, type FonteGeografia, type GruppoRegione, type VocePaese } from '@/lib/geographic-exposure'
+import { formatPercent, type LocaleFormato } from '@/lib/format'
+import { nomePaese, type RiepilogoGeografico, type VocePaese } from '@/lib/geographic-exposure'
 import { traduciRegione } from '@/lib/i18n-regions'
 
-// Distribuzione geografica: macro-regioni con la loro barra e i paesi sotto. I paesi piccoli di ogni
-// regione stanno in una voce "Altri paesi" che si apre con un clic. Presentazionale: i numeri arrivano
-// già calcolati da lib/geographic-exposure.ts, così la stessa vista serve per una categoria del PAC
-// (copertura valorizzata) e per un singolo asset (nessuna copertura).
+// Card "Esposizione geografica": in alto il peso per macro-regione, sotto i paesi più pesanti e, in un
+// blocco che si apre con un clic, tutti gli altri. Presentazionale: i numeri arrivano già calcolati da
+// lib/geographic-exposure.ts, così la stessa card serve per una categoria del PAC (copertura valorizzata)
+// e per un singolo asset (nessuna copertura). Va dentro una <Sezione>, vedi components/exposure-cards.tsx.
 
 export async function GeographicExposure({
-  regioni,
+  geografia,
   copertura,
-  fonti,
 }: {
-  regioni: GruppoRegione[]
+  geografia: RiepilogoGeografico
   /** % del valore della categoria su cui è calcolata; assente per un singolo asset. */
   copertura?: number
-  fonti: FonteGeografia[]
 }) {
   const locale = (await getLocale()) as LocaleFormato
-  const t = await getTranslations('EsposizioneGeografica')
+  const t = await getTranslations('Esposizione')
   const tRegioni = await getTranslations('Regioni')
 
   // Sotto 0,05% la cifra arrotondata sarebbe 0,0%: si scrive "<0,1%".
@@ -33,9 +31,8 @@ export async function GeographicExposure({
         display: 'flex',
         justifyContent: 'space-between',
         gap: 12,
-        fontSize: 'var(--fs-card-link)',
-        color: 'var(--text-secondary)',
-        padding: '2px 0',
+        fontSize: 'var(--fs-table)',
+        padding: '3px 0',
       }}
     >
       <span>{nomePaese(voce.codiceIso, voce.paese, locale)}</span>
@@ -44,64 +41,51 @@ export async function GeographicExposure({
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div>
+      <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, margin: '0 0 12px' }}>{t('titoloGeografia')}</h3>
+
       {copertura != null && (
-        <div style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)' }}>
+        <div style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', marginBottom: 12 }}>
           {t('calcolataSu', { percentuale: formatPercent(copertura, copertura >= 99.95 ? 0 : 1, false, locale) })}
         </div>
       )}
 
-      {regioni.map((gruppo) => (
-        <div key={gruppo.regione}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-table)', marginBottom: 4 }}>
-            <span>{traduciRegione(tRegioni, gruppo.regione)}</span>
-            <span style={{ fontWeight: 500 }}>{pct(gruppo.peso)}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {geografia.regioni.map((voce) => (
+          <div key={voce.regione}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-table)', marginBottom: 4 }}>
+              <span>{traduciRegione(tRegioni, voce.regione)}</span>
+              <span style={{ fontWeight: 500 }}>{pct(voce.peso)}</span>
+            </div>
+            <div style={{ position: 'relative', height: 10, background: 'var(--border-default)', borderRadius: 0 }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  height: '100%',
+                  width: `${Math.min(voce.peso, 100)}%`,
+                  background: 'var(--primary)',
+                  borderRadius: 0,
+                }}
+              />
+            </div>
           </div>
-          <div style={{ position: 'relative', height: 10, background: 'var(--border-default)', borderRadius: 0 }}>
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                height: '100%',
-                width: `${Math.min(gruppo.peso, 100)}%`,
-                background: 'var(--primary)',
-                borderRadius: 0,
-              }}
-            />
-          </div>
+        ))}
+      </div>
 
-          <div style={{ marginTop: 6, marginLeft: 12 }}>
-            {gruppo.paesi.map(rigaPaese)}
-            {gruppo.altriPaesi.length > 0 && (
-              <details style={{ marginTop: 2 }}>
-                <summary style={{ cursor: 'pointer', fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', padding: '2px 0' }}>
-                  {t('altriPaesi', {
-                    n: gruppo.altriPaesi.length,
-                    percentuale: pct(gruppo.altriPaesi.reduce((somma, v) => somma + v.peso, 0)),
-                  })}
-                </summary>
-                <div style={{ marginLeft: 12 }}>{gruppo.altriPaesi.map(rigaPaese)}</div>
-              </details>
-            )}
-          </div>
-        </div>
-      ))}
-
-      <div style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-muted)' }}>{t('notaSoloTitoli')}</div>
-
-      {fonti.length > 0 && (
-        <div style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)' }}>
-          <span style={{ marginRight: 8 }}>{t('aggiornamento')}:</span>
-          {fonti.map((fonte, i) => (
-            <span key={i} style={{ marginRight: 12, color: fonte.scaduto ? 'var(--warning)' : undefined }}>
-              {fonte.etichetta ? `${fonte.etichetta} ` : ''}
-              {fonte.dataAggiornamento ? formatData(fonte.dataAggiornamento, locale) : '—'}
-              {fonte.scaduto ? ` (${t('datoScaduto')})` : ''}
-            </span>
-          ))}
-        </div>
-      )}
+      <div style={{ borderTop: '1px solid var(--border-default)', marginTop: 16, paddingTop: 10 }}>
+        {geografia.paesi.map(rigaPaese)}
+        {geografia.altriPaesi.length > 0 && (
+          <details style={{ marginTop: 2 }}>
+            <summary style={{ cursor: 'pointer', fontSize: 'var(--fs-table)', color: 'var(--text-secondary)', padding: '3px 0' }}>
+              <span>{t('altriPaesi')}</span>
+              <span style={{ float: 'right' }}>{pct(geografia.altriPaesi.reduce((somma, v) => somma + v.peso, 0))}</span>
+            </summary>
+            <div style={{ color: 'var(--text-secondary)' }}>{geografia.altriPaesi.map(rigaPaese)}</div>
+          </details>
+        )}
+      </div>
     </div>
   )
 }
