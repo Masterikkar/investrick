@@ -1,0 +1,361 @@
+import { getLocale, getTranslations } from 'next-intl/server'
+import { createClient } from '@/lib/supabase/server'
+import { formatEuro, formatEuroSigned, type LocaleFormato } from '@/lib/format'
+import { TabellaOrdinabile, CHIAVI_FILTRO_POSIZIONE, type ColonnaTabella, type RigaTabella } from '@/components/tabella-ordinabile'
+import { GraficoStorico, type PuntoStorico } from '@/components/grafico-storico'
+import { RippleLink } from '@/components/ripple-link'
+import { CardMetrica } from '@/components/card-metrica'
+import { CardRendimento } from '@/components/card-rendimento'
+import { Sezione } from '@/components/sezione'
+import { traduciCategoria } from '@/lib/i18n-categorie'
+import type { SottoTarget } from '@/components/barre-sottocategoria'
+import type { ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
+import { AnalisiRendimento, type ContributoCategoria } from '@/components/analisi-rendimento'
+import { AnalisiComposizione, type ScostamentoCategoria } from '@/components/analisi-composizione'
+import { CATEGORIE } from '@/lib/categorie'
+import { caricaRicompenseResidue, ricompensePosizione } from '@/lib/ricompense'
+import { CapitaleInvestito } from '@/components/capitale-investito'
+import { ExposureCards } from '@/components/exposure-cards'
+import {
+  caricaGeografiaEtf,
+  caricaPartecipazioniEtf,
+  esposizionePerCategoria,
+  type PosizioneGeografica,
+} from '@/lib/geographic-exposure'
+
+
+export default async function PacDettaglioPage({
+  params,
+}: {
+  params: Promise<{ contenitoreId: string }>
+}) {
+  const { contenitoreId } = await params
+  const locale = (await getLocale()) as LocaleFormato
+  const t = await getTranslations('PaginaContenitore')
+  const tCategorie = await getTranslations('Categorie')
+  const tContenitori = await getTranslations('Contenitori')
+  const tEsposizione = await getTranslations('Esposizione')
+  const supabase = await createClient()
+  const ricompense = await caricaRicompenseResidue(supabase)
+
+  const { data: pac } = await supabase
+    .from('v_valore_per_contenitore')
+    .select('contenitore_id, nome, valore_totale')
+    .eq('contenitore_id', contenitoreId)
+    .maybeSingle()
+
+  if (!pac) {
+    return <div>{t('contenitoreNonTrovato')}</div>
+  }
+
+  const COLONNE: ColonnaTabella[] = [
+    { key: 'nome', label: t('colonnaStrumento'), kind: 'link', linkPrefix: '/asset/', linkKey: 'strumentoId' },
+    { key: 'tipo', label: t('colonnaTipo'), kind: 'text' },
+    { key: 'categoriaVisualizzata', label: t('colonnaCategoria'), kind: 'text' },
+    { key: 'rendimentoPct', label: t('colonnaRendimento'), kind: 'percent-signed' },
+    { key: 'rendimentoAssoluto', label: t('colonnaRendimentoEuro'), kind: 'euro-signed' },
+    { key: 'valore', label: t('colonnaValore'), kind: 'euro' },
+    { key: 'peso', label: t('colonnaPeso'), kind: 'percent' },
+    { key: 'nav', label: t('colonnaNav'), kind: 'euro' },
+    { key: 'prezzoMedioUnitario', label: t('colonnaPrezzoMedio'), kind: 'euro' },
+    { key: 'costo', label: t('colonnaCosto'), kind: 'euro' },
+  ]
+
+  const valoreTotalePac = pac.valore_totale ?? 0
+
+  const { data: storicoRaw } = await supabase
+    .from('v_storico_valorizzazioni_per_contenitore')
+    .select('data, valore_totale, capitale_investito_totale')
+    .eq('contenitore_id', contenitoreId)
+    .order('data', { ascending: true })
+
+  const storicoValoreMap = new Map<string, number>()
+  const storicoCapitaleMap = new Map<string, number>()
+  for (const r of storicoRaw ?? []) {
+    if (!r.data) continue
+    storicoValoreMap.set(r.data, (storicoValoreMap.get(r.data) ?? 0) + Number(r.valore_totale))
+    if (r.capitale_investito_totale != null) {
+      storicoCapitaleMap.set(r.data, (storicoCapitaleMap.get(r.data) ?? 0) + Number(r.capitale_investito_totale))
+    }
+  }
+
+  const puntiRendimento: PuntoStorico[] = Array.from(storicoValoreMap.entries())
+    .map(([data, valore]) => {
+      const capitale = storicoCapitaleMap.get(data)
+      if (!capitale || capitale <= 0) return null
+      return { data, valore: ((valore - capitale) / capitale) * 100 }
+    })
+    .filter((p): p is PuntoStorico => p !== null)
+    .sort((a, b) => a.data.localeCompare(b.data))
+
+  const { data: posizioni } = await supabase
+    .from('v_riepilogo_posizione')
+    .select(
+      'strumento_id, valore, rendimento_pct, capitale_investito, prezzo_medio_unitario, prezzo_attuale, quantita_posseduta'
+    )
+    .eq('contenitore_id', contenitoreId)
+
+  const strumentoIds = (posizioni ?? [])
+    .map((p) => p.strumento_id)
+    .filter((id): id is string => id !== null)
+
+  const { data: strumenti } = strumentoIds.length
+    ? await supabase.from('strumenti').select('id, nome, ticker, isin, tipo, categoria').in('id', strumentoIds)
+    : { data: null }
+
+  const { data: costi } = await supabase
+    .from('v_costo_per_strumento')
+    .select('strumento_id, costo_totale')
+    .eq('contenitore_id', contenitoreId)
+
+  const { data: contenitoreInfo } = await supabase
+    .from('contenitori')
+    .select('target_attivo')
+    .eq('id', contenitoreId)
+    .maybeSingle()
+
+  const { data: scostamenti } = contenitoreInfo?.target_attivo
+    ? await supabase.from('v_scostamento_target').select('*').eq('contenitore_id', contenitoreId)
+    : { data: null }
+
+  const { data: subTargetRaw } = await supabase
+    .from('target_allocazioni_strumento')
+    .select('strumento_id, target_percentuale_categoria')
+    .eq('contenitore_id', contenitoreId)
+
+  const { data: impostazioni } = await supabase
+    .from('impostazioni_utente')
+    .select('soglia_ribilanciamento_pp')
+    .maybeSingle()
+
+  const soglia = impostazioni?.soglia_ribilanciamento_pp ?? 3
+
+  const composizione: ScostamentoCategoria[] = (scostamenti ?? [])
+    .slice()
+    .sort(
+      (a, b) =>
+        CATEGORIE.indexOf(a.categoria ?? '') - CATEGORIE.indexOf(b.categoria ?? '')
+    )
+
+  const righe: RigaTabella[] = (posizioni ?? [])
+    .map((p) => {
+      const strumento = strumenti?.find((s) => s.id === p.strumento_id)
+      const costo = costi?.find((c) => c.strumento_id === p.strumento_id)
+      const categoria = strumento?.categoria ?? '—'
+      return {
+        key: p.strumento_id ?? '—',
+        strumentoId: p.strumento_id,
+        nome: strumento?.nome ?? '—',
+        ticker: strumento?.ticker ?? null,
+        isin: strumento?.isin ?? null,
+        tipo: strumento?.tipo ?? '—',
+        categoria,
+        categoriaVisualizzata: traduciCategoria(tCategorie, categoria),
+        rendimentoPct: p.rendimento_pct ?? 0,
+        rendimentoAssoluto: (p.valore ?? 0) - (p.capitale_investito ?? 0),
+        valore: p.valore ?? 0,
+        capitaleInvestito: p.capitale_investito ?? 0,
+        capitaleInvestitoNetto: (p.quantita_posseduta ?? 0) * (p.prezzo_medio_unitario ?? 0),
+        ricompense: ricompensePosizione(ricompense, p.strumento_id, contenitoreId),
+        nav: p.prezzo_attuale ?? 0,
+        prezzoMedioUnitario: p.prezzo_medio_unitario ?? 0,
+        peso: valoreTotalePac > 0 ? ((p.valore ?? 0) / valoreTotalePac) * 100 : 0,
+        costo: costo?.costo_totale ?? 0,
+      }
+    })
+    .sort((a, b) => (b.valore as number) - (a.valore as number))
+
+  const costoTotalePac = righe.reduce((acc, r) => acc + (r.costo as number), 0)
+  const valoreTotalePosizioni = righe.reduce((acc, r) => acc + (r.valore as number), 0)
+  const capitaleInvestitoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestito as number), 0)
+  const capitaleInvestitoNettoTotale = righe.reduce((acc, r) => acc + (r.capitaleInvestitoNetto as number), 0)
+  const ricompenseTotale = righe.reduce((acc, r) => acc + (r.ricompense as number), 0)
+  const plusMinusNonRealizzata = valoreTotalePosizioni - capitaleInvestitoTotale
+  const rendimentoPctTotale = capitaleInvestitoTotale > 0 ? (plusMinusNonRealizzata / capitaleInvestitoTotale) * 100 : null
+
+  const valorePerCategoria: Record<string, number> = {}
+  for (const r of righe) {
+    const cat = r.categoria as string
+    valorePerCategoria[cat] = (valorePerCategoria[cat] ?? 0) + (r.valore as number)
+  }
+
+  const sottoTargetPerCategoria: Record<string, SottoTarget[]> = {}
+  for (const st of subTargetRaw ?? []) {
+    const strumento = strumenti?.find((s) => s.id === st.strumento_id)
+    if (!strumento) continue
+    const cat = strumento.categoria
+    const rigaStrumento = righe.find((r) => r.strumentoId === st.strumento_id)
+    const valoreStrumento = (rigaStrumento?.valore as number) ?? 0
+    const totaleCategoria = valorePerCategoria[cat] ?? 0
+    const pesoAttualePct = totaleCategoria > 0 ? (valoreStrumento / totaleCategoria) * 100 : 0
+    const targetPct = Number(st.target_percentuale_categoria)
+
+    if (!sottoTargetPerCategoria[cat]) sottoTargetPerCategoria[cat] = []
+    sottoTargetPerCategoria[cat].push({
+      strumentoId: st.strumento_id,
+      nome: strumento.nome,
+      ticker: strumento.ticker,
+      targetPct,
+      pesoAttualePct: Math.round(pesoAttualePct * 100) / 100,
+      scostamentoPp: Math.round((pesoAttualePct - targetPct) * 100) / 100,
+    })
+  }
+  for (const cat of Object.keys(sottoTargetPerCategoria)) {
+    sottoTargetPerCategoria[cat].sort((a, b) => b.targetPct - a.targetPct)
+  }
+
+  // Esposizione (geografia e partecipazioni): una vista per categoria, solo per le categorie con almeno un ETF
+  // che ha dati (oro, fondi e il resto senza fonte restano fuori e non compaiono).
+  const posizioniGeografiche: PosizioneGeografica[] = righe.map((r) => ({
+    strumentoId: r.strumentoId as string,
+    nome: r.nome as string,
+    ticker: r.ticker as string | null,
+    isin: r.isin as string | null,
+    categoria: r.categoria as string,
+    valore: r.valore as number,
+  }))
+  const isinEsposizione = posizioniGeografiche.flatMap((p) => (p.isin ? [p.isin] : []))
+  const [{ perIsin: geografiaPerIsin, mappa: mappaPaesi }, partecipazioniPerIsin] = await Promise.all([
+    caricaGeografiaEtf(supabase, isinEsposizione),
+    caricaPartecipazioniEtf(supabase, isinEsposizione),
+  ])
+  const esposizione = esposizionePerCategoria(
+    posizioniGeografiche,
+    geografiaPerIsin,
+    partecipazioniPerIsin,
+    mappaPaesi,
+    CATEGORIE
+  )
+
+  const guadagnoPerCategoria: Record<string, number> = {}
+  for (const r of righe) {
+    const cat = r.categoria as string
+    guadagnoPerCategoria[cat] = (guadagnoPerCategoria[cat] ?? 0) + (r.rendimentoAssoluto as number)
+  }
+  const maxAbsGuadagno = Math.max(0, ...Object.values(guadagnoPerCategoria).map((g) => Math.abs(g)))
+  const contributoPerCategoria: ContributoCategoria[] = CATEGORIE.filter(
+    (cat) => guadagnoPerCategoria[cat] !== undefined
+  ).map((cat) => {
+    const guadagno = guadagnoPerCategoria[cat]
+    const contributoPct = plusMinusNonRealizzata !== 0 ? (guadagno / plusMinusNonRealizzata) * 100 : null
+    const larghezzaPct = maxAbsGuadagno > 0 ? (Math.abs(guadagno) / maxAbsGuadagno) * 50 : 0
+    return { categoria: cat, guadagno, contributoPct, larghezzaPct }
+  })
+
+  const contributoStrumentoPerCategoria: Record<string, ContributoStrumento[]> = {}
+  for (const r of righe) {
+    const cat = r.categoria as string
+    const guadagnoCategoria = guadagnoPerCategoria[cat] ?? 0
+    const strumento = strumenti?.find((s) => s.id === r.strumentoId)
+    if (!contributoStrumentoPerCategoria[cat]) contributoStrumentoPerCategoria[cat] = []
+    contributoStrumentoPerCategoria[cat].push({
+      strumentoId: r.strumentoId as string,
+      nome: r.nome as string,
+      ticker: strumento?.ticker ?? null,
+      guadagno: r.rendimentoAssoluto as number,
+      contributoPctCategoria:
+        guadagnoCategoria !== 0 ? ((r.rendimentoAssoluto as number) / guadagnoCategoria) * 100 : null,
+    })
+  }
+  for (const cat of Object.keys(contributoStrumentoPerCategoria)) {
+    if (contributoStrumentoPerCategoria[cat].length <= 1) delete contributoStrumentoPerCategoria[cat]
+    else contributoStrumentoPerCategoria[cat].sort((a, b) => b.guadagno - a.guadagno)
+  }
+
+  return (
+    <div>
+      <RippleLink href="/investment-plans" className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
+        {t('linkTuttiPac')}
+      </RippleLink>
+
+      <div style={{ fontSize: 'var(--fs-eyebrow)', color: 'var(--text-secondary)', marginTop: 12 }}>{tContenitori('pac')}</div>
+      <h1 style={{ fontSize: 'var(--fs-h1)', marginTop: 4, marginBottom: 16, fontWeight: 500 }}>{pac.nome ?? '—'}</h1>
+
+      <section>
+        <Sezione>
+          <GraficoStorico punti={puntiRendimento} formato="percent" valoreAttuale={valoreTotalePac} />
+        </Sezione>
+      </section>
+
+      <section style={{ marginTop: 24 }}>
+        <Sezione>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <CardRendimento rendimentoPct={rendimentoPctTotale} label={t('labelRendimento')} />
+
+            <CardMetrica label={t('labelPlusMinusNonRealizzata')} href="/tax" linkLabel={t('linkFiscalita')}>
+              <span style={{ color: plusMinusNonRealizzata >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                {formatEuroSigned(plusMinusNonRealizzata, locale)}
+              </span>
+            </CardMetrica>
+
+            <CardMetrica label={t('labelCapitaleInvestitoNetto')} href="/account/data-management/transactions" linkLabel={t('linkTransazioni')}>
+              <CapitaleInvestito capitale={capitaleInvestitoNettoTotale} ricompense={ricompenseTotale} />
+            </CardMetrica>
+
+            <CardMetrica label={t('labelCostoTotale')} href="/costs" linkLabel={t('linkCosti')}>
+              {formatEuro(costoTotalePac, locale)}
+            </CardMetrica>
+          </div>
+        </Sezione>
+      </section>
+
+      <section style={{ marginTop: 32, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
+          <h2 style={{ fontSize: 'var(--fs-h2)', marginBottom: 12, fontWeight: 500 }}>{t('titoloAnalisiRendimento')}</h2>
+          <Sezione>
+            <AnalisiRendimento
+              contributoPerCategoria={contributoPerCategoria}
+              contributoStrumentoPerCategoria={contributoStrumentoPerCategoria}
+              plusMinusNonRealizzata={plusMinusNonRealizzata}
+            />
+          </Sezione>
+        </div>
+
+        <div style={{ flex: '1 1 480px', maxWidth: 520 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h2 style={{ fontSize: 'var(--fs-h2)', margin: 0, fontWeight: 500 }}>{t('titoloAnalisiComposizione')}</h2>
+            <RippleLink href={`/target/${contenitoreId}`} className="link-dettaglio" style={{ fontSize: 'var(--fs-card-link)' }}>
+              {t('linkModificaTarget')}
+            </RippleLink>
+          </div>
+          <Sezione>
+            <AnalisiComposizione
+              composizione={composizione}
+              sottoTargetPerCategoria={sottoTargetPerCategoria}
+              soglia={soglia}
+              targetAttivo={contenitoreInfo?.target_attivo ?? false}
+            />
+          </Sezione>
+        </div>
+      </section>
+
+      {esposizione.length > 0 && (
+        <section style={{ marginTop: 32 }}>
+          <h2 style={{ fontSize: 'var(--fs-h2)', marginBottom: 12, fontWeight: 500 }}>{tEsposizione('titolo')}</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {esposizione.map((e) => (
+              <div key={e.categoria}>
+                <h3 style={{ fontSize: 'var(--fs-h3)', marginBottom: 8, fontWeight: 500 }}>
+                  {traduciCategoria(tCategorie, e.categoria)}
+                </h3>
+                <ExposureCards
+                  geografia={e.geografia}
+                  partecipazioni={e.partecipazioni}
+                  copertura={e.copertura}
+                  fonti={e.fonti}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 'var(--fs-h2)', marginBottom: 12, fontWeight: 500 }}>{t('titoloStrumenti')}</h2>
+        <Sezione>
+          <TabellaOrdinabile colonne={COLONNE} righe={righe} filtro={{ chiavi: CHIAVI_FILTRO_POSIZIONE }} />
+        </Sezione>
+      </section>
+    </div>
+  )
+}

@@ -1,7 +1,8 @@
 'use client'
 
+import { useLocale } from 'next-intl'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
-import { formatEuro } from '@/lib/format'
+import { formatData, formatEuro, type LocaleFormato } from '@/lib/format'
 
 export type PuntoLineaSemplice = { data: string; valore: number }
 
@@ -9,9 +10,17 @@ const GRIGLIA = '#2B3350'
 const TESTO_ASSI = '#9198AD'
 const LINEA = '#7C8CFF'
 
-export function GraficoLineaSemplice({ punti }: { punti: PuntoLineaSemplice[] }) {
+export function GraficoLineaSemplice({
+  punti,
+  messaggioNessunDato = "Non ci sono ancora dati per quest'anno.",
+}: {
+  punti: PuntoLineaSemplice[]
+  messaggioNessunDato?: string
+}) {
+  const locale = useLocale() as LocaleFormato
+
   if (punti.length === 0) {
-    return <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', marginTop: 12 }}>Non ci sono ancora dati per quest'anno.</p>
+    return <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)', marginTop: 12 }}>{messaggioNessunDato}</p>
   }
 
   // Se tutti i valori della serie sono identici (es. una linea piatta a 0),
@@ -31,24 +40,24 @@ export function GraficoLineaSemplice({ punti }: { punti: PuntoLineaSemplice[] })
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRIGLIA} />
         <XAxis
           dataKey="data"
-          tickFormatter={(v) => new Date(v).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
+          tickFormatter={(v) => formatData(v, locale, { day: '2-digit', month: '2-digit' })}
           tick={{ fill: TESTO_ASSI, fontSize: 11 }}
           axisLine={{ stroke: GRIGLIA }}
           tickLine={{ stroke: GRIGLIA }}
         />
         <YAxis
           domain={dominioY}
-          tickFormatter={(v) => formatEuro(Number(v))}
+          tickFormatter={(v) => formatEuro(Number(v), locale)}
           width={80}
           tick={{ fill: TESTO_ASSI, fontSize: 11 }}
           axisLine={{ stroke: GRIGLIA }}
           tickLine={{ stroke: GRIGLIA }}
         />
         <Tooltip
-          labelFormatter={(v) => new Date(v as string).toLocaleDateString('it-IT')}
-          formatter={(value) => formatEuro(Number(value))}
+          labelFormatter={(v) => formatData(v as string, locale)}
+          formatter={(value) => formatEuro(Number(value), locale)}
           cursor={{ stroke: '#2B3350', strokeWidth: 1 }}
-          contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
+          contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2', fontSize: 'var(--fs-tooltip)' }}
           labelStyle={{ color: '#E8EBF2' }}
           itemStyle={{ color: '#E8EBF2' }}
         />

@@ -1,0 +1,309 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+
+  /* Colori */
+  --bg-base: #0A0D16;
+  --bg-surface: #1A2036;
+  --bg-section: #101421;
+  --border-default: #2B3350;
+  --border-section: #181D2F;
+  --text-primary: #E8EBF2;
+  --text-secondary: #9198AD;
+  --text-muted: #6C7286;
+  --primary: #4C5FE0;
+  --primary-vivid: #7C8CFF;
+  --success: #34C77B;
+  --success-light: #7DDBA8;
+  --danger: #E5484D;
+  --danger-light: #F09A9D;
+  --warning: #E8A23B;
+
+  /* Tipografia — unico punto da cui pagine e componenti pescano i
+     font-size, invece di ripeterli sparsi nei singoli file. */
+
+  /* Titoli */
+  --fs-eyebrow: 12px;   /* etichetta piccola sopra il titolo, es. "Categoria" */
+  --fs-h1: 18px;        /* titolo di pagina */
+  --fs-h2: 16px;        /* titolo di sezione */
+  --fs-h3: 14px;        /* sotto-titolo, es. "Transazione manuale" */
+
+  /* Numeri "hero" (Zilla Slab) */
+  --fs-hero: 32px;             /* valore totale principale */
+  --fs-hero-secondario: 24px;  /* rendimento cumulato, stato attuale, YTD */
+  --fs-hero-badge: 14px;       /* variazione accanto a un numero hero */
+
+  /* Grafici: i tick degli assi Recharts restano un numero letterale (11px)
+     nei singoli componenti grafico — quella prop passa come attributo SVG,
+     non come style HTML, e lì le CSS custom properties non sono affidabili
+     su tutti i browser. Tooltip, pulsanti periodo e didascalie invece sì. */
+  --fs-period: 12px;
+  --fs-tooltip: 12px;  /* tooltip dei grafici: dati di supporto, appena sopra i tick (11px) */
+
+  /* Card metriche (CardMetrica) */
+  --fs-card-label: 11px;
+  --fs-card-value: 17px;
+  --fs-card-link: 12px;   /* link "→ Dettaglio..." e testo secondario simile */
+
+  /* Navigazione */
+  --fs-menu: 13px;
+  --fs-search: 13px;
+  --fs-search-sub: 11px;
+
+  /* Bottoni */
+  --fs-button: 13px;
+  --fs-button-outline: 12px;
+
+  /* Tabelle e form */
+  --fs-table: 13px;
+  --fs-form-label: 13px;
+  --fs-form-hint: 11px;
+
+  /* Badge/pill (es. provenienza, tipo contenitore) */
+  --fs-badge: 11px;
+
+  /* Testo generico di paragrafo */
+  --fs-body: 13px;
+}
+
+@theme inline {
+  --color-background: var(--bg-base);
+  --color-surface: var(--bg-surface);
+  --color-section: var(--bg-section);
+  --color-border: var(--border-default);
+  --color-section-border: var(--border-section);
+  --color-foreground: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-primary-vivid: var(--primary-vivid);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+  --font-hero: var(--font-zilla-slab);
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-plex-sans), Arial, Helvetica, sans-serif;
+}
+
+.link-interattivo {
+  color: var(--text-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Ordine LVHA (Link-Visited-Hover-Active): :visited DEVE stare prima di
+   :hover nel file. Specificità identica tra le due => vince chi è scritto
+   dopo; con l'ordine sbagliato, un link visitato E sotto il mouse mostrava
+   il colore da visitato invece di quello da hover, hover "morto" in
+   silenzio su ogni link già cliccato in precedenza. */
+.menu-row:visited,
+.link-interattivo:visited,
+.riga-interattiva:visited {
+  color: var(--text-primary);
+}
+
+.link-interattivo:hover {
+  color: var(--primary-vivid);
+}
+
+.link-dettaglio {
+  color: var(--primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.link-dettaglio:visited {
+  color: var(--primary);
+}
+
+.link-dettaglio:hover {
+  color: var(--primary-vivid);
+}
+
+.riga-interattiva {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.riga-interattiva:hover {
+  background: var(--border-default);
+}
+
+.tabella-riga {
+  border-bottom: 1px solid var(--border-default);
+}
+
+.tabella-riga:last-child {
+  border-bottom: none;
+}
+
+@keyframes ripple-espandi {
+  from {
+    transform: scale(0);
+    opacity: 0.35;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* Barra di caricamento del wizard di ribilanciamento, durante il calcolo */
+@keyframes barra-caricamento-scorrimento {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.barra-caricamento-riempimento {
+  width: 40%;
+  height: 100%;
+  background: var(--primary);
+  animation: barra-caricamento-scorrimento 1.1s ease-in-out infinite;
+}
+
+/* Menu di navigazione a tendina */
+.menu-toggle {
+  position: relative;
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 8px 12px;
+  border-radius: 0;
+  color: var(--text-primary);
+  font-size: var(--fs-menu);
+}
+
+.menu-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.menu-toggle::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 6px;
+  height: 1px;
+  background: var(--primary-vivid);
+  width: 0;
+  transition: width 0.18s ease;
+}
+
+.menu-toggle:hover {
+  color: var(--primary-vivid);
+}
+
+.menu-toggle:hover .menu-chevron {
+  color: var(--primary-vivid);
+}
+
+.menu-toggle:hover::after {
+  width: calc(100% - 24px);
+}
+
+.menu-toggle-bar::after {
+  content: none;
+}
+
+.menu-chevron {
+  display: inline-flex;
+  margin-left: auto;
+  transition: transform 0.15s ease, color 0.15s ease;
+  color: var(--text-secondary);
+}
+
+details[open] > .menu-toggle .menu-chevron {
+  transform: rotate(180deg);
+}
+
+.menu-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 230px;
+}
+
+.menu-row {
+  position: relative;
+  padding: 9px 10px;
+  color: var(--text-primary);
+  font-size: var(--fs-menu);
+}
+
+.menu-row::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 3px;
+  height: 1px;
+  background: var(--primary-vivid);
+  width: 0;
+  transition: width 0.18s ease;
+}
+
+.menu-row:hover {
+  color: var(--primary-vivid);
+}
+
+.menu-row:hover::after {
+  width: calc(100% - 20px);
+}
+
+.menu-row-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-divider {
+  border: none;
+  border-top: 1px solid var(--border-default);
+  margin: 6px 4px;
+}
+
+.menu-submenu-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+  padding-left: 6px;
+}
+
+/* Focus su input di testo: sostituisce l'anello blu/bianco nativo del
+   browser con bordo + alone nella palette dell'app. Esclude checkbox/radio
+   (hanno già il loro trattamento via accentColor) e non tocca <select> —
+   solo caselle di testo vere e proprie. */
+input:not([type="checkbox"]):not([type="radio"]):focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary-vivid);
+  box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.25);
+}
+/* Grafici Recharts: con accessibilityLayer (attivo di default in Recharts 3)
+   l'<svg> radice ha tabIndex=0 e i settori delle torte tabIndex=-1, quindi un
+   click li mette a fuoco. Chrome disegna l'anello di focus sugli elementi SVG
+   già con :focus (sugli HTML solo con :focus-visible), da cui il rettangolo
+   azzurro al click. Lo si toglie solo quando il focus non è "visibile":
+   navigando con Tab (:focus-visible) l'anello resta. */
+.recharts-wrapper :focus:not(:focus-visible) {
+  outline: none;
+}

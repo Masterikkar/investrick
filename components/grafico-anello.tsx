@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
-import { formatEuro, formatPercent } from '@/lib/format'
+import { formatEuro, formatPercent, type LocaleFormato } from '@/lib/format'
 
-export type FettaAnello = { nome: string; valore: number }
+export type FettaAnello = { nome: string; valore: number; nomeVisualizzato?: string }
 
 // Sfumatura di indaco: dalla fetta più grande (più satura/scura) alla più
 // piccola (quasi bianca). Stessa tonalità (~235, il nostro indaco), sale
@@ -34,16 +35,23 @@ function ordinaEColora(fette: FettaAnello[]) {
 const ALTEZZA_GRAFICO = 280
 
 export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
+  const t = useTranslations('GraficoAnello')
+  const locale = useLocale() as LocaleFormato
   const [selezionato, setSelezionato] = useState<number | null>(null)
   const { fetteValide, totale, colori } = ordinaEColora(fette)
 
   if (fetteValide.length === 0) {
-    return <p style={{ color: 'var(--text-secondary)' }}>Nessun dato da mostrare.</p>
+    return <p style={{ color: 'var(--text-secondary)' }}>{t('alertNessunDato')}</p>
   }
 
-  const centroNome = selezionato !== null ? fetteValide[selezionato].nome : 'Totale'
+  const centroNome =
+    selezionato !== null ? fetteValide[selezionato].nomeVisualizzato ?? fetteValide[selezionato].nome : t('etichettaTotale')
   const centroValore = selezionato !== null ? fetteValide[selezionato].valore : totale
   const centroPct = selezionato !== null ? (fetteValide[selezionato].valore / totale) * 100 : null
+
+  // Solo per Recharts (nameKey legge "nome"): stesso ordine e stessi indici di
+  // fetteValide, quindi non altera in alcun modo colori o ordinamento.
+  const datiGrafico = fetteValide.map((f) => ({ ...f, nome: f.nomeVisualizzato ?? f.nome }))
 
   return (
     <div
@@ -56,7 +64,7 @@ export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
       <ResponsiveContainer width="100%" height={ALTEZZA_GRAFICO}>
         <PieChart>
           <Pie
-            data={fetteValide}
+            data={datiGrafico}
             dataKey="valore"
             nameKey="nome"
             cx="50%"
@@ -95,11 +103,11 @@ export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
       >
         <div style={{ fontSize: 'var(--fs-card-label)', color: 'var(--text-secondary)' }}>{centroNome}</div>
         <div style={{ fontSize: 'var(--fs-card-value)', fontWeight: 500, color: 'var(--text-primary)', marginTop: 4 }}>
-          {formatEuro(centroValore)}
+          {formatEuro(centroValore, locale)}
         </div>
         {centroPct !== null && (
           <div style={{ fontSize: 'var(--fs-card-label)', color: 'var(--text-secondary)', marginTop: 2 }}>
-            {formatPercent(centroPct, 2)}
+            {formatPercent(centroPct, 2, false, locale)}
           </div>
         )}
       </div>
@@ -113,6 +121,7 @@ export function GraficoAnello({ fette }: { fette: FettaAnello[] }) {
 // e proprio (pallino, nome, euro, percentuale) sta in un blocco interno con
 // larghezza massima propria — così resta compatto anche se il box è largo.
 export function ElencoAllocazione({ fette }: { fette: FettaAnello[] }) {
+  const locale = useLocale() as LocaleFormato
   const { fetteValide, totale, colori } = ordinaEColora(fette)
 
   if (fetteValide.length === 0) {
@@ -139,12 +148,12 @@ export function ElencoAllocazione({ fette }: { fette: FettaAnello[] }) {
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>
               <span style={{ width: 9, height: 9, background: colori[i], display: 'inline-block', flexShrink: 0 }} />
-              {f.nome}
+              {f.nomeVisualizzato ?? f.nome}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <span style={{ fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>{formatEuro(f.valore)}</span>
+              <span style={{ fontSize: 'var(--fs-table)', color: 'var(--text-primary)' }}>{formatEuro(f.valore, locale)}</span>
               <span style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', minWidth: 44, textAlign: 'right' }}>
-                {formatPercent((f.valore / totale) * 100, 2)}
+                {formatPercent((f.valore / totale) * 100, 2, false, locale)}
               </span>
             </span>
           </div>

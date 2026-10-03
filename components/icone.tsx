@@ -1,3 +1,19 @@
+import type { CSSProperties } from 'react'
+
+// Pulsante con sola icona (Salva, Elimina, Sposta, ...): stesso aspetto
+// ovunque, il colore lo decide chi lo usa. Spostato qui (era nel solo form
+// di Gestione strumenti) perché ora lo usa anche Storico.
+export const STILE_BOTTONE_ICONA: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  border: '1px solid var(--border-default)',
+  background: 'var(--bg-surface)',
+  padding: 4,
+  cursor: 'pointer',
+  flexShrink: 0,
+}
+
 function IconaBase({ children }: { children: React.ReactNode }) {
   return (
     <svg
@@ -42,6 +58,14 @@ export function IconaAnalisi() {
   )
 }
 
+export function IconaTool() {
+  return (
+    <IconaBase>
+      <path d="M13.5 3a3.5 3.5 0 0 0-3.3 4.7L3.7 14.2a1.6 1.6 0 0 0 2.3 2.3l6.5-6.5A3.5 3.5 0 0 0 17 6.5l-2.3 2.3-2.5-.5-.5-2.5L14 3.5z" />
+    </IconaBase>
+  )
+}
+
 export function IconaAccount() {
   return (
     <IconaBase>
@@ -51,11 +75,47 @@ export function IconaAccount() {
   )
 }
 
+export function IconaSicurezza() {
+  return (
+    <IconaBase>
+      <rect x="4" y="9" width="12" height="8" />
+      <path d="M7 9V6a3 3 0 0 1 6 0v3" />
+    </IconaBase>
+  )
+}
+
+export function IconaOcchio() {
+  return (
+    <IconaBase>
+      <path d="M1.5 10s3-5.5 8.5-5.5S18.5 10 18.5 10s-3 5.5-8.5 5.5S1.5 10 1.5 10z" />
+      <circle cx="10" cy="10" r="2.5" />
+    </IconaBase>
+  )
+}
+
+export function IconaOcchioBarrato() {
+  return (
+    <IconaBase>
+      <path d="M1.5 10s3-5.5 8.5-5.5S18.5 10 18.5 10s-3 5.5-8.5 5.5S1.5 10 1.5 10z" />
+      <circle cx="10" cy="10" r="2.5" />
+      <path d="M3 3l14 14" />
+    </IconaBase>
+  )
+}
+
 export function IconaAsset() {
   return (
     <IconaBase>
       <circle cx="10" cy="10" r="7" />
       <path d="M10 3v7l5 3" />
+    </IconaBase>
+  )
+}
+
+export function IconaGruppi() {
+  return (
+    <IconaBase>
+      <path d="M3 7h14v10H3zM5 4.5h10M7 2h6" />
     </IconaBase>
   )
 }
@@ -146,12 +206,137 @@ export function IconaGestione() {
   )
 }
 
+export function IconaImpostazioni() {
+  return (
+    <IconaBase>
+      <g transform="scale(0.8333)">
+        <path
+          d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+          vectorEffect="non-scaling-stroke"
+        />
+        <circle cx="12" cy="12" r="3" vectorEffect="non-scaling-stroke" />
+      </g>
+    </IconaBase>
+  )
+}
+
 export function IconaEsci() {
   return (
     <IconaBase>
       <path d="M8 3H4.5A1.5 1.5 0 0 0 3 4.5v11A1.5 1.5 0 0 0 4.5 17H8" />
       <path d="M13 6.5l4 3.5-4 3.5M17 10H7.5" />
     </IconaBase>
+  )
+}
+
+export function IconaModifica() {
+  return (
+    <IconaBase>
+      <path d="M13.5 3.5l3 3L7 16H4v-3l9.5-9.5zM11.5 5.5l3 3" />
+    </IconaBase>
+  )
+}
+
+export function IconaSalva() {
+  return (
+    <IconaBase>
+      <path d="M4 3.5h9.5L16.5 6.5v10H4zM7 3.5v4h6v-4M7 16.5v-5h6v5" />
+    </IconaBase>
+  )
+}
+
+// Segno di spunta: riquadro selezionato della checkbox personalizzata
+// (components/checkbox.tsx) e marcatore "passo fatto" della sidebar del
+// wizard di ribilanciamento. Piccola e a sé come IconaInfo, non da IconaBase:
+// a 18px dentro un riquadro di 18px risulterebbe senza margine.
+export function IconaSpunta() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 10.5l3.5 3.5 8-9" />
+    </svg>
+  )
+}
+
+export function IconaElimina() {
+  return (
+    <IconaBase>
+      <path d="M3.5 6h13M8 6V3.5h4V6M5.5 6l1 10.5h7l1-10.5M8.5 9v4.5M11.5 9v4.5" />
+    </IconaBase>
+  )
+}
+
+// Sostituisce il glifo "→" (sposta in un altro gruppo): un'emoji/glifo di
+// testo cambia forma da sistema a sistema, un'icona vera no.
+export function IconaSposta() {
+  return (
+    <IconaBase>
+      <path d="M4 10h11M11 6l4 4-4 4" />
+    </IconaBase>
+  )
+}
+
+// Sostituisce la "×" di chiusura di un popup (Modale).
+export function IconaChiudi() {
+  return (
+    <IconaBase>
+      <path d="M5.5 5.5l9 9M14.5 5.5l-9 9" />
+    </IconaBase>
+  )
+}
+
+// Sostituisce la "i" testuale di InfoTooltip: pensata per il pulsante
+// rotondo da 16px del componente, non per lo stile a riga degli altri.
+export function IconaInfo() {
+  return (
+    <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor">
+      <circle cx="5" cy="2.6" r="1.1" />
+      <rect x="4" y="4.5" width="2" height="4.5" rx="0.5" />
+    </svg>
+  )
+}
+
+export function IconaTransazioni() {
+  return (
+    <IconaBase>
+      <path d="M4 7h10" />
+      <path d="M11 4l3 3-3 3" />
+      <path d="M16 13H6" />
+      <path d="M9 10l-3 3 3 3" />
+    </IconaBase>
+  )
+}
+
+export function IconaImporta() {
+  return (
+    <IconaBase>
+      <path d="M10 11V3" />
+      <path d="M6.5 6l3.5-3 3.5 3" />
+      <path d="M3 14v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2" />
+    </IconaBase>
+  )
+}
+
+export function IconaEsporta() {
+  return (
+    <IconaBase>
+      <path d="M10 3v8" />
+      <path d="M6.5 8l3.5 3 3.5-3" />
+      <path d="M3 14v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2" />
+    </IconaBase>
+  )
+}
+
+// Triangolo di avviso: unica icona di sezione rimasta nel layout a blocchi
+// del risultato di ribilanciamento (avviso di limite strutturale) — tutte le
+// altre icone di titolo di sezione sono state tolte lì per ridurre il rumore
+// visivo, questa resta perché segnala davvero un problema da guardare.
+export function IconaAvviso() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 2.3 1.5 17h17L10 2.3Z" />
+      <path d="M10 7.5v4" />
+      <circle cx="10" cy="14.3" r="0.5" fill="currentColor" stroke="none" />
+    </svg>
   )
 }
 

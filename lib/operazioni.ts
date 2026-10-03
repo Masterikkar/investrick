@@ -12,9 +12,11 @@ export const ETICHETTA_OPERAZIONE: Record<string, string> = {
   Scambio_acquisizione: 'Scambio (acquisizione)',
 }
 
-// Direzione inversa, per il parsing dell'import Excel. "Costo (in contanti)"
-// è volutamente assente: quell'operazione si inserisce solo a mano, non è
-// mai stata supportata dal file Excel.
+// Direzione inversa, per il parsing dell'import Excel: le etichette nelle altre
+// lingue arrivano qui tramite operazioneDaEtichettaExcel
+// (lib/i18n-tipi-operazione.ts). "Costo (in contanti)" è volutamente assente:
+// quell'operazione si inserisce solo a mano, non è mai stata supportata dal
+// file Excel.
 export const OPERAZIONE_DA_ETICHETTA: Record<string, string> = {
   Acquisto: 'Acquisto',
   Vendita: 'Vendita',

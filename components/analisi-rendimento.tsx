@@ -1,4 +1,6 @@
-import { formatEuroSigned, formatPercent } from '@/lib/format'
+import { getLocale, getTranslations } from 'next-intl/server'
+import { formatEuroSigned, formatPercent, type LocaleFormato } from '@/lib/format'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 import { BarreSottocategoriaRendimento, type ContributoStrumento } from '@/components/barre-sottocategoria-rendimento'
 
 export type ContributoCategoria = {
@@ -8,7 +10,7 @@ export type ContributoCategoria = {
   larghezzaPct: number
 }
 
-export function AnalisiRendimento({
+export async function AnalisiRendimento({
   contributoPerCategoria,
   contributoStrumentoPerCategoria,
   plusMinusNonRealizzata,
@@ -17,8 +19,12 @@ export function AnalisiRendimento({
   contributoStrumentoPerCategoria: Record<string, ContributoStrumento[]>
   plusMinusNonRealizzata: number
 }) {
+  const locale = (await getLocale()) as LocaleFormato
+  const t = await getTranslations('PaginaContenitore')
+  const tCategorie = await getTranslations('Categorie')
+
   if (contributoPerCategoria.length === 0 || plusMinusNonRealizzata === 0) {
-    return <p style={{ color: 'var(--text-secondary)' }}>Nessun guadagno o perdita maturata ancora.</p>
+    return <p style={{ color: 'var(--text-secondary)' }}>{t('alertNessunGuadagnoPerdita')}</p>
   }
 
   return (
@@ -29,10 +35,10 @@ export function AnalisiRendimento({
         return (
           <div key={c.categoria}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-table)', marginBottom: 4 }}>
-              <span>{c.categoria}</span>
+              <span>{traduciCategoria(tCategorie, c.categoria)}</span>
               <span style={{ color: colore, fontWeight: 500 }}>
-                {formatEuroSigned(c.guadagno)}
-                {c.contributoPct != null && ` (${formatPercent(c.contributoPct, 1, true)})`}
+                {formatEuroSigned(c.guadagno, locale)}
+                {c.contributoPct != null && ` (${formatPercent(c.contributoPct, 1, true, locale)})`}
               </span>
             </div>
             <div style={{ position: 'relative', height: 10, background: 'var(--border-default)', borderRadius: 0 }}>

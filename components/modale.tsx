@@ -1,17 +1,31 @@
 'use client'
 
 import { useEffect } from 'react'
+import { IconaChiudi } from '@/components/icone'
 
 export function Modale({
   aperto,
   onChiudi,
   titolo,
   children,
+  mostraChiusura = true,
+  larghezzaMassima = 480,
+  layoutLibero = false,
 }: {
   aperto: boolean
   onChiudi: () => void
-  titolo: string
+  // Vuoto e senza × (es. una notifica): niente intestazione.
+  titolo?: string
   children: React.ReactNode
+  // La × in alto a destra. false solo quando il contenuto ha già un suo
+  // pulsante per annullare (es. il dialogo di conferma); Esc e clic fuori
+  // chiudono comunque.
+  mostraChiusura?: boolean
+  larghezzaMassima?: number
+  // true quando il contenuto gestisce da sé intestazione, padding e fasce di
+  // sfondo (es. il wizard di ribilanciamento): Modale si limita a overlay,
+  // Esc, clic-fuori e blocco scroll — niente h2/×, niente padding.
+  layoutLibero?: boolean
 }) {
   useEffect(() => {
     if (!aperto) return
@@ -40,7 +54,11 @@ export function Modale({
         background: 'rgba(10, 13, 22, 0.75)',
         zIndex: 100,
         display: 'flex',
-        alignItems: 'flex-start',
+        // "safe center": centrato quando il contenuto ci sta nell'altezza
+        // della finestra, ancorato in alto (come prima) quando non ci sta —
+        // un center puro taglierebbe la parte alta di un popup più lungo del
+        // pattern content-scrollbar (es. il form di modifica asset).
+        alignItems: 'safe center',
         justifyContent: 'center',
         padding: '48px 24px',
         overflowY: 'auto',
@@ -52,29 +70,35 @@ export function Modale({
           background: 'var(--bg-section)',
           border: '1px solid var(--border-section)',
           width: '100%',
-          maxWidth: 480,
-          padding: 24,
+          maxWidth: larghezzaMassima,
+          padding: layoutLibero ? 0 : 24,
+          overflow: layoutLibero ? 'hidden' : undefined,
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, margin: 0 }}>{titolo}</h2>
-          <button
-            type="button"
-            onClick={onChiudi}
-            aria-label="Chiudi"
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              fontSize: 20,
-              lineHeight: 1,
-              cursor: 'pointer',
-              padding: 4,
-            }}
-          >
-            ×
-          </button>
-        </div>
+        {!layoutLibero && (titolo || mostraChiusura) && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, margin: 0 }}>{titolo}</h2>
+            {mostraChiusura && (
+              <button
+                type="button"
+                onClick={onChiudi}
+                aria-label="Chiudi"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                  padding: 4,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }}
+              >
+                <IconaChiudi />
+              </button>
+            )}
+          </div>
+        )}
         {children}
       </div>
     </div>

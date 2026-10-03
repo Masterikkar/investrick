@@ -1,5 +1,6 @@
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { formatPercent } from '@/lib/format'
+import { formatData, formatPercent, type LocaleFormato } from '@/lib/format'
 import { RippleLink } from '@/components/ripple-link'
 import { Sezione } from '@/components/sezione'
 
@@ -31,10 +32,12 @@ function BloccoMovimenti({
   titolo,
   righe,
   messaggioVuoto,
+  locale,
 }: {
   titolo: string
   righe: RigaChiusura[]
   messaggioVuoto: string
+  locale: LocaleFormato
 }) {
   const colonne = suddividiInColonneFisse(righe, NUM_COLONNE)
 
@@ -99,7 +102,7 @@ function BloccoMovimenti({
                           color: r.variazionePct >= 0 ? 'var(--success)' : 'var(--danger)',
                         }}
                       >
-                        {formatPercent(r.variazionePct, 2, true)}
+                        {formatPercent(r.variazionePct, 2, true, locale)}
                       </span>
                     </div>
                   ))}
@@ -114,6 +117,8 @@ function BloccoMovimenti({
 }
 
 export async function ValoriChiusura() {
+  const locale = (await getLocale()) as LocaleFormato
+  const t = await getTranslations('ValoriChiusura')
   const supabase = await createClient()
 
   const { data: posizioniRaw } = await supabase
@@ -180,14 +185,14 @@ export async function ValoriChiusura() {
   return (
     <section style={{ marginTop: 32 }}>
       <h2 style={{ fontSize: 'var(--fs-h2)', fontWeight: 500, marginBottom: 12 }}>
-        Risultati di chiusura{' '}
+        {t('titolo')}{' '}
         <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>
-          — {new Date(dataRiferimento).toLocaleDateString('it-IT')}
+          — {formatData(dataRiferimento, locale)}
         </span>
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <BloccoMovimenti titolo="Rialzi" righe={rialzi} messaggioVuoto="Nessun titolo in rialzo." />
-        <BloccoMovimenti titolo="Ribassi" righe={ribassi} messaggioVuoto="Nessun titolo in ribasso." />
+        <BloccoMovimenti titolo={t('titoloRialzi')} righe={rialzi} messaggioVuoto={t('alertNessunRialzo')} locale={locale} />
+        <BloccoMovimenti titolo={t('titoloRibassi')} righe={ribassi} messaggioVuoto={t('alertNessunRibasso')} locale={locale} />
       </div>
     </section>
   )

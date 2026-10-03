@@ -7,6 +7,10 @@
     {
       "path": "/api/aggiorna-prezzi-scraping",
       "schedule": "45 21 * * *"
+    },
+    {
+      "path": "/api/update-etf-geography",
+      "schedule": "20 5 * * 1"
     }
   ]
 }

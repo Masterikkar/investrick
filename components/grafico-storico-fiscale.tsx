@@ -1,7 +1,8 @@
 'use client'
 
+import { useLocale, useTranslations } from 'next-intl'
 import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
-import { formatEuro } from '@/lib/format'
+import { formatEuro, type LocaleFormato } from '@/lib/format'
 
 export type PuntoStoricoFiscale = {
   anno: number
@@ -16,8 +17,10 @@ const GRIGLIA = '#2B3350'
 const TESTO_ASSI = '#9198AD'
 
 export function GraficoStoricoFiscale({ punti }: { punti: PuntoStoricoFiscale[] }) {
+  const t = useTranslations('PaginaFiscalita')
+  const locale = useLocale() as LocaleFormato
   if (punti.length === 0) {
-    return <p style={{ color: 'var(--text-secondary)', marginTop: 12 }}>Non abbastanza storico per un grafico.</p>
+    return <p style={{ color: 'var(--text-secondary)', marginTop: 12 }}>{t('alertStoricoInsufficiente')}</p>
   }
 
   return (
@@ -26,20 +29,20 @@ export function GraficoStoricoFiscale({ punti }: { punti: PuntoStoricoFiscale[] 
         <BarChart data={punti} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRIGLIA} />
           <XAxis dataKey="anno" tick={{ fill: TESTO_ASSI, fontSize: 11 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
-          <YAxis tickFormatter={(v) => formatEuro(Number(v))} width={80} tick={{ fill: TESTO_ASSI, fontSize: 11 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+          <YAxis tickFormatter={(v) => formatEuro(Number(v), locale)} width={80} tick={{ fill: TESTO_ASSI, fontSize: 11 }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
           <Tooltip
-            formatter={(value) => formatEuro(Number(value))}
+            formatter={(value) => formatEuro(Number(value), locale)}
             cursor={{ fill: '#1A2036', fillOpacity: 0.5 }}
-            contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
+            contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2', fontSize: 'var(--fs-tooltip)' }}
             labelStyle={{ color: '#E8EBF2' }}
             itemStyle={{ color: '#E8EBF2' }}
           />
-          <Bar dataKey="realizzato" name="Realizzate nette" maxBarSize={36}>
+          <Bar dataKey="realizzato" name={t('labelRealizzateNette')} maxBarSize={36}>
             {punti.map((p, i) => (
               <Cell key={`realizzato-${i}`} fill={p.realizzato >= 0 ? VERDE : ROSSO} />
             ))}
           </Bar>
-          <Bar dataKey="nonRealizzato" name="Non realizzate" maxBarSize={36}>
+          <Bar dataKey="nonRealizzato" name={t('serieNonRealizzate')} maxBarSize={36}>
             {punti.map((p, i) => (
               <Cell
                 key={`nonrealizzato-${i}`}
@@ -51,7 +54,7 @@ export function GraficoStoricoFiscale({ punti }: { punti: PuntoStoricoFiscale[] 
         </BarChart>
       </ResponsiveContainer>
       <p style={{ fontSize: 'var(--fs-form-hint)', color: 'var(--text-secondary)', marginTop: 4 }}>
-        Scuro = realizzato · Chiaro = non realizzato · Verde = plusvalenza · Rosso = minusvalenza
+        {t('legendaGrafico')}
       </p>
     </div>
   )

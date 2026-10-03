@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { formatEuroSigned, formatPercent } from '@/lib/format'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatEuroSigned, formatPercent, type LocaleFormato } from '@/lib/format'
 
 export type ContributoStrumento = {
   strumentoId: string
@@ -12,6 +13,8 @@ export type ContributoStrumento = {
 }
 
 export function BarreSottocategoriaRendimento({ items }: { items: ContributoStrumento[] }) {
+  const t = useTranslations('PaginaContenitore')
+  const locale = useLocale() as LocaleFormato
   const [aperto, setAperto] = useState(false)
   if (items.length === 0) return null
 
@@ -32,7 +35,7 @@ export function BarreSottocategoriaRendimento({ items }: { items: ContributoStru
           color: 'var(--text-secondary)',
         }}
       >
-        {aperto ? '▾' : '▸'} Dettaglio per strumento
+        {aperto ? '▾' : '▸'} {t('linkDettaglioPerStrumento')}
       </button>
 
       {aperto && (
@@ -56,8 +59,8 @@ export function BarreSottocategoriaRendimento({ items }: { items: ContributoStru
                     {it.nome} {it.ticker ? `(${it.ticker})` : ''}
                   </span>
                   <span style={{ color: colore, fontWeight: 500 }}>
-                    {formatEuroSigned(it.guadagno)}
-                    {it.contributoPctCategoria != null && ` (${formatPercent(it.contributoPctCategoria, 1, true)})`}
+                    {formatEuroSigned(it.guadagno, locale)}
+                    {it.contributoPctCategoria != null && ` (${formatPercent(it.contributoPctCategoria, 1, true, locale)})`}
                   </span>
                 </div>
                 <div style={{ position: 'relative', height: 7, background: 'var(--border-default)', borderRadius: 0 }}>

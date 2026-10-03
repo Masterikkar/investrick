@@ -1,8 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { IconaInfo } from '@/components/icone'
 
 export function InfoTooltip({ testo }: { testo: string }) {
+  const t = useTranslations('PaginaFiscalita')
   const [aperto, setAperto] = useState(false)
   const contenitoreRef = useRef<HTMLSpanElement>(null)
 
@@ -27,7 +30,7 @@ export function InfoTooltip({ testo }: { testo: string }) {
       <button
         type="button"
         onClick={() => setAperto((a) => !a)}
-        aria-label="Maggiori informazioni"
+        aria-label={t('ariaLabelInfoTooltip')}
         style={{
           width: 16,
           height: 16,
@@ -35,9 +38,6 @@ export function InfoTooltip({ testo }: { testo: string }) {
           border: '1px solid var(--text-secondary)',
           background: 'none',
           color: 'var(--text-secondary)',
-          fontSize: 10,
-          lineHeight: '14px',
-          fontFamily: 'inherit',
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -46,7 +46,7 @@ export function InfoTooltip({ testo }: { testo: string }) {
           flexShrink: 0,
         }}
       >
-        i
+        <IconaInfo />
       </button>
 
       {aperto && (
@@ -56,7 +56,13 @@ export function InfoTooltip({ testo }: { testo: string }) {
             position: 'absolute',
             bottom: 'calc(100% + 8px)',
             left: 0,
-            width: 260,
+            // Larghezza sul contenuto ma mai oltre 300px; white-space va
+            // ripristinato perché il tooltip può stare in un'intestazione di
+            // tabella con nowrap, che altrimenti impedirebbe di andare a capo.
+            width: 'max-content',
+            maxWidth: 300,
+            whiteSpace: 'normal',
+            overflowWrap: 'break-word',
             background: 'var(--bg-surface)',
             border: '1px solid var(--border-default)',
             padding: '10px 12px',

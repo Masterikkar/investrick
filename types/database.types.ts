@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      comuni: {
+        Row: {
+          codice_istat: string
+          nome: string
+          nome_ricerca: string
+          nome_straniero: string | null
+          provincia: string
+          regione: string
+          sigla_provincia: string
+        }
+        Insert: {
+          codice_istat: string
+          nome: string
+          nome_ricerca: string
+          nome_straniero?: string | null
+          provincia: string
+          regione: string
+          sigla_provincia: string
+        }
+        Update: {
+          codice_istat?: string
+          nome?: string
+          nome_ricerca?: string
+          nome_straniero?: string | null
+          provincia?: string
+          regione?: string
+          sigla_provincia?: string
+        }
+        Relationships: []
+      }
       contenitori: {
         Row: {
           created_at: string
@@ -82,9 +112,123 @@ export type Database = {
           },
         ]
       }
+      geografia_etf: {
+        Row: {
+          isin: string
+          paese: string
+          peso_pct: number
+        }
+        Insert: {
+          isin: string
+          paese: string
+          peso_pct: number
+        }
+        Update: {
+          isin?: string
+          paese?: string
+          peso_pct?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geografia_etf_isin_fkey"
+            columns: ["isin"]
+            isOneToOne: false
+            referencedRelation: "geografia_fonti"
+            referencedColumns: ["isin"]
+          },
+        ]
+      }
+      geografia_fonti: {
+        Row: {
+          attiva: boolean
+          created_at: string
+          data_file: string | null
+          emittente: string
+          esito: string | null
+          isin: string
+          messaggio: string | null
+          parametro: string | null
+          somma_pesi_grezza: number | null
+          ultimo_successo: string | null
+          ultimo_tentativo: string | null
+        }
+        Insert: {
+          attiva?: boolean
+          created_at?: string
+          data_file?: string | null
+          emittente: string
+          esito?: string | null
+          isin: string
+          messaggio?: string | null
+          parametro?: string | null
+          somma_pesi_grezza?: number | null
+          ultimo_successo?: string | null
+          ultimo_tentativo?: string | null
+        }
+        Update: {
+          attiva?: boolean
+          created_at?: string
+          data_file?: string | null
+          emittente?: string
+          esito?: string | null
+          isin?: string
+          messaggio?: string | null
+          parametro?: string | null
+          somma_pesi_grezza?: number | null
+          ultimo_successo?: string | null
+          ultimo_tentativo?: string | null
+        }
+        Relationships: []
+      }
+      gruppi_personalizzati_strumenti: {
+        Row: {
+          contenitore_id: string
+          created_at: string
+          strumento_id: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          contenitore_id: string
+          created_at?: string
+          strumento_id: string
+          tipo?: string
+          user_id?: string
+        }
+        Update: {
+          contenitore_id?: string
+          created_at?: string
+          strumento_id?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gruppi_personalizzati_strumenti_contenitore_id_tipo_fkey"
+            columns: ["contenitore_id", "tipo"]
+            isOneToOne: false
+            referencedRelation: "contenitori"
+            referencedColumns: ["id", "tipo"]
+          },
+          {
+            foreignKeyName: "gruppi_personalizzati_strumenti_contenitore_id_tipo_fkey"
+            columns: ["contenitore_id", "tipo"]
+            isOneToOne: false
+            referencedRelation: "v_valore_per_contenitore"
+            referencedColumns: ["contenitore_id", "tipo"]
+          },
+          {
+            foreignKeyName: "gruppi_personalizzati_strumenti_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       importazioni: {
         Row: {
-          categoria: string
+          categoria: string | null
           created_at: string
           data_caricamento: string
           dettaglio_errori: Json | null
@@ -98,7 +242,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          categoria: string
+          categoria?: string | null
           created_at?: string
           data_caricamento?: string
           dettaglio_errori?: Json | null
@@ -112,7 +256,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
-          categoria?: string
+          categoria?: string | null
           created_at?: string
           data_caricamento?: string
           dettaglio_errori?: Json | null
@@ -218,6 +362,13 @@ export type Database = {
             foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
@@ -234,6 +385,65 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "strumenti"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      paesi_macro_regioni: {
+        Row: {
+          codice_iso: string
+          macro_regione: string
+          nome_nel_file: string
+        }
+        Insert: {
+          codice_iso: string
+          macro_regione: string
+          nome_nel_file: string
+        }
+        Update: {
+          codice_iso?: string
+          macro_regione?: string
+          nome_nel_file?: string
+        }
+        Relationships: []
+      }
+      partecipazioni_etf: {
+        Row: {
+          cedola_pct: number | null
+          isin: string
+          isin_titolo: string | null
+          nome: string
+          peso_pct: number
+          posizione: number
+          scadenza: string | null
+          ticker: string | null
+        }
+        Insert: {
+          cedola_pct?: number | null
+          isin: string
+          isin_titolo?: string | null
+          nome: string
+          peso_pct: number
+          posizione: number
+          scadenza?: string | null
+          ticker?: string | null
+        }
+        Update: {
+          cedola_pct?: number | null
+          isin?: string
+          isin_titolo?: string | null
+          nome?: string
+          peso_pct?: number
+          posizione?: number
+          scadenza?: string | null
+          ticker?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partecipazioni_etf_isin_fkey"
+            columns: ["isin"]
+            isOneToOne: false
+            referencedRelation: "geografia_fonti"
+            referencedColumns: ["isin"]
           },
         ]
       }
@@ -268,6 +478,96 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "prezzi_storici_strumento_id_fkey"
+            columns: ["strumento_id"]
+            isOneToOne: false
+            referencedRelation: "strumenti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulazioni_ribilanciamento: {
+        Row: {
+          contenitore_id: string | null
+          creato_at: string
+          id: string
+          nome: string
+          parametri: Json
+          risultato: Json
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          contenitore_id?: string | null
+          creato_at?: string
+          id?: string
+          nome: string
+          parametri: Json
+          risultato: Json
+          tipo: string
+          user_id?: string
+        }
+        Update: {
+          contenitore_id?: string | null
+          creato_at?: string
+          id?: string
+          nome?: string
+          parametri?: Json
+          risultato?: Json
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulazioni_ribilanciamento_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "contenitori"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulazioni_ribilanciamento_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "simulazioni_ribilanciamento_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_valore_per_contenitore"
+            referencedColumns: ["contenitore_id"]
+          },
+        ]
+      }
+      storico_aliquote_strumento: {
+        Row: {
+          aliquota: number
+          created_at: string
+          data_decorrenza: string
+          id: string
+          strumento_id: string
+          user_id: string
+        }
+        Insert: {
+          aliquota: number
+          created_at?: string
+          data_decorrenza: string
+          id?: string
+          strumento_id: string
+          user_id?: string
+        }
+        Update: {
+          aliquota?: number
+          created_at?: string
+          data_decorrenza?: string
+          id?: string
+          strumento_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storico_aliquote_strumento_strumento_id_fkey"
             columns: ["strumento_id"]
             isOneToOne: false
             referencedRelation: "strumenti"
@@ -319,6 +619,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contenitori"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
           },
           {
             foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
@@ -450,6 +757,13 @@ export type Database = {
             foreignKeyName: "target_allocazioni_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "target_allocazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
@@ -490,6 +804,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contenitori"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "target_allocazioni_strumento_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
           },
           {
             foreignKeyName: "target_allocazioni_strumento_contenitore_id_fkey"
@@ -586,6 +907,13 @@ export type Database = {
             foreignKeyName: "transazioni_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
@@ -634,6 +962,13 @@ export type Database = {
             foreignKeyName: "transazioni_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
@@ -676,6 +1011,13 @@ export type Database = {
             foreignKeyName: "transazioni_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
@@ -706,6 +1048,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contenitori"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
           },
           {
             foreignKeyName: "transazioni_contenitore_id_fkey"
@@ -742,6 +1091,13 @@ export type Database = {
             foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
@@ -772,6 +1128,13 @@ export type Database = {
             foreignKeyName: "transazioni_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
@@ -792,6 +1155,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contenitori"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
           },
           {
             foreignKeyName: "transazioni_contenitore_id_fkey"
@@ -849,6 +1219,13 @@ export type Database = {
             foreignKeyName: "transazioni_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
@@ -877,6 +1254,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contenitori"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
           },
           {
             foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
@@ -917,6 +1301,13 @@ export type Database = {
             foreignKeyName: "transazioni_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
@@ -931,6 +1322,7 @@ export type Database = {
       }
       v_non_realizzato_dettaglio: {
         Row: {
+          base_fiscale: number | null
           capitale_investito: number | null
           categoria: string | null
           contenitore_id: string | null
@@ -945,6 +1337,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contenitori"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
           },
           {
             foreignKeyName: "transazioni_contenitore_id_fkey"
@@ -962,38 +1361,28 @@ export type Database = {
           },
         ]
       }
+      v_non_realizzato_fiscale_per_anno: {
+        Row: {
+          anno: number | null
+          base_fiscale: number | null
+          data: string | null
+          polizze_incomplete: string[] | null
+          valore: number | null
+        }
+        Relationships: []
+      }
       v_non_realizzato_inizio_anno: {
         Row: {
+          base_fiscale: number | null
           capitale_investito: number | null
           categoria: string | null
           contenitore_id: string | null
           contenitore_tipo: string | null
+          incompleta: boolean | null
           strumento_id: string | null
           valore: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
-            columns: ["contenitore_id"]
-            isOneToOne: false
-            referencedRelation: "contenitori"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
-            columns: ["contenitore_id"]
-            isOneToOne: false
-            referencedRelation: "v_valore_per_contenitore"
-            referencedColumns: ["contenitore_id"]
-          },
-          {
-            foreignKeyName: "storico_valorizzazioni_strumento_id_fkey"
-            columns: ["strumento_id"]
-            isOneToOne: false
-            referencedRelation: "strumenti"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       v_plusvalenze_realizzate: {
         Row: {
@@ -1010,6 +1399,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contenitori"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
           },
           {
             foreignKeyName: "transazioni_contenitore_id_fkey"
@@ -1047,6 +1443,13 @@ export type Database = {
             foreignKeyName: "transazioni_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
@@ -1058,6 +1461,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      v_premi_residui_polizza: {
+        Row: {
+          contenitore_id: string | null
+          non_realizzato_fiscale: number | null
+          premi_consumati: number | null
+          premi_residui: number | null
+          premi_versati: number | null
+          user_id: string | null
+          valore_attuale: number | null
+        }
+        Relationships: []
       }
       v_prezzo_attuale: {
         Row: {
@@ -1080,9 +1495,9 @@ export type Database = {
         Row: {
           anno: number | null
           imponibile_dividendi: number | null
+          imponibile_riscatti_polizze: number | null
           imponibile_vendite: number | null
           netto_dividendi: number | null
-          netto_switch_polizze: number | null
           netto_vendite: number | null
           realizzato_netto_totale: number | null
           tasse_dividendi: number | null
@@ -1107,6 +1522,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contenitori"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
           },
           {
             foreignKeyName: "transazioni_contenitore_id_fkey"
@@ -1147,6 +1569,13 @@ export type Database = {
             foreignKeyName: "transazioni_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
@@ -1158,6 +1587,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      v_riscatti_polizza: {
+        Row: {
+          anno: number | null
+          commissione: number | null
+          contenitore_id: string | null
+          data_riscatto: string | null
+          imponibile: number | null
+          importo_lordo: number | null
+          premi_consumati: number | null
+          premi_residui_dopo: number | null
+          premi_residui_prima: number | null
+          prezzo_stimato: boolean | null
+          tassa_trattenuta: number | null
+          user_id: string | null
+          valore_polizza_prima: number | null
+          vendite_ids: string[] | null
+        }
+        Relationships: []
       }
       v_saldo_liquidita: {
         Row: {
@@ -1173,6 +1621,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contenitori"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
           },
           {
             foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
@@ -1216,10 +1671,30 @@ export type Database = {
             foreignKeyName: "target_allocazioni_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "target_allocazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
         ]
+      }
+      v_scostamento_target_portafoglio: {
+        Row: {
+          categoria: string | null
+          peso_attuale_pct: number | null
+          scostamento_pp: number | null
+          target_id: string | null
+          target_percentuale: number | null
+          user_id: string | null
+          valore_categoria: number | null
+          valore_portafoglio_totale: number | null
+        }
+        Relationships: []
       }
       v_storico_valorizzazioni_dettaglio: {
         Row: {
@@ -1238,6 +1713,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contenitori"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
           },
           {
             foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
@@ -1278,6 +1760,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contenitori"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
           },
           {
             foreignKeyName: "storico_valorizzazioni_contenitore_id_fkey"
@@ -1327,22 +1816,7 @@ export type Database = {
           user_id: string | null
           valore_categoria: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "transazioni_contenitore_id_fkey"
-            columns: ["contenitore_id"]
-            isOneToOne: false
-            referencedRelation: "contenitori"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transazioni_contenitore_id_fkey"
-            columns: ["contenitore_id"]
-            isOneToOne: false
-            referencedRelation: "v_valore_per_contenitore"
-            referencedColumns: ["contenitore_id"]
-          },
-        ]
+        Relationships: []
       }
       v_valore_per_categoria: {
         Row: {
@@ -1378,6 +1852,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contenitori"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transazioni_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
           },
           {
             foreignKeyName: "transazioni_contenitore_id_fkey"
@@ -1426,34 +1907,16 @@ export type Database = {
           data_vendita: string | null
           differenza: number | null
           plusvalenza_totale_vendita: number | null
+          prezzo_stimato: boolean | null
+          ritenuta_eccessiva: boolean | null
           strumento_id: string | null
           tassa_attesa: number | null
           tassa_trattenuta_effettiva: number | null
+          tipo_riga: string | null
+          valore_lordo: number | null
           vendita_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "transazioni_contenitore_id_fkey"
-            columns: ["contenitore_id"]
-            isOneToOne: false
-            referencedRelation: "contenitori"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transazioni_contenitore_id_fkey"
-            columns: ["contenitore_id"]
-            isOneToOne: false
-            referencedRelation: "v_valore_per_contenitore"
-            referencedColumns: ["contenitore_id"]
-          },
-          {
-            foreignKeyName: "transazioni_strumento_id_fkey"
-            columns: ["strumento_id"]
-            isOneToOne: false
-            referencedRelation: "strumenti"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       v_verifica_trattenute_interessi: {
         Row: {
@@ -1479,6 +1942,13 @@ export type Database = {
             foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
             columns: ["contenitore_id"]
             isOneToOne: false
+            referencedRelation: "v_premi_residui_polizza"
+            referencedColumns: ["contenitore_id"]
+          },
+          {
+            foreignKeyName: "movimenti_liquidita_contenitore_id_fkey"
+            columns: ["contenitore_id"]
+            isOneToOne: false
             referencedRelation: "v_valore_per_contenitore"
             referencedColumns: ["contenitore_id"]
           },
@@ -1493,6 +1963,10 @@ export type Database = {
       }
     }
     Functions: {
+      aliquota_tassazione_a_data: {
+        Args: { p_data: string; p_strumento_id: string }
+        Returns: number
+      }
       calcola_fifo_posizione: {
         Args: { p_contenitore_id: string; p_strumento_id: string }
         Returns: {
@@ -1527,6 +2001,91 @@ export type Database = {
         }
         Returns: number
       }
+      elimina_strumento: {
+        Args: { p_strumento_id: string }
+        Returns: {
+          movimenti_eliminati: number
+          transazioni_eliminate: number
+        }[]
+      }
+      fondi_polizza_a_data: {
+        Args: {
+          p_contenitore_id: string
+          p_data: string
+          p_escludi_vendite_del_giorno: boolean
+        }
+        Returns: {
+          mancante: boolean
+          prezzo: number
+          quote: number
+          stimato: boolean
+          strumento_id: string
+        }[]
+      }
+      motore_fifo_posizione: {
+        Args: {
+          p_contenitore_id: string
+          p_data_limite?: string
+          p_strumento_id: string
+        }
+        Returns: {
+          acquisto_id: string
+          commissione_acquisto_quota: number
+          commissione_vendita_quota: number
+          data_acquisto: string
+          data_vendita: string
+          plusvalenza: number
+          prezzo_acquisto: number
+          prezzo_vendita: number
+          quantita: number
+          tassa_quota: number
+          tipo_riga: string
+          vendita_id: string
+        }[]
+      }
+      non_realizzato_fiscale_a_data: {
+        Args: { p_data: string }
+        Returns: {
+          base_fiscale: number
+          capitale_investito: number
+          categoria: string
+          contenitore_id: string
+          contenitore_tipo: string
+          incompleta: boolean
+          strumento_id: string
+          valore: number
+        }[]
+      }
+      premi_residui_polizza_a_data: {
+        Args: { p_contenitore_id: string; p_data: string }
+        Returns: number
+      }
+      prezzo_fondo_a_data: {
+        Args: {
+          p_contenitore_id: string
+          p_data: string
+          p_strumento_id: string
+        }
+        Returns: Record<string, unknown>
+      }
+      pulisci_storico_valorizzazioni: {
+        Args: never
+        Returns: {
+          righe_fantasma_rimosse: number
+          righe_orfane_rimosse: number
+        }[]
+      }
+      ricostruisci_storico_gruppo: {
+        Args: {
+          p_contenitore_id?: string
+          p_da_data?: string
+          p_strumento_id?: string
+        }
+        Returns: {
+          righe_liquidita: number
+          righe_mercato: number
+        }[]
+      }
       ricostruisci_storico_valorizzazioni: {
         Args: never
         Returns: {
@@ -1535,6 +2094,37 @@ export type Database = {
           righe_mercato: number
           righe_orfane_rimosse: number
         }[]
+      }
+      riscatti_polizza: {
+        Args: { p_contenitore_id: string }
+        Returns: {
+          commissione: number
+          contenitore_id: string
+          data_riscatto: string
+          imponibile: number
+          importo_lordo: number
+          premi_consumati: number
+          premi_residui_dopo: number
+          premi_residui_prima: number
+          prezzo_stimato: boolean
+          tassa_trattenuta: number
+          valore_polizza_prima: number
+          vendite_ids: string[]
+        }[]
+      }
+      sostituisci_geografia_etf: {
+        Args: {
+          p_data_file: string
+          p_isin: string
+          p_messaggio: string
+          p_pesi: Json
+          p_somma_pesi_grezza: number
+        }
+        Returns: number
+      }
+      sostituisci_partecipazioni_etf: {
+        Args: { p_isin: string; p_partecipazioni: Json }
+        Returns: number
       }
     }
     Enums: {

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { formatPercent, formatNumero } from '@/lib/format'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatPercent, formatNumero, type LocaleFormato } from '@/lib/format'
 
 export type SottoTarget = {
   strumentoId: string
@@ -13,6 +14,8 @@ export type SottoTarget = {
 }
 
 export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; soglia: number }) {
+  const t = useTranslations('PaginaContenitore')
+  const locale = useLocale() as LocaleFormato
   const [aperto, setAperto] = useState(false)
   if (items.length === 0) return null
 
@@ -31,7 +34,7 @@ export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; s
           color: 'var(--text-secondary)',
         }}
       >
-        {aperto ? '▾' : '▸'} Dettaglio per strumento
+        {aperto ? '▾' : '▸'} {t('linkDettaglioPerStrumento')}
       </button>
 
       {aperto && (
@@ -56,8 +59,11 @@ export function BarreSottocategoria({ items, soglia }: { items: SottoTarget[]; s
                     {it.nome} {it.ticker ? `(${it.ticker})` : ''}
                   </span>
                   <span>
-                    {formatPercent(it.pesoAttualePct, 1)} attuale · {formatPercent(it.targetPct, 1)} target (
-                    {formatNumero(it.scostamentoPp, 2, true)} pp)
+                    {t('barraComposizione', {
+                      pesoAttuale: formatPercent(it.pesoAttualePct, 1, false, locale),
+                      target: formatPercent(it.targetPct, 1, false, locale),
+                      scostamento: formatNumero(it.scostamentoPp, 2, true, locale),
+                    })}
                   </span>
                 </div>
                 <div style={{ position: 'relative', height: 7, background: 'var(--border-default)', borderRadius: 0 }}>

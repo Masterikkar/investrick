@@ -110,7 +110,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // --- Snapshot giornaliero di valorizzazione: mercato + liquidità, incluso "Diretto" ---
+  // --- Snapshot giornaliero di valorizzazione: mercato + liquidità, anche senza contenitore ---
   // "valore" è colonna GENERATED, non va scritta. "contenitore_chiave" è colonna generata per
   // l'unicità, non va scritta. "capitale_investito" alimenta il grafico di rendimento nel tempo.
   const risultatiSnapshot: { tipo: string; esito: string }[] = []
@@ -128,10 +128,15 @@ export async function GET(request: Request) {
       capitaleMap.set(`${c.strumento_id}|${c.contenitore_id ?? ''}`, Number(c.capitale_investito))
     }
 
-    const posizioniValide = (posizioniMercato ?? []).filter(
+    // Una posizione chiusa (quantità 0) non ha nulla da valorizzare: niente riga di
+    // storico. Il ricalcolo non la produce e la pulizia la toglierebbe comunque.
+    const posizioniAperte = (posizioniMercato ?? []).filter(
+      (p) => p.quantita_corrente === null || p.quantita_corrente > 0
+    )
+    const posizioniValide = posizioniAperte.filter(
       (p) => p.strumento_id !== null && p.quantita_corrente !== null && p.prezzo_attuale !== null
     )
-    const posizioniScartate = (posizioniMercato?.length ?? 0) - posizioniValide.length
+    const posizioniScartate = posizioniAperte.length - posizioniValide.length
 
     if (posizioniValide.length > 0) {
       const righeMercato = posizioniValide.map((p) => ({

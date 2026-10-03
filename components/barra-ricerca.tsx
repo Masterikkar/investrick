@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { RippleLink } from '@/components/ripple-link'
+import { traduciCategoria } from '@/lib/i18n-categorie'
 
 type Strumento = { id: string; nome: string; categoria: string; ticker: string | null }
 type Contenitore = { id: string; nome: string; tipo: string }
@@ -13,10 +15,13 @@ type Risultato = {
   href: string
 }
 
-const ROUTE_PER_TIPO_CONTENITORE: Record<string, string> = {
-  PAC: '/pac',
-  Polizza: '/polizze',
-  Liquidita: '/liquidita',
+// Dove porta un gruppo trovato: la pagina elenco del suo tipo, o per un
+// Personalizzato la gestione dei suoi membri (che non ha ancora un dettaglio).
+function hrefGruppo(c: { id: string; tipo: string }): string {
+  if (c.tipo === 'PAC') return '/investment-plans'
+  if (c.tipo === 'Polizza') return '/insurance-policies'
+  if (c.tipo === 'Personalizzato') return `/custom-groups/${c.id}/members`
+  return '/'
 }
 
 export function BarraRicerca({
@@ -26,6 +31,9 @@ export function BarraRicerca({
   strumenti: Strumento[]
   contenitori: Contenitore[]
 }) {
+  const t = useTranslations('BarraRicerca')
+  const tCategorie = useTranslations('Categorie')
+  const tPaginaContenitore = useTranslations('PaginaContenitore')
   const [query, setQuery] = useState('')
   const [aperto, setAperto] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -40,6 +48,13 @@ export function BarraRicerca({
     return () => document.removeEventListener('click', handleClick)
   }, [])
 
+  // Stesse etichette del tipo di gruppo usate in Gestione strumenti.
+  function etichettaTipo(tipo: string): string {
+    if (tipo === 'Polizza') return tPaginaContenitore('etichettaPolizza')
+    if (tipo === 'Personalizzato') return tPaginaContenitore('etichettaPersonalizzato')
+    return tipo
+  }
+
   const testo = query.trim().toLowerCase()
 
   const risultati: Risultato[] = testo
@@ -52,7 +67,7 @@ export function BarraRicerca({
           .map((s) => ({
             key: `asset-${s.id}`,
             label: s.nome,
-            sottotitolo: `Asset · ${s.categoria}`,
+            sottotitolo: t('sottotitoloAsset', { categoria: traduciCategoria(tCategorie, s.categoria) }),
             href: `/asset/${s.id}`,
           })),
         ...contenitori
@@ -60,8 +75,8 @@ export function BarraRicerca({
           .map((c) => ({
             key: `contenitore-${c.id}`,
             label: c.nome,
-            sottotitolo: `Contenitore · ${c.tipo}`,
-            href: ROUTE_PER_TIPO_CONTENITORE[c.tipo] ?? '/',
+            sottotitolo: t('sottotitoloGruppo', { tipo: etichettaTipo(c.tipo) }),
+            href: hrefGruppo(c),
           })),
       ].slice(0, 8)
     : []
@@ -70,7 +85,7 @@ export function BarraRicerca({
     <div ref={containerRef} style={{ position: 'relative' }}>
       <input
         type="text"
-        placeholder="Cerca asset o contenitori..."
+        placeholder={t('placeholder')}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value)
@@ -91,41 +106,37 @@ export function BarraRicerca({
         }}
       />
 
+      {/* Stesso pannello e stesse righe dei menu a tendina della navigazione
+          (.menu-panel e .menu-row in globals.css). */}
       {aperto && testo && (
         <div
+          className="menu-panel"
           style={{
             position: 'absolute',
-            top: 'calc(100% + 4px)',
+            top: 'calc(100% + 6px)',
             left: 0,
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border-default)',
-            borderRadius: 0,
-            minWidth: 260,
+            zIndex: 10,
             maxHeight: 320,
             overflowY: 'auto',
-            zIndex: 20,
-            color: 'var(--text-primary)',
           }}
         >
           {risultati.length === 0 ? (
-            <div style={{ padding: 12, color: 'var(--text-secondary)', fontSize: 'var(--fs-search)' }}>Nessun risultato.</div>
+            <div className="menu-row" style={{ color: 'var(--text-secondary)' }}>
+              {t('nessunRisultato')}
+            </div>
           ) : (
             risultati.map((r) => (
               <RippleLink
                 key={r.key}
                 href={r.href}
-                className="riga-interattiva"
+                className="menu-row link-interattivo"
                 onClick={() => {
                   setAperto(false)
                   setQuery('')
                 }}
-                style={{
-                  display: 'block',
-                  padding: '8px 12px',
-                  borderBottom: '1px solid var(--border-default)',
-                }}
+                style={{ display: 'block' }}
               >
-                <div style={{ fontSize: 'var(--fs-search)' }}>{r.label}</div>
+                <div>{r.label}</div>
                 <div style={{ fontSize: 'var(--fs-search-sub)', color: 'var(--text-secondary)' }}>{r.sottotitolo}</div>
               </RippleLink>
             ))

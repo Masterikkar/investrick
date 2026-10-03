@@ -1,21 +1,25 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
-import { formatEuro, formatPercent } from '@/lib/format'
+import { formatData, formatEuro, formatEuroCompatto, formatPercent, type LocaleFormato } from '@/lib/format'
+import { dataLocaleDaIso } from '@/lib/data-calendario'
 
 export type PuntoStorico = { data: string; valore: number }
 
 type Periodo = '1G' | '1S' | '1M' | '1A' | 'YTD' | 'SEMPRE'
 
-const PERIODI: { key: Periodo; label: string }[] = [
-  { key: '1G', label: '1G' },
-  { key: '1S', label: '1S' },
-  { key: '1M', label: '1M' },
-  { key: '1A', label: '1A' },
-  { key: 'YTD', label: 'YTD' },
-  { key: 'SEMPRE', label: 'Da sempre' },
-]
+const PERIODI: Periodo[] = ['1G', '1S', '1M', '1A', 'YTD', 'SEMPRE']
+
+const CHIAVE_LABEL_PERIODO: Record<Periodo, string> = {
+  '1G': 'periodoGiorno',
+  '1S': 'periodoSettimana',
+  '1M': 'periodoMese',
+  '1A': 'periodoAnno',
+  YTD: 'periodoYtd',
+  SEMPRE: 'periodoSempre',
+}
 
 const GRIGLIA = '#2B3350'
 const TESTO_ASSI = '#9198AD'
@@ -41,14 +45,8 @@ function filtraPerPeriodo(punti: PuntoStorico[], periodo: Periodo): PuntoStorico
   }
   const soglia = dataMinimaTeorica(periodo, new Date())
   if (!soglia) return punti
-  return punti.filter((p) => new Date(p.data) >= soglia)
+  return punti.filter((p) => (dataLocaleDaIso(p.data) ?? new Date(p.data)) >= soglia)
 }
-
-const formatEuroCompatto = new Intl.NumberFormat('it-IT', {
-  style: 'currency',
-  currency: 'EUR',
-  notation: 'compact',
-})
 
 export function GraficoStorico({
   punti,
@@ -59,6 +57,9 @@ export function GraficoStorico({
   formato?: 'euro' | 'percent'
   valoreAttuale?: number
 }) {
+  const t = useTranslations('GraficoStorico')
+  const tPaginaRendimenti = useTranslations('PaginaRendimenti')
+  const locale = useLocale() as LocaleFormato
   const [periodo, setPeriodo] = useState<Periodo>('1M')
   const datiFiltrati = useMemo(() => filtraPerPeriodo(punti, periodo), [punti, periodo])
 
@@ -78,24 +79,27 @@ export function GraficoStorico({
     if (formato !== 'percent' || punti.length === 0) return null
     const soglia = dataMinimaTeorica(periodo, new Date())
     if (!soglia) return null
-    const primoDatoReale = new Date(punti[0].data)
+    const primoDatoReale = dataLocaleDaIso(punti[0].data) ?? new Date(punti[0].data)
     if (primoDatoReale > soglia) {
-      return `Dati disponibili solo da ${primoDatoReale.toLocaleDateString('it-IT')} — il periodo mostrato è più corto di "${periodo}".`
+      return t('notaDatiParziali', {
+        data: formatData(primoDatoReale, locale),
+        periodo: t(CHIAVE_LABEL_PERIODO[periodo]),
+      })
     }
     return null
-  }, [formato, periodo, punti])
+  }, [formato, periodo, punti, t, locale])
 
-  const formatAsse = formato === 'percent' ? (v: number) => formatPercent(v, 0, false) : (v: number) => formatEuroCompatto.format(v)
+  const formatAsse = formato === 'percent' ? (v: number) => formatPercent(v, 0, false, locale) : (v: number) => formatEuroCompatto(v, locale)
   const formatTooltip =
-    formato === 'percent' ? (v: number) => formatPercent(v, 2, true) : (v: number) => formatEuro(v)
-  const etichettaTooltip = formato === 'percent' ? 'Rendimento' : 'Valore'
+    formato === 'percent' ? (v: number) => formatPercent(v, 2, true, locale) : (v: number) => formatEuro(v, locale)
+  const etichettaTooltip = formato === 'percent' ? tPaginaRendimenti('tooltipRendimento') : t('etichettaTooltipValore')
 
   return (
     <div>
       {valoreAttuale !== undefined && (
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 16 }}>
           <p style={{ fontFamily: 'var(--font-zilla-slab)', fontWeight: 600, fontSize: 'var(--fs-hero)', margin: 0, color: 'var(--text-primary)' }}>
-            {formatEuro(valoreAttuale)}
+            {formatEuro(valoreAttuale, locale)}
           </p>
           {rendimentoBadge !== null && (
             <span
@@ -105,7 +109,7 @@ export function GraficoStorico({
                 color: rendimentoBadge >= 0 ? 'var(--success)' : 'var(--danger)',
               }}
             >
-              {formatPercent(rendimentoBadge, 2, true)}
+              {formatPercent(rendimentoBadge, 2, true, locale)}
             </span>
           )}
         </div>
@@ -114,19 +118,19 @@ export function GraficoStorico({
       <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
         {PERIODI.map((p) => (
           <button
-            key={p.key}
-            onClick={() => setPeriodo(p.key)}
+            key={p}
+            onClick={() => setPeriodo(p)}
             style={{
               padding: '4px 10px',
               borderRadius: 0,
               border: '1px solid var(--border-default)',
-              background: periodo === p.key ? 'var(--primary)' : 'var(--bg-surface)',
-              color: periodo === p.key ? '#FFFFFF' : 'var(--text-secondary)',
+              background: periodo === p ? 'var(--primary)' : 'var(--bg-surface)',
+              color: periodo === p ? '#FFFFFF' : 'var(--text-secondary)',
               cursor: 'pointer',
               fontSize: 'var(--fs-period)',
             }}
           >
-            {p.label}
+            {t(CHIAVE_LABEL_PERIODO[p])}
           </button>
         ))}
       </div>
@@ -136,28 +140,28 @@ export function GraficoStorico({
       )}
 
       {punti.length === 0 ? (
-        <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>Nessuno storico disponibile ancora.</p>
+        <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>{tPaginaRendimenti('alertNessunoStorico')}</p>
       ) : datiFiltrati.length < 2 ? (
-        <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>Non abbastanza dati per questo periodo.</p>
+        <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>{t('alertDatiInsufficientiPeriodo')}</p>
       ) : (
         <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={datiFiltrati} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+          <LineChart data={datiFiltrati} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={GRIGLIA} />
             <XAxis
               dataKey="data"
               interval="preserveStartEnd"
-              tickFormatter={(d) => new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
+              tickFormatter={(d) => formatData(d, locale, { day: '2-digit', month: '2-digit' })}
               fontSize={11}
               tick={{ fill: TESTO_ASSI }}
               axisLine={{ stroke: GRIGLIA }}
               tickLine={{ stroke: GRIGLIA }}
             />
-            <YAxis tickFormatter={(v) => formatAsse(Number(v))} fontSize={11} width={70} tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
+            <YAxis allowDecimals={false} tickFormatter={(v) => formatAsse(Number(v))} fontSize={11} width="auto" tick={{ fill: TESTO_ASSI }} axisLine={{ stroke: GRIGLIA }} tickLine={{ stroke: GRIGLIA }} />
             <Tooltip
               formatter={(value) => [formatTooltip(Number(value)), etichettaTooltip]}
-              labelFormatter={(label) => (label ? new Date(String(label)).toLocaleDateString('it-IT') : '')}
+              labelFormatter={(label) => (label ? formatData(String(label), locale) : '')}
               cursor={{ stroke: '#2B3350', strokeWidth: 1 }}
-              contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2' }}
+              contentStyle={{ background: '#1A2036', border: '1px solid #2B3350', borderRadius: 0, color: '#E8EBF2', fontSize: 'var(--fs-tooltip)' }}
               labelStyle={{ color: '#E8EBF2' }}
               itemStyle={{ color: '#E8EBF2' }}
             />
