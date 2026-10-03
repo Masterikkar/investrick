@@ -37,6 +37,8 @@ export type GeografiaEstratta = {
   /** Somma dei pesi dei titoli prima di riportarli a 100 (serve per i controlli). */
   sommaPesiGrezza: number
   righeTitoli: number
+  /** Titoli con scadenza dichiarata ma illeggibile (restano senza scadenza): 0 se è tutto a posto. */
+  scadenzeNonLette: number
   /** Righe escluse perché non sono titoli, per tipo (cash, derivati, valute...). */
   esclusi: { tipo: string; peso: number; righe: number }[]
 }
@@ -72,6 +74,19 @@ const INTESTAZIONI_RICHIESTA = {
 const TIMEOUT_RICHIESTA_MS = 20_000
 
 const MESI_INGLESI = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+const MESI_INGLESI_ESTESI = [
+  'january', 'february', 'march', 'april', 'may', 'june',
+  'july', 'august', 'september', 'october', 'november', 'december',
+]
+
+// 1–12 per "Sep", "Sept" (come abbrevia settembre l'inglese britannico) o "September"; 0 se non è un mese.
+function numeroMeseInglese(parola: string): number {
+  const p = parola.toLowerCase()
+  const breve = MESI_INGLESI.indexOf(p)
+  if (breve >= 0) return breve + 1
+  if (p === 'sept') return 9
+  return MESI_INGLESI_ESTESI.indexOf(p) + 1
+}
 
 // Pesi dei titoli accettati prima della normalizzazione, in % (controllo di sanità sul file).
 // Xtrackers è più largo: il file di DBXP somma oltre 108% già sulle sole obbligazioni (motivo non chiarito).
@@ -132,10 +147,10 @@ function dividiRigaCsv(riga: string): string[] {
 
 // "01/Oct/2026" → "2026-10-01", senza passare da Date. null se non è una data reale (il file vuoto ha "-").
 function dataIsoDaIshares(testo: string): string | null {
-  const m = testo.trim().match(/^(\d{1,2})\/([A-Za-z]{3})\/(\d{4})$/)
+  const m = testo.trim().match(/^(\d{1,2})\/([A-Za-z]{3,9})\/(\d{4})$/)
   if (!m) return null
   const giorno = Number(m[1])
-  const mese = MESI_INGLESI.indexOf(m[2].toLowerCase()) + 1
+  const mese = numeroMeseInglese(m[2])
   const anno = Number(m[3])
   if (mese < 1 || giorno < 1 || giorno > giorniNelMese(anno, mese)) return null
   return componiDataIso(anno, mese, giorno)
@@ -163,10 +178,12 @@ type Accumulatori = {
   titoli: TitoloGrezzo[]
   esclusi: Map<string, { peso: number; righe: number }>
   righeTitoli: number
+  /** Titoli con una scadenza scritta nel file ma in un formato che non si riesce a leggere. */
+  scadenzeNonLette: number
 }
 
 function nuoviAccumulatori(): Accumulatori {
-  return { pesiGrezzi: new Map(), titoli: [], esclusi: new Map(), righeTitoli: 0 }
+  return { pesiGrezzi: new Map(), titoli: [], esclusi: new Map(), righeTitoli: 0, scadenzeNonLette: 0 }
 }
 
 function aggiungiRiga(
@@ -235,6 +252,7 @@ function finalizza(
     dataFile,
     sommaPesiGrezza: arrotonda(sommaGrezza, 4),
     righeTitoli: acc.righeTitoli,
+    scadenzeNonLette: acc.scadenzeNonLette,
     esclusi: [...acc.esclusi.entries()]
       .map(([tipo, v]) => ({ tipo, peso: arrotonda(v.peso, 4), righe: v.righe }))
       .sort((a, b) => Math.abs(b.peso) - Math.abs(a.peso)),
@@ -301,12 +319,16 @@ export function estraiGeografiaIshares(testoGrezzo: string): GeografiaEstratta {
     const tipo = campi[indiceTipo].trim() || '(senza tipo)'
     const paese = campi[indicePaese].trim() || '-'
     const ticker = indiceTicker >= 0 ? testoOpzionale(campi[indiceTicker]) : null
-    aggiungiRiga(acc, TIPI_TITOLO_ISHARES.has(tipo.toLowerCase()), tipo, paese, peso, {
+    const eTitolo = TIPI_TITOLO_ISHARES.has(tipo.toLowerCase())
+    const scadenzaScritta = indiceScadenza >= 0 ? testoOpzionale(campi[indiceScadenza]) : null
+    const scadenza = scadenzaScritta ? dataIsoDaIshares(scadenzaScritta) : null
+    if (eTitolo && scadenzaScritta && !scadenza) acc.scadenzeNonLette++
+    aggiungiRiga(acc, eTitolo, tipo, paese, peso, {
       nome: testoOpzionale(campi[indiceNome]) ?? ticker ?? '(senza nome)',
       ticker,
       isinTitolo: null,
       cedolaPct: indiceCedola >= 0 ? numeroOpzionale(campi[indiceCedola]) : null,
-      scadenza: indiceScadenza >= 0 ? dataIsoDaIshares(campi[indiceScadenza]) : null,
+      scadenza,
     })
   }
 
@@ -396,6 +418,7 @@ function riepilogaMessaggio(
     `ok: ${Object.keys(estratto.pesi).length} paesi da ${estratto.righeTitoli} titoli, somma grezza ${formatoMessaggio(estratto.sommaPesiGrezza)}%`,
     `partecipazioni: ${estratto.partecipazioni.length}`,
   ]
+  if (estratto.scadenzeNonLette > 0) parti.push(`scadenze non lette: ${estratto.scadenzeNonLette}`)
   if (estratto.esclusi.length > 0) {
     parti.push(`esclusi: ${estratto.esclusi.map((e) => `${e.tipo} ${formatoMessaggio(e.peso)}%`).join(', ')}`)
   }
