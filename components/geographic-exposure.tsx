@@ -1,10 +1,12 @@
 import { getLocale, getTranslations } from 'next-intl/server'
+import { InfoTooltip } from '@/components/info-tooltip'
 import { formatPercent, type LocaleFormato } from '@/lib/format'
 import { nomePaese, type RiepilogoGeografico, type VocePaese } from '@/lib/geographic-exposure'
 import { traduciRegione } from '@/lib/i18n-regions'
 
-// Card "Esposizione geografica": in alto il peso per macro-regione, sotto i paesi più pesanti e, in un
-// blocco che si apre con un clic, tutti gli altri. Presentazionale: i numeri arrivano già calcolati da
+// Card "Esposizione geografica": in alto il peso per macro-regione, sotto i paesi più pesanti e, separato da una
+// linea e in un blocco che si apre con un clic, tutti gli altri. Per il PAC, la base di calcolo (% del valore della
+// categoria coperta dai dati) sta in un tooltip accanto al titolo. Presentazionale: i numeri arrivano già calcolati da
 // lib/geographic-exposure.ts, così la stessa card serve per una categoria del PAC (copertura valorizzata)
 // e per un singolo asset (nessuna copertura). Va dentro una <Sezione>, vedi components/exposure-cards.tsx.
 
@@ -42,13 +44,14 @@ export async function GeographicExposure({
 
   return (
     <div>
-      <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, margin: '0 0 12px' }}>{t('titoloGeografia')}</h3>
-
-      {copertura != null && (
-        <div style={{ fontSize: 'var(--fs-card-link)', color: 'var(--text-secondary)', marginBottom: 12 }}>
-          {t('calcolataSu', { percentuale: formatPercent(copertura, copertura >= 99.95 ? 0 : 1, false, locale) })}
-        </div>
-      )}
+      <h3 style={{ fontSize: 'var(--fs-h3)', fontWeight: 500, margin: '0 0 12px' }}>
+        {t('titoloGeografia')}
+        {copertura != null && (
+          <InfoTooltip
+            testo={t('calcolataSu', { percentuale: formatPercent(copertura, copertura >= 99.95 ? 0 : 1, false, locale) })}
+          />
+        )}
+      </h3>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {geografia.regioni.map((voce) => (
@@ -76,16 +79,17 @@ export async function GeographicExposure({
 
       <div style={{ borderTop: '1px solid var(--border-default)', marginTop: 16, paddingTop: 10 }}>
         {geografia.paesi.map(rigaPaese)}
-        {geografia.altriPaesi.length > 0 && (
-          <details style={{ marginTop: 2 }}>
-            <summary style={{ cursor: 'pointer', fontSize: 'var(--fs-table)', color: 'var(--text-secondary)', padding: '3px 0' }}>
-              <span>{t('altriPaesi')}</span>
-              <span style={{ float: 'right' }}>{pct(geografia.altriPaesi.reduce((somma, v) => somma + v.peso, 0))}</span>
-            </summary>
-            <div style={{ color: 'var(--text-secondary)' }}>{geografia.altriPaesi.map(rigaPaese)}</div>
-          </details>
-        )}
       </div>
+
+      {geografia.altriPaesi.length > 0 && (
+        <details style={{ borderTop: '1px solid var(--border-default)', marginTop: 14, paddingTop: 7 }}>
+          <summary style={{ cursor: 'pointer', fontSize: 'var(--fs-table)', color: 'var(--text-secondary)', padding: '3px 0' }}>
+            <span>{t('altriPaesi')}</span>
+            <span style={{ float: 'right' }}>{pct(geografia.altriPaesi.reduce((somma, v) => somma + v.peso, 0))}</span>
+          </summary>
+          <div style={{ color: 'var(--text-secondary)' }}>{geografia.altriPaesi.map(rigaPaese)}</div>
+        </details>
+      )}
     </div>
   )
 }
