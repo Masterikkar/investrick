@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function GET(request: Request) {
+  const segreto = process.env.CRON_SECRET
   const authHeader = request.headers.get('authorization')
   const url = new URL(request.url)
   const secretDaQuery = url.searchParams.get('secret')
-  const autorizzato =
-    authHeader === `Bearer ${process.env.CRON_SECRET}` || secretDaQuery === process.env.CRON_SECRET
+  // Se CRON_SECRET non è impostato la richiesta viene sempre rifiutata (evita il caso "Bearer undefined").
+  const autorizzato = !!segreto && (authHeader === `Bearer ${segreto}` || secretDaQuery === segreto)
 
   if (!autorizzato) {
     return new NextResponse('Non autorizzato', { status: 401 })

@@ -1,8 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { IconaInfo } from '@/components/icone'
+
+// Distanza minima tra il fumetto e il bordo della finestra.
+const MARGINE_FINESTRA = 8
 
 export function InfoTooltip({ testo }: { testo: string }) {
   const t = useTranslations('PaginaFiscalita')
@@ -19,6 +22,22 @@ export function InfoTooltip({ testo }: { testo: string }) {
     document.addEventListener('mousedown', handleClickFuori)
     return () => document.removeEventListener('mousedown', handleClickFuori)
   }, [aperto])
+
+  // Il fumetto nasce allineato a sinistra dell'icona. Se così uscirebbe dallo
+  // schermo (tipico su telefono, con l'icona a metà riga) lo spostiamo quanto
+  // basta per tenerlo dentro. Callback ref: la misura avviene appena il fumetto
+  // compare, prima che il browser disegni, quindi non si vede nessun salto;
+  // niente stato, quindi nessun render in più.
+  const tieniDentroLaFinestra = useCallback((el: HTMLSpanElement | null) => {
+    if (!el) return
+    el.style.transform = ''
+    const rect = el.getBoundingClientRect()
+    const larghezzaFinestra = document.documentElement.clientWidth
+    const sinistraMassima = larghezzaFinestra - MARGINE_FINESTRA - rect.width
+    const sinistra = Math.max(MARGINE_FINESTRA, Math.min(rect.left, sinistraMassima))
+    const spostamento = sinistra - rect.left
+    if (spostamento !== 0) el.style.transform = `translateX(${spostamento}px)`
+  }, [])
 
   return (
     <span
@@ -51,6 +70,7 @@ export function InfoTooltip({ testo }: { testo: string }) {
 
       {aperto && (
         <span
+          ref={tieniDentroLaFinestra}
           role="tooltip"
           style={{
             position: 'absolute',
