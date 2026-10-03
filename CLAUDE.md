@@ -6,7 +6,7 @@ App web personale di gestione portafoglio multi-asset (regime amministrato itali
 
 - Next.js 16 (App Router, Turbopack, nessuna cartella `src/`), TypeScript, Tailwind, Recharts, SheetJS (installato dal CDN ufficiale SheetJS, non dal pacchetto npm `xlsx`, che ha una vulnerabilità nota)
 - Supabase (progetto `uchkjvxhxuabmjaesvpv`), PostgreSQL con RLS su tutte le tabelle
-- Vercel, cron in `vercel.json`: prezzi EODHD alle 22:00 UTC, scraping Teleborsa per i fondi assicurativi alle 21:45 UTC, esposizione degli ETF del PAC il lunedì alle 05:20 UTC. I cron partono solo dal deploy di Production e solo se `CRON_SECRET` esiste in Production; le route dei prezzi accettano `Bearer undefined` quando manca, quella dell'esposizione rifiuta
+- Vercel, cron in `vercel.json`: prezzi EODHD alle 22:00 UTC, scraping Teleborsa per i fondi assicurativi alle 21:45 UTC, esposizione degli ETF del PAC il lunedì alle 05:20 UTC. I cron partono solo dal deploy di Production e solo se `CRON_SECRET` esiste in Production; le tre route (`aggiorna-prezzi`, `aggiorna-prezzi-scraping`, `update-etf-geography`) rispondono 401 se il segreto non è impostato, quindi in Preview e in locale vanno chiamate a mano solo dopo aver impostato `CRON_SECRET`
 - Middleware in `proxy.ts` (non `middleware.ts`)
 - i18n con next-intl, prefisso di lingua sempre nell'URL (`/it/...`, `/en/...`)
 
