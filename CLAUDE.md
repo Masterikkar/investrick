@@ -6,7 +6,7 @@ App web personale di gestione portafoglio multi-asset (regime amministrato itali
 
 - Next.js 16 (App Router, Turbopack, nessuna cartella `src/`), TypeScript, Tailwind, Recharts, SheetJS (installato dal CDN ufficiale SheetJS, non dal pacchetto npm `xlsx`, che ha una vulnerabilità nota)
 - Supabase (progetto `uchkjvxhxuabmjaesvpv`), PostgreSQL con RLS su tutte le tabelle
-- Vercel, cron prezzi in `vercel.json` (EODHD alle 22:00 UTC, scraping Teleborsa per i fondi assicurativi alle 21:45 UTC)
+- Vercel, cron in `vercel.json`: prezzi EODHD alle 22:00 UTC, scraping Teleborsa per i fondi assicurativi alle 21:45 UTC, esposizione degli ETF del PAC il lunedì alle 05:20 UTC. I cron partono solo dal deploy di Production e solo se `CRON_SECRET` esiste in Production; le route dei prezzi accettano `Bearer undefined` quando manca, quella dell'esposizione rifiuta
 - Middleware in `proxy.ts` (non `middleware.ts`)
 - i18n con next-intl, prefisso di lingua sempre nell'URL (`/it/...`, `/en/...`)
 
@@ -55,6 +55,16 @@ App web personale di gestione portafoglio multi-asset (regime amministrato itali
 - Conferme con `useConferma()` (`components/conferma.tsx`), mai `window.confirm`.
 - i18n: tradotto solo il testo visibile. Namespace = nome della pagina o del componente in PascalCase italiano, chiavi in camelCase, namespace condivisi riusati (es. "Categorie").
 - Codice nuovo: rotte e nomi di file in inglese. Le rotte italiane esistenti (`/pac`, `/polizze`, ...) si correggeranno prima del rilascio.
+
+## Esposizione degli ETF del PAC (geografia e partecipazioni)
+
+- **Dati pubblici condivisi per ISIN**, senza `user_id`: RLS con sola lettura per `authenticated`; li scrive solo il cron con la chiave di servizio, tramite funzioni eseguibili solo da `service_role`. Tabelle: `geografia_fonti` (una riga per ETF: emittente, parametro, stato dell'ultimo aggiornamento), `geografia_etf` (paese come scritto dall'emittente, `peso_pct`), `paesi_macro_regioni` (nome nel file → codice ISO → macro-regione), `partecipazioni_etf` (prime 100 posizioni per ETF: nome, ticker, ISIN del titolo, cedola, scadenza, `peso_pct`). Funzioni `sostituisci_partecipazioni_etf` e `sostituisci_geografia_etf`: sostituiscono i dati di un ETF in una transazione e rifiutano pesi che non tornano. Prima si scrivono le partecipazioni, poi la geografia, che registra l'esito.
+- **Aggiornamento**: `app/api/update-etf-geography/route.ts` con `lib/etf-geography.ts` (CSV iShares, Excel Xtrackers). Non usa EODHD. Segreto `CRON_SECRET` (header o `?secret=`); prove a mano con `?dryRun=1` (non scrive) e `?isin=`. Le date iShares usano l'inglese britannico ("Sept"). In caso di errore o controllo non superato resta l'ultimo dato valido; dato "scaduto" dopo 35 giorni; un file più vecchio di quello salvato si rifiuta.
+- **Pesi**: solo titoli (azioni, obbligazioni); cash, derivati e valute esclusi; riportati a 100 sui soli titoli, quindi di pochi decimi sopra il sito dell'emittente. Dove non c'è un dato non si mostra niente; oro e fondi senza fonte sono esclusi.
+- **Paesi non riconosciuti**: mai "Non classificato", si chiama **"Altro"**. Il messaggio dell'ultimo aggiornamento in `geografia_fonti` li elenca: vanno aggiunti a `paesi_macro_regioni`.
+- **Calcolo nell'app**: `lib/geographic-exposure.ts`. Per il PAC è la media pesata sul valore degli ETF che hanno il dato, una vista per categoria. Lo stesso titolo in più ETF si unisce (ISIN del titolo, oppure nome + ticker + cedola + scadenza). Nomi dei titoli in "Prima Lettera Maiuscola" (`nomeTitoloLeggibile`); nomi dei paesi dal codice ISO con `Intl.DisplayNames`.
+- **Schermata**: sezione "Esposizione" con due card affiancate, a sinistra Partecipazioni (prime 15, barre solo sulle prime 5) e a destra Esposizione geografica (regioni con barre, 10 paesi, poi "Altri paesi" in un blocco che si apre). Componenti `components/exposure-cards.tsx`, `etf-holdings.tsx`, `geographic-exposure.tsx`; usati in `investment-plans/[contenitoreId]` (una coppia per categoria) e in `asset/[strumentoId]`. Namespace i18n `Esposizione` e `Regioni`. Attenzione: `lib/geographic-exposure.ts` (libreria) e `components/geographic-exposure.tsx` (componente) hanno lo stesso nome in cartelle diverse: non confonderli.
+- **Aggiungere un ETF**: una riga in `geografia_fonti` con `attiva = true`, l'ISIN dello strumento, l'emittente (`ishares` o `xtrackers`) e, per iShares, il `portfolioId` come `parametro` (per Xtrackers resta vuoto: il file si trova dall'ISIN). Nessun altro intervento sul codice.
 
 ## Regole di dominio
 
