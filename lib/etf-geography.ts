@@ -41,6 +41,12 @@ export type GeografiaEstratta = {
   scadenzeNonLette: number
   /** Righe escluse perché non sono titoli, per tipo (cash, derivati, valute...). */
   esclusi: { tipo: string; peso: number; righe: number }[]
+  /** Somma dei pesi di tutte le righe con un peso (titoli ed esclusi), prima di riportare a 100. */
+  sommaTutteLeRighe: number
+  /** true se il totale di tutte le righe è stato controllato (oggi solo Xtrackers). */
+  totaleVerificato: boolean
+  /** Righe del file senza un peso numerico ("N/A"): ignorate, identificate da ISIN o nome. */
+  righeSenzaPeso: string[]
 }
 
 export type EsitoFonte = {
@@ -89,9 +95,13 @@ function numeroMeseInglese(parola: string): number {
 }
 
 // Pesi dei titoli accettati prima della normalizzazione, in % (controllo di sanità sul file).
-// Xtrackers è più largo: il file di DBXP somma oltre 108% già sulle sole obbligazioni (motivo non chiarito).
+// Xtrackers ammette qualche punto in più (cash negativo: il 06/10/2026 le obbligazioni pesavano 100,25%).
 const SOMMA_TITOLI_ISHARES = { min: 90, max: 103 }
-const SOMMA_TITOLI_XTRACKERS = { min: 90, max: 115 }
+const SOMMA_TITOLI_XTRACKERS = { min: 90, max: 105 }
+// Xtrackers: il totale di tutte le righe con un peso (titoli, fondo monetario, cash) deve fare 100.
+// Il 03/10 e il 05/10/2026 il file faceva 108,41%: due obbligazioni avevano un peso in eccesso e il giorno
+// dopo erano "N/A". Un file con il totale fuori da questi limiti non è affidabile e si rifiuta.
+const SOMMA_TOTALE_XTRACKERS = { min: 98, max: 102 }
 const RIGHE_TITOLI_MINIME = 10
 
 // Quante posizioni per ETF si salvano: abbastanza perché la lista aggregata del PAC sia esatta
@@ -103,7 +113,14 @@ const SOMMA_PARTECIPAZIONI_MAX = 100.5
 
 // Tipi di riga che contano come titoli, in minuscolo. Tutto il resto è escluso e segnalato.
 const TIPI_TITOLO_ISHARES = new Set(['equity', 'fixed income'])
-const TIPI_TITOLO_XTRACKERS = new Set(['equity', 'bond'])
+
+// Xtrackers cambia le etichette da un giorno all'altro: il 06/10/2026 le obbligazioni erano "Bond" e
+// "Government Bond". Conta come titolo "Equity" e ogni tipo che contiene "bond". Il fondo monetario
+// ("Mutual Fund" il 03/10, "Equities" il 06/10) resta escluso e compare tra gli esclusi del messaggio.
+function eTitoloXtrackers(tipo: string): boolean {
+  const t = tipo.trim().toLowerCase()
+  return t === 'equity' || t.includes('bond')
+}
 
 function arrotonda(valore: number, decimali: number): number {
   const fattore = 10 ** decimali
@@ -180,10 +197,22 @@ type Accumulatori = {
   righeTitoli: number
   /** Titoli con una scadenza scritta nel file ma in un formato che non si riesce a leggere. */
   scadenzeNonLette: number
+  /** Somma dei pesi di tutte le righe con un peso, titoli ed esclusi. */
+  sommaTutteLeRighe: number
+  /** Righe senza un peso numerico, ignorate. */
+  righeSenzaPeso: string[]
 }
 
 function nuoviAccumulatori(): Accumulatori {
-  return { pesiGrezzi: new Map(), titoli: [], esclusi: new Map(), righeTitoli: 0, scadenzeNonLette: 0 }
+  return {
+    pesiGrezzi: new Map(),
+    titoli: [],
+    esclusi: new Map(),
+    righeTitoli: 0,
+    scadenzeNonLette: 0,
+    sommaTutteLeRighe: 0,
+    righeSenzaPeso: [],
+  }
 }
 
 function aggiungiRiga(
@@ -194,6 +223,7 @@ function aggiungiRiga(
   peso: number,
   dettaglio: DettaglioTitolo,
 ) {
+  acc.sommaTutteLeRighe += peso
   if (eTitolo) {
     acc.righeTitoli++
     acc.pesiGrezzi.set(paese, (acc.pesiGrezzi.get(paese) ?? 0) + peso)
@@ -205,13 +235,22 @@ function aggiungiRiga(
 }
 
 // Controlla la somma, riporta a 100 sulla parte con peso positivo e arrotonda a 4 decimali.
+// limitiTotale (facoltativo): controlla anche la somma di tutte le righe, titoli ed esclusi.
 function finalizza(
   acc: Accumulatori,
   dataFile: string | null,
   limiti: { min: number; max: number },
+  limitiTotale?: { min: number; max: number },
 ): GeografiaEstratta {
   if (acc.righeTitoli < RIGHE_TITOLI_MINIME) {
     throw new Error(`Poche righe di titoli nel file (${acc.righeTitoli})`)
+  }
+  if (limitiTotale && (acc.sommaTutteLeRighe < limitiTotale.min || acc.sommaTutteLeRighe > limitiTotale.max)) {
+    const senzaPeso =
+      acc.righeSenzaPeso.length > 0 ? `; righe senza peso: ${elencoRighe(acc.righeSenzaPeso)}` : ''
+    throw new Error(
+      `File incoerente: il totale di tutte le righe è ${formatoMessaggio(acc.sommaTutteLeRighe)}% invece di 100 (atteso tra ${limitiTotale.min} e ${limitiTotale.max}), resta l'ultimo dato valido${senzaPeso}`,
+    )
   }
   const sommaGrezza = [...acc.pesiGrezzi.values()].reduce((a, b) => a + b, 0)
   if (sommaGrezza < limiti.min || sommaGrezza > limiti.max) {
@@ -256,7 +295,16 @@ function finalizza(
     esclusi: [...acc.esclusi.entries()]
       .map(([tipo, v]) => ({ tipo, peso: arrotonda(v.peso, 4), righe: v.righe }))
       .sort((a, b) => Math.abs(b.peso) - Math.abs(a.peso)),
+    sommaTutteLeRighe: arrotonda(acc.sommaTutteLeRighe, 4),
+    totaleVerificato: limitiTotale !== undefined,
+    righeSenzaPeso: acc.righeSenzaPeso,
   }
+}
+
+// Elenco breve per i messaggi: le prime cinque righe, poi "e altre N".
+function elencoRighe(righe: string[]): string {
+  const prime = righe.slice(0, 5).join(', ')
+  return `${righe.length} (${prime}${righe.length > 5 ? `, e altre ${righe.length - 5}` : ''})`
 }
 
 // ───────────────────────── iShares (CSV) ─────────────────────────
@@ -373,12 +421,17 @@ export function estraiGeografiaXtrackers(righe: unknown[][]): GeografiaEstratta 
   const acc = nuoviAccumulatori()
   for (const riga of righe.slice(indiceIntestazione + 1)) {
     const grezzo = riga[indicePeso]
-    if (typeof grezzo !== 'number' || !Number.isFinite(grezzo)) continue
+    const isinTitolo = indiceIsin >= 0 ? testoOpzionale(riga[indiceIsin]) : null
+    if (typeof grezzo !== 'number' || !Number.isFinite(grezzo)) {
+      // Peso "N/A" o assente: la riga si ignora, ma se è una riga vera (ha un ISIN o un nome) si ricorda.
+      const identificativo = isinTitolo ?? testoOpzionale(riga[indiceNome])
+      if (identificativo) acc.righeSenzaPeso.push(identificativo)
+      continue
+    }
     const peso = grezzo * 100
     const tipo = String(riga[indiceTipo] ?? '').trim() || '(senza tipo)'
     const paese = String(riga[indicePaese] ?? '').trim() || '-'
-    const isinTitolo = indiceIsin >= 0 ? testoOpzionale(riga[indiceIsin]) : null
-    aggiungiRiga(acc, TIPI_TITOLO_XTRACKERS.has(tipo.toLowerCase()), tipo, paese, peso, {
+    aggiungiRiga(acc, eTitoloXtrackers(tipo), tipo, paese, peso, {
       nome: testoOpzionale(riga[indiceNome]) ?? isinTitolo ?? '(senza nome)',
       ticker: null,
       isinTitolo,
@@ -387,7 +440,7 @@ export function estraiGeografiaXtrackers(righe: unknown[][]): GeografiaEstratta 
     })
   }
 
-  return finalizza(acc, null, SOMMA_TITOLI_XTRACKERS)
+  return finalizza(acc, null, SOMMA_TITOLI_XTRACKERS, SOMMA_TOTALE_XTRACKERS)
 }
 
 async function scaricaRigheXtrackers(isin: string): Promise<unknown[][]> {
@@ -415,9 +468,14 @@ function riepilogaMessaggio(
   senzaPaese: number,
 ): string {
   const parti = [
-    `ok: ${Object.keys(estratto.pesi).length} paesi da ${estratto.righeTitoli} titoli, somma grezza ${formatoMessaggio(estratto.sommaPesiGrezza)}%`,
+    `ok: ${Object.keys(estratto.pesi).length} paesi da ${estratto.righeTitoli} titoli, somma grezza ${formatoMessaggio(estratto.sommaPesiGrezza)}%${
+      estratto.totaleVerificato ? `, totale righe ${formatoMessaggio(estratto.sommaTutteLeRighe)}%` : ''
+    }`,
     `partecipazioni: ${estratto.partecipazioni.length}`,
   ]
+  if (estratto.righeSenzaPeso.length > 0) {
+    parti.push(`righe senza peso ignorate: ${elencoRighe(estratto.righeSenzaPeso)}`)
+  }
   if (estratto.scadenzeNonLette > 0) parti.push(`scadenze non lette: ${estratto.scadenzeNonLette}`)
   if (estratto.esclusi.length > 0) {
     parti.push(`esclusi: ${estratto.esclusi.map((e) => `${e.tipo} ${formatoMessaggio(e.peso)}%`).join(', ')}`)
