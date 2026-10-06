@@ -9,7 +9,7 @@ import type { AvvisoStrutturale } from '@/lib/ribilanciamento-simulazione'
 import { Sezione } from '@/components/sezione'
 import { stileCardMetrica } from '@/components/card-metrica'
 import { IconaAvviso, IconaSpunta } from '@/components/icone'
-import { testoDaRich, type SezionePdf } from './esporta-pdf'
+import type { SezionePdf } from './esporta-pdf'
 
 // Tipo minimo del traduttore next-intl di cui questo file ha bisogno per
 // costruire il PDF: il progetto non ha una tipizzazione stretta delle chiavi
